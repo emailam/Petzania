@@ -1,6 +1,6 @@
 # **PetZania**  
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/5fab115c-993a-4540-8518-bf02a425d32b" width="200" alt="PetZania Logo">
+  <img src="https://github.com/user-attachments/assets/90548fe0-e7ae-478c-932d-57102f966c2e" width="200" alt="PetZania Logo">
 </p>  
 
 **PetZania** is a social media platform designed to connect pet owners with each other and with pet service providers. The platform enables users to share their pet's experiences, find nearby pet services, and engage with a passionate pet-loving community.  
