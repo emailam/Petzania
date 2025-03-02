@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: RegistrationModule
+
+  datasource:
+    password: 123456789
+    url: jdbc:postgresql://localhost:5432/registration
+    username: postgres
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
+
+server:
+  error:
+    include-message: always
+    include-binding-errors: always
