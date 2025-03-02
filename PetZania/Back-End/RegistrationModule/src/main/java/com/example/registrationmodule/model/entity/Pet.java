@@ -28,18 +28,18 @@ public class Pet {
     private String species; // cat or dog,..
 
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "petVaccines",
-            joinColumns = @JoinColumn(name = "petId"),
-            inverseJoinColumns = @JoinColumn(name = "vaccineId"))
+    @JoinTable(name = "pet_vaccines",
+            joinColumns = @JoinColumn(name = "pet_id"),
+            inverseJoinColumns = @JoinColumn(name = "vaccine_url"))
     private List<Media> myVaccines;
 
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "petPictures",
-            joinColumns = @JoinColumn(name = "petId"),
-            inverseJoinColumns = @JoinColumn(name = "pictureId"))
+    @JoinTable(name = "pet_pictures",
+            joinColumns = @JoinColumn(name = "pet_id"),
+            inverseJoinColumns = @JoinColumn(name = "picture_url"))
     private List<Media> myPictures;
 
     @ManyToOne
-    @JoinColumn(name = "userId")
+    @JoinColumn(name = "user_id")
     private User user;
 }
