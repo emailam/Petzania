@@ -30,6 +30,7 @@ public class User {
     private String phoneNumber;
     private List<UserRole> userRoles;
 
+    // private List<UUID> posts;
     // private List<UUID> savedPosts;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
