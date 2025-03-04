@@ -23,7 +23,6 @@ public class DtoConversionService implements IDtoConversionService {
         }
 
         return new UserProfileDto(
-                user.getUserId(),
                 user.getUsername(),
                 user.getName(),
                 user.getBio(),
@@ -33,9 +32,9 @@ public class DtoConversionService implements IDtoConversionService {
                 user.getMyPets().stream()
                         .map(this::mapToPetDto)
                         .collect(Collectors.toList()),
-                user.getFriends(),
-                user.getFollowers(),
-                user.getFollowing(),
+                user.getFriends().size(),
+                user.getFollowers().size(),
+                user.getFollowing().size(),
                 user.getStoreProfileId(),
                 user.getVetProfileId()
         );

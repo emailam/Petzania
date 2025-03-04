@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UpdateUserProfileDto {
-    private String username;
     private String name;
     private String bio;
     private String profilePictureURL;

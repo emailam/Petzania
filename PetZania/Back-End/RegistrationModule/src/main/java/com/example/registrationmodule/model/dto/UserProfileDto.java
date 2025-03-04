@@ -12,7 +12,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserProfileDto {
-    private UUID userId;
     private String username;
     private String name;
     private String bio;
@@ -20,9 +19,9 @@ public class UserProfileDto {
     private String phoneNumber;
     private List<UserRole> userRoles;
     private List<PetDto> myPets;
-    private List<UUID> friends;
-    private List<UUID> followers;
-    private List<UUID> following;
+    private int friendsCount;
+    private int followersCount;
+    private int followingCount;
     private UUID storeProfileId;
     private UUID vetProfileId;
 }
