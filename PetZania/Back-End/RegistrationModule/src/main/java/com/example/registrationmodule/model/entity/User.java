@@ -28,6 +28,11 @@ public class User {
     private String bio;
     private String profilePictureURL;
     private String phoneNumber;
+
+    @ElementCollection(targetClass = UserRole.class, fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_role")
     private List<UserRole> userRoles;
 
     // private List<UUID> posts;
@@ -35,18 +40,25 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Pet> myPets;
-    // private List<User> friends;
-    // private List<User> followers;
-    // private List<User> following;
-    // private List<User> blocked;
+
+    @ElementCollection
+    private List<UUID> friends;
+
+    @ElementCollection
+    private List<UUID> followers;
+
+    @ElementCollection
+    private List<UUID> following;
+
+    @ElementCollection
+    private List<UUID> blocked;
     // private List<User> receivedFriendRequests;
     // private List<UUID> sendFriendRequests;
     // private List<UUID> notifications;
     // private List<UUID> myChats;
     // private List<UUID> archivedChats;
     // private List<UUID> pinnedGroups;
-    // private UUID storeProfileId;
-    // private UUID vetProfileId;
+    private UUID storeProfileId;
+    private UUID vetProfileId;
     // Payment Method
-
 }
