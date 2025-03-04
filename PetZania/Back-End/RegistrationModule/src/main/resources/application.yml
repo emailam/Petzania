@@ -16,6 +16,11 @@ spring:
         format_sql: true
     show-sql: true
 
+  security:
+    user:
+      name: admin
+      password: 1234
+
 server:
   error:
     include-message: always
