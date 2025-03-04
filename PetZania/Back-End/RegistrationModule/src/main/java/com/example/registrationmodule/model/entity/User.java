@@ -43,6 +43,7 @@ public class User {
     private boolean verified;
     private List<UserRole> userRoles;
 
+    // private List<UUID> posts;
     // private List<UUID> savedPosts;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
