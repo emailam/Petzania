@@ -19,7 +19,7 @@ public class UserService implements IUserService {
     private final UserRepository userRepository;
 
     @Override
-    public Optional<User> getUser(UUID userId) {
+    public Optional<User> getUserById(UUID userId) {
         return userRepository.findById(userId);
     }
 
@@ -29,12 +29,12 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public boolean exists(UUID userId) {
+    public boolean existsById(UUID userId) {
         return userRepository.existsById(userId);
     }
 
     @Override
-    public User updateUser(UUID userId, User updatedUser) {
+    public User partialUpdateUserById(UUID userId, User updatedUser) {
         return userRepository.findById(userId).map(existingUser -> {
             Optional.ofNullable(updatedUser.getName()).ifPresent(existingUser::setName);
             Optional.ofNullable(updatedUser.getBio()).ifPresent(existingUser::setBio);

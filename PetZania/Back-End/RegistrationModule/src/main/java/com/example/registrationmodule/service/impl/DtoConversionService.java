@@ -6,9 +6,7 @@ import com.example.registrationmodule.model.dto.UserProfileDto;
 import com.example.registrationmodule.model.entity.Pet;
 import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.service.IDtoConversionService;
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -17,6 +15,8 @@ import java.util.stream.Collectors;
 @Service
 @AllArgsConstructor
 public class DtoConversionService implements IDtoConversionService {
+
+    private final UserService userService;
 
     @Override
     public UserProfileDto mapToUserProfileDto(User user) {
@@ -54,7 +54,7 @@ public class DtoConversionService implements IDtoConversionService {
         return user;
     }
 
-
+    @Override
     public PetDto mapToPetDto(Pet pet) {
         if (pet == null) {
             return null;
@@ -68,8 +68,29 @@ public class DtoConversionService implements IDtoConversionService {
                 pet.getBreed(),
                 pet.getSpecies(),
                 pet.getMyVaccinesURLs() != null ? pet.getMyVaccinesURLs() : new ArrayList<>(),
-                pet.getMyPicturesURLs() != null ? pet.getMyPicturesURLs() : new ArrayList<>()
+                pet.getMyPicturesURLs() != null ? pet.getMyPicturesURLs() : new ArrayList<>(),
+                pet.getUser().getUserId()
         );
+    }
+
+    @Override
+    public Pet mapToPet(PetDto petDto) {
+        Pet pet = new Pet();
+
+        pet.setName(petDto.getName());
+        pet.setDescription(petDto.getDescription());
+        pet.setGender(petDto.getGender());
+        pet.setAge(petDto.getAge());
+        pet.setBreed(petDto.getBreed());
+        pet.setSpecies(petDto.getSpecies());
+        pet.setMyVaccinesURLs(petDto.getMyVaccinesURLs());
+        pet.setMyPicturesURLs(petDto.getMyPicturesURLs());
+
+        User user = userService.getUserById(petDto.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        pet.setUser(user);
+
+        return pet;
     }
 
 }

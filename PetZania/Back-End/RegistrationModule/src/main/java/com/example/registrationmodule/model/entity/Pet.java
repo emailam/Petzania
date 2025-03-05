@@ -1,5 +1,6 @@
 package com.example.registrationmodule.model.entity;
 
+import com.example.registrationmodule.model.enumeration.PetSpecies;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,12 +21,15 @@ public class Pet {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID petId;
+
     private String name;
     private String description;
     private String gender;
-    private int age;
+    private Integer age;
     private String breed;
-    private String species; // cat or dog,..
+
+    @Enumerated(EnumType.STRING)
+    private PetSpecies species; // cat or dog,..
 
     @ElementCollection
     @CollectionTable(name = "pets_vaccines_urls", joinColumns = @JoinColumn(name = "pet_id"))
