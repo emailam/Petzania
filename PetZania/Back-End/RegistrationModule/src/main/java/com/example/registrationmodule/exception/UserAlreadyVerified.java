@@ -4,10 +4,10 @@ package com.example.registrationmodule.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-// 404 not found
-@ResponseStatus(HttpStatus.NOT_FOUND)
-public class UserDoesNotExistException extends RuntimeException {
-    public UserDoesNotExistException(String message) {
+// 409 conflict
+@ResponseStatus(HttpStatus.CONFLICT)
+public class UserAlreadyVerified extends RuntimeException {
+    public UserAlreadyVerified(String message){
         super(message);
     }
 }

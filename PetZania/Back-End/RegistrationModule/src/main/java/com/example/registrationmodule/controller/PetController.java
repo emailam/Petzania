@@ -1,13 +1,12 @@
 package com.example.registrationmodule.controller;
 
-import com.example.registrationmodule.model.dto.UserProfileDto;
+import com.example.registrationmodule.model.dto.UserProfileDTO;
 import com.example.registrationmodule.model.entity.User;
-import com.example.registrationmodule.service.IDtoConversionService;
+import com.example.registrationmodule.service.IDTOConversionService;
 import com.example.registrationmodule.service.IProfileService;
 import com.example.registrationmodule.service.IUserService;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,25 +20,25 @@ import java.util.UUID;
 //@AllArgsConstructor
 @RestController
 @RequestMapping("api/user/profile")
-public class UserProfileController {
+public class PetController {
 
     private final IUserService userService;
     private final IProfileService profileService;
-    private final IDtoConversionService dtoConversionService;
+    private final IDTOConversionService dtoConversionService;
 
-    public UserProfileController(IUserService userService,
-                                 IProfileService profileService,
-                                 IDtoConversionService dtoConversionService) {
+    public PetController(IUserService userService,
+                         IProfileService profileService,
+                         IDTOConversionService dtoConversionService) {
         this.userService = userService;
         this.profileService = profileService;
         this.dtoConversionService = dtoConversionService;
     }
 
     @GetMapping(path = "/{id}")
-    public ResponseEntity<UserProfileDto> getUserProfileById(@PathVariable("id") UUID userId) {
-        Optional<User> user = userService.getUser(userId);
+    public ResponseEntity<UserProfileDTO> getUserProfileById(@PathVariable("id") UUID userId) {
+        Optional<User> user = userService.getUserById(userId);
         return user.map(userEntity -> {
-            UserProfileDto userProfileDto = dtoConversionService.mapToUserProfileDto(userEntity);
+            UserProfileDTO userProfileDto = dtoConversionService.mapToUserProfileDto(userEntity);
             return new ResponseEntity<>(userProfileDto, HttpStatus.OK);
         }).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
