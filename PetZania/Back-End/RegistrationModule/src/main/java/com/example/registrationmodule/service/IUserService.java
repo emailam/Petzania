@@ -7,4 +7,7 @@ import java.util.UUID;
 
 public interface IUserService {
     Optional<User> getUser(UUID userId);
+    User saveUser(User user);
+    boolean exists(UUID userId);
+    User updateUser(UUID userId, User user);
 }

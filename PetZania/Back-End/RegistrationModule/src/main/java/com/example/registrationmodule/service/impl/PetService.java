@@ -1,14 +1,13 @@
 package com.example.registrationmodule.service.impl;
 
-import com.example.registrationmodule.service.IProfileService;
+import com.example.registrationmodule.service.IPetService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
 @Transactional
-public class ProfileService implements IProfileService {
+public class PetService implements IPetService {
 
 }

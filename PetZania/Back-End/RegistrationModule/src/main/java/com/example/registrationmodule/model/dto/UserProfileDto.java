@@ -12,6 +12,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserProfileDto {
+    private UUID userId;
     private String username;
     private String name;
     private String bio;
