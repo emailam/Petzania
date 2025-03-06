@@ -12,6 +12,7 @@ import com.example.registrationmodule.service.IEmailService;
 import com.example.registrationmodule.service.IUserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -29,6 +30,8 @@ public class UserService implements IUserService {
     private final UserRepository userRepository;
     private final IEmailService emailService;
 
+    private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
+
     @Override
     public void registerUser(RegisterUserDTO registerUserDTO) {
         // convert to regular user.
@@ -39,6 +42,7 @@ public class UserService implements IUserService {
         } else if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             throw new EmailAlreadyExistsException("Email already registered");
         } else {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
             user.setVerified(false);
             userRepository.save(user);
         }
@@ -68,6 +72,7 @@ public class UserService implements IUserService {
 
     @Override
     public User saveUser(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
