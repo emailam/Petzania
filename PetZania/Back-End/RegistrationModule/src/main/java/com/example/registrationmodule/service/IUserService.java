@@ -24,6 +24,7 @@ public interface IUserService {
     public Optional<User> getUserById(UUID userId);
 
     public void deleteUserById(UUID userId);
+    public User saveUser(User user);
 
     void login(LoginUserDTO loginUserDTO);
 

@@ -1,11 +1,13 @@
-package com.example.registrationmodule.service;
+package com.example.registrationmodule.service.impl;
 
 import com.example.registrationmodule.model.dto.PetDTO;
+import com.example.registrationmodule.model.dto.RegisterUserDTO;
 import com.example.registrationmodule.model.dto.UpdateUserProfileDto;
 import com.example.registrationmodule.model.dto.UserProfileDTO;
 import com.example.registrationmodule.model.entity.Pet;
 import com.example.registrationmodule.model.entity.User;
 
+import com.example.registrationmodule.repo.UserRepository;
 import com.example.registrationmodule.service.IDTOConversionService;
 import com.example.registrationmodule.service.impl.UserService;
 import lombok.AllArgsConstructor;
@@ -18,7 +20,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class DTOConversionService implements IDTOConversionService {
 
-    private final UserService userService;
+    private final UserRepository userRepository;
 
     @Override
     public UserProfileDTO mapToUserProfileDto(User user) {
@@ -88,11 +90,20 @@ public class DTOConversionService implements IDTOConversionService {
         pet.setMyVaccinesURLs(petDto.getMyVaccinesURLs());
         pet.setMyPicturesURLs(petDto.getMyPicturesURLs());
 
-        User user = userService.getUserById(petDto.getUserId())
+        User user = userRepository.findById(petDto.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         pet.setUser(user);
 
         return pet;
+    }
+
+    @Override
+    public User convertToUser(RegisterUserDTO registerUserDTO) {
+        User user = new User();
+        user.setUsername(registerUserDTO.getUsername());
+        user.setEmail(registerUserDTO.getEmail());
+        user.setPassword(registerUserDTO.getPassword());
+        return user;
     }
 
 }

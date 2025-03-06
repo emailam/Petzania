@@ -7,22 +7,13 @@ import com.example.registrationmodule.model.dto.RegisterUserDTO;
 import com.example.registrationmodule.model.entity.EmailRequest;
 import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.repo.UserRepository;
+import com.example.registrationmodule.service.IDTOConversionService;
 import com.example.registrationmodule.service.IEmailService;
 import com.example.registrationmodule.service.IUserService;
-import com.sendgrid.Method;
-import com.sendgrid.Request;
-import com.sendgrid.Response;
-import com.sendgrid.SendGrid;
-import com.sendgrid.helpers.mail.Mail;
-import com.sendgrid.helpers.mail.objects.Content;
-import com.sendgrid.helpers.mail.objects.Email;
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,7 +25,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserService implements IUserService {
 
-    private final DTOConversionService converter;
+    private final IDTOConversionService converter;
     private final UserRepository userRepository;
     private final IEmailService emailService;
 
@@ -73,6 +64,11 @@ public class UserService implements IUserService {
         } else {
             throw new UserDoesNotExistException("User does not exist");
         }
+    }
+
+    @Override
+    public User saveUser(User user) {
+        return userRepository.save(user);
     }
 
     @Override

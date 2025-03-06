@@ -1,6 +1,7 @@
-package com.example.registrationmodule.service.impl;
+package com.example.registrationmodule.service;
 
 import com.example.registrationmodule.model.dto.PetDTO;
+import com.example.registrationmodule.model.dto.RegisterUserDTO;
 import com.example.registrationmodule.model.dto.UpdateUserProfileDto;
 import com.example.registrationmodule.model.dto.UserProfileDTO;
 import com.example.registrationmodule.model.entity.Pet;
@@ -15,4 +16,6 @@ public interface IDTOConversionService {
     PetDTO mapToPetDto(Pet pet);
 
     Pet mapToPet(PetDTO petDto);
+
+    User convertToUser(RegisterUserDTO registerUserDTO);
 }
