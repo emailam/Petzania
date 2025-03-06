@@ -1,0 +1,66 @@
+package com.example.registrationmodule.config;
+
+import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.SecurityFilterChain;
+
+@Configuration
+@EnableWebSecurity
+@AllArgsConstructor
+public class SecurityConfig {
+
+    private final UserDetailsService userDetailsService;
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // disable the need for CSRF Token since it will be stateless.
+        http.csrf(AbstractHttpConfigurer::disable);
+
+        // make every request needs an authorization.
+        http.authorizeHttpRequests(request -> request.anyRequest().authenticated());
+
+        // Enable the form login.
+        // http.formLogin(Customizer.withDefaults());
+
+        // Enable it to be able to sign in from postman.
+        http.httpBasic(Customizer.withDefaults());
+
+        // This makes the session Stateless so we no longer need the CSRF token.
+        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
+        return http.build();
+    }
+
+//    @Bean
+//    public UserDetailsService userDetailsService() {
+//        UserDetails user1 = User
+//                .withDefaultPasswordEncoder()
+//                .username("admin")
+//                .password("1234")
+//                .roles("USER").build();
+//
+//        return new InMemoryUserDetailsManager(user1);
+//    }
+
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setPasswordEncoder(NoOpPasswordEncoder.getInstance());
+        provider.setUserDetailsService(userDetailsService);
+        return provider;
+    }
+}
