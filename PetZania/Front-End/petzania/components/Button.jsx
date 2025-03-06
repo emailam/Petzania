@@ -10,7 +10,6 @@ export default function Button({title,borderRadius,width,fontSize,onPress}) {
 
             </Pressable>
         </View>
-        
     )
 }
 const styles = StyleSheet.create({
