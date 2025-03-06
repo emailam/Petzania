@@ -1,8 +1,7 @@
 package com.example.registrationmodule.service.impl;
 
-import com.example.registrationmodule.model.dto.PetDto;
-import com.example.registrationmodule.model.dto.UpdateUserProfileDto;
-import com.example.registrationmodule.model.dto.UserProfileDto;
+import com.example.registrationmodule.model.dto.*;
+import com.example.registrationmodule.model.entity.Admin;
 import com.example.registrationmodule.model.entity.Pet;
 import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.service.IDtoConversionService;
@@ -52,6 +51,27 @@ public class DtoConversionService implements IDtoConversionService {
         user.setProfilePictureURL(updateUserProfileDto.getProfilePictureURL());
         user.setPhoneNumber(updateUserProfileDto.getPhoneNumber());
         return user;
+    }
+
+    @Override
+    public Admin mapToAdmin(UpdateAdminDto updateAdminDto){
+        Admin admin = new Admin();
+        admin.setUsername(updateAdminDto.getUsername());
+        //admin.setRole(updateAdminDto.getAdminRoles());
+        return admin;
+    }
+
+    @Override
+    public AdminDto mapToAdminDto(Admin admin){
+        if (admin == null) {
+            return null;
+        }
+
+        return new AdminDto(
+                admin.getAdminId(),
+                admin.getUsername(),
+                admin.getRole()
+        );
     }
 
     @Override
