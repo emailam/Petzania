@@ -1,5 +1,7 @@
 package com.example.registrationmodule.model.dto;
 
+import com.example.registrationmodule.model.enumeration.PetSpecies;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,14 +12,13 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PetDto {
-    private UUID petId;
+public class UpdatePetDto {
     private String name;
     private String description;
     private String gender;
-    private int age;
+    private Integer age;
     private String breed;
-    private String species; // cat or dog,..
+    private PetSpecies species; // cat or dog,..
     private List<String> myVaccinesURLs;
     private List<String> myPicturesURLs;
 }

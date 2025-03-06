@@ -182,4 +182,15 @@ public class UserService implements IUserService {
         userRepository.save(user);
     }
 
+
+    @Override
+    public User partialUpdateUserById(UUID userId, User updatedUser) {
+        return userRepository.findById(userId).map(existingUser -> {
+            Optional.ofNullable(updatedUser.getName()).ifPresent(existingUser::setName);
+            Optional.ofNullable(updatedUser.getBio()).ifPresent(existingUser::setBio);
+            Optional.ofNullable(updatedUser.getProfilePictureURL()).ifPresent(existingUser::setProfilePictureURL);
+            Optional.ofNullable(updatedUser.getPhoneNumber()).ifPresent(existingUser::setPhoneNumber);
+            return userRepository.save(existingUser);
+        }).orElseThrow(() -> new RuntimeException("User does not exist"));
+    }
 }
