@@ -6,5 +6,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface IUserService {
-    Optional<User> getUser(UUID userId);
+    Optional<User> getUserById(UUID userId);
+    User saveUser(User user);
+    boolean existsById(UUID userId);
+    User partialUpdateUserById(UUID userId, User user);
 }

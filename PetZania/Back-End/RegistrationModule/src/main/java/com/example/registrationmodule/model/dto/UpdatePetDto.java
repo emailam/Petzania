@@ -12,9 +12,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PetDto {
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY) // This prevents clients from sending petId
-    private UUID petId;
+public class UpdatePetDto {
     private String name;
     private String description;
     private String gender;
@@ -23,5 +21,4 @@ public class PetDto {
     private PetSpecies species; // cat or dog,..
     private List<String> myVaccinesURLs;
     private List<String> myPicturesURLs;
-    private UUID userId;
 }
