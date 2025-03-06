@@ -58,7 +58,7 @@ public class AdminController {
                 HttpStatus.OK
         );
     }
-
+    @DeleteMapping("/admin/{id}")
     public ResponseEntity<AdminService> deleteAdminById(@PathVariable("id") UUID adminId) {
         if (!adminService.existsById(adminId)) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
