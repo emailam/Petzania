@@ -5,7 +5,7 @@ import com.example.registrationmodule.model.entity.Admin;
 import com.example.registrationmodule.model.entity.Pet;
 import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.service.IAdminService;
-import com.example.registrationmodule.service.IDtoConversionService;
+import com.example.registrationmodule.service.IDTOConversionService;
 import com.example.registrationmodule.service.impl.AdminService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @RequestMapping("api")
 public class AdminController {
     private final IAdminService adminService;
-    private final IDtoConversionService dtoConversionService;
+    private final IDTOConversionService dtoConversionService;
 
     @PostMapping(path = "/admin")
     public ResponseEntity<AdminDto> createAdminById(@RequestBody UpdateAdminDto adminDto) {
@@ -46,9 +46,9 @@ public class AdminController {
 
     @PatchMapping(path = "/admin/{id}")
     public ResponseEntity<AdminDto> partialUpdateUAdminById(@PathVariable("id") UUID adminId,
-                                                                       @RequestBody UpdateAdminDto updateAdminDto) {
+                                                            @RequestBody UpdateAdminDto updateAdminDto) {
 
-        if(!adminService.existsById(adminId)) {
+        if (!adminService.existsById(adminId)) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
@@ -59,12 +59,11 @@ public class AdminController {
         );
     }
 
-    public ResponseEntity<AdminService> deleteAdminById(@PathVariable("id") UUID adminId){
-        if(!adminService.existsById(adminId)) {
+    public ResponseEntity<AdminService> deleteAdminById(@PathVariable("id") UUID adminId) {
+        if (!adminService.existsById(adminId)) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         adminService.deleteById(adminId);
         return ResponseEntity.noContent().build();
     }
-
 }

@@ -16,6 +16,14 @@ spring:
         format_sql: true
     show-sql: true
 
+  security:
+    user:
+      name: admin
+      password: 1234
+
+  sendgrid:
+    api-key: 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
+
 
 server:
   error:

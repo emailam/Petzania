@@ -2,9 +2,15 @@ package com.example.registrationmodule.service.impl;
 
 import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.entity.Admin;
-import com.example.registrationmodule.model.entity.Pet;
+import com.example.registrationmodule.model.dto.PetDTO;
+import com.example.registrationmodule.model.dto.RegisterUserDTO;
+import com.example.registrationmodule.model.dto.UpdateUserProfileDto;
+import com.example.registrationmodule.model.dto.UserProfileDTO;import com.example.registrationmodule.model.entity.Pet;
 import com.example.registrationmodule.model.entity.User;
-import com.example.registrationmodule.service.IDtoConversionService;
+
+import com.example.registrationmodule.repo.UserRepository;
+import com.example.registrationmodule.service.IDTOConversionService;
+import com.example.registrationmodule.service.impl.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,17 +19,17 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-public class DtoConversionService implements IDtoConversionService {
+public class DTOConversionService implements IDTOConversionService {
 
-    private final UserService userService;
+    private final UserRepository userRepository;
 
     @Override
-    public UserProfileDto mapToUserProfileDto(User user) {
+    public UserProfileDTO mapToUserProfileDto(User user) {
         if (user == null) {
             return null;
         }
 
-        return new UserProfileDto(
+        return new UserProfileDTO(
                 user.getUserId(),
                 user.getUsername(),
                 user.getName(),
@@ -75,11 +81,11 @@ public class DtoConversionService implements IDtoConversionService {
     }
 
     @Override
-    public PetDto mapToPetDto(Pet pet) {
-        if (pet == null) {
-            return null;
-        }
-        return new PetDto(
+    public PetDTO mapToPetDto(Pet pet) {
+    if (pet == null) {
+                return null;
+            }
+        return new PetDTO(
                 pet.getPetId(),
                 pet.getName(),
                 pet.getDescription(),
@@ -94,7 +100,7 @@ public class DtoConversionService implements IDtoConversionService {
     }
 
     @Override
-    public Pet mapToPet(PetDto petDto) {
+    public Pet mapToPet(PetDTO petDto) {
         Pet pet = new Pet();
 
         pet.setName(petDto.getName());
@@ -106,11 +112,20 @@ public class DtoConversionService implements IDtoConversionService {
         pet.setMyVaccinesURLs(petDto.getMyVaccinesURLs());
         pet.setMyPicturesURLs(petDto.getMyPicturesURLs());
 
-        User user = userService.getUserById(petDto.getUserId())
+        User user = userRepository.findById(petDto.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         pet.setUser(user);
 
         return pet;
+    }
+
+    @Override
+    public User convertToUser(RegisterUserDTO registerUserDTO) {
+        User user = new User();
+        user.setUsername(registerUserDTO.getUsername());
+        user.setEmail(registerUserDTO.getEmail());
+        user.setPassword(registerUserDTO.getPassword());
+        return user;
     }
 
 }
