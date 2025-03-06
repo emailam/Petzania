@@ -1,6 +1,6 @@
 package com.example.registrationmodule.service.impl;
 
-import com.example.registrationmodule.model.dto.UpdatePetDto;
+import com.example.registrationmodule.model.dto.UpdatePetDTO;
 import com.example.registrationmodule.model.entity.Pet;
 import com.example.registrationmodule.repository.PetRepository;
 import com.example.registrationmodule.service.IPetService;
@@ -40,7 +40,7 @@ public class PetService implements IPetService {
     }
 
     @Override
-    public Pet partialUpdatePet(UUID petId, UpdatePetDto petDto) {
+    public Pet partialUpdatePet(UUID petId, UpdatePetDTO petDto) {
         return petRepository.findById(petId).map(existingPet -> {
             Optional.ofNullable(petDto.getName()).ifPresent(existingPet::setName);
             Optional.ofNullable(petDto.getDescription()).ifPresent(existingPet::setDescription);

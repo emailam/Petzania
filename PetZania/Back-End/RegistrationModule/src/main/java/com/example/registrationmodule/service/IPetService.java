@@ -1,6 +1,6 @@
 package com.example.registrationmodule.service;
 
-import com.example.registrationmodule.model.dto.UpdatePetDto;
+import com.example.registrationmodule.model.dto.UpdatePetDTO;
 import com.example.registrationmodule.model.entity.Pet;
 
 import java.util.List;
@@ -17,7 +17,7 @@ public interface IPetService {
 
     boolean existsById(UUID petId);
 
-    Pet partialUpdatePet(UUID petId, UpdatePetDto petDto);
+    Pet partialUpdatePet(UUID petId, UpdatePetDTO petDto);
 
     void deleteById(UUID petId);
 }
