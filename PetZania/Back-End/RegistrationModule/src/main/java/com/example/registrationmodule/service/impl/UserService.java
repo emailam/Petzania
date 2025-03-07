@@ -12,6 +12,9 @@ import com.example.registrationmodule.service.IEmailService;
 import com.example.registrationmodule.service.IUserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +32,9 @@ public class UserService implements IUserService {
     private final IDTOConversionService converter;
     private final UserRepository userRepository;
     private final IEmailService emailService;
+
+    private final JWTService jwtService;
+    private final AuthenticationManager authenticationManager;
 
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
@@ -77,16 +83,15 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void login(LoginUserDTO loginUserDTO) {
-        if (userRepository.findByEmailAndPassword(loginUserDTO.getEmail(), loginUserDTO.getPassword()).isEmpty()) {
-            throw new UserDoesNotExistException("Email or Password is invalid");
+    public String login(LoginUserDTO loginUserDTO) {
+        if (userRepository.findByEmailAndPassword(loginUserDTO.getEmail(), loginUserDTO.getPassword()).isPresent()) {
+            throw new InvalidUserCredentials("Email or Password is incorrect");
         }
-
-        User user = userRepository.findByEmailAndPassword(loginUserDTO.getEmail(), loginUserDTO.getPassword()).get();
-        if (!user.isVerified()) {
-            throw new UserNotVerified("User not verified");
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginUserDTO.getEmail(), loginUserDTO.getPassword()));
+        if (authentication.isAuthenticated()) {
+             return jwtService.generateToken();
         }
-        // user is logged in.
+        return "";
     }
 
     @Override

@@ -26,7 +26,7 @@ public interface IUserService {
     public void deleteUserById(UUID userId);
     public User saveUser(User user);
 
-    void login(LoginUserDTO loginUserDTO);
+    String login(LoginUserDTO loginUserDTO);
 
     void deleteAll();
 

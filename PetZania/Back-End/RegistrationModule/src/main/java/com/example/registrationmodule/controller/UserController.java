@@ -88,10 +88,10 @@ public class UserController {
         return ResponseEntity.ok("All users deleted successfully!");
     }
 
-    @GetMapping("/login")
+    @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody @Valid LoginUserDTO loginUserDTO) {
-        userService.login(loginUserDTO);
-        return ResponseEntity.ok("User logged in successfully!");
+        String token = userService.login(loginUserDTO);
+        return ResponseEntity.status(HttpStatus.OK).body("User logged in successfully! User token: " + token);
     }
 
     @GetMapping("/users")
