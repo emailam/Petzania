@@ -1,14 +1,5 @@
 import React from 'react';
-import { 
-  TextInput, 
-  Text, 
-  ScrollView, 
-  StyleSheet, 
-  useWindowDimensions, 
-  TouchableOpacity, 
-  View, 
-  Alert 
-} from "react-native";
+import { TextInput, Text, ScrollView, StyleSheet, useWindowDimensions, TouchableOpacity, View, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -181,13 +172,15 @@ export default function Register() {
           </View>
           {errors.confirmPassword ? <Text style={styles.errorText}>{errors.confirmPassword}</Text> : null}
         </View>
+
         <View style={[styles.inputWrapper,{marginBottom: '10%'}]}>
             <View style={styles.checkBoxContainer}>
                 <TouchableOpacity onPress={() => setCheckBox(prev => !prev)}>
                     <FontAwesome 
                     name={checkBox ? "check-square" : "square-o"} 
                     size={24} 
-                    color="gray" 
+                    color="#9188E5"
+                    width={24}
                     />
                 </TouchableOpacity>
                 <Text style={styles.textCheckBox}>
@@ -212,7 +205,7 @@ export default function Register() {
         </Text>
 
         <View style={styles.methodsContainer}>
-          <Text style={styles.text}>Or sign up with</Text>
+          <Text style={styles.text}>Or sign in with</Text>
           <Button 
             title={<FontAwesome5 name="google" size={24} color="white" />} 
             borderRadius={8} 
@@ -276,7 +269,7 @@ const styles = StyleSheet.create({
     color: 'gray',
     fontSize: 18,
     marginLeft: 5,
-    width: '80%',
+
   },
   LinkText: {
     color: 'black',
