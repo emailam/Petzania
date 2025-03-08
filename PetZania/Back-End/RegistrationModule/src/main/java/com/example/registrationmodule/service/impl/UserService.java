@@ -89,7 +89,7 @@ public class UserService implements IUserService {
         }
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginUserDTO.getEmail(), loginUserDTO.getPassword()));
         if (authentication.isAuthenticated()) {
-             return jwtService.generateToken();
+             return jwtService.generateToken(loginUserDTO.getEmail());
         }
         return "";
     }
