@@ -1,5 +1,6 @@
 package com.example.registrationmodule.filter;
 
+import com.example.registrationmodule.model.entity.UserPrincipal;
 import com.example.registrationmodule.service.impl.JWTService;
 import com.example.registrationmodule.service.impl.MyUserDetailsService;
 import jakarta.servlet.FilterChain;
@@ -35,9 +36,9 @@ public class JWTFilter extends OncePerRequestFilter {
             email = jwtService.extractEmail(token);
         }
         if (token != null && email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = context.getBean(MyUserDetailsService.class).loadUserByUsername(email);
-            System.out.println("this is the user details " + userDetails.getUsername());
-            if (userDetails != null && jwtService.validateToken(token, userDetails)) {
+            UserPrincipal userDetails = (UserPrincipal) context.getBean(MyUserDetailsService.class).loadUserByEmail(email);
+            System.out.println("this is the user details " + userDetails.getEmail());
+            if (jwtService.validateToken(token, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);

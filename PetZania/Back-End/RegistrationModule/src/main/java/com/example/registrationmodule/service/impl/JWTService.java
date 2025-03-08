@@ -1,5 +1,6 @@
 package com.example.registrationmodule.service.impl;
 
+import com.example.registrationmodule.model.entity.UserPrincipal;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -58,9 +59,9 @@ public class JWTService {
                 .getBody();
     }
 
-    public boolean validateToken(String token, UserDetails userDetails) {
+    public boolean validateToken(String token, UserPrincipal userDetails) {
         final String extractedEmail = extractEmail(token);
-        if(extractedEmail.equals(userDetails.getUsername()) && !isTokenExpired(token)){
+        if(extractedEmail.equals(userDetails.getEmail()) && !isTokenExpired(token)){
             return true;
         } else {
             return false;
