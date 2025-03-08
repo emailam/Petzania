@@ -22,13 +22,6 @@ import java.util.function.Function;
 @Service
 public class JWTService {
 
-    private String secretKey = ""; // Replace with a secure key
-
-    public JWTService() throws NoSuchAlgorithmException {
-        KeyGenerator keyGenerator = KeyGenerator.getInstance("HmacSHA256");
-        SecretKey sk = keyGenerator.generateKey();
-        secretKey = Base64.getEncoder().encodeToString(sk.getEncoded());
-    }
 
     public String generateToken(String email) {
         Map<String, Object> claims = new HashMap<>();
@@ -42,6 +35,8 @@ public class JWTService {
     }
 
     private Key getKey() {
+        // Replace with a secure key
+        String secretKey = "4ioX3ogCr4GAZ9gB99txf1LyhqVOmTJ8RsL9hyJzZXQ=";
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
@@ -56,11 +51,20 @@ public class JWTService {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder().setSigningKey(getKey()).build().parseClaimsJws(token).getBody();
+        return Jwts.parserBuilder()
+                .setSigningKey(getKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 
-    public boolean validateToken(String token, String email) {
-        return !isTokenExpired(token) && email != null;
+    public boolean validateToken(String token, UserDetails userDetails) {
+        final String extractedEmail = extractEmail(token);
+        if(extractedEmail.equals(userDetails.getUsername()) && !isTokenExpired(token)){
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public boolean isTokenExpired(String token) {
