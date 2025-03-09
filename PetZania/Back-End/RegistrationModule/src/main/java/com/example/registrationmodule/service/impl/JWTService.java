@@ -7,6 +7,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.bouncycastle.jcajce.provider.symmetric.AES;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -22,10 +23,13 @@ import java.util.function.Function;
 
 @Service
 public class JWTService {
+    @Value("${spring.jwt.secret-key}")
+    private String secretKey;
 
 
-    public String generateToken(String email) {
+    public String generateToken(String email, String role) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("role", role);
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(email)
@@ -37,13 +41,17 @@ public class JWTService {
 
     private Key getKey() {
         // Replace with a secure key
-        String secretKey = "4ioX3ogCr4GAZ9gB99txf1LyhqVOmTJ8RsL9hyJzZXQ=";
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    public String extractRole(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get("role", String.class);
     }
 
     private <T> T extractClaim(String token, Function<Claims, T> claimResolver) {
@@ -61,7 +69,7 @@ public class JWTService {
 
     public boolean validateToken(String token, UserPrincipal userDetails) {
         final String extractedEmail = extractEmail(token);
-        if(extractedEmail.equals(userDetails.getEmail()) && !isTokenExpired(token)){
+        if (extractedEmail.equals(userDetails.getEmail()) && !isTokenExpired(token)) {
             return true;
         } else {
             return false;

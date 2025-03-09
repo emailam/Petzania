@@ -37,7 +37,9 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable);
 
         // make every request needs an authorization.
-        http.authorizeHttpRequests(request -> request.requestMatchers("api/user/auth/signup", "api/user/auth/login").permitAll().anyRequest().authenticated());
+        http.authorizeHttpRequests(request -> request.requestMatchers("api/user/auth/signup", "api/user/auth/login").permitAll()
+                .requestMatchers("/api/user/auth/users").hasRole("USER").anyRequest().authenticated());
+
 
         // Enable the form login.
         // http.formLogin(Customizer.withDefaults());

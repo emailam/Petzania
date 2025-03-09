@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -31,13 +32,20 @@ public class JWTFilter extends OncePerRequestFilter {
         String authenticationHeader = request.getHeader("Authorization");
         String token = null;
         String email = null;
+        String role = null;
+
         if (authenticationHeader != null && authenticationHeader.startsWith("Bearer ")) {
+            // System.out.println("I entered the JWT filter");
             token = authenticationHeader.substring(7);
             email = jwtService.extractEmail(token);
+            role = jwtService.extractRole(token);
         }
+
         if (token != null && email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserPrincipal userDetails = (UserPrincipal) context.getBean(MyUserDetailsService.class).loadUserByEmail(email);
-            System.out.println("this is the user details " + userDetails.getEmail());
+            userDetails.setGrantedAuthority(new SimpleGrantedAuthority(role));
+
+            // System.out.println("this is the user details " + userDetails.getEmail());
             if (jwtService.validateToken(token, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

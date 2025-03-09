@@ -23,6 +23,7 @@ spring:
 
   jwt:
     secret-key:
+      4ioX3ogCr4GAZ9gB99txf1LyhqVOmTJ8RsL9hyJzZXQ=
 
   sendgrid:
     key:

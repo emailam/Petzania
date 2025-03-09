@@ -7,6 +7,7 @@ import com.example.registrationmodule.model.dto.RegisterUserDTO;
 import com.example.registrationmodule.model.dto.UserProfileDTO;
 import com.example.registrationmodule.model.entity.EmailRequest;
 import com.example.registrationmodule.model.entity.User;
+import com.example.registrationmodule.model.enumeration.UserRole;
 import com.example.registrationmodule.repo.UserRepository;
 import com.example.registrationmodule.service.IDTOConversionService;
 import com.example.registrationmodule.service.IEmailService;
@@ -93,7 +94,7 @@ public class UserService implements IUserService {
         }
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginUserDTO.getEmail(), loginUserDTO.getPassword()));
         if (authentication.isAuthenticated()) {
-            return jwtService.generateToken(loginUserDTO.getEmail());
+            return jwtService.generateToken(loginUserDTO.getEmail(), "ROLE_USER");
         }
         return "";
     }
