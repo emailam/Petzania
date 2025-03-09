@@ -39,5 +39,7 @@ public interface IUserService {
     boolean userExistsByEmail(String email);
 
     boolean isUserVerified(UUID userId);
+
+    boolean isUserVerified(String email);
     User partialUpdateUserById(UUID userId, User user);
 }

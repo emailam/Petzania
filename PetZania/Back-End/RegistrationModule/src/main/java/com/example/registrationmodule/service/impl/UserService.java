@@ -84,12 +84,13 @@ public class UserService implements IUserService {
 
     @Override
     public String login(LoginUserDTO loginUserDTO) {
-        if (userRepository.findByEmailAndPassword(loginUserDTO.getEmail(), loginUserDTO.getPassword()).isPresent()) {
-            throw new InvalidUserCredentials("Email or Password is incorrect");
+        User user = userRepository.findByEmail(loginUserDTO.getEmail()).orElseThrow(() -> new InvalidUserCredentials("Email is incorrect"));
+        if (!user.isVerified()) {
+            throw new UserNotVerified("User is not verified");
         }
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginUserDTO.getEmail(), loginUserDTO.getPassword()));
         if (authentication.isAuthenticated()) {
-             return jwtService.generateToken(loginUserDTO.getEmail());
+            return jwtService.generateToken(loginUserDTO.getEmail());
         }
         return "";
     }
@@ -151,6 +152,12 @@ public class UserService implements IUserService {
     @Override
     public boolean isUserVerified(UUID userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new UserDoesNotExistException("User does not exist"));
+        return user.isVerified();
+    }
+
+    @Override
+    public boolean isUserVerified(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserDoesNotExistException("User does not exist"));
         return user.isVerified();
     }
 
