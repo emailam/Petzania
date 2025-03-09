@@ -4,6 +4,7 @@ import com.example.registrationmodule.exception.*;
 import com.example.registrationmodule.model.dto.LoginUserDTO;
 import com.example.registrationmodule.model.dto.OTPValidationDTO;
 import com.example.registrationmodule.model.dto.RegisterUserDTO;
+import com.example.registrationmodule.model.dto.UserProfileDTO;
 import com.example.registrationmodule.model.entity.EmailRequest;
 import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.repo.UserRepository;
@@ -39,7 +40,7 @@ public class UserService implements IUserService {
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
     @Override
-    public void registerUser(RegisterUserDTO registerUserDTO) {
+    public UserProfileDTO registerUser(RegisterUserDTO registerUserDTO) {
         // convert to regular user.
         User user = converter.convertToUser(registerUserDTO);
 
@@ -55,6 +56,8 @@ public class UserService implements IUserService {
 
         // send verification code.
         sendVerificationCode(user.getUserId());
+
+        return converter.mapToUserProfileDto(user);
     }
 
     @Override

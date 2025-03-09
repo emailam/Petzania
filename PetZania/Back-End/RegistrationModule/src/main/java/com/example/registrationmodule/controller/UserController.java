@@ -26,14 +26,14 @@ public class UserController {
 
 
     @PostMapping("/signup")
-    public ResponseEntity<String> signup(@RequestBody @Valid RegisterUserDTO registerUserDTO) {
+    public ResponseEntity<SignUpResponseDTO> signup(@RequestBody @Valid RegisterUserDTO registerUserDTO) {
         if (userService.userExistsByUsername(registerUserDTO.getUsername())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(new SignUpResponseDTO("Username already exists", null));
         } else if (userService.userExistsByEmail(registerUserDTO.getEmail())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already exists");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(new SignUpResponseDTO("Email already exists", null));
         } else {
-            userService.registerUser(registerUserDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
+            UserProfileDTO userProfileDTO = userService.registerUser(registerUserDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(new SignUpResponseDTO("User registered successfully", userProfileDTO));
         }
     }
 
@@ -102,12 +102,13 @@ public class UserController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<List<User>> getUsers() {
+    public ResponseEntity<List<UserProfileDTO>> getUsers() {
         List<User> users = userService.getUsers();
         if (users.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(users);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(List.of());
         }
-        return ResponseEntity.ok(users);
+        List<UserProfileDTO> userProfileDTOs = users.stream().map(dtoConversionService::mapToUserProfileDto).toList();
+        return ResponseEntity.ok(userProfileDTOs);
     }
 
     @GetMapping(path = "/user/{id}")

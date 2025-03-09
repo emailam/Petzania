@@ -3,6 +3,7 @@ package com.example.registrationmodule.service;
 import com.example.registrationmodule.model.dto.LoginUserDTO;
 import com.example.registrationmodule.model.dto.OTPValidationDTO;
 import com.example.registrationmodule.model.dto.RegisterUserDTO;
+import com.example.registrationmodule.model.dto.UserProfileDTO;
 import com.example.registrationmodule.model.entity.EmailRequest;
 import com.example.registrationmodule.model.entity.User;
 import jakarta.transaction.Transactional;
@@ -14,7 +15,7 @@ import java.util.UUID;
 
 @Transactional
 public interface IUserService {
-    public void registerUser(RegisterUserDTO registerUserDTO);
+    public UserProfileDTO registerUser(RegisterUserDTO registerUserDTO);
 
     public void sendVerificationCode(UUID userID);
 
