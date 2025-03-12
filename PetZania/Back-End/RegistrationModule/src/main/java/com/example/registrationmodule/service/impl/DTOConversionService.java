@@ -12,6 +12,8 @@ import com.example.registrationmodule.service.IDTOConversionService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
@@ -67,7 +69,8 @@ public class DTOConversionService implements IDTOConversionService {
                 pet.getName(),
                 pet.getDescription(),
                 pet.getGender(),
-                pet.getAge(),
+                pet.getDateOfBirth(),
+                Period.between(pet.getDateOfBirth(), LocalDate.now()).getYears(), // Calculate age
                 pet.getBreed(),
                 pet.getSpecies(),
                 pet.getMyVaccinesURLs() != null ? pet.getMyVaccinesURLs() : new ArrayList<>(),
@@ -83,7 +86,7 @@ public class DTOConversionService implements IDTOConversionService {
         pet.setName(petDto.getName());
         pet.setDescription(petDto.getDescription());
         pet.setGender(petDto.getGender());
-        pet.setAge(petDto.getAge());
+        pet.setDateOfBirth(petDto.getDateOfBirth());
         pet.setBreed(petDto.getBreed());
         pet.setSpecies(petDto.getSpecies());
         pet.setMyVaccinesURLs(petDto.getMyVaccinesURLs());

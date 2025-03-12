@@ -45,7 +45,7 @@ public class PetService implements IPetService {
             Optional.ofNullable(petDto.getName()).ifPresent(existingPet::setName);
             Optional.ofNullable(petDto.getDescription()).ifPresent(existingPet::setDescription);
             Optional.ofNullable(petDto.getGender()).ifPresent(existingPet::setGender);
-            Optional.ofNullable(petDto.getAge()).ifPresent(existingPet::setAge);
+            Optional.ofNullable(petDto.getDateOfBirth()).ifPresent(existingPet::setDateOfBirth);
             Optional.ofNullable(petDto.getBreed()).ifPresent(existingPet::setBreed);
             Optional.ofNullable(petDto.getSpecies()).ifPresent(existingPet::setSpecies);
             Optional.ofNullable(petDto.getMyVaccinesURLs()).ifPresent(existingPet::setMyVaccinesURLs);
