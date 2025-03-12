@@ -10,6 +10,7 @@ import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.repo.UserRepository;
 import com.example.registrationmodule.service.IDTOConversionService;
 import com.example.registrationmodule.service.impl.UserService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
+@Transactional
 public class DTOConversionService implements IDTOConversionService {
 
     private final UserRepository userRepository;
@@ -33,6 +35,7 @@ public class DTOConversionService implements IDTOConversionService {
                 user.getUsername(),
                 user.getName(),
                 user.getBio(),
+                user.getEmail(),
                 user.getProfilePictureURL(),
                 user.getPhoneNumber(),
                 user.getUserRoles() != null ? user.getUserRoles() : new ArrayList<>(),

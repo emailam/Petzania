@@ -1,46 +1,45 @@
 package com.example.registrationmodule.service;
 
-import com.example.registrationmodule.model.dto.LoginUserDTO;
-import com.example.registrationmodule.model.dto.OTPValidationDTO;
-import com.example.registrationmodule.model.dto.RegisterUserDTO;
-import com.example.registrationmodule.model.dto.UserProfileDTO;
-import com.example.registrationmodule.model.entity.EmailRequest;
+import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.entity.User;
 import jakarta.transaction.Transactional;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Transactional
 public interface IUserService {
     public UserProfileDTO registerUser(RegisterUserDTO registerUserDTO);
 
-    public void sendVerificationCode(UUID userID);
+    public void sendVerificationCode(String email);
 
-    public List<User> getUsers();
+    public List<UserProfileDTO> getUsers();
 
 
-    public Optional<User> getUserById(UUID userId);
+    public UserProfileDTO getUserById(UUID userId);
 
     public void deleteUserById(UUID userId);
+
     public User saveUser(User user);
 
-    String login(LoginUserDTO loginUserDTO);
+    public TokenDTO login(LoginUserDTO loginUserDTO);
+
+
+    public TokenDTO refreshToken(String refreshToken);
+
+    public void logout(LogoutDTO logoutDTO);
+
+    public void blockUser(BlockUserDTO blockUserDTO);
+
+    public void unblockUser(BlockUserDTO blockUserDTO);
 
     void deleteAll();
 
-    void verifyCode(UUID id, OTPValidationDTO otpValidationDTO);
-
-    boolean userExistsByUsername(String username);
+    void verifyCode(OTPValidationDTO otpValidationDTO);
 
     boolean userExistsById(UUID userId);
 
-    boolean userExistsByEmail(String email);
 
-    boolean isUserVerified(UUID userId);
+//    boolean isUserCredentialsValid(String email, String password);
 
-    boolean isUserVerified(String email);
-    User partialUpdateUserById(UUID userId, User user);
+    UserProfileDTO updateUserById(UUID userId, UpdateUserProfileDto updateUserProfileDto);
 }

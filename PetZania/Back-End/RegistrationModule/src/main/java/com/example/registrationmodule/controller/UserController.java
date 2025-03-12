@@ -1,21 +1,13 @@
 package com.example.registrationmodule.controller;
 
 import com.example.registrationmodule.model.dto.*;
-import com.example.registrationmodule.model.entity.EmailRequest;
-import com.example.registrationmodule.model.entity.User;
-import com.example.registrationmodule.service.IDTOConversionService;
-import com.example.registrationmodule.service.IEmailService;
 import com.example.registrationmodule.service.IUserService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
-
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -23,65 +15,66 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserController {
     private final IUserService userService;
-    private final IDTOConversionService dtoConversionService;
 
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(@RequestBody @Valid LogoutDTO logoutDTO) {
+        userService.logout(logoutDTO);
+        return ResponseEntity.ok("User logged out successfully");
+    }
+
+
+    @PostMapping("/resendOTP")
+    public ResponseEntity<String> resendOTP(@RequestBody @Valid EmailDTO emailDTO) {
+        userService.sendVerificationCode(emailDTO.getEmail());
+        return ResponseEntity.ok("A new OTP was sent");
+    }
+
+    @PostMapping("/block")
+    public ResponseEntity<String> blockUser(@RequestBody @Valid BlockUserDTO blockUserDTO) {
+        userService.blockUser(blockUserDTO);
+        return ResponseEntity.ok("User is blocked successfully");
+    }
+
+    @PostMapping("/unblock")
+    public ResponseEntity<String> unblockUser(@RequestBody @Valid BlockUserDTO blockUserDTO) {
+        userService.unblockUser(blockUserDTO);
+        return ResponseEntity.ok("User is unblocked successfully");
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<ResponseLoginDTO> login(@RequestBody @Valid LoginUserDTO loginUserDTO) {
+        TokenDTO token = userService.login(loginUserDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseLoginDTO("Successful login", token));
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<TokenDTO> refreshToken(@RequestBody RefreshTokenDTO refreshTokenDTO) {
+        return ResponseEntity.status(HttpStatus.OK).body(userService.refreshToken(refreshTokenDTO.getRefreshToken()));
+    }
 
     @PostMapping("/signup")
     public ResponseEntity<SignUpResponseDTO> signup(@RequestBody @Valid RegisterUserDTO registerUserDTO) {
-        if (userService.userExistsByUsername(registerUserDTO.getUsername())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(new SignUpResponseDTO("Username already exists", null));
-        } else if (userService.userExistsByEmail(registerUserDTO.getEmail())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(new SignUpResponseDTO("Email already exists", null));
-        } else {
-            UserProfileDTO userProfileDTO = userService.registerUser(registerUserDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(new SignUpResponseDTO("User registered successfully", userProfileDTO));
-        }
+        UserProfileDTO userProfileDTO = userService.registerUser(registerUserDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new SignUpResponseDTO("User registered successfully", userProfileDTO));
     }
 
-    @PatchMapping(path = "/user/{id}")
-    public ResponseEntity<UserProfileDTO> partialUpdateUserProfileById(@PathVariable("id") UUID userId,
-                                                                       @RequestBody UpdateUserProfileDto updateUserProfileDto) {
-
-        if (!userService.userExistsById(userId)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-
-        User user = dtoConversionService.mapToUser(updateUserProfileDto);
-        User updatedUser = userService.partialUpdateUserById(userId, user);
-        return new ResponseEntity<>(
-                dtoConversionService.mapToUserProfileDto(updatedUser),
-                HttpStatus.OK
-        );
+    @PatchMapping("/{id}")
+    public ResponseEntity<UserProfileDTO> updateUserProfile(@PathVariable("id") UUID userId,
+                                                            @RequestBody UpdateUserProfileDto updateUserProfileDto) {
+        UserProfileDTO userProfileDTO = userService.updateUserById(userId, updateUserProfileDto);
+        return ResponseEntity.ok(userProfileDTO);
     }
 
-    @PutMapping("/resendOTP/{userId}")
-    public ResponseEntity<String> resendOTP(@PathVariable UUID userId) {
-        if (userService.isUserVerified(userId)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("User already verified");
-        } else {
-            userService.sendVerificationCode(userId);
-            return ResponseEntity.ok("A new OTP was sent");
-        }
-    }
-
-    @PutMapping("/verify/{userId}")
-    public ResponseEntity<String> verifyCode(@PathVariable UUID userId, @RequestBody @Valid OTPValidationDTO otpValidationDTO) {
-        if (userService.isUserVerified(userId)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("User already verified");
-        } else {
-            userService.verifyCode(userId, otpValidationDTO);
-            return ResponseEntity.ok("OTP verification successful");
-        }
+    @PutMapping("/verify")
+    public ResponseEntity<String> verifyCode(@RequestBody @Valid OTPValidationDTO otpValidationDTO) {
+        userService.verifyCode(otpValidationDTO);
+        return ResponseEntity.ok("OTP verification successful");
     }
 
     @DeleteMapping("/delete/{userId}")
     public ResponseEntity<String> deleteUserById(@PathVariable UUID userId) {
-        if (!userService.userExistsById(userId)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User does not exist");
-        } else {
-            userService.deleteUserById(userId);
-            return ResponseEntity.ok("User deleted successfully");
-        }
+        userService.deleteUserById(userId);
+        return ResponseEntity.ok("User deleted successfully");
     }
 
     @DeleteMapping("/deleteAll")
@@ -90,34 +83,21 @@ public class UserController {
         return ResponseEntity.ok("All users deleted successfully");
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody @Valid LoginUserDTO loginUserDTO) {
-        if (!userService.userExistsByEmail(loginUserDTO.getEmail())) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Email does not exist");
-        } else if (!userService.isUserVerified(loginUserDTO.getEmail())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User is not verified");
-        } else {
-            String token = userService.login(loginUserDTO);
-            return ResponseEntity.status(HttpStatus.OK).body("User logged in successfully, User token: " + token);
-        }
-    }
-
     @GetMapping("/users")
     public ResponseEntity<List<UserProfileDTO>> getUsers() {
-        List<User> users = userService.getUsers();
+        List<UserProfileDTO> users = userService.getUsers();
         if (users.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(List.of());
+        } else {
+            return ResponseEntity.ok(users);
         }
-        List<UserProfileDTO> userProfileDTOs = users.stream().map(dtoConversionService::mapToUserProfileDto).toList();
-        return ResponseEntity.ok(userProfileDTOs);
     }
 
-    @GetMapping(path = "/user/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<UserProfileDTO> getUserById(@PathVariable("id") UUID userId) {
-        Optional<User> user = userService.getUserById(userId);
-        return user.map(userEntity -> {
-            UserProfileDTO userProfileDto = dtoConversionService.mapToUserProfileDto(userEntity);
-            return new ResponseEntity<>(userProfileDto, HttpStatus.OK);
-        }).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        UserProfileDTO user = userService.getUserById(userId);
+        return ResponseEntity.ok(user);
     }
+
+
 }

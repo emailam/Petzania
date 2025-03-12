@@ -1,9 +1,9 @@
-package com.example.registrationmodule.model.entity;
+package com.example.registrationmodule.model.dto;
 
 import lombok.Data;
 
 @Data
-public class EmailRequest {
+public class EmailRequestDTO {
 
     private String from;
     private String to;

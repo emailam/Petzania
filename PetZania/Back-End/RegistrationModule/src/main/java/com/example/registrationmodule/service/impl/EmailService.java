@@ -1,7 +1,7 @@
 package com.example.registrationmodule.service.impl;
 
 import com.example.registrationmodule.exception.EmailNotSent;
-import com.example.registrationmodule.model.entity.EmailRequest;
+import com.example.registrationmodule.model.dto.EmailRequestDTO;
 import com.example.registrationmodule.service.IEmailService;
 import com.sendgrid.Method;
 import com.sendgrid.Request;
@@ -20,7 +20,7 @@ public class EmailService implements IEmailService {
     private final SendGrid sendGrid;
 
     @Override
-    public void sendEmail(EmailRequest request) {
+    public void sendEmail(EmailRequestDTO request) {
         Email from = new Email(request.getFrom());
         Email to = new Email(request.getTo());
         Content emailContent = new Content("text/plain", request.getBody());

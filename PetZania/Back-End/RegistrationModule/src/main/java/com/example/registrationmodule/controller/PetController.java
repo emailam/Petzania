@@ -5,7 +5,6 @@ import com.example.registrationmodule.model.dto.UpdatePetDTO;
 import com.example.registrationmodule.model.dto.UpdateUserProfileDto;
 import com.example.registrationmodule.model.dto.UserProfileDTO;
 import com.example.registrationmodule.model.entity.Pet;
-import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.service.IPetService;
 import com.example.registrationmodule.service.IUserService;
 import com.example.registrationmodule.service.IDTOConversionService;
@@ -45,10 +44,9 @@ public class PetController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        User user = dtoConversionService.mapToUser(updateUserProfileDto);
-        User updatedUser = userService.partialUpdateUserById(userId, user);
+        UserProfileDTO updatedUser = userService.updateUserById(userId, updateUserProfileDto);
         return new ResponseEntity<>(
-                dtoConversionService.mapToUserProfileDto(updatedUser),
+                updatedUser,
                 HttpStatus.OK
         );
     }
