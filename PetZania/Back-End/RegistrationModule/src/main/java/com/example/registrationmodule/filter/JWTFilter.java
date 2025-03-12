@@ -1,9 +1,8 @@
 package com.example.registrationmodule.filter;
 
 import com.example.registrationmodule.exception.InvalidToken;
-import com.example.registrationmodule.exception.RefreshTokenNotValid;
 import com.example.registrationmodule.model.entity.UserPrincipal;
-import com.example.registrationmodule.repo.RevokedRefreshTokenRepository;
+import com.example.registrationmodule.repository.RevokedRefreshTokenRepository;
 import com.example.registrationmodule.service.impl.JWTService;
 import com.example.registrationmodule.service.impl.MyUserDetailsService;
 import jakarta.servlet.FilterChain;
@@ -20,7 +19,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.io.InvalidClassException;
 
 @AllArgsConstructor
 @Component

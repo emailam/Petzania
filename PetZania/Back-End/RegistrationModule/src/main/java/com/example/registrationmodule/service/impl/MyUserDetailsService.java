@@ -3,7 +3,7 @@ package com.example.registrationmodule.service.impl;
 import com.example.registrationmodule.exception.UserDoesNotExist;
 import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.model.entity.UserPrincipal;
-import com.example.registrationmodule.repo.UserRepository;
+import com.example.registrationmodule.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Primary;
