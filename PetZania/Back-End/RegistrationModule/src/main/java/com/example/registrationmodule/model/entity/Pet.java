@@ -1,5 +1,6 @@
 package com.example.registrationmodule.model.entity;
 
+import com.example.registrationmodule.model.enumeration.Gender;
 import com.example.registrationmodule.model.enumeration.PetSpecies;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -24,7 +25,7 @@ public class Pet {
 
     private String name;
     private String description;
-    private String gender;
+    private Gender gender;
     private Integer age;
     private String breed;
 

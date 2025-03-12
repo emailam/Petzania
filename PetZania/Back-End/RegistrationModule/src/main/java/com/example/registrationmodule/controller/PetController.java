@@ -29,30 +29,6 @@ public class PetController {
     private final IPetService petService;
     private final IDTOConversionService dtoConversionService;
 
-//    public UserProfileController(IUserService userService, IProfileService profileService, IDtoConversionService dtoConversionService) {
-//        this.userService = userService;
-//        this.profileService = profileService;
-//        this.dtoConversionService = dtoConversionService;
-//    }
-
-
-
-    @PatchMapping(path = "/user/{id}")
-    public ResponseEntity<UserProfileDTO> partialUpdateUserProfileById(@PathVariable("id") UUID userId,
-                                                                       @RequestBody UpdateUserProfileDto updateUserProfileDto) {
-
-        if (!userService.userExistsById(userId)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-
-        User user = dtoConversionService.mapToUser(updateUserProfileDto);
-        User updatedUser = userService.partialUpdateUserById(userId, user);
-        return new ResponseEntity<>(
-                dtoConversionService.mapToUserProfileDto(updatedUser),
-                HttpStatus.OK
-        );
-    }
-
     @PostMapping(path = "/pet")
     public ResponseEntity<PetDTO> createPet(@RequestBody PetDTO petDto) {
         UUID userId = petDto.getUserId();
