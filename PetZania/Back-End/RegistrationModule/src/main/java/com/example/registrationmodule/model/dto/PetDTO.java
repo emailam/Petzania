@@ -37,8 +37,7 @@ public class PetDTO {
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY) // Exclude from requests
     @NotNull(message = "Age is required.")
-    @Min(value = 0, message = "Age cannot be negative.")
-    private Integer age;
+    private String age;
 
     @NotBlank(message = "Breed is required.")
     private String breed;
