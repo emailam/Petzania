@@ -1,4 +1,4 @@
-package com.example.registrationmodule.repo;
+package com.example.registrationmodule.repository;
 
 import com.example.registrationmodule.model.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;

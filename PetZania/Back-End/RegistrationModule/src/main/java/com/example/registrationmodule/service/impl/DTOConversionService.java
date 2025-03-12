@@ -7,9 +7,8 @@ import com.example.registrationmodule.model.dto.UserProfileDTO;
 import com.example.registrationmodule.model.entity.Pet;
 import com.example.registrationmodule.model.entity.User;
 
-import com.example.registrationmodule.repo.UserRepository;
+import com.example.registrationmodule.repository.UserRepository;
 import com.example.registrationmodule.service.IDTOConversionService;
-import com.example.registrationmodule.service.impl.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -98,7 +97,7 @@ public class DTOConversionService implements IDTOConversionService {
     }
 
     @Override
-    public User convertToUser(RegisterUserDTO registerUserDTO) {
+    public User mapToUser(RegisterUserDTO registerUserDTO) {
         User user = new User();
         user.setUsername(registerUserDTO.getUsername());
         user.setEmail(registerUserDTO.getEmail());

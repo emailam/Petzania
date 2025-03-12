@@ -6,7 +6,7 @@ import com.example.registrationmodule.model.dto.OTPValidationDTO;
 import com.example.registrationmodule.model.dto.RegisterUserDTO;
 import com.example.registrationmodule.model.entity.EmailRequest;
 import com.example.registrationmodule.model.entity.User;
-import com.example.registrationmodule.repo.UserRepository;
+import com.example.registrationmodule.repository.UserRepository;
 import com.example.registrationmodule.service.IDTOConversionService;
 import com.example.registrationmodule.service.IEmailService;
 import com.example.registrationmodule.service.IUserService;
@@ -32,7 +32,7 @@ public class UserService implements IUserService {
     @Override
     public void registerUser(RegisterUserDTO registerUserDTO) {
         // convert to regular user.
-        User user = converter.convertToUser(registerUserDTO);
+        User user = converter.mapToUser(registerUserDTO);
 
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             throw new UsernameAlreadyExistsException("Username '" + user.getUsername() + "' already exists");
