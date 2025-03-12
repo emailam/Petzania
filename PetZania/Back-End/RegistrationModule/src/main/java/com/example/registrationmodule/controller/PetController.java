@@ -130,7 +130,7 @@ public class PetController {
     }
 
     @DeleteMapping("/pet/{id}")
-    public ResponseEntity<Void> deletePetById(@PathVariable UUID petId) {
+    public ResponseEntity<Void> deletePetById(@PathVariable(name = "id") UUID petId) {
         if (!petService.existsById(petId)) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

@@ -41,7 +41,7 @@ public class PetControllerIntegrationTests {
 
         User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/pet/user/{userId}", testUserA.getUserId())
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/{userId}", testUserA.getUserId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.username").value(testUserA.getUsername()))
@@ -65,7 +65,7 @@ public class PetControllerIntegrationTests {
     public void testGetUserById_UserNotFound_ShouldReturnNotFound() throws Exception {
         UUID nonExistentId = UUID.randomUUID();
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/pet/user/{userId}", nonExistentId)
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/{userId}", nonExistentId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
@@ -80,7 +80,7 @@ public class PetControllerIntegrationTests {
         updateDto.setProfilePictureURL("https://example.com/new-profile.jpg");
         updateDto.setPhoneNumber("123456789");
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/pet/user/{id}", testUserA.getUserId())
+        mockMvc.perform(MockMvcRequestBuilders.patch("/api/user/{id}", testUserA.getUserId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -98,7 +98,7 @@ public class PetControllerIntegrationTests {
         updateDto.setName("Updated Name");
 
         // Act & Assert
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/pet/user/{id}", nonExistentId)
+        mockMvc.perform(MockMvcRequestBuilders.patch("/api/user/{id}", nonExistentId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
@@ -112,7 +112,7 @@ public class PetControllerIntegrationTests {
         updateDto.setBio("Updated Bio Only");
 
         // Act & Assert
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/pet/user/{id}", testUser.getUserId())
+        mockMvc.perform(MockMvcRequestBuilders.patch("/api/user/{id}", testUser.getUserId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
