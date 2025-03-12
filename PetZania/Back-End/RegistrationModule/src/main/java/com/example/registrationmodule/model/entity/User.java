@@ -8,7 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -41,6 +40,7 @@ public class User {
     private String verificationCode;
     private Timestamp expirationTime;
     private boolean verified;
+    private boolean isBlocked;
 
     @ElementCollection(targetClass = UserRole.class, fetch = FetchType.EAGER)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
