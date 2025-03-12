@@ -1,14 +1,16 @@
 package com.example.registrationmodule.service.impl;
 
+import com.example.registrationmodule.model.dto.*;
+import com.example.registrationmodule.model.entity.Admin;
 import com.example.registrationmodule.model.dto.PetDTO;
 import com.example.registrationmodule.model.dto.RegisterUserDTO;
 import com.example.registrationmodule.model.dto.UpdateUserProfileDto;
-import com.example.registrationmodule.model.dto.UserProfileDTO;
-import com.example.registrationmodule.model.entity.Pet;
+import com.example.registrationmodule.model.dto.UserProfileDTO;import com.example.registrationmodule.model.entity.Pet;
 import com.example.registrationmodule.model.entity.User;
 
 import com.example.registrationmodule.repository.UserRepository;
 import com.example.registrationmodule.service.IDTOConversionService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
+@Transactional
 public class DTOConversionService implements IDTOConversionService {
 
     private final UserRepository userRepository;
@@ -57,6 +60,27 @@ public class DTOConversionService implements IDTOConversionService {
         user.setProfilePictureURL(updateUserProfileDto.getProfilePictureURL());
         user.setPhoneNumber(updateUserProfileDto.getPhoneNumber());
         return user;
+    }
+
+    @Override
+    public Admin mapToAdmin(UpdateAdminDto updateAdminDto){
+        Admin admin = new Admin();
+        admin.setUsername(updateAdminDto.getUsername());
+        //admin.setRole(updateAdminDto.getAdminRoles());
+        return admin;
+    }
+
+    @Override
+    public AdminDto mapToAdminDto(Admin admin){
+        if (admin == null) {
+            return null;
+        }
+
+        return new AdminDto(
+                admin.getAdminId(),
+                admin.getUsername(),
+                admin.getRole()
+        );
     }
 
     @Override

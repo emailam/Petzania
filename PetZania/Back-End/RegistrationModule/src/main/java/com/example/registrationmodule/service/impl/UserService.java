@@ -1,24 +1,32 @@
 package com.example.registrationmodule.service.impl;
 
 import com.example.registrationmodule.exception.*;
-import com.example.registrationmodule.model.dto.LoginUserDTO;
-import com.example.registrationmodule.model.dto.OTPValidationDTO;
-import com.example.registrationmodule.model.dto.RegisterUserDTO;
-import com.example.registrationmodule.model.entity.EmailRequest;
+import com.example.registrationmodule.model.dto.*;
+import com.example.registrationmodule.model.dto.EmailRequestDTO;
+import com.example.registrationmodule.model.entity.RevokedRefreshToken;
 import com.example.registrationmodule.model.entity.User;
+import com.example.registrationmodule.repository.UserRepository;
+import com.example.registrationmodule.repository.RevokedRefreshTokenRepository;
 import com.example.registrationmodule.repository.UserRepository;
 import com.example.registrationmodule.service.IDTOConversionService;
 import com.example.registrationmodule.service.IEmailService;
 import com.example.registrationmodule.service.IUserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -27,61 +35,151 @@ public class UserService implements IUserService {
 
     private final IDTOConversionService converter;
     private final UserRepository userRepository;
+    private final RevokedRefreshTokenRepository revokedRefreshTokenRepository;
     private final IEmailService emailService;
+    private final JWTService jwtService;
+    private final AuthenticationManager authenticationManager;
+
+    @Value("${spring.email.sender}")
+    private String emailSender;
+
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
     @Override
-    public void registerUser(RegisterUserDTO registerUserDTO) {
+    public UserProfileDTO registerUser(RegisterUserDTO registerUserDTO) {
         // convert to regular user.
         User user = converter.mapToUser(registerUserDTO);
 
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
-            throw new UsernameAlreadyExistsException("Username '" + user.getUsername() + "' already exists");
+            throw new UsernameAlreadyExists("Username '" + user.getUsername() + "' already exists");
         } else if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            throw new EmailAlreadyExistsException("Email already registered");
+            throw new EmailAlreadyExists("Email already registered");
         } else {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
             user.setVerified(false);
             userRepository.save(user);
         }
 
         // send verification code.
-        sendVerificationCode(user.getUserId());
+        sendVerificationCode(user.getEmail());
+
+        return converter.mapToUserProfileDto(user);
     }
 
     @Override
-    public List<User> getUsers() {
-        return userRepository.findAll();
+    public List<UserProfileDTO> getUsers() {
+        return userRepository.findAll().stream()
+                .map(converter::mapToUserProfileDto)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Optional<User> getUserById(UUID userId) {
-        return userRepository.findById(userId);
+    public UserProfileDTO getUserById(UUID userId) {
+        return userRepository.findById(userId)
+                .map(converter::mapToUserProfileDto)
+                .orElseThrow(() -> new UserDoesNotExist("User does not exist"));
     }
+
 
     @Override
     public void deleteUserById(UUID userId) {
         if (userRepository.findById(userId).isPresent()) {
             userRepository.deleteById(userId);
         } else {
-            throw new UserDoesNotExistException("User does not exist");
+            throw new UserDoesNotExist("User does not exist");
         }
     }
 
     @Override
     public User saveUser(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
     @Override
-    public void login(LoginUserDTO loginUserDTO) {
-        if (userRepository.findByEmailAndPassword(loginUserDTO.getEmail(), loginUserDTO.getPassword()).isEmpty()) {
-            throw new UserDoesNotExistException("Email or Password is invalid");
+    public TokenDTO login(LoginUserDTO loginUserDTO) {
+        User user = userRepository.findByEmail(loginUserDTO.getEmail()).orElseThrow(() -> new InvalidUserCredentials("Email is incorrect"));
+
+        if (!user.isVerified()) {
+            throw new UserNotVerified("User is not verified");
+        }
+        if (user.isBlocked()) {
+            throw new UserIsBlocked("User is blocked");
         }
 
-        User user = userRepository.findByEmailAndPassword(loginUserDTO.getEmail(), loginUserDTO.getPassword()).get();
-        if (!user.isVerified()) {
-            throw new UserNotVerified("User not verified");
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginUserDTO.getEmail(), loginUserDTO.getPassword()));
+        if (authentication.isAuthenticated()) {
+            return new TokenDTO(jwtService.generateAccessToken(loginUserDTO.getEmail(), "ROLE_USER"), jwtService.generateRefreshToken(loginUserDTO.getEmail(), "ROLE_USER"));
+        } else {
+            throw new InvalidUserCredentials("Email or password is incorrect");
         }
-        // user is logged in.
+    }
+
+
+    @Override
+    public TokenDTO refreshToken(String refreshToken) {
+        if (refreshToken == null) {
+            throw new RefreshTokenNotValid("There is no refresh token sent");
+        }
+        if (revokedRefreshTokenRepository.findByToken(refreshToken).isPresent()) {
+            throw new RefreshTokenNotValid("The refresh token is invalid");
+        }
+        String email = jwtService.extractEmail(refreshToken);
+        String role = jwtService.extractRole(refreshToken);
+        boolean isExpired = jwtService.isTokenExpired(refreshToken);
+
+        if (email == null || role == null || isExpired) {
+            throw new RefreshTokenNotValid("Invalid or expired refresh token");
+        }
+
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+        if (user.isBlocked()) {
+            throw new UserIsBlocked("User is blocked, sorry cannot able to generate a new token");
+        }
+
+        String newAccessToken = jwtService.generateAccessToken(email, role);
+        return new TokenDTO(newAccessToken, refreshToken);
+    }
+
+    @Override
+    public void logout(LogoutDTO logoutDTO) {
+        // get the revoked token data
+        User user = userRepository.findByEmail(logoutDTO.getEmail()).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+        String refreshToken = logoutDTO.getRefreshToken();
+        Date expirationTime = jwtService.extractExpiration(refreshToken);
+
+        if (revokedRefreshTokenRepository.findByToken(refreshToken).isPresent()) {
+            throw new UserAlreadyLoggedOut("User already logged out");
+        }
+
+        // create revoked refresh token object
+        RevokedRefreshToken revokedRefreshToken = new RevokedRefreshToken();
+        revokedRefreshToken.setUser(user);
+        revokedRefreshToken.setToken(refreshToken);
+        revokedRefreshToken.setExpirationTime(expirationTime);
+
+        // save it in the database
+        revokedRefreshTokenRepository.save(revokedRefreshToken);
+    }
+
+    @Override
+    public void blockUser(BlockUserDTO blockUserDTO) {
+        User user = userRepository.findByEmail(blockUserDTO.getEmail()).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+        if (user.isBlocked()) {
+            throw new UserAlreadyBlocked("User is blocked already");
+        } else {
+            user.setBlocked(true);
+        }
+    }
+
+    @Override
+    public void unblockUser(BlockUserDTO blockUserDTO) {
+        User user = userRepository.findByEmail(blockUserDTO.getEmail()).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+        if (user.isBlocked()) {
+            user.setBlocked(false);
+        } else {
+            throw new UserAlreadyUnblocked(("User is unblocked already"));
+        }
     }
 
     @Override
@@ -90,8 +188,8 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void verifyCode(UUID id, OTPValidationDTO otpValidationDTO) {
-        User user = userRepository.findById(id).orElseThrow(() -> new UserDoesNotExistException("User does not exist"));
+    public void verifyCode(OTPValidationDTO otpValidationDTO) {
+        User user = userRepository.findByEmail(otpValidationDTO.getEmail()).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
         if (user.isVerified()) {
             throw new UserAlreadyVerified("User already verified");
         }
@@ -112,15 +210,6 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public boolean userExistsByUsername(String username) {
-        if (userRepository.findByUsername(username).isPresent()) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    @Override
     public boolean userExistsById(UUID userId) {
         if (userRepository.findById(userId).isPresent()) {
             return true;
@@ -130,49 +219,37 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public boolean userExistsByEmail(String email) {
-        if (userRepository.findByEmail(email).isPresent()) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    @Override
-    public boolean isUserVerified(UUID userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserDoesNotExistException("User does not exist"));
-        return user.isVerified();
-    }
-
-
-    @Override
-    public void sendVerificationCode(UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserDoesNotExistException("User does not exist"));
+    public void sendVerificationCode(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserDoesNotExist("User does not exist"));
 
         if (user.isVerified()) {
             throw new UserAlreadyVerified("User already verified");
         }
+        if (user.isBlocked()) {
+            throw new UserIsBlocked("User is blocked");
+        }
 
+        System.out.println("User email is: " + email);
         String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
         user.setVerificationCode(otp);
-        user.setExpirationTime(Timestamp.valueOf(LocalDateTime.now().plusMinutes(10)));
+        user.setExpirationTime(Timestamp.valueOf(LocalDateTime.now().plusMinutes(3)));
 
-        EmailRequest emailRequest = new EmailRequest();
-        emailRequest.setTo(user.getEmail());
-        emailRequest.setFrom("mohamedkhaledfcai@gmail.com");
-        emailRequest.setSubject("Your Verification Code");
-        emailRequest.setBody(
+        EmailRequestDTO emailRequestDTO = new EmailRequestDTO();
+        emailRequestDTO.setTo(user.getEmail());
+        emailRequestDTO.setFrom(emailSender);
+        emailRequestDTO.setSubject("Your Verification Code");
+        emailRequestDTO.setBody(
                 "Dear " + user.getUsername() + ",\n\n" +
                         "To complete your verification, please use the following One-Time Password (OTP):\n\n" +
                         "🔑 Your OTP: " + otp + "\n\n" +
-                        "This code is valid for **10 minutes**. If you did not request this, please ignore this email.\n\n" +
+                        "This code is valid for **3 minutes**. If you did not request this, please ignore this email.\n\n" +
                         "Best regards,\n" +
                         "Petzania Team."
         );
 
         // send the email.
-        emailService.sendEmail(emailRequest);
+        emailService.sendEmail(emailRequestDTO);
 
         // save the user in the database.
         userRepository.save(user);
@@ -180,13 +257,19 @@ public class UserService implements IUserService {
 
 
     @Override
-    public User partialUpdateUserById(UUID userId, User updatedUser) {
+    public UserProfileDTO updateUserById(UUID userId, UpdateUserProfileDto updateUserProfileDto) {
+        if (!userRepository.existsById(userId)) {
+            throw new UserDoesNotExist("User does not exist");
+        }
+
         return userRepository.findById(userId).map(existingUser -> {
-            Optional.ofNullable(updatedUser.getName()).ifPresent(existingUser::setName);
-            Optional.ofNullable(updatedUser.getBio()).ifPresent(existingUser::setBio);
-            Optional.ofNullable(updatedUser.getProfilePictureURL()).ifPresent(existingUser::setProfilePictureURL);
-            Optional.ofNullable(updatedUser.getPhoneNumber()).ifPresent(existingUser::setPhoneNumber);
-            return userRepository.save(existingUser);
-        }).orElseThrow(() -> new RuntimeException("User does not exist"));
+            Optional.ofNullable(updateUserProfileDto.getName()).ifPresent(existingUser::setName);
+            Optional.ofNullable(updateUserProfileDto.getBio()).ifPresent(existingUser::setBio);
+            Optional.ofNullable(updateUserProfileDto.getProfilePictureURL()).ifPresent(existingUser::setProfilePictureURL);
+            Optional.ofNullable(updateUserProfileDto.getPhoneNumber()).ifPresent(existingUser::setPhoneNumber);
+
+            User updatedUser = userRepository.save(existingUser);
+            return converter.mapToUserProfileDto(updatedUser);
+        }).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
     }
 }

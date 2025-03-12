@@ -5,7 +5,6 @@ import com.example.registrationmodule.model.dto.UpdatePetDTO;
 import com.example.registrationmodule.model.dto.UpdateUserProfileDto;
 import com.example.registrationmodule.model.dto.UserProfileDTO;
 import com.example.registrationmodule.model.entity.Pet;
-import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.service.IPetService;
 import com.example.registrationmodule.service.IUserService;
 import com.example.registrationmodule.service.IDTOConversionService;
