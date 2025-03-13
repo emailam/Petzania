@@ -22,6 +22,33 @@ spring:
       enabled: true
       path: /h2-console
 
+  security:
+    user:
+      name: admin
+      password: 1234
+
+  jwt:
+    secret-key:
+      4ioX3ogCr4GAZ9gB99txf1LyhqVOmTJ8RsL9hyJzZXQ=
+
+  access:
+    token:
+      expiration:
+        300000
+
+  refresh:
+    token:
+      expiration:
+        86400000
+
+  sendgrid:
+    key:
+      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
+
+  email:
+    sender:
+      petzaniasystem@gmail.com
+
 server:
   error:
     include-message: always

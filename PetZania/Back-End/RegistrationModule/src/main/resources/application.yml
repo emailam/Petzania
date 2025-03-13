@@ -43,11 +43,6 @@ spring:
     sender:
       petzaniasystem@gmail.com
 
-
-
-
-
-
 server:
   error:
     include-message: always
