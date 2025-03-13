@@ -14,6 +14,10 @@ import com.example.registrationmodule.service.IUserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -67,10 +71,12 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public List<UserProfileDTO> getUsers() {
-        return userRepository.findAll().stream()
-                .map(converter::mapToUserProfileDto)
-                .collect(Collectors.toList());
+    public Page<UserProfileDTO> getUsers(int page, int size, String sortBy, String direction) {
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return userRepository.findAll(pageable)
+                .map(converter::mapToUserProfileDto);
     }
 
     @Override
