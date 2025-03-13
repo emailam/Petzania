@@ -19,8 +19,16 @@ import java.util.UUID;
 public class Admin {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "admin_io", nullable = false)
     private UUID adminId;
+
+    @Column(name = "username", nullable = false, unique = true)
     private String username;
+
+    @Column(name = "password", nullable = false)
     private String password;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
     private AdminRole role;
 }
