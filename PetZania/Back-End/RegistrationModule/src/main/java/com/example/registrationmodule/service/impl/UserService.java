@@ -7,10 +7,11 @@ import com.example.registrationmodule.model.entity.RevokedRefreshToken;
 import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.repository.UserRepository;
 import com.example.registrationmodule.repository.RevokedRefreshTokenRepository;
-import com.example.registrationmodule.repository.UserRepository;
 import com.example.registrationmodule.service.IDTOConversionService;
 import com.example.registrationmodule.service.IEmailService;
 import com.example.registrationmodule.service.IUserService;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,10 +28,8 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -50,6 +49,7 @@ public class UserService implements IUserService {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
     @Override
+    @RateLimiter(name = "registerRateLimiter", fallbackMethod = "registerFallback")
     public UserProfileDTO registerUser(RegisterUserDTO registerUserDTO) {
         // convert to regular user.
         User user = converter.mapToUser(registerUserDTO);
@@ -68,6 +68,13 @@ public class UserService implements IUserService {
         sendVerificationCode(user.getEmail());
 
         return converter.mapToUserProfileDto(user);
+    }
+
+    public UserProfileDTO registerFallback(RegisterUserDTO registerUserDTO, Throwable t) {
+        if (t instanceof RequestNotPermitted) {
+            throw new RuntimeException("Too many registration attempts. Try again later.");
+        }
+        throw new RuntimeException("An unexpected error occurred: " + t.getMessage());
     }
 
     @Override
@@ -103,6 +110,7 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @RateLimiter(name = "loginRateLimiter", fallbackMethod = "loginFallback")
     public TokenDTO login(LoginUserDTO loginUserDTO) {
         User user = userRepository.findByEmail(loginUserDTO.getEmail()).orElseThrow(() -> new InvalidUserCredentials("Email is incorrect"));
 
@@ -121,8 +129,15 @@ public class UserService implements IUserService {
         }
     }
 
+    public TokenDTO loginFallback(LoginUserDTO loginUserDTO, Throwable t) {
+        if (t instanceof RequestNotPermitted) {
+            throw new RuntimeException("Too many login attempts. Try again later.");
+        }
+        throw new RuntimeException("An unexpected error occurred: " + t.getMessage(), t);
+    }
 
     @Override
+    @RateLimiter(name = "refreshTokenRateLimiter", fallbackMethod = "refreshFallback")
     public TokenDTO refreshToken(String refreshToken) {
         if (refreshToken == null) {
             throw new RefreshTokenNotValid("There is no refresh token sent");
@@ -147,7 +162,16 @@ public class UserService implements IUserService {
         return new TokenDTO(newAccessToken, refreshToken);
     }
 
+    public TokenDTO refreshFallback(String refreshToken, Throwable t) {
+        if (t instanceof RequestNotPermitted) {
+            throw new RuntimeException("Too many refresh requests. Try again later.");
+        }
+        throw new RuntimeException("An unexpected error occurred: " + t.getMessage(), t);
+    }
+
+
     @Override
+    @RateLimiter(name = "logoutRateLimiter", fallbackMethod = "logoutFallback")
     public void logout(LogoutDTO logoutDTO) {
         // get the revoked token data
         User user = userRepository.findByEmail(logoutDTO.getEmail()).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
@@ -166,6 +190,13 @@ public class UserService implements IUserService {
 
         // save it in the database
         revokedRefreshTokenRepository.save(revokedRefreshToken);
+    }
+
+    public void logoutFallback(LogoutDTO logoutDTO, Throwable t) {
+        if (t instanceof RequestNotPermitted) {
+            throw new RuntimeException("Too many logout requests. Try again later.");
+        }
+        throw new RuntimeException("An unexpected error occurred: " + t.getMessage(), t);
     }
 
     @Override
@@ -194,6 +225,7 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @RateLimiter(name = "verifyOtpRateLimiter", fallbackMethod = "otpFallback")
     public void verifyCode(OTPValidationDTO otpValidationDTO) {
         User user = userRepository.findByEmail(otpValidationDTO.getEmail()).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
         if (user.isVerified()) {
@@ -215,6 +247,14 @@ public class UserService implements IUserService {
         userRepository.save(user);
     }
 
+    public void otpFallback(OTPValidationDTO otpValidationDTO, Throwable t) {
+        if (t instanceof RequestNotPermitted) {
+            throw new RuntimeException("Too many OTP attempts. Try again later.");
+        }
+        throw new RuntimeException("An unexpected error occurred: " + t.getMessage(), t);
+    }
+
+
     @Override
     public boolean userExistsById(UUID userId) {
         if (userRepository.findById(userId).isPresent()) {
@@ -225,6 +265,7 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @RateLimiter(name = "sendOtpRateLimiter", fallbackMethod = "sendOtpFallback")
     public void sendVerificationCode(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserDoesNotExist("User does not exist"));
@@ -261,6 +302,12 @@ public class UserService implements IUserService {
         userRepository.save(user);
     }
 
+    public void sendOtpFallback(String email, Throwable t) {
+        if (t instanceof RequestNotPermitted) {
+            throw new RuntimeException("Too many OTP requests. Try again later.");
+        }
+        throw new RuntimeException("An unexpected error occurred: " + t.getMessage(), t);
+    }
 
     @Override
     public UserProfileDTO updateUserById(UUID userId, UpdateUserProfileDto updateUserProfileDto) {
