@@ -3,7 +3,6 @@ package com.example.registrationmodule.model.entity;
 import com.example.registrationmodule.model.enumeration.Gender;
 import com.example.registrationmodule.model.enumeration.PetSpecies;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,7 +17,15 @@ import java.util.UUID;
 @Builder
 @Data
 @Entity
-@Table(name = "pets")
+@Table(
+        name = "pets",
+        indexes = {
+                @Index(name = "idx_pet_user", columnList = "user_id"),
+                @Index(name = "idx_pet_species", columnList = "species"),
+                @Index(name = "idx_pet_breed", columnList = "breed"),
+                @Index(name = "idx_pet_gender", columnList = "gender")
+        }
+)
 public class Pet {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -43,7 +50,7 @@ public class Pet {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "species", nullable = false)
-    private PetSpecies species; // cat or dog,..
+    private PetSpecies species;
 
     @ElementCollection
     @CollectionTable(name = "pets_vaccines_urls", joinColumns = @JoinColumn(name = "pet_id"))
@@ -59,3 +66,4 @@ public class Pet {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 }
+

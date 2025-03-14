@@ -15,11 +15,17 @@ import java.util.UUID;
 @Builder
 @Data
 @Entity
-@Table(name = "admins")
+@Table(
+        name = "admins",
+        indexes = {
+                @Index(name = "idx_admin_username", columnList = "username"),
+                @Index(name = "idx_admin_role", columnList = "role")
+        }
+)
 public class Admin {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "admin_io", nullable = false)
+    @Column(name = "admin_id", nullable = false)
     private UUID adminId;
 
     @Column(name = "username", nullable = false, unique = true)
