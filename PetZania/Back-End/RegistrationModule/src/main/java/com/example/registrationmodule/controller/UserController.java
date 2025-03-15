@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -69,6 +70,12 @@ public class UserController {
     public ResponseEntity<String> verifyCode(@RequestBody @Valid OTPValidationDTO otpValidationDTO) {
         userService.verifyCode(otpValidationDTO);
         return ResponseEntity.ok("OTP verification successful");
+    }
+
+    @PutMapping("/changePassword")
+    public ResponseEntity<String> changePassword(@RequestBody ChangePasswordDTO changePasswordDTO) {
+        userService.changePassword(changePasswordDTO);
+        return ResponseEntity.ok("Password changed successfully");
     }
 
     @DeleteMapping("/delete/{userId}")

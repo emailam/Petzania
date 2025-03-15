@@ -182,6 +182,12 @@ public class UserService implements IUserService {
     }
 
     @Override
+    public void changePassword(ChangePasswordDTO changePasswordDTO) {
+        User user = userRepository.findByEmail(changePasswordDTO.getEmail()).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+        user.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
+    }
+
+    @Override
     public void deleteAll() {
         userRepository.deleteAll();
     }

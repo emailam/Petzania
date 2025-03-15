@@ -3,6 +3,7 @@ package com.example.registrationmodule.service;
 import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.entity.User;
 import jakarta.transaction.Transactional;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -31,6 +32,8 @@ public interface IUserService {
     public void blockUser(BlockUserDTO blockUserDTO);
 
     public void unblockUser(BlockUserDTO blockUserDTO);
+
+    public void changePassword(ChangePasswordDTO changePasswordDTO);
 
     void deleteAll();
 
