@@ -20,11 +20,12 @@ public class RedisCacheConfig {
 
         RedisCacheConfiguration refreshTokenConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofDays(1)) // Refresh token cache expiration (1 day)
-                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
-                .disableCachingNullValues();
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()))
+                .disableCachingNullValues()
+                .disableKeyPrefix();
 
         return RedisCacheManager.builder(redisConnectionFactory)
-                .withCacheConfiguration("refreshTokens", refreshTokenConfig)
+                .withCacheConfiguration("revokedTokens", refreshTokenConfig)
                 .build();
     }
 }

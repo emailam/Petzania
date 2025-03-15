@@ -3,6 +3,8 @@ package com.example.registrationmodule.service;
 import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.entity.User;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.Email;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -17,7 +19,9 @@ public interface IUserService {
 
     public UserProfileDTO getUserById(UUID userId);
 
-    public void deleteUserById(UUID userId);
+    public void deleteUser(EmailDTO emailDTO);
+
+    public void sendDeleteConfirmation(User user);
 
     public User saveUser(User user);
 

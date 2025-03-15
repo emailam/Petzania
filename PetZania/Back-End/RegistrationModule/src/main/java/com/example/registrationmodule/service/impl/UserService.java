@@ -34,7 +34,7 @@ public class UserService implements IUserService {
 
     private final IDTOConversionService converter;
     private final UserRepository userRepository;
-    private final RevokedRefreshTokenRepository revokedRefreshTokenRepository;
+    private final RefreshTokenService refreshTokenService;
     private final IEmailService emailService;
     private final JWTService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -81,12 +81,34 @@ public class UserService implements IUserService {
 
 
     @Override
-    public void deleteUserById(UUID userId) {
-        if (userRepository.findById(userId).isPresent()) {
-            userRepository.deleteById(userId);
-        } else {
-            throw new UserDoesNotExist("User does not exist");
-        }
+    public void deleteUser(EmailDTO emailDTO) {
+        System.out.println(emailDTO.getEmail());
+        User user = userRepository.findByEmail(emailDTO.getEmail()).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+
+        // Send delete email
+        sendDeleteConfirmation(user);
+
+        // Delete the user
+        userRepository.deleteByEmail(emailDTO.getEmail());
+    }
+
+    @Override
+    public void sendDeleteConfirmation(User user) {
+        EmailRequestDTO emailRequestDTO = new EmailRequestDTO();
+        emailRequestDTO.setTo(user.getEmail());
+        emailRequestDTO.setFrom(emailSender);
+        emailRequestDTO.setSubject("Account Deletion Confirmation");
+        emailRequestDTO.setBody(
+                "Dear " + user.getUsername() + ",\n\n" +
+                        "We regret to inform you that your account has been deleted from our system.\n\n" +
+                        "If this was a mistake or you have any questions, please contact our support team.\n\n" +
+                        "Best regards,\n" +
+                        "Petzania Team."
+        );
+
+        // send the email
+        emailService.sendEmail(emailRequestDTO);
+
     }
 
     @Override
@@ -120,7 +142,7 @@ public class UserService implements IUserService {
         if (refreshToken == null) {
             throw new RefreshTokenNotValid("There is no refresh token sent");
         }
-        if (revokedRefreshTokenRepository.findByToken(refreshToken).isPresent()) {
+        if (refreshTokenService.isTokenRevoked(refreshToken)) {
             throw new RefreshTokenNotValid("The refresh token is invalid");
         }
         String email = jwtService.extractEmail(refreshToken);
@@ -144,21 +166,12 @@ public class UserService implements IUserService {
     public void logout(LogoutDTO logoutDTO) {
         // get the revoked token data
         User user = userRepository.findByEmail(logoutDTO.getEmail()).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
-        String refreshToken = logoutDTO.getRefreshToken();
-        Date expirationTime = jwtService.extractExpiration(refreshToken);
 
-        if (revokedRefreshTokenRepository.findByToken(refreshToken).isPresent()) {
+        if (refreshTokenService.isTokenRevoked(logoutDTO.getRefreshToken())) {
             throw new UserAlreadyLoggedOut("User already logged out");
         }
-
-        // create revoked refresh token object
-        RevokedRefreshToken revokedRefreshToken = new RevokedRefreshToken();
-        revokedRefreshToken.setUser(user);
-        revokedRefreshToken.setToken(refreshToken);
-        revokedRefreshToken.setExpirationTime(expirationTime);
-
         // save it in the database
-        revokedRefreshTokenRepository.save(revokedRefreshToken);
+        refreshTokenService.saveToken(logoutDTO.getRefreshToken(), user);
     }
 
     @Override
