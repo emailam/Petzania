@@ -50,10 +50,11 @@ server:
 
 resilience4j.ratelimiter:
   instances:
+    ### User Service Limiters
     loginRateLimiter:
       limitForPeriod: 10  # Up to 10 login attempts
       limitRefreshPeriod: 5m  # Reset after 5 minutes
-      timeoutDuration: 0  # No wait time
+      timeoutDuration: 0  # No wait time (Default is 5 sec)
 
     sendOtpRateLimiter:
       limitForPeriod: 5
@@ -74,4 +75,33 @@ resilience4j.ratelimiter:
     registerRateLimiter:
       limitForPeriod: 10
       limitRefreshPeriod: 5m
+
+    ### Pet Service Limiters
+    savePetRateLimiter:
+      limitForPeriod: 5
+      limitRefreshPeriod: 2m
+
+    updatePetRateLimiter:
+      limitForPeriod: 10
+      limitRefreshPeriod: 3m
+
+    deletePetRateLimiter:
+      limitForPeriod: 10
+      limitRefreshPeriod: 3m
+
+    ### Admin Service Limiters
+    updateAdminRateLimiter:
+      limitForPeriod: 5
+      limitRefreshPeriod: 1m
+      timeoutDuration: 0
+
+    saveAdminRateLimiter:
+      limitForPeriod: 3
+      limitRefreshPeriod: 2m
+      timeoutDuration: 0
+
+    deleteAdminRateLimiter:
+      limitForPeriod: 3
+      limitRefreshPeriod: 2m
+      timeoutDuration: 0
 

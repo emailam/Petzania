@@ -70,11 +70,8 @@ public class UserService implements IUserService {
         return converter.mapToUserProfileDto(user);
     }
 
-    public UserProfileDTO registerFallback(RegisterUserDTO registerUserDTO, Throwable t) {
-        if (t instanceof RequestNotPermitted) {
-            throw new RuntimeException("Too many registration attempts. Try again later.");
-        }
-        throw new RuntimeException("An unexpected error occurred: " + t.getMessage());
+    public UserProfileDTO registerFallback(RegisterUserDTO registerUserDTO, RequestNotPermitted t) {
+        throw new RuntimeException("Too many registration attempts. Try again later.");
     }
 
     @Override
@@ -129,11 +126,8 @@ public class UserService implements IUserService {
         }
     }
 
-    public TokenDTO loginFallback(LoginUserDTO loginUserDTO, Throwable t) {
-        if (t instanceof RequestNotPermitted) {
-            throw new RuntimeException("Too many login attempts. Try again later.");
-        }
-        throw new RuntimeException("An unexpected error occurred: " + t.getMessage(), t);
+    public TokenDTO loginFallback(LoginUserDTO loginUserDTO, RequestNotPermitted t) {
+        throw new RuntimeException("Too many login attempts. Try again later.");
     }
 
     @Override
@@ -162,11 +156,8 @@ public class UserService implements IUserService {
         return new TokenDTO(newAccessToken, refreshToken);
     }
 
-    public TokenDTO refreshFallback(String refreshToken, Throwable t) {
-        if (t instanceof RequestNotPermitted) {
-            throw new RuntimeException("Too many refresh requests. Try again later.");
-        }
-        throw new RuntimeException("An unexpected error occurred: " + t.getMessage(), t);
+    public TokenDTO refreshFallback(String refreshToken, RequestNotPermitted t) {
+        throw new RuntimeException("Too many refresh requests. Try again later.");
     }
 
 
@@ -192,11 +183,8 @@ public class UserService implements IUserService {
         revokedRefreshTokenRepository.save(revokedRefreshToken);
     }
 
-    public void logoutFallback(LogoutDTO logoutDTO, Throwable t) {
-        if (t instanceof RequestNotPermitted) {
-            throw new RuntimeException("Too many logout requests. Try again later.");
-        }
-        throw new RuntimeException("An unexpected error occurred: " + t.getMessage(), t);
+    public void logoutFallback(LogoutDTO logoutDTO, RequestNotPermitted t) {
+        throw new RuntimeException("Too many logout requests. Try again later.");
     }
 
     @Override
@@ -247,13 +235,9 @@ public class UserService implements IUserService {
         userRepository.save(user);
     }
 
-    public void otpFallback(OTPValidationDTO otpValidationDTO, Throwable t) {
-        if (t instanceof RequestNotPermitted) {
-            throw new RuntimeException("Too many OTP attempts. Try again later.");
-        }
-        throw new RuntimeException("An unexpected error occurred: " + t.getMessage(), t);
+    public void otpFallback(OTPValidationDTO otpValidationDTO, RequestNotPermitted t) {
+        throw new RuntimeException("Too many OTP attempts. Try again later.");
     }
-
 
     @Override
     public boolean userExistsById(UUID userId) {
@@ -302,11 +286,8 @@ public class UserService implements IUserService {
         userRepository.save(user);
     }
 
-    public void sendOtpFallback(String email, Throwable t) {
-        if (t instanceof RequestNotPermitted) {
-            throw new RuntimeException("Too many OTP requests. Try again later.");
-        }
-        throw new RuntimeException("An unexpected error occurred: " + t.getMessage(), t);
+    public void sendOtpFallback(String email, RequestNotPermitted t) {
+        throw new RuntimeException("Too many OTP requests. Try again later.");
     }
 
     @Override
