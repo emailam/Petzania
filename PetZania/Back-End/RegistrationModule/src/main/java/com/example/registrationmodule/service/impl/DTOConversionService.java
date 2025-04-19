@@ -1,15 +1,16 @@
 package com.example.registrationmodule.service.impl;
 
+import com.example.registrationmodule.model.dto.*;
+import com.example.registrationmodule.model.entity.Admin;
 import com.example.registrationmodule.model.dto.PetDTO;
 import com.example.registrationmodule.model.dto.RegisterUserDTO;
 import com.example.registrationmodule.model.dto.UpdateUserProfileDto;
-import com.example.registrationmodule.model.dto.UserProfileDTO;
-import com.example.registrationmodule.model.entity.Pet;
+import com.example.registrationmodule.model.dto.UserProfileDTO;import com.example.registrationmodule.model.entity.Pet;
 import com.example.registrationmodule.model.entity.User;
 
-import com.example.registrationmodule.repo.UserRepository;
+import com.example.registrationmodule.repository.UserRepository;
 import com.example.registrationmodule.service.IDTOConversionService;
-import com.example.registrationmodule.service.impl.UserService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
+@Transactional
 public class DTOConversionService implements IDTOConversionService {
 
     private final UserRepository userRepository;
@@ -33,6 +35,7 @@ public class DTOConversionService implements IDTOConversionService {
                 user.getUsername(),
                 user.getName(),
                 user.getBio(),
+                user.getEmail(),
                 user.getProfilePictureURL(),
                 user.getPhoneNumber(),
                 user.getUserRoles() != null ? user.getUserRoles() : new ArrayList<>(),
@@ -59,10 +62,31 @@ public class DTOConversionService implements IDTOConversionService {
     }
 
     @Override
-    public PetDTO mapToPetDto(Pet pet) {
-        if (pet == null) {
+    public Admin mapToAdmin(UpdateAdminDto updateAdminDto){
+        Admin admin = new Admin();
+        admin.setUsername(updateAdminDto.getUsername());
+        //admin.setRole(updateAdminDto.getAdminRoles());
+        return admin;
+    }
+
+    @Override
+    public AdminDto mapToAdminDto(Admin admin){
+        if (admin == null) {
             return null;
         }
+
+        return new AdminDto(
+                admin.getAdminId(),
+                admin.getUsername(),
+                admin.getRole()
+        );
+    }
+
+    @Override
+    public PetDTO mapToPetDto(Pet pet) {
+    if (pet == null) {
+                return null;
+            }
         return new PetDTO(
                 pet.getPetId(),
                 pet.getName(),

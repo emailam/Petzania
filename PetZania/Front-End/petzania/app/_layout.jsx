@@ -44,6 +44,8 @@ export default function RootLayout() {
               <Stack.Screen name="index" options={{ headerShown: false }} />
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="RegisterModule/Onboarding" options={{ headerShown: false }} />
+              <Stack.Screen name="RegisterModule/RegisterScreen" options={{ headerShown: false }} />
+              <Stack.Screen name="RegisterModule/LoginScreen" options={{ headerShown: false }} />
               <Stack.Screen
                 name="RegisterModule/AddPet"
                 options={{

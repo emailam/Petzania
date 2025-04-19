@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Petzania.iml" filepath="$PROJECT_DIR$/.idea/Petzania.iml" />
-      <module fileurl="file://$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/RegistrationModule.iml" filepath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/RegistrationModule.iml" />
     </modules>
   </component>
 </project>

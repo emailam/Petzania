@@ -18,6 +18,7 @@ public class UserProfileDTO {
     private String username;
     private String name;
     private String bio;
+    private String email;
     private String profilePictureURL;
     private String phoneNumber;
     private List<UserRole> userRoles;
