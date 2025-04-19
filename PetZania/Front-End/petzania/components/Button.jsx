@@ -30,6 +30,6 @@ const styles = StyleSheet.create({
   },
   text: {
     color: "#ffffff",
-    fontWeight: "bold",
+    fontFamily: 'Inter-Bold'
   },
 });
