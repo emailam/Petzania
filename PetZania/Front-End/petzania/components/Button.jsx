@@ -1,35 +1,32 @@
 import React from "react";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, StyleSheet, Text  } from "react-native";
 
-export default function Button({ title, borderRadius, width, fontSize, onPress }) {
-  const buttonStyle = React.useMemo(
-    () => [styles.container, { borderRadius, width }],
-    [borderRadius, width]
-  );
-  const textStyle = React.useMemo(
-    () => [styles.text, { fontSize }],
-    [fontSize]
-  );
+export default function Button({ title ,onPress, disabled }) {
+  
 
   return (
-    <Pressable onPress={onPress} style={buttonStyle}>
+    <Pressable onPress={onPress} style={styles.button} disabled={disabled}>
       {React.isValidElement(title) ? (
         title
       ) : (
-        <Text style={textStyle}>{title}</Text>
+        <Text style={styles.text}>{title}</Text>
       )}
     </Pressable>
+
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  button: {
     backgroundColor: "#9188E5",
-    padding: 10,
-    alignItems:'center'
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 12,    
   },
   text: {
     color: "#ffffff",
     fontWeight: "bold",
+    fontSize: 20,
   },
 });
