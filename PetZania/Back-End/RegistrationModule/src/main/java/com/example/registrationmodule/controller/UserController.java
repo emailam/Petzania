@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -71,18 +72,17 @@ public class UserController {
         return ResponseEntity.ok("OTP verification successful");
     }
 
-    @DeleteMapping("/delete/{userId}")
-    public ResponseEntity<String> deleteUserById(@PathVariable UUID userId) {
-        userService.deleteUserById(userId);
-        return ResponseEntity.ok("User deleted successfully");
-    }
-
     @DeleteMapping("/deleteAll")
     public ResponseEntity<String> deleteAllUsers() {
         userService.deleteAll();
         return ResponseEntity.ok("All users deleted successfully");
     }
 
+    @DeleteMapping("/deactivateUser")
+    public ResponseEntity<String> deleteUser(@RequestBody EmailDTO emailDTO){
+        userService.deleteUser(emailDTO);
+        return ResponseEntity.ok("User deleted successfully");
+    }
     @GetMapping("/users")
     public ResponseEntity<List<UserProfileDTO>> getUsers() {
         List<UserProfileDTO> users = userService.getUsers();
