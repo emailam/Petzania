@@ -33,10 +33,10 @@ public class SecurityConfig {
 
         // make every request needs an authorization.
         http.authorizeHttpRequests(request ->
-                request.requestMatchers("/api/user/auth/signup", "/api/user/auth/login",
-                                "/api/user/auth/refresh-token", "/api/user/auth/verify", "/api/user/auth/resendOTP")
+                request.requestMatchers("/api/user/auth/signup", "/api/user/auth/sendResetPasswordOTP", "/api/user/auth/verifyResetOTP", "/api/user/auth/login",
+                                "/api/user/auth/refresh-token", "/api/user/auth/verify", "/api/user/auth/resendOTP", "/api/user/auth/resetPassword")
                         .permitAll()
-                .requestMatchers("/api/user/auth/**").hasRole("USER").anyRequest().authenticated());
+                        .requestMatchers("/api/user/auth/**").hasRole("USER").anyRequest().authenticated());
 
 
         // Enable the form login.

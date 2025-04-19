@@ -1,10 +1,15 @@
 package com.example.registrationmodule.controller;
 
 import com.example.registrationmodule.model.dto.*;
+import com.example.registrationmodule.model.entity.UserPrincipal;
 import com.example.registrationmodule.service.IUserService;
+import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
@@ -78,9 +83,27 @@ public class UserController {
         return ResponseEntity.ok("Password changed successfully");
     }
 
-    @DeleteMapping("/delete/{userId}")
-    public ResponseEntity<String> deleteUserById(@PathVariable UUID userId) {
-        userService.deleteUserById(userId);
+    @PutMapping("/sendResetPasswordOTP")
+    public ResponseEntity<String> sendResetOTP(@RequestBody EmailDTO emailDTO) {
+        userService.sendResetPasswordOTP(emailDTO);
+        return ResponseEntity.ok("OTP sent successfully");
+    }
+
+    @PutMapping("/verifyResetOTP")
+    public ResponseEntity<String> verifyResetOTP(@RequestBody OTPValidationDTO otpValidationDTO) {
+        userService.verifyResetOTP(otpValidationDTO.getEmail(), otpValidationDTO.getOtp());
+        return ResponseEntity.ok("OTP verification successful");
+    }
+
+    @PutMapping("/resetPassword")
+    public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordDTO resetPasswordDTO) {
+        userService.resetPassword(resetPasswordDTO.getEmail(), resetPasswordDTO.getOtp(), resetPasswordDTO.getPassword());
+        return ResponseEntity.ok("Password changed successfully");
+    }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<String> deleteUser(@Valid @RequestBody EmailDTO emailDTO) {
+        userService.deleteUser(emailDTO);
         return ResponseEntity.ok("User deleted successfully");
     }
 
@@ -92,6 +115,10 @@ public class UserController {
 
     @GetMapping("/users")
     public ResponseEntity<List<UserProfileDTO>> getUsers() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserPrincipal user = (UserPrincipal) authentication.getPrincipal();
+        String email = user.getEmail();
+        System.out.println("Email is " + email);
         List<UserProfileDTO> users = userService.getUsers();
         if (users.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(List.of());

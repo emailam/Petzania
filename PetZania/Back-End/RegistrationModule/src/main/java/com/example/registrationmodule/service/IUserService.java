@@ -13,12 +13,20 @@ public interface IUserService {
 
     public void sendVerificationCode(String email);
 
+    public void sendDeactivationMessage(String email);
+
     public List<UserProfileDTO> getUsers();
 
 
     public UserProfileDTO getUserById(UUID userId);
 
-    public void deleteUserById(UUID userId);
+    public void deleteUser(EmailDTO emailDTO);
+
+    public void sendResetPasswordOTP(EmailDTO emailDTO);
+
+    public void verifyResetOTP(String email, String otp);
+
+    public void resetPassword(String email, String otp, String newPassword);
 
     public User saveUser(User user);
 

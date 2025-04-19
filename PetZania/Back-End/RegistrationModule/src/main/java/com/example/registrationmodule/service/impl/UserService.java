@@ -21,10 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -81,9 +78,10 @@ public class UserService implements IUserService {
 
 
     @Override
-    public void deleteUserById(UUID userId) {
-        if (userRepository.findById(userId).isPresent()) {
-            userRepository.deleteById(userId);
+    public void deleteUser(EmailDTO emailDTO) {
+        if (userRepository.findByEmail(emailDTO.getEmail()).isPresent()) {
+            sendDeactivationMessage(emailDTO.getEmail());
+            userRepository.deleteUserByEmail(emailDTO.getEmail());
         } else {
             throw new UserDoesNotExist("User does not exist");
         }
@@ -139,6 +137,67 @@ public class UserService implements IUserService {
         String newAccessToken = jwtService.generateAccessToken(email, role);
         return new TokenDTO(newAccessToken, refreshToken);
     }
+
+    @Override
+    public void sendResetPasswordOTP(EmailDTO emailDTO) {
+        User user = userRepository.findByEmail(emailDTO.getEmail()).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+
+        if (user.isBlocked()) {
+            throw new UserIsBlocked("User is blocked");
+        }
+
+        String otp = String.format("%06d", new Random().nextInt(1000000));
+        user.setResetCode(otp);
+        user.setResetCodeExpirationTime(Timestamp.valueOf(LocalDateTime.now().plusMinutes(10)));
+
+        EmailRequestDTO emailRequestDTO = new EmailRequestDTO();
+        emailRequestDTO.setTo(user.getEmail());
+        emailRequestDTO.setFrom(emailSender);
+        emailRequestDTO.setSubject("Reset Password OTP");
+        emailRequestDTO.setBody(
+                "Dear " + user.getUsername() + ",\n\n" +
+                        "To reset your password, please use the following One-Time Password (OTP):\n\n" +
+                        "🔐 Your OTP: " + otp + "\n\n" +
+                        "This code is valid for 10 minutes.\n\n" +
+                        "If you did not request this, please ignore this email.\n\n" +
+                        "Best regards,\n" +
+                        "Petzania Team."
+        );
+
+        emailService.sendEmail(emailRequestDTO);
+        userRepository.save(user);
+    }
+
+    @Override
+    public void verifyResetOTP(String email, String otp) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+
+        if (!otp.equals(user.getResetCode())) {
+            throw new InvalidToken("Invalid OTP");
+        }
+
+        if (user.getResetCodeExpirationTime().before(Timestamp.valueOf(LocalDateTime.now()))) {
+            throw new InvalidToken("OTP has expired");
+        }
+
+    }
+
+    @Override
+    public void resetPassword(String email, String otp, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+
+        if (!otp.equals(user.getResetCode())) {
+            throw new InvalidToken("Invalid OTP");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetCode(null);
+        user.setResetCodeExpirationTime(null);
+        userRepository.save(user);
+    }
+
 
     @Override
     public void logout(LogoutDTO logoutDTO) {
@@ -238,7 +297,7 @@ public class UserService implements IUserService {
         System.out.println("User email is: " + email);
         String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
         user.setVerificationCode(otp);
-        user.setExpirationTime(Timestamp.valueOf(LocalDateTime.now().plusMinutes(3)));
+        user.setExpirationTime(Timestamp.valueOf(LocalDateTime.now().plusMinutes(10)));
 
         EmailRequestDTO emailRequestDTO = new EmailRequestDTO();
         emailRequestDTO.setTo(user.getEmail());
@@ -258,6 +317,26 @@ public class UserService implements IUserService {
 
         // save the user in the database.
         userRepository.save(user);
+    }
+
+    @Override
+    public void sendDeactivationMessage(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+
+        EmailRequestDTO emailRequestDTO = new EmailRequestDTO();
+        emailRequestDTO.setTo(user.getEmail());
+        emailRequestDTO.setFrom(emailSender);
+        emailRequestDTO.setSubject("Account Deactivation Notice");
+        emailRequestDTO.setBody(
+                "Dear " + user.getUsername() + ",\n\n" +
+                        "We would like to inform you that your account has been deactivated.\n\n" +
+                        "If you believe this was done in error or have any questions, please contact our support team.\n\n" +
+                        "Note: You will not be able to access your account until it is reactivated by an administrator.\n\n" +
+                        "Best regards,\n" +
+                        "Petzania Team."
+        );
+
+        emailService.sendEmail(emailRequestDTO);
     }
 
 

@@ -38,6 +38,8 @@ public class User {
     private String profilePictureURL;
     private String phoneNumber;
     private String verificationCode;
+    private String resetCode;
+    private Timestamp resetCodeExpirationTime;
     private Timestamp expirationTime;
     private boolean verified;
     private boolean isBlocked;

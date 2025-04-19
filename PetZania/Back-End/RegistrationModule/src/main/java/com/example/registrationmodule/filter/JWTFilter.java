@@ -42,6 +42,7 @@ public class JWTFilter extends OncePerRequestFilter {
             email = jwtService.extractEmail(token);
             role = jwtService.extractRole(token);
 
+
             // if user tries to send refresh token to access the resources
             if (revokedRefreshTokenRepository.findByToken(token).isPresent()) {
                 throw new InvalidToken("User uses refresh token to access resources");
