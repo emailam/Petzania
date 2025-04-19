@@ -5,6 +5,6 @@ import RegisterScreen from "../RegisterModule/RegisterScreen";
 import LoginScreen from "../RegisterModule/LoginScreen";
 export default function HomeScreen() {
   return (
-    <LoginScreen />
+    <ForgotPasswordScreen />
   );
 }

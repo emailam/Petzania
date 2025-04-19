@@ -1,7 +1,6 @@
 import Button from "./Button";
 import { View, Text , StyleSheet} from "react-native";
 import { FontAwesome5 , FontAwesome } from '@expo/vector-icons';
-import { responsive } from "@/utilities/responsive";
 export default function ExternalSignIn() {
     return(
         <View style={styles.methodsContainer}>
@@ -9,7 +8,7 @@ export default function ExternalSignIn() {
             <Button
                 title={<FontAwesome5 name="google" size={24} color="white" />}
                 borderRadius={8}
-                width="35%"
+                width="50%"
                 fontSize={18}
                 onPress={() => {
                 console.log("Google sign up");
@@ -18,7 +17,6 @@ export default function ExternalSignIn() {
             <Button
                 title={<FontAwesome name="apple" size={24} color="white" />}
                 borderRadius={8}
-                width="35%"
                 fontSize={18}
                 onPress={() => {
                 console.log("Facebook sign up");
@@ -31,15 +29,12 @@ const styles = StyleSheet.create({
     text: {
         color: "gray",
         fontSize: 18,
-        padding: 5,
-        marginTop: "3%",
         marginBottom: "2%",
+        width: "100%",
+        textAlign: "center",
       },
       methodsContainer: {
         flexDirection: "column",
-        alignItems: "center",
-        width: responsive.wp('100%'),
-        margin: "3%",
-        gap: 15,
+        gap: 10,
       },
 })

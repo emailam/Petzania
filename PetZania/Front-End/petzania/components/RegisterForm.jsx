@@ -53,7 +53,7 @@ export default function RegisterForm(){
         }
       };
     return(
-        <View>
+        <View style = {{gap:16}}>
             <FormInput
                 control={control}
                 name="username"
