@@ -3,6 +3,7 @@ package com.example.registrationmodule.service;
 import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.entity.User;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
 import jakarta.validation.constraints.Email;
 
 import java.util.List;
@@ -10,38 +11,35 @@ import java.util.UUID;
 
 @Transactional
 public interface IUserService {
-    public UserProfileDTO registerUser(RegisterUserDTO registerUserDTO);
+    UserProfileDTO registerUser(RegisterUserDTO registerUserDTO);
 
-    public void sendVerificationCode(String email);
+    void sendVerificationCode(String email);
 
-    public List<UserProfileDTO> getUsers();
+    Page<UserProfileDTO> getUsers(int page, int size, String sortBy, String direction);
 
-
-    public UserProfileDTO getUserById(UUID userId);
-
+    UserProfileDTO getUserById(UUID userId);
+  
     public void deleteUser(EmailDTO emailDTO);
-
+  
     public void sendDeleteConfirmation(User user);
 
-    public User saveUser(User user);
+    User saveUser(User user);
 
-    public TokenDTO login(LoginUserDTO loginUserDTO);
+    TokenDTO login(LoginUserDTO loginUserDTO);
 
+    TokenDTO refreshToken(String refreshToken);
 
-    public TokenDTO refreshToken(String refreshToken);
+    void logout(LogoutDTO logoutDTO);
 
-    public void logout(LogoutDTO logoutDTO);
+    void blockUser(BlockUserDTO blockUserDTO);
 
-    public void blockUser(BlockUserDTO blockUserDTO);
-
-    public void unblockUser(BlockUserDTO blockUserDTO);
+    void unblockUser(BlockUserDTO blockUserDTO);
 
     void deleteAll();
 
     void verifyCode(OTPValidationDTO otpValidationDTO);
 
     boolean userExistsById(UUID userId);
-
 
 //    boolean isUserCredentialsValid(String email, String password);
 

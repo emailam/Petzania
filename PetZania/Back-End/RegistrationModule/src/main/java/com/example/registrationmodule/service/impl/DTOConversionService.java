@@ -14,6 +14,8 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
@@ -35,7 +37,6 @@ public class DTOConversionService implements IDTOConversionService {
                 user.getUsername(),
                 user.getName(),
                 user.getBio(),
-                user.getEmail(),
                 user.getProfilePictureURL(),
                 user.getPhoneNumber(),
                 user.getUserRoles() != null ? user.getUserRoles() : new ArrayList<>(),
@@ -84,15 +85,16 @@ public class DTOConversionService implements IDTOConversionService {
 
     @Override
     public PetDTO mapToPetDto(Pet pet) {
-    if (pet == null) {
-                return null;
-            }
+        if (pet == null) {
+            return null;
+        }
         return new PetDTO(
                 pet.getPetId(),
                 pet.getName(),
                 pet.getDescription(),
                 pet.getGender(),
-                pet.getAge(),
+                pet.getDateOfBirth(),
+                getPetAge(pet.getDateOfBirth()), // Calculate age
                 pet.getBreed(),
                 pet.getSpecies(),
                 pet.getMyVaccinesURLs() != null ? pet.getMyVaccinesURLs() : new ArrayList<>(),
@@ -108,7 +110,7 @@ public class DTOConversionService implements IDTOConversionService {
         pet.setName(petDto.getName());
         pet.setDescription(petDto.getDescription());
         pet.setGender(petDto.getGender());
-        pet.setAge(petDto.getAge());
+        pet.setDateOfBirth(petDto.getDateOfBirth());
         pet.setBreed(petDto.getBreed());
         pet.setSpecies(petDto.getSpecies());
         pet.setMyVaccinesURLs(petDto.getMyVaccinesURLs());
@@ -122,7 +124,7 @@ public class DTOConversionService implements IDTOConversionService {
     }
 
     @Override
-    public User convertToUser(RegisterUserDTO registerUserDTO) {
+    public User mapToUser(RegisterUserDTO registerUserDTO) {
         User user = new User();
         user.setUsername(registerUserDTO.getUsername());
         user.setEmail(registerUserDTO.getEmail());
@@ -130,4 +132,15 @@ public class DTOConversionService implements IDTOConversionService {
         return user;
     }
 
+    public String getPetAge(LocalDate dateOfBirth) {
+        Period period = Period.between(dateOfBirth, LocalDate.now());
+        int years = period.getYears();
+        int months = period.getMonths();
+
+        if (years > 0) {
+            return years + " years" + (months > 0 ? " " + months + " months" : "");
+        } else {
+            return months + " months";
+        }
+    }
 }
