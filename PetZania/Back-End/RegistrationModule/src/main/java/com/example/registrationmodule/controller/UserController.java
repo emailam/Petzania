@@ -115,11 +115,6 @@ public class UserController {
         return ResponseEntity.ok("All users deleted successfully");
     }
 
-    @DeleteMapping("/deactivateUser")
-    public ResponseEntity<String> deleteUser(@RequestBody EmailDTO emailDTO){
-        userService.deleteUser(emailDTO);
-        return ResponseEntity.ok("User deleted successfully");
-    }
     @GetMapping("/users")
     public ResponseEntity<Page<UserProfileDTO>> getUsers(
             @RequestParam(defaultValue = "0") int page,

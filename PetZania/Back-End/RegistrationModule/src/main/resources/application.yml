@@ -3,8 +3,8 @@ spring:
     name: RegistrationModule
 
   datasource:
-    password: 1234
-    url: jdbc:postgresql://localhost:5432/postgres
+    password: admin
+    url: jdbc:postgresql://localhost:8090/postgres
     username: postgres
 
   jpa:

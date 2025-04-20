@@ -19,10 +19,6 @@ public interface IUserService {
 
     public void sendDeactivationMessage(String email);
 
-    public List<UserProfileDTO> getUsers();
-
-
-    void sendVerificationCode(String email);
 
     Page<UserProfileDTO> getUsers(int page, int size, String sortBy, String direction);
 
