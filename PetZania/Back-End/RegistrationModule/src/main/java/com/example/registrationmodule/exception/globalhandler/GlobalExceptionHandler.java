@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RefreshTokenNotValid.class)
     public ResponseEntity<String> handleRefreshTokenNotValid(RefreshTokenNotValid ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
     }
 
     @ExceptionHandler(EmailAlreadyExists.class)
@@ -91,7 +91,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UserIsBlocked.class)
     public ResponseEntity<String> handleUserIsBlocked(UserIsBlocked ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
     }
 
     @ExceptionHandler(UsernameAlreadyExists.class)
@@ -101,7 +101,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UserNotVerified.class)
     public ResponseEntity<String> handleUserNotVerified(UserNotVerified ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
     }
 
 

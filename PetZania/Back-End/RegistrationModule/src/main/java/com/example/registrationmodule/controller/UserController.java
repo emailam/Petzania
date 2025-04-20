@@ -1,12 +1,19 @@
 package com.example.registrationmodule.controller;
 
 import com.example.registrationmodule.model.dto.*;
+import com.example.registrationmodule.model.entity.UserPrincipal;
 import com.example.registrationmodule.service.IUserService;
+import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -71,9 +78,34 @@ public class UserController {
         return ResponseEntity.ok("OTP verification successful");
     }
 
-    @DeleteMapping("/delete/{userId}")
-    public ResponseEntity<String> deleteUserById(@PathVariable UUID userId) {
-        userService.deleteUserById(userId);
+
+    @PutMapping("/changePassword")
+    public ResponseEntity<String> changePassword(@RequestBody ChangePasswordDTO changePasswordDTO) {
+        userService.changePassword(changePasswordDTO);
+        return ResponseEntity.ok("Password changed successfully");
+    }
+
+    @PutMapping("/sendResetPasswordOTP")
+    public ResponseEntity<String> sendResetOTP(@RequestBody EmailDTO emailDTO) {
+        userService.sendResetPasswordOTP(emailDTO);
+        return ResponseEntity.ok("OTP sent successfully");
+    }
+
+    @PutMapping("/verifyResetOTP")
+    public ResponseEntity<String> verifyResetOTP(@RequestBody OTPValidationDTO otpValidationDTO) {
+        userService.verifyResetOTP(otpValidationDTO.getEmail(), otpValidationDTO.getOtp());
+        return ResponseEntity.ok("OTP verification successful");
+    }
+
+    @PutMapping("/resetPassword")
+    public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordDTO resetPasswordDTO) {
+        userService.resetPassword(resetPasswordDTO.getEmail(), resetPasswordDTO.getOtp(), resetPasswordDTO.getPassword());
+        return ResponseEntity.ok("Password changed successfully");
+    }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<String> deleteUser(@Valid @RequestBody EmailDTO emailDTO) {
+        userService.deleteUser(emailDTO);
         return ResponseEntity.ok("User deleted successfully");
     }
 
@@ -83,14 +115,20 @@ public class UserController {
         return ResponseEntity.ok("All users deleted successfully");
     }
 
+    @DeleteMapping("/deactivateUser")
+    public ResponseEntity<String> deleteUser(@RequestBody EmailDTO emailDTO){
+        userService.deleteUser(emailDTO);
+        return ResponseEntity.ok("User deleted successfully");
+    }
     @GetMapping("/users")
-    public ResponseEntity<List<UserProfileDTO>> getUsers() {
-        List<UserProfileDTO> users = userService.getUsers();
-        if (users.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(List.of());
-        } else {
-            return ResponseEntity.ok(users);
-        }
+    public ResponseEntity<Page<UserProfileDTO>> getUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction
+    ) {
+        Page<UserProfileDTO> users = userService.getUsers(page, size, sortBy, direction);
+        return users.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(users);
     }
 
     @GetMapping("/{id}")
@@ -98,6 +136,4 @@ public class UserController {
         UserProfileDTO user = userService.getUserById(userId);
         return ResponseEntity.ok(user);
     }
-
-
 }

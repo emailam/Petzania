@@ -3,41 +3,59 @@ package com.example.registrationmodule.service;
 import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.entity.User;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import jakarta.validation.constraints.Email;
+
+
 import java.util.List;
 import java.util.UUID;
 
 @Transactional
 public interface IUserService {
+
     public UserProfileDTO registerUser(RegisterUserDTO registerUserDTO);
 
     public void sendVerificationCode(String email);
 
+    public void sendDeactivationMessage(String email);
+
     public List<UserProfileDTO> getUsers();
 
 
-    public UserProfileDTO getUserById(UUID userId);
+    void sendVerificationCode(String email);
 
-    public void deleteUserById(UUID userId);
+    Page<UserProfileDTO> getUsers(int page, int size, String sortBy, String direction);
 
-    public User saveUser(User user);
+    public void sendResetPasswordOTP(EmailDTO emailDTO);
 
-    public TokenDTO login(LoginUserDTO loginUserDTO);
+    public void verifyResetOTP(String email, String otp);
 
+    public void resetPassword(String email, String otp, String newPassword);
+    UserProfileDTO getUserById(UUID userId);
+  
+    public void deleteUser(EmailDTO emailDTO);
+  
+    public void sendDeleteConfirmation(User user);
 
-    public TokenDTO refreshToken(String refreshToken);
+    User saveUser(User user);
 
-    public void logout(LogoutDTO logoutDTO);
+    TokenDTO login(LoginUserDTO loginUserDTO);
 
-    public void blockUser(BlockUserDTO blockUserDTO);
+    TokenDTO refreshToken(String refreshToken);
 
-    public void unblockUser(BlockUserDTO blockUserDTO);
+    void logout(LogoutDTO logoutDTO);
+
+    void blockUser(BlockUserDTO blockUserDTO);
+
+    void unblockUser(BlockUserDTO blockUserDTO);
+
+    public void changePassword(ChangePasswordDTO changePasswordDTO);
 
     void deleteAll();
 
     void verifyCode(OTPValidationDTO otpValidationDTO);
 
     boolean userExistsById(UUID userId);
-
 
 //    boolean isUserCredentialsValid(String email, String password);
 
