@@ -5,19 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="aacd7b49-acd6-447f-8aa4-f4265b4b3699" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/4a6cd178-bf81-4d8f-bbeb-1a5b251ff263.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/4a6cd178-bf81-4d8f-bbeb-1a5b251ff263/storage_v2/_src_/database/postgres.edMnLQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/4a6cd178-bf81-4d8f-bbeb-1a5b251ff263/storage_v2/_src_/database/postgres.edMnLQ/schema/information_schema.FNRwLQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/4a6cd178-bf81-4d8f-bbeb-1a5b251ff263/storage_v2/_src_/database/postgres.edMnLQ/schema/pg_catalog.0S1ZNQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/4a6cd178-bf81-4d8f-bbeb-1a5b251ff263/storage_v2/_src_/database/postgres.edMnLQ/schema/public.abK9xQ.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/13799730-8837-4aa8-b81e-6e52dac98e49.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/13799730-8837-4aa8-b81e-6e52dac98e49.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/6d81fda2-ede1-45cf-ae16-627aeb752c61.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/6d81fda2-ede1-45cf-ae16-627aeb752c61.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/controller/UserController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/IUserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/IUserService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl/UserService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/model/entity/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/model/entity/User.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -81,7 +72,7 @@
       <workItem from="1745180642335" duration="48000" />
       <workItem from="1745180699266" duration="49000" />
       <workItem from="1745180758033" duration="179000" />
-      <workItem from="1745180945712" duration="1962000" />
+      <workItem from="1745180945712" duration="3405000" />
     </task>
     <servers />
   </component>

@@ -22,5 +22,6 @@
     <schema id="15" parent="1" name="7"/>
     <schema id="16" parent="1" name="8"/>
     <schema id="17" parent="1" name="9"/>
+    <string id="18" parent="2" name="eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9VU0VSIiwic3ViIjoiYW1pbmtoYWxlZGJvNEBnbWFpbC5jb20iLCJpYXQiOjE3NDUxODQzMDAsImV4cCI6MTc0NTI3MDcwMH0.HZoq0DeSvs_96mIindANWtJ4aTTCu2JbOycUgNmBS7Y"/>
   </database-model>
 </dataSource>

@@ -42,7 +42,7 @@ public class User {
     @Email
     private String email;
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name")
     private String name;
 
     @Column(name = "bio")
