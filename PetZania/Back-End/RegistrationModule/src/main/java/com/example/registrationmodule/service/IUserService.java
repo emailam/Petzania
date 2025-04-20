@@ -4,6 +4,7 @@ import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.entity.User;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
+import jakarta.validation.constraints.Email;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,8 +18,10 @@ public interface IUserService {
     Page<UserProfileDTO> getUsers(int page, int size, String sortBy, String direction);
 
     UserProfileDTO getUserById(UUID userId);
-
-    void deleteUserById(UUID userId);
+  
+    public void deleteUser(EmailDTO emailDTO);
+  
+    public void sendDeleteConfirmation(User user);
 
     User saveUser(User user);
 

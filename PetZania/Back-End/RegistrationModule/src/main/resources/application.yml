@@ -3,8 +3,8 @@ spring:
     name: RegistrationModule
 
   datasource:
-    password: admin
-    url: jdbc:postgresql://localhost:8090/postgres
+    password: 1234
+    url: jdbc:postgresql://localhost:5432/postgres
     username: postgres
 
   jpa:
@@ -14,7 +14,14 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-#    show-sql: true
+    # show-sql: true
+
+  cache:
+    type:
+      redis
+    redis:
+      host: localhost
+      port: 6379
 
   security:
     user:
@@ -36,17 +43,26 @@ spring:
         86400000
 
   sendgrid:
-    key:
-      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
+    key: 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
 
   email:
     sender:
       petzaniasystem@gmail.com
-
+paypal:
+  client-id: AcWmUFleXWmsAqACRIjcrfCwEwSfrBy7v3kYe5ejrwqxceOsh8kwdmzm0fkLeRgWe6Md5h1Nfv36_YGU
+  client-secret: ENw9DhaESNiPv6XmjDjtEPTw2_6Y5KxPOkOiSPI64sY8vZsKaI1lVJGNpePSg6YBB4d6-d9Wu8yrbdge
+  mode: sandbox
+  return-url: "http://localhost:8080/api/payment/success"
+  cancel-url: "http://localhost:8080/api/payment/cancel"
+  brand-name: "PetZania"
+  user-action: "PAY_NOW"
+  landing-page: "LOGIN"
+  intent: "CAPTURE"
 server:
   error:
     include-message: always
     include-binding-errors: always
+
 
 resilience4j.ratelimiter:
   instances:
@@ -104,4 +120,7 @@ resilience4j.ratelimiter:
       limitForPeriod: 3
       limitRefreshPeriod: 2m
       timeoutDuration: 0
-
+logging:
+  level:
+    org.springframework.cache: DEBUG
+    org.springframework.data.redis.cache: DEBUG

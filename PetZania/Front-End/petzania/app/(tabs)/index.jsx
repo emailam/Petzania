@@ -1,11 +1,10 @@
-import { Image, StyleSheet, Platform , View, Text } from 'react-native';
-
-import Register from '@/app/RegisterModule/Register';
-import Login from '../RegisterModule/Login';
+import OTPVerificationScreen from "../RegisterModule/OTPVerificationScreen";
+import ForgotPasswordScreen from "../RegisterModule/ForgotPasswordScreen";
+import ResetPasswordScreen from "../RegisterModule/ResetPasswordScreen";
+import RegisterScreen from "../RegisterModule/RegisterScreen";
+import LoginScreen from "../RegisterModule/LoginScreen";
 export default function HomeScreen() {
   return (
-    <View> 
-      <Register/>
-    </View>
+    <ForgotPasswordScreen />
   );
 }
