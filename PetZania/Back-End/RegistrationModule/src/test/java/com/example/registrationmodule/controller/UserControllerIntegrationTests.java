@@ -23,14 +23,14 @@
 //@ExtendWith(SpringExtension.class)
 //@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 //@AutoConfigureMockMvc
-//public class PetControllerIntegrationTests {
+//public class UserControllerIntegrationTests {
 //
 //    private MockMvc mockMvc;
 //    private IUserService userService;
 //    private ObjectMapper objectMapper;
 //
 //    @Autowired
-//    public PetControllerIntegrationTests(MockMvc mockMvc, IUserService userService, ObjectMapper objectMapper) {
+//    public UserControllerIntegrationTests(MockMvc mockMvc, IUserService userService, ObjectMapper objectMapper) {
 //        this.mockMvc = mockMvc;
 //        this.userService = userService;
 //        this.objectMapper = objectMapper;
@@ -41,7 +41,7 @@
 //
 //        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
 //
-//        mockMvc.perform(MockMvcRequestBuilders.get("/api/pet/user/{userId}", testUserA.getUserId())
+//        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/user/{userId}", testUserA.getUserId())
 //                        .contentType(MediaType.APPLICATION_JSON))
 //                .andExpect(MockMvcResultMatchers.status().isOk())
 //                .andExpect(MockMvcResultMatchers.jsonPath("$.username").value(testUserA.getUsername()))
@@ -65,7 +65,7 @@
 //    public void testGetUserById_UserNotFound_ShouldReturnNotFound() throws Exception {
 //        UUID nonExistentId = UUID.randomUUID();
 //
-//        mockMvc.perform(MockMvcRequestBuilders.get("/api/pet/user/{userId}", nonExistentId)
+//        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/user/{userId}", nonExistentId)
 //                        .contentType(MediaType.APPLICATION_JSON))
 //                .andExpect(MockMvcResultMatchers.status().isNotFound());
 //    }
@@ -80,7 +80,7 @@
 //        updateDto.setProfilePictureURL("https://example.com/new-profile.jpg");
 //        updateDto.setPhoneNumber("123456789");
 //
-//        mockMvc.perform(MockMvcRequestBuilders.put("/api/pet/user/{id}", testUserA.getUserId())
+//        mockMvc.perform(MockMvcRequestBuilders.patch("/api/user/auth/user/{id}", testUserA.getUserId())
 //                        .contentType(MediaType.APPLICATION_JSON)
 //                        .content(objectMapper.writeValueAsString(updateDto)))
 //                .andExpect(MockMvcResultMatchers.status().isOk())
@@ -98,7 +98,7 @@
 //        updateDto.setName("Updated Name");
 //
 //        // Act & Assert
-//        mockMvc.perform(MockMvcRequestBuilders.put("/api/pet/user/{id}", nonExistentId)
+//        mockMvc.perform(MockMvcRequestBuilders.patch("/api/user/auth/user/{id}", nonExistentId)
 //                        .contentType(MediaType.APPLICATION_JSON)
 //                        .content(objectMapper.writeValueAsString(updateDto)))
 //                .andExpect(MockMvcResultMatchers.status().isNotFound());
@@ -112,7 +112,7 @@
 //        updateDto.setBio("Updated Bio Only");
 //
 //        // Act & Assert
-//        mockMvc.perform(MockMvcRequestBuilders.put("/api/pet/user/{id}", testUser.getUserId())
+//        mockMvc.perform(MockMvcRequestBuilders.patch("/api/user/auth/user/{id}", testUser.getUserId())
 //                        .contentType(MediaType.APPLICATION_JSON)
 //                        .content(objectMapper.writeValueAsString(updateDto)))
 //                .andExpect(MockMvcResultMatchers.status().isOk())

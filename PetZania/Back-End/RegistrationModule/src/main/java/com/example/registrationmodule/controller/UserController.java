@@ -6,6 +6,7 @@ import com.example.registrationmodule.service.IUserService;
 import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -77,6 +78,7 @@ public class UserController {
         return ResponseEntity.ok("OTP verification successful");
     }
 
+
     @PutMapping("/changePassword")
     public ResponseEntity<String> changePassword(@RequestBody ChangePasswordDTO changePasswordDTO) {
         userService.changePassword(changePasswordDTO);
@@ -113,18 +115,20 @@ public class UserController {
         return ResponseEntity.ok("All users deleted successfully");
     }
 
+    @DeleteMapping("/deactivateUser")
+    public ResponseEntity<String> deleteUser(@RequestBody EmailDTO emailDTO){
+        userService.deleteUser(emailDTO);
+        return ResponseEntity.ok("User deleted successfully");
+    }
     @GetMapping("/users")
-    public ResponseEntity<List<UserProfileDTO>> getUsers() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserPrincipal user = (UserPrincipal) authentication.getPrincipal();
-        String email = user.getEmail();
-        System.out.println("Email is " + email);
-        List<UserProfileDTO> users = userService.getUsers();
-        if (users.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(List.of());
-        } else {
-            return ResponseEntity.ok(users);
-        }
+    public ResponseEntity<Page<UserProfileDTO>> getUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction
+    ) {
+        Page<UserProfileDTO> users = userService.getUsers(page, size, sortBy, direction);
+        return users.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(users);
     }
 
     @GetMapping("/{id}")
@@ -132,6 +136,4 @@ public class UserController {
         UserProfileDTO user = userService.getUserById(userId);
         return ResponseEntity.ok(user);
     }
-
-
 }

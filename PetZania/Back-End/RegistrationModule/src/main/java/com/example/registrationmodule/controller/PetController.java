@@ -28,29 +28,6 @@ public class PetController {
     private final IPetService petService;
     private final IDTOConversionService dtoConversionService;
 
-//    public UserProfileController(IUserService userService, IProfileService profileService, IDtoConversionService dtoConversionService) {
-//        this.userService = userService;
-//        this.profileService = profileService;
-//        this.dtoConversionService = dtoConversionService;
-//    }
-
-
-
-    @PatchMapping(path = "/user/{id}")
-    public ResponseEntity<UserProfileDTO> partialUpdateUserProfileById(@PathVariable("id") UUID userId,
-                                                                       @RequestBody UpdateUserProfileDto updateUserProfileDto) {
-
-        if (!userService.userExistsById(userId)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-
-        UserProfileDTO updatedUser = userService.updateUserById(userId, updateUserProfileDto);
-        return new ResponseEntity<>(
-                updatedUser,
-                HttpStatus.OK
-        );
-    }
-
     @PostMapping(path = "/pet")
     public ResponseEntity<PetDTO> createPet(@RequestBody PetDTO petDto) {
         UUID userId = petDto.getUserId();
@@ -111,7 +88,7 @@ public class PetController {
     }
 
     @DeleteMapping("/pet/{id}")
-    public ResponseEntity<Void> deletePetById(@PathVariable UUID petId) {
+    public ResponseEntity<Void> deletePetById(@PathVariable(name = "id") UUID petId) {
         if (!petService.existsById(petId)) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

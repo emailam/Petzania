@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -15,6 +16,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Service
+@PropertySource("classpath:application.yml")
 public class JWTService {
     @Value("${spring.jwt.secret-key}")
     private String secretKey;

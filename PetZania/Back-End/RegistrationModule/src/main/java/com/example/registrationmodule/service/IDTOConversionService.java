@@ -20,5 +20,5 @@ public interface IDTOConversionService {
 
     Pet mapToPet(PetDTO petDto);
 
-    User convertToUser(RegisterUserDTO registerUserDTO);
+    User mapToUser(RegisterUserDTO registerUserDTO);
 }
