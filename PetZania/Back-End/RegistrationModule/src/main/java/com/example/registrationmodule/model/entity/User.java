@@ -57,6 +57,10 @@ public class User {
     @Column(name = "verification_code")
     private String verificationCode;
 
+  
+    private String resetCode;
+    private Timestamp resetCodeExpirationTime;
+
     @Column(name = "expiration_time")
     private Timestamp expirationTime;
 
