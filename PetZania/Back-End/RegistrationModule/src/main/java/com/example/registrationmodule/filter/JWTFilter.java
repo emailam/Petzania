@@ -1,6 +1,6 @@
 package com.example.registrationmodule.filter;
 
-import com.example.registrationmodule.exception.InvalidToken;
+import com.example.registrationmodule.exception.authenticationAndVerificattion.InvalidToken;
 import com.example.registrationmodule.model.entity.UserPrincipal;
 import com.example.registrationmodule.repository.RevokedRefreshTokenRepository;
 import com.example.registrationmodule.service.impl.JWTService;

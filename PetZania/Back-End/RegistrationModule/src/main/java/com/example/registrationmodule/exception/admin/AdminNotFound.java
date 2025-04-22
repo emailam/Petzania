@@ -1,4 +1,4 @@
-package com.example.registrationmodule.exception;
+package com.example.registrationmodule.exception.admin;
 
 // 404 not found
 public class AdminNotFound extends RuntimeException {

@@ -1,11 +1,10 @@
 package com.example.registrationmodule.controller;
 
-import com.example.registrationmodule.exception.AdminNotFound;
+import com.example.registrationmodule.exception.admin.AdminNotFound;
 import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.entity.Admin;
 import com.example.registrationmodule.service.IAdminService;
 import com.example.registrationmodule.service.IDTOConversionService;
-import com.example.registrationmodule.service.impl.AdminService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

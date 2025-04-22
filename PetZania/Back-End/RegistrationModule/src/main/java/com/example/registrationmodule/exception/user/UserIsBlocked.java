@@ -1,4 +1,4 @@
-package com.example.registrationmodule.exception;
+package com.example.registrationmodule.exception.user;
 
 public class UserIsBlocked extends RuntimeException {
     public UserIsBlocked(String message) {

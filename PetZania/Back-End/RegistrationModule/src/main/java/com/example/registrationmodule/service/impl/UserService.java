@@ -1,6 +1,13 @@
 package com.example.registrationmodule.service.impl;
 
-import com.example.registrationmodule.exception.*;
+import com.example.registrationmodule.exception.authenticationAndVerificattion.ExpiredOTP;
+import com.example.registrationmodule.exception.authenticationAndVerificattion.InvalidOTPCode;
+import com.example.registrationmodule.exception.authenticationAndVerificattion.InvalidUserCredentials;
+import com.example.registrationmodule.exception.authenticationAndVerificattion.RefreshTokenNotValid;
+import com.example.registrationmodule.exception.rateLimiting.TooManyLoginRequests;
+import com.example.registrationmodule.exception.rateLimiting.TooManyOtpRequests;
+import com.example.registrationmodule.exception.rateLimiting.TooManyRegistrationRequests;
+import com.example.registrationmodule.exception.user.*;
 import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.dto.EmailRequestDTO;
 import com.example.registrationmodule.model.entity.User;

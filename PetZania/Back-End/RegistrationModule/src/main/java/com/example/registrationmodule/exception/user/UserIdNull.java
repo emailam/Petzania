@@ -1,4 +1,4 @@
-package com.example.registrationmodule.exception;
+package com.example.registrationmodule.exception.user;
 
 // 400 Bad Request
 public class UserIdNull extends RuntimeException {

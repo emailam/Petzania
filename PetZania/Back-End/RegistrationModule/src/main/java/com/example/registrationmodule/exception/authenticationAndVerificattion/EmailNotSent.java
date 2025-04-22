@@ -1,4 +1,4 @@
-package com.example.registrationmodule.exception;
+package com.example.registrationmodule.exception.authenticationAndVerificattion;
 
 // 500 internal server error
 public class EmailNotSent extends RuntimeException {

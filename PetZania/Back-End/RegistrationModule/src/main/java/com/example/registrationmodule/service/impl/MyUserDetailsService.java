@@ -1,6 +1,6 @@
 package com.example.registrationmodule.service.impl;
 
-import com.example.registrationmodule.exception.UserNotFound;
+import com.example.registrationmodule.exception.user.UserNotFound;
 import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.model.entity.UserPrincipal;
 import com.example.registrationmodule.repository.UserRepository;

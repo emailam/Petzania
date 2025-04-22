@@ -1,6 +1,11 @@
 package com.example.registrationmodule.exception.globalhandler;
 
-import com.example.registrationmodule.exception.*;
+import com.example.registrationmodule.exception.admin.AdminNotFound;
+import com.example.registrationmodule.exception.authenticationAndVerificattion.*;
+import com.example.registrationmodule.exception.payPal.*;
+import com.example.registrationmodule.exception.pet.PetNotFound;
+import com.example.registrationmodule.exception.rateLimiting.*;
+import com.example.registrationmodule.exception.user.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;

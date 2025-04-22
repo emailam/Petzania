@@ -1,4 +1,4 @@
-package com.example.registrationmodule.exception;
+package com.example.registrationmodule.exception.rateLimiting;
 
 // 429 Too Many Requests
 public class TooManyAdminRequests extends RuntimeException {

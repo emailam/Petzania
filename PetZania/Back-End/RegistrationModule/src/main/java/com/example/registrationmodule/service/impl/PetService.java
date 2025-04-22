@@ -1,8 +1,7 @@
 package com.example.registrationmodule.service.impl;
 
-import com.example.registrationmodule.exception.PetNotFound;
-import com.example.registrationmodule.exception.TooManyAdminRequests;
-import com.example.registrationmodule.exception.TooManyPetRequests;
+import com.example.registrationmodule.exception.pet.PetNotFound;
+import com.example.registrationmodule.exception.rateLimiting.TooManyPetRequests;
 import com.example.registrationmodule.model.dto.UpdatePetDTO;
 import com.example.registrationmodule.model.entity.Pet;
 import com.example.registrationmodule.repository.PetRepository;

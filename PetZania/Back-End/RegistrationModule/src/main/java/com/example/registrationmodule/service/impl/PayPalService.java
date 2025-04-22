@@ -1,9 +1,9 @@
 package com.example.registrationmodule.service.impl;
 
 import com.example.registrationmodule.config.PayPalConfig;
-import com.example.registrationmodule.exception.PayPalApprovalUrlNotFound;
-import com.example.registrationmodule.exception.PayPalOrderNotFound;
-import com.example.registrationmodule.exception.PayPalPaymentCapture;
+import com.example.registrationmodule.exception.payPal.PayPalApprovalUrlNotFound;
+import com.example.registrationmodule.exception.payPal.PayPalOrderNotFound;
+import com.example.registrationmodule.exception.payPal.PayPalPaymentCapture;
 import com.example.registrationmodule.model.entity.Payment;
 import com.example.registrationmodule.model.enumeration.PaymentStatus;
 import com.example.registrationmodule.repository.PaymentRepository;

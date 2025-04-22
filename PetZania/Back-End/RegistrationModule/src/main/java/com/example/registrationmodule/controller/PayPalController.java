@@ -1,10 +1,10 @@
 package com.example.registrationmodule.controller;
 
 
-import com.example.registrationmodule.exception.PayPalOrderCreation;
-import com.example.registrationmodule.exception.PayPalOrderNotFound;
-import com.example.registrationmodule.exception.PayPalPaymentCapture;
-import com.example.registrationmodule.exception.PayPalRefund;
+import com.example.registrationmodule.exception.payPal.PayPalOrderCreation;
+import com.example.registrationmodule.exception.payPal.PayPalOrderNotFound;
+import com.example.registrationmodule.exception.payPal.PayPalPaymentCapture;
+import com.example.registrationmodule.exception.payPal.PayPalRefund;
 import com.example.registrationmodule.model.dto.PaymentRequestDTO;
 import com.example.registrationmodule.service.impl.PayPalService;
 import com.example.registrationmodule.util.PayPalOrderFormatter;

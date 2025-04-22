@@ -1,7 +1,7 @@
 package com.example.registrationmodule.service.impl;
 
-import com.example.registrationmodule.exception.AdminNotFound;
-import com.example.registrationmodule.exception.TooManyAdminRequests;
+import com.example.registrationmodule.exception.admin.AdminNotFound;
+import com.example.registrationmodule.exception.rateLimiting.TooManyAdminRequests;
 import com.example.registrationmodule.model.dto.UpdateAdminDto;
 import com.example.registrationmodule.model.entity.Admin;
 import com.example.registrationmodule.repository.AdminRepository;

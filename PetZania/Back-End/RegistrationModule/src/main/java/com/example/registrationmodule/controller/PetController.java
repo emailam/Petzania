@@ -1,8 +1,8 @@
 package com.example.registrationmodule.controller;
 
-import com.example.registrationmodule.exception.PetNotFound;
-import com.example.registrationmodule.exception.UserIdNull;
-import com.example.registrationmodule.exception.UserNotFound;
+import com.example.registrationmodule.exception.pet.PetNotFound;
+import com.example.registrationmodule.exception.user.UserIdNull;
+import com.example.registrationmodule.exception.user.UserNotFound;
 import com.example.registrationmodule.model.dto.PetDTO;
 import com.example.registrationmodule.model.dto.UpdatePetDTO;
 import com.example.registrationmodule.model.entity.Pet;
@@ -13,10 +13,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
