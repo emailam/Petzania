@@ -1,6 +1,9 @@
 package com.example.registrationmodule.service.impl;
 
 import com.example.registrationmodule.config.PayPalConfig;
+import com.example.registrationmodule.exception.PayPalApprovalUrlNotFound;
+import com.example.registrationmodule.exception.PayPalOrderNotFound;
+import com.example.registrationmodule.exception.PayPalPaymentCapture;
 import com.example.registrationmodule.model.entity.Payment;
 import com.example.registrationmodule.model.enumeration.PaymentStatus;
 import com.example.registrationmodule.repository.PaymentRepository;
@@ -72,7 +75,7 @@ public class PayPalService {
                 return link.href();
             }
         }
-        throw new RuntimeException("PayPal approval URL not found");
+        throw new PayPalApprovalUrlNotFound("PayPal approval URL not found");
     }
 
     public Order getOrderDetails(String orderId) throws IOException {
@@ -96,12 +99,12 @@ public class PayPalService {
         Order order = getOrderDetails(token);
 
         if (!"APPROVED".equalsIgnoreCase(order.status())) {
-            throw new IllegalStateException("Order is not approved for capture. Current status: " + order.status());
+            throw new PayPalPaymentCapture("Order is not approved for capture. Current status: " + order.status());
         }
 
         order = captureOrder(token);
         if (!"COMPLETED".equalsIgnoreCase(order.status())) {
-            throw new IllegalStateException("Payment capture failed. Order status: " + order.status());
+            throw new PayPalPaymentCapture("Payment capture failed. Order status: " + order.status());
         }
 
         savePayment(order);
@@ -114,7 +117,7 @@ public class PayPalService {
         List<Capture> captures = order.purchaseUnits().get(0).payments().captures();
 
         if (captures.isEmpty()) {
-            throw new IllegalStateException("No capture details found for the order.");
+            throw new PayPalOrderNotFound("No capture details found for the order.");
         }
 
         Money amount = captures.get(0).amount();
@@ -150,7 +153,7 @@ public class PayPalService {
 
     public String getCaptureIdByOrderId(String orderId) {
         Payment payment = paymentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new RuntimeException("No payment found for order ID: " + orderId));
+                .orElseThrow(() -> new PayPalPaymentCapture("No payment found for order ID: " + orderId));
 
         return payment.getTransactionId();
     }

@@ -1,8 +1,8 @@
 package com.example.registrationmodule.exception;
 
-// 400 Bad Request
-public class PayPalRefund extends RuntimeException {
-    public PayPalRefund(String message) {
+// 404 Not Found
+public class PayPalApprovalUrlNotFound extends RuntimeException {
+    public PayPalApprovalUrlNotFound(String message) {
         super(message);
     }
 }

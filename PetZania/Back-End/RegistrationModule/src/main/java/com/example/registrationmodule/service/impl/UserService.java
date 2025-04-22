@@ -68,7 +68,7 @@ public class UserService implements IUserService {
     }
 
     public UserProfileDTO registerFallback(RegisterUserDTO registerUserDTO, RequestNotPermitted t) {
-        throw new RuntimeException("Too many registration attempts. Try again later.");
+        throw new TooManyRegistrationRequests("Too many registration attempts. Try again later.");
     }
 
     @Override
@@ -146,7 +146,7 @@ public class UserService implements IUserService {
     }
 
     public TokenDTO loginFallback(LoginUserDTO loginUserDTO, RequestNotPermitted t) {
-        throw new RuntimeException("Too many login attempts. Try again later.");
+        throw new TooManyLoginRequests("Too many login attempts. Try again later.");
     }
 
     @Override
@@ -246,7 +246,7 @@ public class UserService implements IUserService {
     }
 
     public void otpFallback(OTPValidationDTO otpValidationDTO, RequestNotPermitted t) {
-        throw new RuntimeException("Too many OTP attempts. Try again later.");
+        throw new TooManyOtpRequests("Too many OTP attempts. Try again later.");
     }
 
     @Override
@@ -297,7 +297,7 @@ public class UserService implements IUserService {
     }
 
     public void sendOtpFallback(String email, RequestNotPermitted t) {
-        throw new RuntimeException("Too many OTP requests. Try again later.");
+        throw new TooManyOtpRequests("Too many OTP requests. Try again later.");
     }
 
     @Override

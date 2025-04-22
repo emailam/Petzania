@@ -1,5 +1,7 @@
 package com.example.registrationmodule.service.impl;
 
+import com.example.registrationmodule.exception.AdminNotFound;
+import com.example.registrationmodule.exception.TooManyAdminRequests;
 import com.example.registrationmodule.model.dto.UpdateAdminDto;
 import com.example.registrationmodule.model.entity.Admin;
 import com.example.registrationmodule.repository.AdminRepository;
@@ -36,7 +38,7 @@ public class AdminService implements IAdminService {
             Optional.ofNullable(updatedAdmin.getUsername()).ifPresent(existingAdmin::setUsername);
             Optional.ofNullable(updatedAdmin.getAdminRole()).ifPresent(existingAdmin::setRole);
             return adminRepository.save(existingAdmin);
-        }).orElseThrow(() -> new RuntimeException("Admin does not exist"));
+        }).orElseThrow(() -> new AdminNotFound("Admin not found with ID: " + adminId));
     }
 
     @Override
@@ -53,14 +55,14 @@ public class AdminService implements IAdminService {
 
     // Fallbacks for rate limiting
     public Admin updateAdminFallback(UUID adminId, UpdateAdminDto updatedAdmin, RequestNotPermitted ex) {
-        throw new RuntimeException("Too many requests for updating admins. Please try again later.");
+        throw new TooManyAdminRequests("Too many requests for updating admins. Please try again later.");
     }
 
     public Admin saveAdminFallback(Admin admin, RequestNotPermitted ex) {
-        throw new RuntimeException("Too many requests for saving admins. Please try again later.");
+        throw new TooManyAdminRequests("Too many requests for saving admins. Please try again later.");
     }
 
     public void deleteAdminFallback(UUID adminId, RequestNotPermitted ex) {
-        throw new RuntimeException("Too many requests for deleting admins. Please try again later.");
+        throw new TooManyAdminRequests("Too many requests for deleting admins. Please try again later.");
     }
 }

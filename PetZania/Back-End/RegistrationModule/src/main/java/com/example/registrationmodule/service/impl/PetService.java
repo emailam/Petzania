@@ -1,5 +1,8 @@
 package com.example.registrationmodule.service.impl;
 
+import com.example.registrationmodule.exception.PetNotFound;
+import com.example.registrationmodule.exception.TooManyAdminRequests;
+import com.example.registrationmodule.exception.TooManyPetRequests;
 import com.example.registrationmodule.model.dto.UpdatePetDTO;
 import com.example.registrationmodule.model.entity.Pet;
 import com.example.registrationmodule.repository.PetRepository;
@@ -56,7 +59,7 @@ public class PetService implements IPetService {
             Optional.ofNullable(petDto.getMyPicturesURLs()).ifPresent(existingPet::setMyPicturesURLs);
 
             return petRepository.save(existingPet);
-        }).orElseThrow(() -> new RuntimeException("Pet does not exist"));
+        }).orElseThrow(() -> new PetNotFound("Pet does not exist"));
     }
 
     @Override
@@ -67,14 +70,14 @@ public class PetService implements IPetService {
 
     // Fallback methods
     public Pet savePetFallback(Pet pet, RequestNotPermitted t) {
-        throw new RuntimeException("Rate limit exceeded for saving pets. Please try again later.");
+        throw new TooManyPetRequests("Rate limit exceeded for saving pets. Please try again later.");
     }
 
     public Pet updatePetFallback(UUID petId, UpdatePetDTO petDto, RequestNotPermitted t) {
-        throw new RuntimeException("Rate limit exceeded for updating pets. Please try again later.");
+        throw new TooManyPetRequests("Rate limit exceeded for updating pets. Please try again later.");
     }
 
     public void deletePetFallback(UUID petId, RequestNotPermitted t) {
-        throw new RuntimeException("Rate limit exceeded for deleting pets. Please try again later.");
+        throw new TooManyPetRequests("Rate limit exceeded for deleting pets. Please try again later.");
     }
 }

@@ -137,6 +137,11 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(TooManyAdminRequests.class)
+    public ResponseEntity<Map<String, Object>> handleTooManyAdminRequests(TooManyAdminRequests ex) {
+        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
     @ExceptionHandler(PayPalOrderCreation.class)
     public ResponseEntity<Map<String, Object>> handlePayPalOrderCreationException(PayPalOrderCreation ex) {
         return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
@@ -157,8 +162,33 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(PayPalApprovalUrlNotFound.class)
+    public ResponseEntity<Map<String, Object>> handlePayPalApprovalUrlNotFound(PayPalApprovalUrlNotFound ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(PetNotFound.class)
     public ResponseEntity<Map<String, Object>> handlePetNotFound(PetNotFound ex) {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(TooManyPetRequests.class)
+    public ResponseEntity<Map<String, Object>> handleTooManyPetRequests(TooManyPetRequests ex) {
+        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    @ExceptionHandler(TooManyRegistrationRequests.class)
+    public ResponseEntity<Map<String, Object>> handleTooManyRegistrationRequests(TooManyRegistrationRequests ex) {
+        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    @ExceptionHandler(TooManyLoginRequests.class)
+    public ResponseEntity<Map<String, Object>> TooManyLoginRequests(TooManyLoginRequests ex) {
+        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    @ExceptionHandler(TooManyOtpRequests.class)
+    public ResponseEntity<Map<String, Object>> TooManyOtpRequests(TooManyOtpRequests ex) {
+        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
     }
 }

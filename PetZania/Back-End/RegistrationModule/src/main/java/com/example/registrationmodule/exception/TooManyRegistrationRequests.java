@@ -1,8 +1,8 @@
 package com.example.registrationmodule.exception;
 
 // 429 Too Many Requests
-public class TooManyPetRequests extends RuntimeException {
-    public TooManyPetRequests(String message) {
+public class TooManyRegistrationRequests extends RuntimeException {
+    public TooManyRegistrationRequests(String message) {
         super(message);
     }
 }
