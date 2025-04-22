@@ -1,8 +1,8 @@
 package com.example.registrationmodule.exception;
 
-// 404 not found
-public class AdminNotFound extends RuntimeException {
-    public AdminNotFound(String message) {
+// 400 Bad Request
+public class PayPalOrderCreation extends RuntimeException {
+    public PayPalOrderCreation(String message) {
         super(message);
     }
 }

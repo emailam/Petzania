@@ -1,8 +1,8 @@
 package com.example.registrationmodule.exception;
 
-
-public class PayPalOrderCreation extends RuntimeException {
-    public PayPalOrderCreation(String message) {
+// 404 Not Found
+public class PayPalOrderNotFound extends RuntimeException {
+    public PayPalOrderNotFound(String message) {
         super(message);
     }
 }

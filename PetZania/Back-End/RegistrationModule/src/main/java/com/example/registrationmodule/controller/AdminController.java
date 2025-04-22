@@ -1,9 +1,8 @@
 package com.example.registrationmodule.controller;
 
+import com.example.registrationmodule.exception.AdminNotFound;
 import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.entity.Admin;
-import com.example.registrationmodule.model.entity.Pet;
-import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.service.IAdminService;
 import com.example.registrationmodule.service.IDTOConversionService;
 import com.example.registrationmodule.service.impl.AdminService;
@@ -11,12 +10,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @RestController
@@ -37,11 +32,10 @@ public class AdminController {
 
     @GetMapping(path = "/admin/{id}")
     public ResponseEntity<AdminDto> getAdminById(@PathVariable("id") UUID adminId) {
-        Optional<Admin> admin = adminService.getAdminById(adminId);
-        return admin.map(adminEntity -> {
-            AdminDto adminDto = dtoConversionService.mapToAdminDto(adminEntity);
-            return new ResponseEntity<>(adminDto, HttpStatus.OK);
-        }).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        Admin admin = adminService.getAdminById(adminId)
+                .orElseThrow(() -> new AdminNotFound("Admin not found with ID: " + adminId));
+        AdminDto adminDto = dtoConversionService.mapToAdminDto(admin);
+        return new ResponseEntity<>(adminDto, HttpStatus.OK);
     }
 
     @PatchMapping(path = "/admin/{id}")
@@ -49,7 +43,7 @@ public class AdminController {
                                                             @RequestBody UpdateAdminDto updateAdminDto) {
 
         if (!adminService.existsById(adminId)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new AdminNotFound("Admin not found with ID: " + adminId);
         }
 
         Admin updatedAdmin = adminService.partialUpdateAdminById(adminId, updateAdminDto);
@@ -59,9 +53,9 @@ public class AdminController {
         );
     }
     @DeleteMapping("/admin/{id}")
-    public ResponseEntity<AdminService> deleteAdminById(@PathVariable("id") UUID adminId) {
+    public ResponseEntity<Void> deleteAdminById(@PathVariable("id") UUID adminId) {
         if (!adminService.existsById(adminId)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new AdminNotFound("Admin not found with ID: " + adminId);
         }
         adminService.deleteById(adminId);
         return ResponseEntity.noContent().build();

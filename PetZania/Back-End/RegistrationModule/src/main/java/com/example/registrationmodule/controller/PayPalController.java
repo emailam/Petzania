@@ -1,6 +1,10 @@
 package com.example.registrationmodule.controller;
 
 
+import com.example.registrationmodule.exception.PayPalOrderCreation;
+import com.example.registrationmodule.exception.PayPalOrderNotFound;
+import com.example.registrationmodule.exception.PayPalPaymentCapture;
+import com.example.registrationmodule.exception.PayPalRefund;
 import com.example.registrationmodule.model.dto.PaymentRequestDTO;
 import com.example.registrationmodule.service.impl.PayPalService;
 import com.example.registrationmodule.util.PayPalOrderFormatter;
@@ -26,7 +30,7 @@ public class PayPalController {
             String approvalUrl = payPalService.getApprovalUrl(order);
             return ResponseEntity.ok(approvalUrl);
         } catch (IOException e) {
-            return ResponseEntity.badRequest().body("Error creating PayPal order.");
+            throw new PayPalOrderCreation("Error creating PayPal order: " + e.getMessage());
         }
     }
 
@@ -36,9 +40,9 @@ public class PayPalController {
             String responseMessage = payPalService.processPaymentCapture(token);
             return ResponseEntity.ok(responseMessage);
         } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            throw new PayPalPaymentCapture("Error during payment capture: " + e.getMessage());
         } catch (IOException e) {
-            return ResponseEntity.badRequest().body("Payment Capture Failed: " + e.getMessage());
+            throw new PayPalPaymentCapture("Payment Capture Failed: " + e.getMessage());
         }
     }
 
@@ -53,7 +57,7 @@ public class PayPalController {
             Order order = payPalService.getOrderDetails(orderId);
             return ResponseEntity.ok(PayPalOrderFormatter.formatOrderDetails(order));
         } catch (IOException e) {
-            return ResponseEntity.badRequest().body("Error retrieving order details.");
+            throw new PayPalOrderNotFound("Error retrieving order details: " + e.getMessage());
         }
     }
 
@@ -65,9 +69,9 @@ public class PayPalController {
             Refund refund = payPalService.refundPayment(captureId, reason);
             return ResponseEntity.ok("Refund Successful! Refund ID: " + refund.id());
         } catch (IOException e) {
-            return ResponseEntity.badRequest().body("Refund Failed: " + e.getMessage());
+            throw new PayPalRefund("Refund Failed: " + e.getMessage());
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body("Order not found: " + e.getMessage());
+            throw new PayPalOrderNotFound("Order not found: " + e.getMessage());
         }
     }
 }
