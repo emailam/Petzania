@@ -227,11 +227,11 @@ public class UserService implements IUserService {
                 .orElseThrow(() -> new UserDoesNotExist("User does not exist"));
 
         if (!otp.equals(user.getResetCode())) {
-            throw new InvalidToken("Invalid OTP");
+            throw new InvalidOTPCode("Invalid OTP");
         }
 
         if (user.getResetCodeExpirationTime().before(Timestamp.valueOf(LocalDateTime.now()))) {
-            throw new InvalidToken("OTP has expired");
+            throw new ExpiredOTP("OTP has expired");
         }
 
     }
@@ -242,7 +242,7 @@ public class UserService implements IUserService {
                 .orElseThrow(() -> new UserDoesNotExist("User does not exist"));
 
         if (!otp.equals(user.getResetCode())) {
-            throw new InvalidToken("Invalid OTP");
+            throw new InvalidOTPCode("Invalid OTP");
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));

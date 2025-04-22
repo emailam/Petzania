@@ -29,7 +29,7 @@ public class UserController {
         return ResponseEntity.ok("User logged out successfully");
     }
 
-
+    
     @PostMapping("/resendOTP")
     public ResponseEntity<String> resendOTP(@RequestBody @Valid EmailDTO emailDTO) {
         userService.sendVerificationCode(emailDTO.getEmail());
@@ -41,7 +41,6 @@ public class UserController {
         userService.blockUser(blockUserDTO);
         return ResponseEntity.ok("User is blocked successfully");
     }
-
     @PostMapping("/unblock")
     public ResponseEntity<String> unblockUser(@RequestBody @Valid BlockUserDTO blockUserDTO) {
         userService.unblockUser(blockUserDTO);
