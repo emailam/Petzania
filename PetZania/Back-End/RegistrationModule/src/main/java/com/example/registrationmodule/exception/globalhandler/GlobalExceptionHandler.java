@@ -192,8 +192,18 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
     }
 
+    @ExceptionHandler(TooManyLogoutRequests.class)
+    public ResponseEntity<Map<String, Object>> TooManyLogoutRequests(TooManyLogoutRequests ex) {
+        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
     @ExceptionHandler(TooManyOtpRequests.class)
     public ResponseEntity<Map<String, Object>> TooManyOtpRequests(TooManyOtpRequests ex) {
+        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    @ExceptionHandler(TooManyRefreshRequests.class)
+    public ResponseEntity<Map<String, Object>> TooManyRefreshRequests(TooManyRefreshRequests ex) {
         return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
     }
 }
