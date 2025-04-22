@@ -15,7 +15,7 @@ public class TestDataUtil {
     public static User createTestUserA() {
         return User.builder()
                 .username("testUser")
-                .password("password123")
+                .password("Password123#")
                 .email("test@example.com")
                 .name("Test User")
                 .bio("I love pets!")
@@ -27,6 +27,7 @@ public class TestDataUtil {
                 .following(new ArrayList<>())
                 .storeProfileId(UUID.randomUUID())
                 .vetProfileId(UUID.randomUUID())
+                .verified(true)
                 .build();
     }
 }
