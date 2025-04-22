@@ -107,8 +107,8 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex, HttpStatus.CONFLICT);
     }
 
-    @ExceptionHandler(UserDoesNotExist.class)
-    public ResponseEntity<Map<String, Object>> handleUserDoesNotExist(UserDoesNotExist ex) {
+    @ExceptionHandler(UserNotFound.class)
+    public ResponseEntity<Map<String, Object>> handleUserNotFound(UserNotFound ex) {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
     }
 
@@ -125,6 +125,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UserNotVerified.class)
     public ResponseEntity<Map<String, Object>> handleUserNotVerified(UserNotVerified ex) {
         return buildErrorResponse(ex, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(UserIdNull.class)
+    public ResponseEntity<Map<String, Object>> handleUserIdNull(UserIdNull ex) {
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(AdminNotFound.class)
@@ -152,4 +157,8 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(PetNotFound.class)
+    public ResponseEntity<Map<String, Object>> handlePetNotFound(PetNotFound ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
 }

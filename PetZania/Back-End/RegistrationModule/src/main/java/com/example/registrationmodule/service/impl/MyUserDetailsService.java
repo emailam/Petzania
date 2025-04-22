@@ -1,6 +1,6 @@
 package com.example.registrationmodule.service.impl;
 
-import com.example.registrationmodule.exception.UserDoesNotExist;
+import com.example.registrationmodule.exception.UserNotFound;
 import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.model.entity.UserPrincipal;
 import com.example.registrationmodule.repository.UserRepository;
@@ -21,12 +21,12 @@ public class MyUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(username).orElseThrow(() -> new UserDoesNotExist("Username does not exist"));
+        User user = userRepository.findByEmail(username).orElseThrow(() -> new UserNotFound("Username does not exist"));
         return new UserPrincipal(user);
     }
 
-    public UserDetails loadUserByEmail(String email) throws UserDoesNotExist {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserDoesNotExist("Email does not exist"));
+    public UserDetails loadUserByEmail(String email) throws UserNotFound {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFound("Email does not exist"));
         return new UserPrincipal(user);
     }
 }

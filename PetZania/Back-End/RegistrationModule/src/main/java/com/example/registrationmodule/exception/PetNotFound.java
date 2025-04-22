@@ -1,8 +1,8 @@
 package com.example.registrationmodule.exception;
 
 // 404 not found
-public class UserNotFound extends RuntimeException {
-    public UserNotFound(String message) {
+public class PetNotFound extends RuntimeException {
+    public PetNotFound(String message) {
         super(message);
     }
 }

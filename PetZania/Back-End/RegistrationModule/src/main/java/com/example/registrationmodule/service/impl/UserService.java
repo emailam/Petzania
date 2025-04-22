@@ -3,10 +3,8 @@ package com.example.registrationmodule.service.impl;
 import com.example.registrationmodule.exception.*;
 import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.dto.EmailRequestDTO;
-import com.example.registrationmodule.model.entity.RevokedRefreshToken;
 import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.repository.UserRepository;
-import com.example.registrationmodule.repository.RevokedRefreshTokenRepository;
 import com.example.registrationmodule.service.IDTOConversionService;
 import com.example.registrationmodule.service.IEmailService;
 import com.example.registrationmodule.service.IUserService;
@@ -27,7 +25,6 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -87,14 +84,14 @@ public class UserService implements IUserService {
     public UserProfileDTO getUserById(UUID userId) {
         return userRepository.findById(userId)
                 .map(converter::mapToUserProfileDto)
-                .orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+                .orElseThrow(() -> new UserNotFound("User does not exist"));
     }
 
 
     @Override
     public void deleteUser(EmailDTO emailDTO) {
         System.out.println(emailDTO.getEmail());
-        User user = userRepository.findByEmail(emailDTO.getEmail()).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+        User user = userRepository.findByEmail(emailDTO.getEmail()).orElseThrow(() -> new UserNotFound("User does not exist"));
 
         // Send delete email
         sendDeleteConfirmation(user);
@@ -169,7 +166,7 @@ public class UserService implements IUserService {
             throw new RefreshTokenNotValid("Invalid or expired refresh token");
         }
 
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFound("User does not exist"));
         if (user.isBlocked()) {
             throw new UserIsBlocked("User is blocked, sorry cannot able to generate a new token");
         }
@@ -187,7 +184,7 @@ public class UserService implements IUserService {
     @RateLimiter(name = "logoutRateLimiter", fallbackMethod = "logoutFallback")
     public void logout(LogoutDTO logoutDTO) {
         // get the revoked token data
-        User user = userRepository.findByEmail(logoutDTO.getEmail()).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+        User user = userRepository.findByEmail(logoutDTO.getEmail()).orElseThrow(() -> new UserNotFound("User does not exist"));
 
         if (refreshTokenService.isTokenRevoked(logoutDTO.getRefreshToken())) {
             throw new UserAlreadyLoggedOut("User already logged out");
@@ -202,7 +199,7 @@ public class UserService implements IUserService {
 
     @Override
     public void blockUser(BlockUserDTO blockUserDTO) {
-        User user = userRepository.findByEmail(blockUserDTO.getEmail()).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+        User user = userRepository.findByEmail(blockUserDTO.getEmail()).orElseThrow(() -> new UserNotFound("User does not exist"));
         if (user.isBlocked()) {
             throw new UserAlreadyBlocked("User is blocked already");
         } else {
@@ -212,7 +209,7 @@ public class UserService implements IUserService {
 
     @Override
     public void unblockUser(BlockUserDTO blockUserDTO) {
-        User user = userRepository.findByEmail(blockUserDTO.getEmail()).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+        User user = userRepository.findByEmail(blockUserDTO.getEmail()).orElseThrow(() -> new UserNotFound("User does not exist"));
         if (user.isBlocked()) {
             user.setBlocked(false);
         } else {
@@ -228,7 +225,7 @@ public class UserService implements IUserService {
     @Override
     @RateLimiter(name = "verifyOtpRateLimiter", fallbackMethod = "otpFallback")
     public void verifyCode(OTPValidationDTO otpValidationDTO) {
-        User user = userRepository.findByEmail(otpValidationDTO.getEmail()).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+        User user = userRepository.findByEmail(otpValidationDTO.getEmail()).orElseThrow(() -> new UserNotFound("User does not exist"));
         if (user.isVerified()) {
             throw new UserAlreadyVerified("User already verified");
         }
@@ -265,7 +262,7 @@ public class UserService implements IUserService {
     @RateLimiter(name = "sendOtpRateLimiter", fallbackMethod = "sendOtpFallback")
     public void sendVerificationCode(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+                .orElseThrow(() -> new UserNotFound("User does not exist"));
 
         if (user.isVerified()) {
             throw new UserAlreadyVerified("User already verified");
@@ -306,7 +303,7 @@ public class UserService implements IUserService {
     @Override
     public UserProfileDTO updateUserById(UUID userId, UpdateUserProfileDto updateUserProfileDto) {
         if (!userRepository.existsById(userId)) {
-            throw new UserDoesNotExist("User does not exist");
+            throw new UserNotFound("User does not exist");
         }
 
         return userRepository.findById(userId).map(existingUser -> {
@@ -317,6 +314,6 @@ public class UserService implements IUserService {
 
             User updatedUser = userRepository.save(existingUser);
             return converter.mapToUserProfileDto(updatedUser);
-        }).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+        }).orElseThrow(() -> new UserNotFound("User does not exist"));
     }
 }
