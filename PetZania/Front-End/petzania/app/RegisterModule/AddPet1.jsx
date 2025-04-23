@@ -28,11 +28,13 @@ const AddPet1 = () => {
             mediaTypes: ['images'],
             aspect: [1, 1],
             quality: 1,
+            allowsEditing: true,
         });
 
         if (!result.canceled) {
             setImage(result.assets[0].uri);
             setPet({ ...pet, image: result.assets[0].uri });
+            console.log(result.assets[0].uri);
         }
     };
 
@@ -75,7 +77,7 @@ const AddPet1 = () => {
             </ScrollView>
 
             <View style={styles.buttonContainer}>
-                <Button title="Next" borderRadius={10} fontSize={20} onPress={goToNextStep} />
+                <Button title="Next" borderRadius={10} fontSize={16} onPress={goToNextStep} />
             </View>
         </KeyboardAvoidingView>
     );

@@ -17,9 +17,11 @@ export default function AddPet6() {
 
     useEffect(() => {
         createNewPet();
-    }, []);
+    }, [router]);
 
     const goToNextPage = () => {
+        // Here we will add the pet to the database
+        // and then navigate to the next page
         router.push('/RegisterModule/ProfileSetUp3');
     }
 
@@ -37,7 +39,7 @@ export default function AddPet6() {
                 )}
             />
             <View style={styles.buttonContainer}>
-                <Button title="Next" borderRadius={10} fontSize={20} onPress={goToNextPage} />
+                <Button title="Next" borderRadius={10} fontSize={16} onPress={goToNextPage} />
             </View>
         </View>
     )

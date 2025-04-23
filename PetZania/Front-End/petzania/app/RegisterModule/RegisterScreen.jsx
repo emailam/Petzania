@@ -5,13 +5,11 @@ import { responsive } from '@/utilities/responsive';
 import RegisterForm from '@/components/RegisterForm';
 
 export default function RegisterScreen() {
-  
   return (
     <SafeAreaView style={styles.safeArea}>
       <Text style={styles.title}>Create account</Text>
 
       <ScrollView contentContainerStyle={styles.container}>
-        
         <RegisterForm />
 
         <Text style={styles.footerText}>
@@ -29,12 +27,13 @@ const styles = StyleSheet.create({
     paddingTop: responsive.hp('10%'),
     backgroundColor: 'white',
     gap: responsive.hp('2%'),
+    height: responsive.hp('100%'),
   },
   title: {
     fontSize: responsive.fonts.title,
     color: '#9188E5',
     fontWeight: 'bold',
-    marginLeft: responsive.margins.screenEdge + 20,
+    marginLeft: responsive.margins.screenEdge + 30,
   },
   container: {
     flexGrow: 1,

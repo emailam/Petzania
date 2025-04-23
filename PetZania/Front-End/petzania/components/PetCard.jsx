@@ -7,7 +7,7 @@ export default function PetCard({ pet }) {
     const router = useRouter();
 
     const showPetInfo = (pet) => {
-        router.push({ pathname: '/RegisterModule/PetDetails', params: { ...pet } })
+        router.push({ pathname: '/RegisterModule/PetDetails', params: { name: pet.name } });
     };
 
     return (

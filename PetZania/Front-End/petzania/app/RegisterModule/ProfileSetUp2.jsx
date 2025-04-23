@@ -3,32 +3,31 @@ import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import Button from '@/components/Button';
 
-export default function AddPet() {
+export default function ProfileSetUp2() {
     const router = useRouter();
 
     const goToNextStep = () => {
-      router.push('/RegisterModule/AddPet1');
+        router.push('/RegisterModule/AddPet1');
     }
 
     return (
         <View style={styles.container}>
-            <Image source={require('../../assets/images/AddPet/Cat and Dog.png')} style={styles.image} />
+            <View style={styles.contentWrapper}>
+                <Image source={require('../../assets/images/AddPet/Cat and Dog.png')} style={styles.image} />
+                <Text style={styles.mainText}>Uh Oh!</Text>
+                <Text style={styles.description}>
+                    Looks like you have no profiles set up at this moment, add your pet now
+                </Text>
+            </View>
 
-            <Text style={styles.mainText}>Uh Oh!</Text>
-            <Text style={styles.description}>
-                Looks like you have no profiles set up at this moment, add your pet now
-            </Text>
-
-            <View style={{ width: '100%', alignItems: 'center', flex: 1, justifyContent: 'flex-end', marginBottom: 20 }}>
+            <View style={styles.buttonContainer}>
                 <Button
                     title="Next"
-                    borderRadius={10}
-                    width="88%"
-                    fontSize={20}
                     onPress={goToNextStep}
+                    fontSize={16}
                 />
-                <TouchableOpacity onPress={() => router.push('/RegisterModule/AddPet1')}>
-                  <Text style={styles.skipText}>Skip for now</Text>
+                <TouchableOpacity onPress={() => router.push('/RegisterModule/ProfileSetUp3')}>
+                    <Text style={styles.skipText}>Skip for now</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -40,7 +39,12 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#F8F8F8',
+        backgroundColor: '#fff',
+        justifyContent: 'space-between',
+    },
+    contentWrapper: {
+        alignItems: 'center',
+        marginTop: 40,
     },
     image: {
         width: 350,
@@ -64,5 +68,13 @@ const styles = StyleSheet.create({
         color: '#888',
         paddingVertical: 10,
         fontFamily: 'Inter-Bold',
+    },
+    buttonContainer: {
+        padding: 20,
+        borderTopWidth: 1,
+        borderTopColor: '#e0e0e0',
+        backgroundColor: '#f5f5f5',
+        width: '100%',
+        alignItems: 'center',
     },
 });

@@ -7,7 +7,7 @@ export default function OnboardingScreen() {
   const router = useRouter();
 
   const handleDone = async () => {
-    router.replace("/RegisterModule/RegisterScreen");
+    router.push("/RegisterModule/RegisterScreen");
   };
 
   const SkipButton = ({ ...props }) => (

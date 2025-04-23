@@ -88,7 +88,7 @@ export default function AddPet4() {
             </ScrollView>
 
             <View style={styles.buttonContainer}>
-                <Button title="Next" borderRadius={10} fontSize={20} onPress={goToNextStep} />
+                <Button title="Next" borderRadius={10} fontSize={16} onPress={goToNextStep} />
             </View>
         </KeyboardAvoidingView>
     );

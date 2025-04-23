@@ -47,7 +47,20 @@ export default function RootLayout() {
               <Stack.Screen name="RegisterModule/RegisterScreen" options={{ headerShown: false }} />
               <Stack.Screen name="RegisterModule/LoginScreen" options={{ headerShown: false }} />
               <Stack.Screen
-                name="RegisterModule/AddPet"
+                name="RegisterModule/ProfileSetUp1"
+                options={{
+                  headerTitle: () => (
+                    <View>
+                      <CustomHeader title="Profile Set Up" subtitle="Add your details 1 of 3"/>
+                    </View>
+                  ),
+                  headerBackTitle: "",
+                  headerTintColor: "#9188E5",
+                  headerStyle: { backgroundColor: "#FFF" },
+                }}
+              />
+              <Stack.Screen
+                name="RegisterModule/ProfileSetUp2"
                 options={{
                   headerTitle: () => (
                     <View>
@@ -194,6 +207,19 @@ export default function RootLayout() {
                     </Text>
                   ),
                   headerTitleAlign: "center",
+                  headerBackTitle: "",
+                  headerTintColor: "#9188E5",
+                  headerStyle: { backgroundColor: "#FFF" },
+                }}
+              />
+              <Stack.Screen
+                name="RegisterModule/ProfileSetUp3"
+                options={{
+                  headerTitle: () => (
+                    <View>
+                      <CustomHeader title="Profile Set Up" subtitle="Finalize your profile 3 of 3"/>
+                    </View>
+                  ),
                   headerBackTitle: "",
                   headerTintColor: "#9188E5",
                   headerStyle: { backgroundColor: "#FFF" },

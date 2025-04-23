@@ -17,6 +17,7 @@ export default function PasswordInput({
         control={control}
         name={name}
         render={({ field }) => (
+          
           <View style={[styles.inputContainer, errors[name] && styles.errorBorder]}>
             {/* Render icon if provided */}
             {icon && <View style={styles.iconContainer}>{icon}</View>}
@@ -44,10 +45,7 @@ export default function PasswordInput({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    width: '80%',
-    marginVertical: 12,
-  },
+  
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',

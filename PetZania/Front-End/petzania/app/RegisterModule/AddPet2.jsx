@@ -64,7 +64,7 @@ export default function AddPet2() {
                     onChangeText={handleManualInput}
                 />
                 {error ? <Text style={styles.error}>{error}</Text> : null}
-                <Button title="Next" borderRadius={10} fontSize={20} onPress={goToNextStep} />
+                <Button title="Next" borderRadius={10} fontSize={16} onPress={goToNextStep} />
             </View>
         </View>
     );
