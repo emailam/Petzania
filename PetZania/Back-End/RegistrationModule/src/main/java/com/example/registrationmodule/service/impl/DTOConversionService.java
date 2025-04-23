@@ -1,5 +1,6 @@
 package com.example.registrationmodule.service.impl;
 
+import com.example.registrationmodule.exception.user.UserNotFound;
 import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.entity.Admin;
 import com.example.registrationmodule.model.dto.PetDTO;
@@ -117,7 +118,7 @@ public class DTOConversionService implements IDTOConversionService {
         pet.setMyPicturesURLs(petDto.getMyPicturesURLs());
 
         User user = userRepository.findById(petDto.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFound("User not found"));
         pet.setUser(user);
 
         return pet;
