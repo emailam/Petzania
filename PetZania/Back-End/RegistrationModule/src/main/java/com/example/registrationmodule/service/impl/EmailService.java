@@ -1,6 +1,6 @@
 package com.example.registrationmodule.service.impl;
 
-import com.example.registrationmodule.exception.EmailNotSent;
+import com.example.registrationmodule.exception.authenticationAndVerificattion.EmailNotSent;
 import com.example.registrationmodule.model.dto.EmailRequestDTO;
 import com.example.registrationmodule.service.IEmailService;
 import com.sendgrid.Method;

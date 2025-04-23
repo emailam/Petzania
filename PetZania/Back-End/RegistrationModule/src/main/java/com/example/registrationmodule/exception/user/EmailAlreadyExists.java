@@ -1,4 +1,4 @@
-package com.example.registrationmodule.exception;
+package com.example.registrationmodule.exception.user;
 
 // 409 conflict
 public class EmailAlreadyExists extends RuntimeException {
