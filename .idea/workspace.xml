@@ -4,7 +4,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="49e5d718-e6b4-43f3-9091-c01ae0409e17" name="Changes" comment="" />
+    <list default="true" id="aacd7b49-acd6-447f-8aa4-f4265b4b3699" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/13799730-8837-4aa8-b81e-6e52dac98e49.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/13799730-8837-4aa8-b81e-6e52dac98e49.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/13799730-8837-4aa8-b81e-6e52dac98e49/storage_v2/_src_/database/postgres.edMnLQ/schema/public.abK9xQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/13799730-8837-4aa8-b81e-6e52dac98e49/storage_v2/_src_/database/postgres.edMnLQ/schema/public.abK9xQ.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/controller/UserController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/test/java/com/example/registrationmodule/TestDataUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/test/java/com/example/registrationmodule/TestDataUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/test/java/com/example/registrationmodule/controller/UserControllerIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/test/java/com/example/registrationmodule/controller/UserControllerIntegrationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/test/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/test/resources/application.yml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -16,45 +26,121 @@
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
-  <component name="MavenImportPreferences">
-    <option name="generalSettings">
-      <MavenGeneralSettings>
-        <option name="useMavenConfig" value="true" />
-      </MavenGeneralSettings>
-    </option>
+  <component name="ProjectId" id="2w0WaFTAMYuGK65UjLkTy0Frc6t" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
   </component>
-  <component name="ProjectId" id="2tmPrZ5FkNVwdlqlvX69pKt4UGr" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.cidr.known.project.marker": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
     "WebServerToolWindowFactoryState": "false",
-    "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "feature/admin-controller-service",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "C:/Users/alanh/Documents/GitHub/Petzania/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "reference.projectsettings.compiler.annotationProcessors",
     "spring.configuration.checksum": "e750f113bb97157825a84bd97017a404",
     "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "postgresql",
+      "redis",
+      "h2"
+    ]
   }
 }]]></component>
-  <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\Users\alanh\Documents\GitHub\Petzania\PetZania\Back-End\RegistrationModule\src\main\java\com\example\registrationmodule\service\impl" />
-      <recent name="C:\Users\alanh\Documents\GitHub\Petzania\PetZania\Back-End\RegistrationModule\src\main\java\com\example\registrationmodule\service" />
-      <recent name="C:\Users\alanh\Documents\GitHub\Petzania\PetZania\Back-End\RegistrationModule\src\main\java\com\example\registrationmodule\repository" />
-      <recent name="C:\Users\alanh\Documents\GitHub\Petzania\PetZania\Back-End\RegistrationModule\src\main\java\com\example\registrationmodule\model\dto" />
-      <recent name="C:\Users\alanh\Documents\GitHub\Petzania\PetZania\Back-End\RegistrationModule\src\main\java\com\example\registrationmodule\controller" />
-    </key>
+  <component name="ReactorSettings">
+    <option name="notificationShown" value="true" />
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="JUnit.UserControllerIntegrationTests">
+    <configuration name="UserControllerIntegrationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="RegistrationModule" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.example.registrationmodule.controller.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.example.registrationmodule.controller" />
+      <option name="MAIN_CLASS_NAME" value="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="UserControllerIntegrationTests.testChangePassword_Success" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="RegistrationModule" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.example.registrationmodule.controller.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.example.registrationmodule.controller" />
+      <option name="MAIN_CLASS_NAME" value="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
+      <option name="METHOD_NAME" value="testChangePassword_Success" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="UserControllerIntegrationTests.testVerifyRegistrationOTPCode_InvalidOTPCode_Failure" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="RegistrationModule" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.example.registrationmodule.controller.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.example.registrationmodule.controller" />
+      <option name="MAIN_CLASS_NAME" value="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
+      <option name="METHOD_NAME" value="testVerifyRegistrationOTPCode_InvalidOTPCode_Failure" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="UserControllerIntegrationTests.testVerifyRegistrationOTPCode_Success" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="RegistrationModule" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.example.registrationmodule.controller.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.example.registrationmodule.controller" />
+      <option name="MAIN_CLASS_NAME" value="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
+      <option name="METHOD_NAME" value="testVerifyRegistrationOTPCode_Success" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="UserControllerIntegrationTests.testVerifyRegistrationOTPCode_UserAlreadyVerified_Failure" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="RegistrationModule" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.example.registrationmodule.controller.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.example.registrationmodule.controller" />
+      <option name="MAIN_CLASS_NAME" value="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
+      <option name="METHOD_NAME" value="testVerifyRegistrationOTPCode_UserAlreadyVerified_Failure" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="RegistrationModuleApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="RegistrationModule" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.example.registrationmodule.RegistrationModuleApplication" />
@@ -62,21 +148,35 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.UserControllerIntegrationTests" />
+        <item itemvalue="JUnit.UserControllerIntegrationTests.testVerifyRegistrationOTPCode_InvalidOTPCode_Failure" />
+        <item itemvalue="JUnit.UserControllerIntegrationTests.testVerifyRegistrationOTPCode_UserAlreadyVerified_Failure" />
+        <item itemvalue="JUnit.UserControllerIntegrationTests.testVerifyRegistrationOTPCode_Success" />
+        <item itemvalue="JUnit.UserControllerIntegrationTests.testChangePassword_Success" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="49e5d718-e6b4-43f3-9091-c01ae0409e17" name="Changes" comment="" />
-      <created>1740954475668</created>
+      <changelist id="aacd7b49-acd6-447f-8aa4-f4265b4b3699" name="Changes" comment="" />
+      <created>1745180638507</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1740954475668</updated>
-      <workItem from="1740954476822" duration="34000" />
-      <workItem from="1741286420355" duration="296000" />
+      <updated>1745180638507</updated>
+      <workItem from="1745180642335" duration="48000" />
+      <workItem from="1745180699266" duration="49000" />
+      <workItem from="1745180758033" duration="179000" />
+      <workItem from="1745180945712" duration="3405000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
 </project>

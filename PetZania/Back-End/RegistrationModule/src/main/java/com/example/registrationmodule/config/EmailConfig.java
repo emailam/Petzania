@@ -4,8 +4,10 @@ import com.sendgrid.SendGrid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 
 @Configuration
+@PropertySource("classpath:application.yml")
 public class EmailConfig {
     @Value("${spring.sendgrid.key}")
     private String key;
@@ -13,5 +15,4 @@ public class EmailConfig {
     public SendGrid getSendgrid(){
         return new SendGrid(key);
     }
-
 }
