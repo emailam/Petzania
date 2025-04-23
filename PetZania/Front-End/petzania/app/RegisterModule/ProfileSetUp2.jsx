@@ -14,10 +14,11 @@ export default function ProfileSetUp2() {
         <View style={styles.container}>
             <View style={styles.contentWrapper}>
                 <Image source={require('../../assets/images/AddPet/Cat and Dog.png')} style={styles.image} />
-                <Text style={styles.mainText}>Uh Oh!</Text>
+                <Text style={styles.mainText}>Who's a good pet? 🐾</Text>
                 <Text style={styles.description}>
-                    Looks like you have no profiles set up at this moment, add your pet now
+                    Add your pets now to begin tracking their adventures!
                 </Text>
+
             </View>
 
             <View style={styles.buttonContainer}>
