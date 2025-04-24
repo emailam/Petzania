@@ -5,10 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="aacd7b49-acd6-447f-8aa4-f4265b4b3699" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/13799730-8837-4aa8-b81e-6e52dac98e49.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/13799730-8837-4aa8-b81e-6e52dac98e49.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/13799730-8837-4aa8-b81e-6e52dac98e49/storage_v2/_src_/database/postgres.edMnLQ/schema/public.abK9xQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/13799730-8837-4aa8-b81e-6e52dac98e49/storage_v2/_src_/database/postgres.edMnLQ/schema/public.abK9xQ.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/model/entity/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/model/entity/User.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/test/java/com/example/registrationmodule/controller/UserControllerIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/test/java/com/example/registrationmodule/controller/UserControllerIntegrationTests.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -165,7 +165,7 @@
       <workItem from="1745180699266" duration="49000" />
       <workItem from="1745180758033" duration="179000" />
       <workItem from="1745180945712" duration="3405000" />
-      <workItem from="1745484952191" duration="17570000" />
+      <workItem from="1745484952191" duration="20272000" />
     </task>
     <servers />
   </component>
@@ -174,5 +174,19 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl/UserService.java</url>
+          <line>132</line>
+          <properties>
+            <option name="lambda-ordinal" value="-1" />
+          </properties>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

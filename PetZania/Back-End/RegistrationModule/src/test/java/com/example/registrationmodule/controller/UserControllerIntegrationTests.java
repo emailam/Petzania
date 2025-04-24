@@ -62,7 +62,6 @@ public class UserControllerIntegrationTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(otpValidationDTO)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
-
     }
 
     @Test

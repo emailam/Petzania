@@ -132,15 +132,16 @@ public class UserService implements IUserService {
     public TokenDTO login(LoginUserDTO loginUserDTO) {
         User user = userRepository.findByEmail(loginUserDTO.getEmail()).orElseThrow(() -> new InvalidUserCredentials("Email is incorrect"));
 
-        if (!user.isVerified()) {
-            throw new UserNotVerified("User is not verified");
-        }
-        if (user.isBlocked()) {
-            throw new UserIsBlocked("User is blocked");
-        }
-
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginUserDTO.getEmail(), loginUserDTO.getPassword()));
         if (authentication.isAuthenticated()) {
+            if (!user.isVerified()) {
+                throw new UserNotVerified("User is not verified");
+            }
+
+            if (user.isBlocked()) {
+                throw new UserIsBlocked("User is blocked");
+            }
+            
             return new TokenDTO(jwtService.generateAccessToken(loginUserDTO.getEmail(), "ROLE_USER"), jwtService.generateRefreshToken(loginUserDTO.getEmail(), "ROLE_USER"));
         } else {
             throw new InvalidUserCredentials("Email or password is incorrect");
