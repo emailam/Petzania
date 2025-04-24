@@ -88,11 +88,17 @@ public class PetControllerIntegrationTests {
     public void testCreateValidPet() throws Exception {
         Pet testPetA = TestDataUtil.createTestPetA(testUserA);
         PetDTO testPetDTO = dtoConversionService.mapToPetDto(testPetA);
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/pet")
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/api/pet")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Authorization", token)
                         .content(objectMapper.writeValueAsString(testPetDTO)))
-                .andExpect(MockMvcResultMatchers.status().isCreated());
+                .andExpect(MockMvcResultMatchers.status().isCreated())
+                .andReturn();
+
+        String response = result.getResponse().getContentAsString();
+        UUID createdPetId = UUID.fromString(objectMapper.readTree(response).get("petId").asText());
+        assertTrue(petService.existsById(createdPetId));
     }
 
     @Test
@@ -200,6 +206,7 @@ public class PetControllerIntegrationTests {
         Pet updatedPet = petService.getPetById(testPetA.getPetId()).orElseThrow();
         assertEquals(updatePetDTO.getName(), updatedPet.getName());
         assertEquals(updatePetDTO.getDescription(), updatedPet.getDescription());
+        assertEquals(testPetA.getSpecies(), updatedPet.getSpecies());
     }
 
     @Test
