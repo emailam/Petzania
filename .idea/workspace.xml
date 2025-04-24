@@ -6,7 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="aacd7b49-acd6-447f-8aa4-f4265b4b3699" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/controller/UserController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/test/java/com/example/registrationmodule/controller/UserControllerIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/test/java/com/example/registrationmodule/controller/UserControllerIntegrationTests.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,7 +54,7 @@
   <component name="ReactorSettings">
     <option name="notificationShown" value="true" />
   </component>
-  <component name="RunManager" selected="Spring Boot.RegistrationModuleApplication">
+  <component name="RunManager" selected="JUnit.UserControllerIntegrationTests">
     <configuration name="UserControllerIntegrationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="RegistrationModule" />
       <extension name="coverage">
@@ -70,7 +70,7 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="UserControllerIntegrationTests.testChangePassword_Success" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="UserControllerIntegrationTests.testResetPassword_InvalidPassword_Failure" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="RegistrationModule" />
       <extension name="coverage">
         <pattern>
@@ -80,13 +80,13 @@
       </extension>
       <option name="PACKAGE_NAME" value="com.example.registrationmodule.controller" />
       <option name="MAIN_CLASS_NAME" value="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
-      <option name="METHOD_NAME" value="testChangePassword_Success" />
+      <option name="METHOD_NAME" value="testResetPassword_InvalidPassword_Failure" />
       <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="UserControllerIntegrationTests.testVerifyRegistrationOTPCode_InvalidOTPCode_Failure" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="UserControllerIntegrationTests.testSignUp_InvalidMail_ShouldReturnBadRequest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="RegistrationModule" />
       <extension name="coverage">
         <pattern>
@@ -96,13 +96,13 @@
       </extension>
       <option name="PACKAGE_NAME" value="com.example.registrationmodule.controller" />
       <option name="MAIN_CLASS_NAME" value="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
-      <option name="METHOD_NAME" value="testVerifyRegistrationOTPCode_InvalidOTPCode_Failure" />
+      <option name="METHOD_NAME" value="testSignUp_InvalidMail_ShouldReturnBadRequest" />
       <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="UserControllerIntegrationTests.testVerifyRegistrationOTPCode_Success" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="UserControllerIntegrationTests.testSignUp_InvalidPassword_ShouldReturnBadRequest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="RegistrationModule" />
       <extension name="coverage">
         <pattern>
@@ -112,13 +112,13 @@
       </extension>
       <option name="PACKAGE_NAME" value="com.example.registrationmodule.controller" />
       <option name="MAIN_CLASS_NAME" value="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
-      <option name="METHOD_NAME" value="testVerifyRegistrationOTPCode_Success" />
+      <option name="METHOD_NAME" value="testSignUp_InvalidPassword_ShouldReturnBadRequest" />
       <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="UserControllerIntegrationTests.testVerifyRegistrationOTPCode_UserAlreadyVerified_Failure" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="UserControllerIntegrationTests.testSignUp_InvalidUserName_ShouldReturnBadRequest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="RegistrationModule" />
       <extension name="coverage">
         <pattern>
@@ -128,7 +128,7 @@
       </extension>
       <option name="PACKAGE_NAME" value="com.example.registrationmodule.controller" />
       <option name="MAIN_CLASS_NAME" value="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
-      <option name="METHOD_NAME" value="testVerifyRegistrationOTPCode_UserAlreadyVerified_Failure" />
+      <option name="METHOD_NAME" value="testSignUp_InvalidUserName_ShouldReturnBadRequest" />
       <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -144,10 +144,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="JUnit.UserControllerIntegrationTests" />
-        <item itemvalue="JUnit.UserControllerIntegrationTests.testVerifyRegistrationOTPCode_InvalidOTPCode_Failure" />
-        <item itemvalue="JUnit.UserControllerIntegrationTests.testVerifyRegistrationOTPCode_UserAlreadyVerified_Failure" />
-        <item itemvalue="JUnit.UserControllerIntegrationTests.testVerifyRegistrationOTPCode_Success" />
-        <item itemvalue="JUnit.UserControllerIntegrationTests.testChangePassword_Success" />
+        <item itemvalue="JUnit.UserControllerIntegrationTests.testResetPassword_InvalidPassword_Failure" />
+        <item itemvalue="JUnit.UserControllerIntegrationTests.testSignUp_InvalidUserName_ShouldReturnBadRequest" />
+        <item itemvalue="JUnit.UserControllerIntegrationTests.testSignUp_InvalidMail_ShouldReturnBadRequest" />
+        <item itemvalue="JUnit.UserControllerIntegrationTests.testSignUp_InvalidPassword_ShouldReturnBadRequest" />
       </list>
     </recent_temporary>
   </component>
@@ -163,7 +163,7 @@
       <workItem from="1745180699266" duration="49000" />
       <workItem from="1745180758033" duration="179000" />
       <workItem from="1745180945712" duration="3405000" />
-      <workItem from="1745484952191" duration="14486000" />
+      <workItem from="1745484952191" duration="14891000" />
     </task>
     <servers />
   </component>
