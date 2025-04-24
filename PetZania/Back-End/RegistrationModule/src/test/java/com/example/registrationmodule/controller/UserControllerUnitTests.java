@@ -19,7 +19,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import javax.print.attribute.standard.Media;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -31,7 +30,7 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(SpringExtension.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @AutoConfigureMockMvc
-public class UserControllerIntegrationTests {
+public class UserControllerUnitTests {
 
     private MockMvc mockMvc;
     private IUserService userService;
@@ -39,7 +38,7 @@ public class UserControllerIntegrationTests {
     private final String DEFAULT_PASSWORD = "Password123#";
 
     @Autowired
-    public UserControllerIntegrationTests(MockMvc mockMvc, IUserService userService, ObjectMapper objectMapper) {
+    public UserControllerUnitTests(MockMvc mockMvc, IUserService userService, ObjectMapper objectMapper) {
         this.mockMvc = mockMvc;
         this.userService = userService;
         this.objectMapper = objectMapper;
@@ -240,7 +239,7 @@ public class UserControllerIntegrationTests {
         mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/resetPassword")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(resetPasswordDTO)))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                .andExpect(MockMvcResultMatchers.status().isNotAcceptable());
     }
 
 
@@ -288,7 +287,7 @@ public class UserControllerIntegrationTests {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/user/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerUserDTO)))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                .andExpect(MockMvcResultMatchers.status().isNotAcceptable());
     }
 
     @Test
@@ -301,7 +300,7 @@ public class UserControllerIntegrationTests {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/user/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerUserDTO)))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                .andExpect(MockMvcResultMatchers.status().isNotAcceptable());
     }
 
     @Test
@@ -314,7 +313,7 @@ public class UserControllerIntegrationTests {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/user/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerUserDTO)))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                .andExpect(MockMvcResultMatchers.status().isNotAcceptable());
     }
 
     @Test
