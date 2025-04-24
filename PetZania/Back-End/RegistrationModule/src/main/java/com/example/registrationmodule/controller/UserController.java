@@ -118,7 +118,7 @@ public class UserController {
     public ResponseEntity<Page<UserProfileDTO>> getUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "userId") String sortBy,
             @RequestParam(defaultValue = "asc") String direction
     ) {
         Page<UserProfileDTO> users = userService.getUsers(page, size, sortBy, direction);
