@@ -38,6 +38,7 @@ public class User {
     @Column(name = "password", nullable = false)
     private String password;
 
+
     @Column(name = "email", nullable = false, unique = true)
     @Email
     private String email;

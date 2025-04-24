@@ -93,14 +93,6 @@ public class UserService implements IUserService {
 
     @Override
     public void deleteUser(EmailDTO emailDTO) {
-        if (userRepository.findByEmail(emailDTO.getEmail()).isPresent()) {
-            sendDeactivationMessage(emailDTO.getEmail());
-            userRepository.deleteUserByEmail(emailDTO.getEmail());
-        } else {
-            throw new UserNotFound("User does not exist");
-        }
-
-        System.out.println(emailDTO.getEmail());
         User user = userRepository.findByEmail(emailDTO.getEmail()).orElseThrow(() -> new UserNotFound("User does not exist"));
 
         // Send delete email
@@ -140,15 +132,16 @@ public class UserService implements IUserService {
     public TokenDTO login(LoginUserDTO loginUserDTO) {
         User user = userRepository.findByEmail(loginUserDTO.getEmail()).orElseThrow(() -> new InvalidUserCredentials("Email is incorrect"));
 
-        if (!user.isVerified()) {
-            throw new UserNotVerified("User is not verified");
-        }
-        if (user.isBlocked()) {
-            throw new UserIsBlocked("User is blocked");
-        }
-
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginUserDTO.getEmail(), loginUserDTO.getPassword()));
         if (authentication.isAuthenticated()) {
+            if (!user.isVerified()) {
+                throw new UserNotVerified("User is not verified");
+            }
+
+            if (user.isBlocked()) {
+                throw new UserIsBlocked("User is blocked");
+            }
+            
             return new TokenDTO(jwtService.generateAccessToken(loginUserDTO.getEmail(), "ROLE_USER"), jwtService.generateRefreshToken(loginUserDTO.getEmail(), "ROLE_USER"));
         } else {
             throw new InvalidUserCredentials("Email or password is incorrect");
@@ -260,6 +253,7 @@ public class UserService implements IUserService {
         if (refreshTokenService.isTokenRevoked(logoutDTO.getRefreshToken())) {
             throw new UserAlreadyLoggedOut("User already logged out");
         }
+
         // save it in the database
         refreshTokenService.saveToken(logoutDTO.getRefreshToken(), user);
     }
@@ -275,6 +269,7 @@ public class UserService implements IUserService {
             throw new UserAlreadyBlocked("User is blocked already");
         } else {
             user.setBlocked(true);
+            sendDeactivationMessage(blockUserDTO.getEmail());
         }
     }
 
