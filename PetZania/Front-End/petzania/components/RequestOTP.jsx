@@ -27,7 +27,7 @@ export default function RequestOTP({ RESEND_COOLDOWN }) {
     
     try {
       // Replace the endpoint URL with your actual API endpoint.
-      const response = await axios.post("/api/request-otp");
+      const response = await axios.post("http://192.168.1.4:8080/api/user/auth/resendOTP");
       if (response.status === 200) {
         console.log("New OTP requested successfully:", response.data);
         // Optionally, you can update a success message state here.
@@ -37,7 +37,7 @@ export default function RequestOTP({ RESEND_COOLDOWN }) {
     } catch (error) {
       console.error("Error requesting new OTP:", error.response?.data?.message || error.message);
     }
-    
+
     // Disable the resend button and start the cooldown.
     setResendActive(false);
   };

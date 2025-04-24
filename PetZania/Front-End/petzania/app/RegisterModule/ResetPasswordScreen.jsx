@@ -10,7 +10,7 @@ export default function ResetPasswordScreen(){
         <Text style={styles.title}>Reset Password</Text>
         <Text style = {styles.text}>Create a new password. Ensure it differs from previous ones for security</Text>
         <ResetPasswordForm/>
-    </SafeAreaView>
+      </SafeAreaView>
     )
 }
 const styles = StyleSheet.create({

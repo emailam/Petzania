@@ -1,30 +1,33 @@
 import { CodeField, Cursor, useBlurOnFulfill, useClearByFocusCell } from "react-native-confirmation-code-field";
 import Button from "@/components/Button";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { responsive } from '@/utilities/responsive';
 import axios from "axios";
 import { useRouter } from "expo-router";
-export default function OTPForm({ CELL_COUNT , isRegister , email }) {
+import { UserContext } from "@/context/UserContext";
+
+export default function OTPForm({ CELL_COUNT, isRegister }) {
   const [value, setValue] = useState("");
   const ref = useBlurOnFulfill({ value, cellCount: CELL_COUNT });
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({ value, setValue });
   const [errorMessage, setErrorMessage] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const router = useRouter();
-  const handleVerify = async () => {
 
-    console.log("OTP entered:", value);
+  const { user } = useContext(UserContext);
+  const { email } = user;
+
+  const handleVerify = async () => {
     try {
       // Replace the URL below with your actual OTP verification endpoint.
-      const response = await axios.post("/api/verify-otp", { otp: value });
-      
+      const response = await axios.put("http://192.168.1.4:8080/api/user/auth/verify", { otp: value, email: email });
       // Assuming a response structure like { success: true, message: "OTP verified" }
-      if (response.data.success) {
+      if (response.status === 200) {
         setSuccessMessage("OTP verified successfully!");
         setErrorMessage(null);
         if(isRegister) {
-        router.replace("/RegisterModule/LoginScreen");
+          router.replace("/RegisterModule/LoginScreen");
         }
         else {
           router.replace("/RegisterModule/ResetPasswordScreen", { email: email });

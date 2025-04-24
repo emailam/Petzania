@@ -14,9 +14,7 @@ import org.springframework.cache.annotation.EnableCaching;
 @EnableAspectJAutoProxy
 @EnableCaching
 public class RegistrationModuleApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(RegistrationModuleApplication.class, args);
     }
-
 }

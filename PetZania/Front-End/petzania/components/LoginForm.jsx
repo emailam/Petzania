@@ -1,5 +1,5 @@
-import React from "react";
-import {  View , StyleSheet } from 'react-native';
+import React, {useContext} from "react";
+import { View , StyleSheet } from 'react-native';
 import { Link } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
@@ -8,34 +8,90 @@ import Button from "@/components/Button";
 import FormInput from "@/components/FormInput";
 import PasswordInput from "@/components/PasswordInput";
 import { responsive } from "@/utilities/responsive";
-import {useAuthForm} from "@/components/useForm";
+import { useAuthForm } from "@/components/useForm";
 import axios from "axios";
+
+const { useRouter } = require("expo-router");
+
+import { UserContext } from "@/context/UserContext";
+import { AuthContext } from "@/context/AuthContext";
+
+
 export default function LoginForm(){
     const {control , handleSubmit , formState:{errors , isSubmitting} , setError} = useAuthForm("login");
 
     const [displayPassword, setDisplayPassword] = React.useState(false);
 
+    const router = useRouter();
+
+    const {user} = useContext(UserContext);
+    const {setRefreshToken, setAccessToken} = useContext(AuthContext);
+
     const Login = async (data) => {
         try {
-
-        const response = await axios.post("http://localhost:8080/api/user/auth/login", data);
-
-        if (response.ok) {
-            // Redirect to the HomePage screen.
-            // To be implemented 
-        } 
-        } catch (error) {
-        const errorMsg = error.response?.data?.message || error.message;
-        
-        const field = errorMsg.toLowerCase().includes('email') ? 'email' :
-                        errorMsg.toLowerCase().includes('password') ? 'password' : null;
-        
-        if (field) {
-            setError(field, { type: 'manual', message: errorMsg });
-        } else {
-            Alert.alert('Error', errorMsg);
+            const response = await axios.post("http://192.168.1.4:8080/api/user/auth/login", data);
+            console.log(response, data);
+            if (response.status === 200) {
+                console.log("Login successful:", response.data);
+                if(!user.name){
+                    router.push('/RegisterModule/ProfileSetUp1');
+                }
+                else{
+                    router.dismissAll();
+                    router.replace('(tabs)');
+                }
+            }
         }
+        catch (error) {
+            const status = error.response?.status;
+            const errorMsg = error.response?.data?.message || error.message;
+
+            const showBothFieldsError = (message) => {
+                setError("email", {
+                    type: "manual",
+                    message,
+                });
+                setError("password", {
+                    type: "manual",
+                    message,
+                });
+            };
+
+            if (status === 400) {
+                showBothFieldsError("Invalid email or password.");
+                return;
+            }
+            if (status === 401) {
+                router.push("/RegisterModule/OTPVerificationScreen", { email: data.email });
+            }
+
+            if (status === 429) {
+                setError("email", {
+                    type: "manual",
+                    message: "Too many login attempts. Please try again later.",
+                });
+                setError("password", {
+                    type: "manual",
+                    message: "Too many login attempts. Please try again later.",
+                });
+                return;
+            }
+
+            // Fallback error handling
+            const field = errorMsg.toLowerCase().includes("email")
+                ? "email"
+                : errorMsg.toLowerCase().includes("password")
+                ? "password"
+                : null;
+
+            if (field) {
+                setError(field, { type: "manual", message: errorMsg });
+            } else {
+                // For general error with unknown field, show on both
+                showBothFieldsError(errorMsg);
+            }
         }
+
     }
     return(
         <View style = {styles.container}>
@@ -46,7 +102,6 @@ export default function LoginForm(){
                 placeholder="Email"
                 icon={<MaterialIcons name="email" size={24} color="#8188E5" />}
             />
-   
             <PasswordInput
                 control={control}
                 name="password"
@@ -54,12 +109,11 @@ export default function LoginForm(){
                 showPassword={displayPassword}
                 toggleShow={() => setDisplayPassword(!displayPassword)}
                 placeholder="Password"
-                icon={  
-                <FontAwesome name="lock" size={24} color="#9188E5"/>}
+                icon={<FontAwesome name="lock" size={24} color="#9188E5"/>}
             />
-            
+
             <Link href="/forgot-password" style={styles.link}> Forgot Password? </Link>
-              
+
             <Button
                 title="Login"
                 onPress={handleSubmit(Login)}
