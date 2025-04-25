@@ -1,9 +1,6 @@
-import { View, Text } from 'react-native'
 import React from 'react'
-import Onboarding from './onboarding/index'
+import { Redirect } from 'expo-router';
 
-export default function index() {
-  return (
-    <Onboarding />
-  )
+export default function App() {
+    return <Redirect href="/RegisterModule/RegisterScreen" />;
 }

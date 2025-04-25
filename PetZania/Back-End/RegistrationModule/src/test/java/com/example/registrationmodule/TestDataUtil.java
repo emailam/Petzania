@@ -16,7 +16,6 @@ public class TestDataUtil {
         return User.builder()
                 .username("testUser")
                 .password("Password123#")
-                .loginTimes(0)
                 .email("test@example.com")
                 .name("Test User")
                 .bio("I love pets!")

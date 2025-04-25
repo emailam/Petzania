@@ -5,18 +5,16 @@ import { responsive } from '@/utilities/responsive';
 import RegisterForm from '@/components/RegisterForm';
 
 export default function RegisterScreen() {
-  
   return (
     <SafeAreaView style={styles.safeArea}>
       <Text style={styles.title}>Create account</Text>
 
       <ScrollView contentContainerStyle={styles.container}>
-        
         <RegisterForm />
 
         <Text style={styles.footerText}>
           Already have an account?{' '}
-          <Link href="/login" style={styles.link}>Login now</Link>
+          <Link href="/RegisterModule/LoginScreen" style={styles.link}>Login now</Link>
         </Text>
       </ScrollView>
     </SafeAreaView>

@@ -28,7 +28,6 @@ public class UserController {
         userService.logout(logoutDTO);
         return ResponseEntity.ok("User logged out successfully");
     }
-
     
     @PostMapping("/resendOTP")
     public ResponseEntity<String> resendOTP(@RequestBody @Valid EmailDTO emailDTO) {
@@ -49,8 +48,8 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<ResponseLoginDTO> login(@RequestBody @Valid LoginUserDTO loginUserDTO) {
-        ResponseLoginDTO token = userService.login(loginUserDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(token);
+        TokenDTO token = userService.login(loginUserDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseLoginDTO("Successful login", token));
     }
 
     @PostMapping("/refresh-token")

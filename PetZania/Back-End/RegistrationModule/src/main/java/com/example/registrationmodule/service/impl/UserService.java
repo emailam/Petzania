@@ -129,7 +129,7 @@ public class UserService implements IUserService {
 
     @Override
     @RateLimiter(name = "loginRateLimiter", fallbackMethod = "loginFallback")
-    public ResponseLoginDTO login(LoginUserDTO loginUserDTO) {
+    public TokenDTO login(LoginUserDTO loginUserDTO) {
         User user = userRepository.findByEmail(loginUserDTO.getEmail()).orElseThrow(() -> new InvalidUserCredentials("Email is incorrect"));
 
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginUserDTO.getEmail(), loginUserDTO.getPassword()));
@@ -141,21 +141,14 @@ public class UserService implements IUserService {
             if (user.isBlocked()) {
                 throw new UserIsBlocked("User is blocked");
             }
-
-            String message = "Successful login";
-            TokenDTO tokenDTO = new TokenDTO(jwtService.generateAccessToken(loginUserDTO.getEmail(), "ROLE_USER"), jwtService.generateRefreshToken(loginUserDTO.getEmail(), "ROLE_USER"));
-            int loginTimes = user.getLoginTimes();
-            UUID userId = user.getUserId();
-            user.setLoginTimes(loginTimes + 1);
-            userRepository.save(user);
-
-            return new ResponseLoginDTO(message, tokenDTO, loginTimes + 1, userId);
+            
+            return new TokenDTO(jwtService.generateAccessToken(loginUserDTO.getEmail(), "ROLE_USER"), jwtService.generateRefreshToken(loginUserDTO.getEmail(), "ROLE_USER"));
         } else {
             throw new InvalidUserCredentials("Email or password is incorrect");
         }
     }
 
-    public ResponseLoginDTO loginFallback(LoginUserDTO loginUserDTO, RequestNotPermitted t) {
+    public TokenDTO loginFallback(LoginUserDTO loginUserDTO, RequestNotPermitted t) {
         throw new TooManyLoginRequests("Too many login attempts. Try again later.");
     }
 

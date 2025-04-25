@@ -38,8 +38,7 @@ public class User {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "login_times")
-    private Integer loginTimes = 0;
+
     @Column(name = "email", nullable = false, unique = true)
     @Email
     private String email;

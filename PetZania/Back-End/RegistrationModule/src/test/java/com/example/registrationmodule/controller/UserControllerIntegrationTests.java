@@ -362,7 +362,6 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testGetUserById_UserExists_ShouldReturnUserProfile() throws Exception {
-
         User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
         String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
 
