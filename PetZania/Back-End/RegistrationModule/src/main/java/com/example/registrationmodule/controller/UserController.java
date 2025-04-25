@@ -48,8 +48,8 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<ResponseLoginDTO> login(@RequestBody @Valid LoginUserDTO loginUserDTO) {
-        TokenDTO token = userService.login(loginUserDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseLoginDTO("Successful login", token));
+        ResponseLoginDTO token = userService.login(loginUserDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(token);
     }
 
     @PostMapping("/refresh-token")

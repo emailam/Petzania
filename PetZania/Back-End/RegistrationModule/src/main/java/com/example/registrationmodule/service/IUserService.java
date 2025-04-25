@@ -35,7 +35,7 @@ public interface IUserService {
 
     User saveUser(User user);
 
-    TokenDTO login(LoginUserDTO loginUserDTO);
+    ResponseLoginDTO login(LoginUserDTO loginUserDTO);
 
     TokenDTO refreshToken(String refreshToken);
 

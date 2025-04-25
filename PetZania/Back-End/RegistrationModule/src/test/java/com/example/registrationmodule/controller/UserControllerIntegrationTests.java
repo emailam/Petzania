@@ -439,7 +439,7 @@ public class UserControllerIntegrationTests {
                         .content(objectMapper.writeValueAsString(updateDto))
                         .header("Authorization", token))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
-    }
+    }   
 
     @Test
     public void testUpdateUserProfileById_PartialUpdate_ShouldReturnUpdatedProfile() throws Exception {

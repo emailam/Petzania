@@ -37,6 +37,7 @@ public class DTOConversionService implements IDTOConversionService {
                 user.getUserId(),
                 user.getUsername(),
                 user.getName(),
+                user.getLoginTimes(),
                 user.getBio(),
                 user.getProfilePictureURL(),
                 user.getPhoneNumber(),
