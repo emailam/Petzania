@@ -5,33 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="aacd7b49-acd6-447f-8aa4-f4265b4b3699" name="Changes" comment="">
-<<<<<<< HEAD
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/13799730-8837-4aa8-b81e-6e52dac98e49.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/13799730-8837-4aa8-b81e-6e52dac98e49.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/13799730-8837-4aa8-b81e-6e52dac98e49/storage_v2/_src_/database/postgres.edMnLQ/schema/public.abK9xQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/13799730-8837-4aa8-b81e-6e52dac98e49/storage_v2/_src_/database/postgres.edMnLQ/schema/public.abK9xQ.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/6d81fda2-ede1-45cf-ae16-627aeb752c61.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/6d81fda2-ede1-45cf-ae16-627aeb752c61.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/RegistrationModuleApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/RegistrationModuleApplication.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/test/java/com/example/registrationmodule/controller/UserControllerIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/test/java/com/example/registrationmodule/controller/UserControllerIntegrationTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(tabs)/index.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(tabs)/index.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/controller/UserController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/OTPVerificationScreen.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/OTPVerificationScreen.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/ResetPasswordScreen.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/ResetPasswordScreen.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/_layout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/_layout.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/index.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/index.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/Button.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/Button.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/ForgotPasswordForm.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/ForgotPasswordForm.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/LoginForm.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/LoginForm.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/OTPForm.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/OTPForm.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/RegisterForm.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/RegisterForm.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/RequestOTP.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/RequestOTP.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/ResetPasswordForm.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/ResetPasswordForm.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/context/AuthContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/context/AuthContext.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/context/UserContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/context/UserContext.js" afterDir="false" />
-=======
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/model/entity/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/model/entity/User.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl/UserService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/test/java/com/example/registrationmodule/controller/UserControllerIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/test/java/com/example/registrationmodule/controller/UserControllerIntegrationTests.java" afterDir="false" />
->>>>>>> 8ea8146953c75ef20b5f7abb22370bdeb958c6ad
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,7 +38,7 @@
     <option name="stateVersion" value="1" />
   </component>
   <component name="ProjectColorInfo">{
-  &quot;associatedIndex&quot;: 7
+  &quot;associatedIndex&quot;: 8
 }</component>
   <component name="ProjectId" id="2w0WaFTAMYuGK65UjLkTy0Frc6t" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
@@ -70,37 +51,22 @@
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
-<<<<<<< HEAD
-    &quot;Application.RegistrationModuleApplication.executor&quot;: &quot;Run&quot;,
-=======
->>>>>>> 8ea8146953c75ef20b5f7abb22370bdeb958c6ad
     &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
     &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
     &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
     &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
-<<<<<<< HEAD
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;Spring Boot.RegistrationModuleApplication.executor&quot;: &quot;Run&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
     &quot;git-widget-placeholder&quot;: &quot;Front-Back-Integration-Registration-Module&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/AliveTube/Documents/Projects CS50/Petzania&quot;,
-=======
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
->>>>>>> 8ea8146953c75ef20b5f7abb22370bdeb958c6ad
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-<<<<<<< HEAD
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-=======
->>>>>>> 8ea8146953c75ef20b5f7abb22370bdeb958c6ad
     &quot;settings.editor.selected.configurable&quot;: &quot;reference.projectsettings.compiler.annotationProcessors&quot;,
     &quot;spring.configuration.checksum&quot;: &quot;e750f113bb97157825a84bd97017a404&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\AliveTube\\Documents\\Projects CS50\\Petzania\\PetZania\\Front-End\\petzania\\node_modules\\typescript\\lib&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
   &quot;keyToStringList&quot;: {
@@ -115,22 +81,6 @@
     <option name="notificationShown" value="true" />
   </component>
   <component name="RunManager" selected="Spring Boot.RegistrationModuleApplication">
-<<<<<<< HEAD
-    <configuration name="RegistrationModuleApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="com.example.registrationmodule.RegistrationModuleApplication" />
-      <module name="RegistrationModule" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.example.registrationmodule.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-=======
->>>>>>> 8ea8146953c75ef20b5f7abb22370bdeb958c6ad
     <configuration name="UserControllerIntegrationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="RegistrationModule" />
       <extension name="coverage">
@@ -146,9 +96,6 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-<<<<<<< HEAD
-    <configuration name="UserControllerIntegrationTests.testVerifyRegistrationOTPCode_InvalidOTPCode_Failure" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-=======
     <configuration name="UserControllerIntegrationTests.testResetPassword_InvalidPassword_Failure" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="RegistrationModule" />
       <extension name="coverage">
@@ -166,7 +113,6 @@
       </method>
     </configuration>
     <configuration name="UserControllerIntegrationTests.testSignUp_InvalidMail_ShouldReturnBadRequest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
->>>>>>> 8ea8146953c75ef20b5f7abb22370bdeb958c6ad
       <module name="RegistrationModule" />
       <extension name="coverage">
         <pattern>
@@ -223,18 +169,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.RegistrationModuleApplication" />
         <item itemvalue="JUnit.UserControllerIntegrationTests" />
-<<<<<<< HEAD
-        <item itemvalue="JUnit.UserControllerIntegrationTests.testVerifyRegistrationOTPCode_InvalidOTPCode_Failure" />
-        <item itemvalue="JUnit.UserControllerIntegrationTests.testVerifyRegistrationOTPCode_UserAlreadyVerified_Failure" />
-        <item itemvalue="JUnit.UserControllerIntegrationTests.testVerifyRegistrationOTPCode_Success" />
-=======
         <item itemvalue="JUnit.UserControllerIntegrationTests.testResetPassword_InvalidPassword_Failure" />
         <item itemvalue="JUnit.UserControllerIntegrationTests.testSignUp_InvalidUserName_ShouldReturnBadRequest" />
         <item itemvalue="JUnit.UserControllerIntegrationTests.testSignUp_InvalidMail_ShouldReturnBadRequest" />
         <item itemvalue="JUnit.UserControllerIntegrationTests.testSignUp_InvalidPassword_ShouldReturnBadRequest" />
->>>>>>> 8ea8146953c75ef20b5f7abb22370bdeb958c6ad
       </list>
     </recent_temporary>
   </component>
@@ -258,18 +197,25 @@
       <workItem from="1745180699266" duration="49000" />
       <workItem from="1745180758033" duration="179000" />
       <workItem from="1745180945712" duration="3405000" />
-<<<<<<< HEAD
-      <workItem from="1745441391061" duration="622000" />
-      <workItem from="1745485919586" duration="5542000" />
-      <workItem from="1745496851761" duration="6498000" />
-=======
-      <workItem from="1745484952191" duration="20272000" />
->>>>>>> 8ea8146953c75ef20b5f7abb22370bdeb958c6ad
+      <workItem from="1745484952191" duration="23910000" />
+      <workItem from="1745528170758" duration="46000" />
+      <workItem from="1745582410537" duration="366000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />

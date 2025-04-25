@@ -5,9 +5,8 @@ import { View, Text, StyleSheet } from "react-native";
 import { responsive } from '@/utilities/responsive';
 import axios from "axios";
 import { useRouter } from "expo-router";
-import { UserContext } from "@/context/UserContext";
 
-export default function OTPForm({ CELL_COUNT, isRegister }) {
+export default function OTPForm({ CELL_COUNT, isRegister, email }) {
   const [value, setValue] = useState("");
   const ref = useBlurOnFulfill({ value, cellCount: CELL_COUNT });
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({ value, setValue });
@@ -15,23 +14,37 @@ export default function OTPForm({ CELL_COUNT, isRegister }) {
   const [successMessage, setSuccessMessage] = useState(null);
   const router = useRouter();
 
-  const { user } = useContext(UserContext);
-  const { email } = user;
+  
+
+  const handleChangePasswordVerification = async () => {
+    try {
+      const response = await axios.put("http://192.168.1.4:8080/api/user/auth/verify", { otp: value, email: email });
+      if (response.status === 200) {
+        setSuccessMessage("OTP verified successfully!");
+        setErrorMessage(null);
+        router.replace("/RegisterModule/ResetPasswordScreen", { email: email });
+      } else {
+        setErrorMessage(response.data.message || "OTP verification failed.");
+        setSuccessMessage(null);
+      }
+    } catch (error) {
+      const errMsg = error.response?.data?.message || error.message;
+      setErrorMessage(errMsg);
+      setSuccessMessage(null);
+    }
+  };
 
   const handleVerify = async () => {
     try {
       // Replace the URL below with your actual OTP verification endpoint.
       const response = await axios.put("http://192.168.1.4:8080/api/user/auth/verify", { otp: value, email: email });
       // Assuming a response structure like { success: true, message: "OTP verified" }
+      console.log("OTP verification response:", response.status, response.data);
+      console.log(otp, email);
       if (response.status === 200) {
         setSuccessMessage("OTP verified successfully!");
         setErrorMessage(null);
-        if(isRegister) {
-          router.replace("/RegisterModule/LoginScreen");
-        }
-        else {
-          router.replace("/RegisterModule/ResetPasswordScreen", { email: email });
-        }
+        router.replace("/RegisterModule/ResetPasswordScreen", { email: email });
       } else {
         setErrorMessage(response.data.message || "OTP verification failed.");
         setSuccessMessage(null);
@@ -71,7 +84,7 @@ export default function OTPForm({ CELL_COUNT, isRegister }) {
       {successMessage && <Text style={styles.successText}>{successMessage}</Text>}
       <Button
         title="Verify"
-        onPress={handleVerify}
+        onPress={isRegister ? handleVerify : handleChangePasswordVerification}
         disabled={value.length !== CELL_COUNT}
       />
     </View>

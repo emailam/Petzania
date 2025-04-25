@@ -24,16 +24,32 @@ export default function LoginForm(){
 
     const router = useRouter();
 
-    const {user} = useContext(UserContext);
+    const {user, setUser} = useContext(UserContext);
     const {setRefreshToken, setAccessToken} = useContext(AuthContext);
+
+    const getUserDataById = async (userId) => {
+        try {
+            const response = await axios.get(`http://192.168.1.4:8080/api/user/auth/login/${userId}`);
+            if (response.status === 200) {
+                setUser(response.data);
+            } else {
+                console.error("Failed to retrieve user data. Status:", response.status);
+            }
+        } catch (error) {
+            console.error("Error retrieving user data:", error.response?.data?.message || error.message);
+        }
+    };
 
     const Login = async (data) => {
         try {
             const response = await axios.post("http://192.168.1.4:8080/api/user/auth/login", data);
             console.log(response, data);
             if (response.status === 200) {
-                console.log("Login successful:", response.data);
-                if(!user.name){
+                getUserDataById(response.data.userId);
+                setRefreshToken(response.data.tokenDTO.refreshToken);
+                setAccessToken(response.data.tokenDTO.accessToken);
+                // Here we will check for login count from database
+                if(user.loginCount === 1){
                     router.push('/RegisterModule/ProfileSetUp1');
                 }
                 else{
@@ -46,6 +62,9 @@ export default function LoginForm(){
             const status = error.response?.status;
             const errorMsg = error.response?.data?.message || error.message;
 
+            console.log("Login error:", errorMsg);
+            console.log("Status code:", status);
+
             const showBothFieldsError = (message) => {
                 setError("email", {
                     type: "manual",
@@ -57,12 +76,30 @@ export default function LoginForm(){
                 });
             };
 
-            if (status === 400) {
+            if (status === 400 || errorMsg === "Email is incorrect") {
                 showBothFieldsError("Invalid email or password.");
                 return;
             }
-            if (status === 401) {
-                router.push("/RegisterModule/OTPVerificationScreen", { email: data.email });
+
+            else if (status === 401 && errorMsg === "User is not verified") {
+                try {
+                    const response = await axios.post("http://192.168.1.4:8080/api/user/auth/resendOTP", {
+                        email: data.email,
+                    });
+                    if (response.status === 200) {
+                        console.log("New OTP requested successfully:", response.data);
+                    } else {
+                        console.error("Failed to request new OTP. Status:", response.status);
+                    }
+                }
+                catch (error) {
+                    console.error("Error requesting new OTP:", error.response?.data?.message || error.message);
+                }
+                router.push({
+                    pathname: "/RegisterModule/OTPVerificationScreen",
+                    params: { isRegister: true, email: data.email },
+                });
+                return;
             }
 
             if (status === 429) {
@@ -112,7 +149,7 @@ export default function LoginForm(){
                 icon={<FontAwesome name="lock" size={24} color="#9188E5"/>}
             />
 
-            <Link href="/forgot-password" style={styles.link}> Forgot Password? </Link>
+            <Link href="/RegisterModule/ForgotPasswordScreen" style={styles.link}> Forgot Password? </Link>
 
             <Button
                 title="Login"

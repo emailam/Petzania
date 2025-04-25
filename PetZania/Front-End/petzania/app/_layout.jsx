@@ -51,6 +51,7 @@ export default function RootLayout() {
                   <Stack.Screen name="RegisterModule/RegisterScreen" options={{ headerShown: false }} />
                   <Stack.Screen name="RegisterModule/OTPVerificationScreen" options={{ headerShown: false }} />
                   <Stack.Screen name="RegisterModule/ResetPasswordScreen" options={{ headerShown: false }} />
+                  <Stack.Screen name="RegisterModule/ForgotPasswordScreen" options={{ headerShown: false }} />
                   <Stack.Screen name="RegisterModule/LoginScreen" options={{ headerShown: false }} />
                   <Stack.Screen
                     name="RegisterModule/ProfileSetUp1"

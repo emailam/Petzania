@@ -8,9 +8,7 @@ import { UserContext } from "@/context/UserContext";
 
 
 export default function OTPVerificationScreen() {
-  const { user } = useContext(UserContext);
-  const { email } = user;
-  const { isRegister } = useLocalSearchParams();
+  const { isRegister, email } = useLocalSearchParams();
   return (
     <SafeAreaView style={styles.safeArea}>
 
@@ -21,11 +19,11 @@ export default function OTPVerificationScreen() {
           <Text style={styles.emailText}>{email}</Text> for verification.
         </Text>
 
-        <OTPForm CELL_COUNT={6} isRegister={isRegister} />
+        <OTPForm CELL_COUNT={6} isRegister={isRegister} email={email} />
 
-        <Text style={styles.footerText}>Didn’t receive any code?</Text>
+        <Text style={styles.footerText}>Didn't receive any code?</Text>
 
-        <RequestOTP RESEND_COOLDOWN = {60}/>
+        <RequestOTP RESEND_COOLDOWN = {60} email = {email}/>
       </View>
     </SafeAreaView>
   );

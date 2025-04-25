@@ -28,7 +28,6 @@ public class UserController {
         userService.logout(logoutDTO);
         return ResponseEntity.ok("User logged out successfully");
     }
-
     
     @PostMapping("/resendOTP")
     public ResponseEntity<String> resendOTP(@RequestBody @Valid EmailDTO emailDTO) {
