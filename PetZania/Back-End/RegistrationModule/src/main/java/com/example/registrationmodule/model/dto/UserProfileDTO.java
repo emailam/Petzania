@@ -25,6 +25,8 @@ public class UserProfileDTO {
     @NotBlank(message = "Name is required.")
     private String name;
 
+    private Integer loginTimes;
+
     private String bio;
 
     private String profilePictureURL;
