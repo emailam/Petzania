@@ -5,6 +5,8 @@ import com.example.registrationmodule.model.entity.Admin;
 import com.example.registrationmodule.model.entity.Pet;
 import com.example.registrationmodule.model.entity.User;
 
+import java.time.LocalDate;
+
 public interface IDTOConversionService {
 
     UserProfileDTO mapToUserProfileDto(User user);
@@ -21,4 +23,6 @@ public interface IDTOConversionService {
     Pet mapToPet(PetDTO petDto);
 
     User mapToUser(RegisterUserDTO registerUserDTO);
+
+    String getPetAge(LocalDate dateOfBirth);
 }

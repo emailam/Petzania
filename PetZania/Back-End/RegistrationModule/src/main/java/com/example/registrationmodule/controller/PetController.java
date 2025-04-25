@@ -58,15 +58,16 @@ public class PetController {
     }
 
     @GetMapping(path = "/user/{id}/pets")
-    public List<PetDTO> getAllPetsByUserId(@PathVariable(name = "id") UUID userId) {
+    public ResponseEntity<List<PetDTO>> getAllPetsByUserId(@PathVariable(name = "id") UUID userId) {
         if (!userService.userExistsById(userId)) {
             throw new UserNotFound("User not found with ID: " + userId);
         }
 
         List<Pet> pets = petService.getPetsByUserId(userId);
-        return pets.stream()
+        return new ResponseEntity<>(pets.stream()
                 .map(dtoConversionService::mapToPetDto)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList())
+                , HttpStatus.OK);
     }
 
     @PatchMapping(path = "/pet/{id}")
