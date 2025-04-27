@@ -1,6 +1,6 @@
 package com.example.registrationmodule.filter;
 
-import com.example.registrationmodule.exception.InvalidToken;
+import com.example.registrationmodule.exception.authenticationAndVerificattion.InvalidToken;
 import com.example.registrationmodule.model.entity.UserPrincipal;
 import com.example.registrationmodule.repository.RevokedRefreshTokenRepository;
 import com.example.registrationmodule.service.impl.JWTService;
@@ -41,6 +41,7 @@ public class JWTFilter extends OncePerRequestFilter {
             token = authenticationHeader.substring(7);
             email = jwtService.extractEmail(token);
             role = jwtService.extractRole(token);
+
 
             // if user tries to send refresh token to access the resources
             if (revokedRefreshTokenRepository.findByToken(token).isPresent()) {

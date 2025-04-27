@@ -1,18 +1,24 @@
 package com.example.registrationmodule.service.impl;
 
-import com.example.registrationmodule.exception.*;
+import com.example.registrationmodule.exception.authenticationAndVerificattion.*;
+import com.example.registrationmodule.exception.rateLimiting.*;
+import com.example.registrationmodule.exception.user.*;
 import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.dto.EmailRequestDTO;
-import com.example.registrationmodule.model.entity.RevokedRefreshToken;
 import com.example.registrationmodule.model.entity.User;
-import com.example.registrationmodule.repository.RevokedRefreshTokenRepository;
 import com.example.registrationmodule.repository.UserRepository;
 import com.example.registrationmodule.service.IDTOConversionService;
 import com.example.registrationmodule.service.IEmailService;
 import com.example.registrationmodule.service.IUserService;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -21,11 +27,9 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -34,7 +38,7 @@ public class UserService implements IUserService {
 
     private final IDTOConversionService converter;
     private final UserRepository userRepository;
-    private final RevokedRefreshTokenRepository revokedRefreshTokenRepository;
+    private final RefreshTokenService refreshTokenService;
     private final IEmailService emailService;
     private final JWTService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -45,9 +49,10 @@ public class UserService implements IUserService {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
     @Override
+    @RateLimiter(name = "registerRateLimiter", fallbackMethod = "registerFallback")
     public UserProfileDTO registerUser(RegisterUserDTO registerUserDTO) {
         // convert to regular user.
-        User user = converter.convertToUser(registerUserDTO);
+        User user = converter.mapToUser(registerUserDTO);
 
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             throw new UsernameAlreadyExists("Username '" + user.getUsername() + "' already exists");
@@ -65,28 +70,63 @@ public class UserService implements IUserService {
         return converter.mapToUserProfileDto(user);
     }
 
+    public UserProfileDTO registerFallback(RegisterUserDTO registerUserDTO, RequestNotPermitted t) {
+        throw new TooManyRegistrationRequests("Too many registration attempts. Try again later.");
+    }
+
     @Override
-    public List<UserProfileDTO> getUsers() {
-        return userRepository.findAll().stream()
-                .map(converter::mapToUserProfileDto)
-                .collect(Collectors.toList());
+    public Page<UserProfileDTO> getUsers(int page, int size, String sortBy, String direction) {
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return userRepository.findAll(pageable)
+                .map(converter::mapToUserProfileDto);
     }
 
     @Override
     public UserProfileDTO getUserById(UUID userId) {
         return userRepository.findById(userId)
                 .map(converter::mapToUserProfileDto)
-                .orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+                .orElseThrow(() -> new UserNotFound("User does not exist"));
     }
 
 
     @Override
-    public void deleteUserById(UUID userId) {
-        if (userRepository.findById(userId).isPresent()) {
-            userRepository.deleteById(userId);
+    public void deleteUser(EmailDTO emailDTO) {
+        if (userRepository.findByEmail(emailDTO.getEmail()).isPresent()) {
+            sendDeactivationMessage(emailDTO.getEmail());
+            userRepository.deleteUserByEmail(emailDTO.getEmail());
         } else {
-            throw new UserDoesNotExist("User does not exist");
+            throw new UserNotFound("User does not exist");
         }
+
+        System.out.println(emailDTO.getEmail());
+        User user = userRepository.findByEmail(emailDTO.getEmail()).orElseThrow(() -> new UserNotFound("User does not exist"));
+
+        // Send delete email
+        sendDeleteConfirmation(user);
+
+        // Delete the user
+        userRepository.deleteByEmail(emailDTO.getEmail());
+    }
+
+    @Override
+    public void sendDeleteConfirmation(User user) {
+        EmailRequestDTO emailRequestDTO = new EmailRequestDTO();
+        emailRequestDTO.setTo(user.getEmail());
+        emailRequestDTO.setFrom(emailSender);
+        emailRequestDTO.setSubject("Account Deletion Confirmation");
+        emailRequestDTO.setBody(
+                "Dear " + user.getUsername() + ",\n\n" +
+                        "We regret to inform you that your account has been deleted from our system.\n\n" +
+                        "If this was a mistake or you have any questions, please contact our support team.\n\n" +
+                        "Best regards,\n" +
+                        "Petzania Team."
+        );
+
+        // send the email
+        emailService.sendEmail(emailRequestDTO);
+
     }
 
     @Override
@@ -96,6 +136,7 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @RateLimiter(name = "loginRateLimiter", fallbackMethod = "loginFallback")
     public TokenDTO login(LoginUserDTO loginUserDTO) {
         User user = userRepository.findByEmail(loginUserDTO.getEmail()).orElseThrow(() -> new InvalidUserCredentials("Email is incorrect"));
 
@@ -114,13 +155,17 @@ public class UserService implements IUserService {
         }
     }
 
+    public TokenDTO loginFallback(LoginUserDTO loginUserDTO, RequestNotPermitted t) {
+        throw new TooManyLoginRequests("Too many login attempts. Try again later.");
+    }
 
     @Override
+    @RateLimiter(name = "refreshTokenRateLimiter", fallbackMethod = "refreshFallback")
     public TokenDTO refreshToken(String refreshToken) {
         if (refreshToken == null) {
             throw new RefreshTokenNotValid("There is no refresh token sent");
         }
-        if (revokedRefreshTokenRepository.findByToken(refreshToken).isPresent()) {
+        if (refreshTokenService.isTokenRevoked(refreshToken)) {
             throw new RefreshTokenNotValid("The refresh token is invalid");
         }
         String email = jwtService.extractEmail(refreshToken);
@@ -131,7 +176,7 @@ public class UserService implements IUserService {
             throw new RefreshTokenNotValid("Invalid or expired refresh token");
         }
 
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFound("User does not exist"));
         if (user.isBlocked()) {
             throw new UserIsBlocked("User is blocked, sorry cannot able to generate a new token");
         }
@@ -140,30 +185,92 @@ public class UserService implements IUserService {
         return new TokenDTO(newAccessToken, refreshToken);
     }
 
-    @Override
-    public void logout(LogoutDTO logoutDTO) {
-        // get the revoked token data
-        User user = userRepository.findByEmail(logoutDTO.getEmail()).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
-        String refreshToken = logoutDTO.getRefreshToken();
-        Date expirationTime = jwtService.extractExpiration(refreshToken);
+    public TokenDTO refreshFallback(String refreshToken, RequestNotPermitted t) {
+        throw new TooManyRefreshRequests("Too many refresh requests. Try again later.");
+    }
 
-        if (revokedRefreshTokenRepository.findByToken(refreshToken).isPresent()) {
-            throw new UserAlreadyLoggedOut("User already logged out");
+
+    @Override
+    public void sendResetPasswordOTP(EmailDTO emailDTO) {
+        User user = userRepository.findByEmail(emailDTO.getEmail()).orElseThrow(() -> new UserNotFound("User does not exist"));
+
+        if (user.isBlocked()) {
+            throw new UserIsBlocked("User is blocked");
         }
 
-        // create revoked refresh token object
-        RevokedRefreshToken revokedRefreshToken = new RevokedRefreshToken();
-        revokedRefreshToken.setUser(user);
-        revokedRefreshToken.setToken(refreshToken);
-        revokedRefreshToken.setExpirationTime(expirationTime);
+        String otp = String.format("%06d", new Random().nextInt(1000000));
+        user.setResetCode(otp);
+        user.setResetCodeExpirationTime(Timestamp.valueOf(LocalDateTime.now().plusMinutes(10)));
 
+        EmailRequestDTO emailRequestDTO = new EmailRequestDTO();
+        emailRequestDTO.setTo(user.getEmail());
+        emailRequestDTO.setFrom(emailSender);
+        emailRequestDTO.setSubject("Reset Password OTP");
+        emailRequestDTO.setBody(
+                "Dear " + user.getUsername() + ",\n\n" +
+                        "To reset your password, please use the following One-Time Password (OTP):\n\n" +
+                        "🔐 Your OTP: " + otp + "\n\n" +
+                        "This code is valid for 10 minutes.\n\n" +
+                        "If you did not request this, please ignore this email.\n\n" +
+                        "Best regards,\n" +
+                        "Petzania Team."
+        );
+
+        emailService.sendEmail(emailRequestDTO);
+        userRepository.save(user);
+    }
+
+    @Override
+    public void verifyResetOTP(String email, String otp) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFound("User does not exist"));
+
+        if (!otp.equals(user.getResetCode())) {
+            throw new InvalidOTPCode("Invalid OTP");
+        }
+
+        if (user.getResetCodeExpirationTime().before(Timestamp.valueOf(LocalDateTime.now()))) {
+            throw new ExpiredOTP("OTP has expired");
+        }
+
+    }
+
+    @Override
+    public void resetPassword(String email, String otp, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFound("User does not exist"));
+
+        if (!otp.equals(user.getResetCode())) {
+            throw new InvalidOTPCode("Invalid OTP");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetCode(null);
+        user.setResetCodeExpirationTime(null);
+        userRepository.save(user);
+    }
+
+
+    @Override
+    @RateLimiter(name = "logoutRateLimiter", fallbackMethod = "logoutFallback")
+    public void logout(LogoutDTO logoutDTO) {
+        // get the revoked token data
+        User user = userRepository.findByEmail(logoutDTO.getEmail()).orElseThrow(() -> new UserNotFound("User does not exist"));
+
+        if (refreshTokenService.isTokenRevoked(logoutDTO.getRefreshToken())) {
+            throw new UserAlreadyLoggedOut("User already logged out");
+        }
         // save it in the database
-        revokedRefreshTokenRepository.save(revokedRefreshToken);
+        refreshTokenService.saveToken(logoutDTO.getRefreshToken(), user);
+    }
+
+    public void logoutFallback(LogoutDTO logoutDTO, RequestNotPermitted t) {
+        throw new TooManyLogoutRequests("Too many logout requests. Try again later.");
     }
 
     @Override
     public void blockUser(BlockUserDTO blockUserDTO) {
-        User user = userRepository.findByEmail(blockUserDTO.getEmail()).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+        User user = userRepository.findByEmail(blockUserDTO.getEmail()).orElseThrow(() -> new UserNotFound("User does not exist"));
         if (user.isBlocked()) {
             throw new UserAlreadyBlocked("User is blocked already");
         } else {
@@ -173,7 +280,7 @@ public class UserService implements IUserService {
 
     @Override
     public void unblockUser(BlockUserDTO blockUserDTO) {
-        User user = userRepository.findByEmail(blockUserDTO.getEmail()).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+        User user = userRepository.findByEmail(blockUserDTO.getEmail()).orElseThrow(() -> new UserNotFound("User does not exist"));
         if (user.isBlocked()) {
             user.setBlocked(false);
         } else {
@@ -182,13 +289,20 @@ public class UserService implements IUserService {
     }
 
     @Override
+    public void changePassword(ChangePasswordDTO changePasswordDTO) {
+        User user = userRepository.findByEmail(changePasswordDTO.getEmail()).orElseThrow(() -> new UserNotFound("User does not exist"));
+        user.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
+    }
+
+    @Override
     public void deleteAll() {
         userRepository.deleteAll();
     }
 
     @Override
+    @RateLimiter(name = "verifyOtpRateLimiter", fallbackMethod = "otpFallback")
     public void verifyCode(OTPValidationDTO otpValidationDTO) {
-        User user = userRepository.findByEmail(otpValidationDTO.getEmail()).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+        User user = userRepository.findByEmail(otpValidationDTO.getEmail()).orElseThrow(() -> new UserNotFound("User does not exist"));
         if (user.isVerified()) {
             throw new UserAlreadyVerified("User already verified");
         }
@@ -208,6 +322,10 @@ public class UserService implements IUserService {
         userRepository.save(user);
     }
 
+    public void otpFallback(OTPValidationDTO otpValidationDTO, RequestNotPermitted t) {
+        throw new TooManyOtpRequests("Too many OTP attempts. Try again later.");
+    }
+
     @Override
     public boolean userExistsById(UUID userId) {
         if (userRepository.findById(userId).isPresent()) {
@@ -218,9 +336,10 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @RateLimiter(name = "sendOtpRateLimiter", fallbackMethod = "sendOtpFallback")
     public void sendVerificationCode(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+                .orElseThrow(() -> new UserNotFound("User does not exist"));
 
         if (user.isVerified()) {
             throw new UserAlreadyVerified("User already verified");
@@ -232,7 +351,7 @@ public class UserService implements IUserService {
         System.out.println("User email is: " + email);
         String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
         user.setVerificationCode(otp);
-        user.setExpirationTime(Timestamp.valueOf(LocalDateTime.now().plusMinutes(3)));
+        user.setExpirationTime(Timestamp.valueOf(LocalDateTime.now().plusMinutes(10)));
 
         EmailRequestDTO emailRequestDTO = new EmailRequestDTO();
         emailRequestDTO.setTo(user.getEmail());
@@ -254,11 +373,35 @@ public class UserService implements IUserService {
         userRepository.save(user);
     }
 
+    @Override
+    public void sendDeactivationMessage(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFound("User does not exist"));
+
+        EmailRequestDTO emailRequestDTO = new EmailRequestDTO();
+        emailRequestDTO.setTo(user.getEmail());
+        emailRequestDTO.setFrom(emailSender);
+        emailRequestDTO.setSubject("Account Deactivation Notice");
+        emailRequestDTO.setBody(
+                "Dear " + user.getUsername() + ",\n\n" +
+                        "We would like to inform you that your account has been deactivated.\n\n" +
+                        "If you believe this was done in error or have any questions, please contact our support team.\n\n" +
+                        "Note: You will not be able to access your account until it is reactivated by an administrator.\n\n" +
+                        "Best regards,\n" +
+                        "Petzania Team."
+        );
+
+        emailService.sendEmail(emailRequestDTO);
+    }
+
+    public void sendOtpFallback(String email, RequestNotPermitted t) {
+        throw new TooManyOtpRequests("Too many OTP requests. Try again later.");
+    }
+
 
     @Override
     public UserProfileDTO updateUserById(UUID userId, UpdateUserProfileDto updateUserProfileDto) {
         if (!userRepository.existsById(userId)) {
-            throw new UserDoesNotExist("User does not exist");
+            throw new UserNotFound("User does not exist");
         }
 
         return userRepository.findById(userId).map(existingUser -> {
@@ -269,6 +412,6 @@ public class UserService implements IUserService {
 
             User updatedUser = userRepository.save(existingUser);
             return converter.mapToUserProfileDto(updatedUser);
-        }).orElseThrow(() -> new UserDoesNotExist("User does not exist"));
+        }).orElseThrow(() -> new UserNotFound("User does not exist"));
     }
 }

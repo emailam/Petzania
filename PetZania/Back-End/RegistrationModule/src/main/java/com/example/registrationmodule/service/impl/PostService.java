@@ -1,6 +1,6 @@
 package com.example.registrationmodule.service.impl;
 
-import com.example.registrationmodule.exception.UserDoesNotExist;
+import com.example.registrationmodule.exception.user.UserNotFound;
 import com.example.registrationmodule.model.dto.PostDTO;
 import com.example.registrationmodule.model.entity.Post;
 import com.example.registrationmodule.model.entity.User;
@@ -31,7 +31,7 @@ public class PostService implements IPostService {
     @Override
     public Post createPost(UUID userId, PostDTO request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserDoesNotExist("User not found"));
+                .orElseThrow(() -> new UserNotFound("User not found"));
         Post post = Post.builder()
                 .user(user)
                 .caption(request.getCaption())

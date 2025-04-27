@@ -18,6 +18,8 @@ public class RevokedRefreshToken {
     @JoinColumn(name = "user_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
+
+    @Column(unique = true, nullable = false)
     private String token;
     private Date expirationTime;
 

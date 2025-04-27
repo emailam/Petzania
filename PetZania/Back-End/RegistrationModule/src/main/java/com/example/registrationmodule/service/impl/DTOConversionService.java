@@ -1,5 +1,6 @@
 package com.example.registrationmodule.service.impl;
 
+import com.example.registrationmodule.exception.user.UserNotFound;
 import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.entity.*;
 import com.example.registrationmodule.model.dto.PetDTO;
@@ -13,6 +14,8 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,7 +38,6 @@ public class DTOConversionService implements IDTOConversionService {
                 user.getUsername(),
                 user.getName(),
                 user.getBio(),
-                user.getEmail(),
                 user.getProfilePictureURL(),
                 user.getPhoneNumber(),
                 user.getUserRoles() != null ? user.getUserRoles() : new ArrayList<>(),
@@ -92,7 +94,8 @@ public class DTOConversionService implements IDTOConversionService {
                 pet.getName(),
                 pet.getDescription(),
                 pet.getGender(),
-                pet.getAge(),
+                pet.getDateOfBirth(),
+                getPetAge(pet.getDateOfBirth()), // Calculate age
                 pet.getBreed(),
                 pet.getSpecies(),
                 pet.getMyVaccinesURLs() != null ? pet.getMyVaccinesURLs() : new ArrayList<>(),
@@ -108,28 +111,28 @@ public class DTOConversionService implements IDTOConversionService {
         pet.setName(petDto.getName());
         pet.setDescription(petDto.getDescription());
         pet.setGender(petDto.getGender());
-        pet.setAge(petDto.getAge());
+        pet.setDateOfBirth(petDto.getDateOfBirth());
         pet.setBreed(petDto.getBreed());
         pet.setSpecies(petDto.getSpecies());
         pet.setMyVaccinesURLs(petDto.getMyVaccinesURLs());
         pet.setMyPicturesURLs(petDto.getMyPicturesURLs());
 
         User user = userRepository.findById(petDto.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFound("User not found"));
         pet.setUser(user);
 
         return pet;
     }
 
     @Override
-    public User convertToUser(RegisterUserDTO registerUserDTO) {
+    public User mapToUser(RegisterUserDTO registerUserDTO) {
         User user = new User();
         user.setUsername(registerUserDTO.getUsername());
         user.setEmail(registerUserDTO.getEmail());
         user.setPassword(registerUserDTO.getPassword());
         return user;
     }
-    
+
     @Override
     public Media convertToMedia(MediaDTO mediaDTO) {
         Media media = new Media();
@@ -148,7 +151,7 @@ public class DTOConversionService implements IDTOConversionService {
                 .mood(post.getMood())
                 .visibility(post.getVisibility())
                 .createdAt(post.getCreatedAt())
-                .mediaList(post.getMediaList()!= null ?
+                .mediaList(post.getMediaList() != null ?
                         post.getMediaList().stream().map(this::mediaToDto).collect(Collectors.toList())
                         : new ArrayList<>())
                 .userId(post.getUser().getUserId())
@@ -165,5 +168,17 @@ public class DTOConversionService implements IDTOConversionService {
                 .postId(media.getPost().getPostId())
                 .uploadedAt(media.getUploadedAt())
                 .build();
+    }
+
+    public String getPetAge(LocalDate dateOfBirth) {
+        Period period = Period.between(dateOfBirth, LocalDate.now());
+        int years = period.getYears();
+        int months = period.getMonths();
+
+        if (years > 0) {
+            return years + " years" + (months > 0 ? " " + months + " months" : "");
+        } else {
+            return months + " months";
+        }
     }
 }

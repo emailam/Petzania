@@ -4,7 +4,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.example.registrationmodule.exception.InvalidMediaFile;
 import com.example.registrationmodule.exception.PostDoesntExist;
-import com.example.registrationmodule.exception.UserDoesNotExist;
+import com.example.registrationmodule.exception.user.UserNotFound;
 import com.example.registrationmodule.model.entity.Media;
 import com.example.registrationmodule.model.entity.Post;
 import com.example.registrationmodule.repository.MediaRepository;

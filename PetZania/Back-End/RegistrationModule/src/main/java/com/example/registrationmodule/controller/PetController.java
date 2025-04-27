@@ -1,9 +1,10 @@
 package com.example.registrationmodule.controller;
 
+import com.example.registrationmodule.exception.pet.PetNotFound;
+import com.example.registrationmodule.exception.user.UserIdNull;
+import com.example.registrationmodule.exception.user.UserNotFound;
 import com.example.registrationmodule.model.dto.PetDTO;
 import com.example.registrationmodule.model.dto.UpdatePetDTO;
-import com.example.registrationmodule.model.dto.UpdateUserProfileDto;
-import com.example.registrationmodule.model.dto.UserProfileDTO;
 import com.example.registrationmodule.model.entity.Pet;
 import com.example.registrationmodule.service.IPetService;
 import com.example.registrationmodule.service.IUserService;
@@ -12,10 +13,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -28,39 +27,16 @@ public class PetController {
     private final IPetService petService;
     private final IDTOConversionService dtoConversionService;
 
-//    public UserProfileController(IUserService userService, IProfileService profileService, IDtoConversionService dtoConversionService) {
-//        this.userService = userService;
-//        this.profileService = profileService;
-//        this.dtoConversionService = dtoConversionService;
-//    }
-
-
-
-    @PatchMapping(path = "/user/{id}")
-    public ResponseEntity<UserProfileDTO> partialUpdateUserProfileById(@PathVariable("id") UUID userId,
-                                                                       @RequestBody UpdateUserProfileDto updateUserProfileDto) {
-
-        if (!userService.userExistsById(userId)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-
-        UserProfileDTO updatedUser = userService.updateUserById(userId, updateUserProfileDto);
-        return new ResponseEntity<>(
-                updatedUser,
-                HttpStatus.OK
-        );
-    }
-
     @PostMapping(path = "/pet")
     public ResponseEntity<PetDTO> createPet(@RequestBody PetDTO petDto) {
         UUID userId = petDto.getUserId();
 
         if (userId == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID must not be null");
+            throw new UserIdNull("User ID must not be null");
         }
 
         if (!userService.userExistsById(userId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+            throw new UserNotFound("User not found with ID: " + userId);
         }
 
         // Ensure the client cannot manually set petId
@@ -76,30 +52,29 @@ public class PetController {
 
     @GetMapping(path = "/pet/{id}")
     public ResponseEntity<PetDTO> getPetById(@PathVariable(name = "id") UUID petId) {
-        Optional<Pet> pet = petService.getPetById(petId);
-        return pet.map(petEntity -> {
-            PetDTO petDto = dtoConversionService.mapToPetDto(petEntity);
-            return new ResponseEntity<>(petDto, HttpStatus.OK);
-        }).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        Pet pet = petService.getPetById(petId)
+                .orElseThrow(() -> new PetNotFound("Pet not found with ID: " + petId));
+        return new ResponseEntity<>(dtoConversionService.mapToPetDto(pet), HttpStatus.OK);
     }
 
     @GetMapping(path = "/user/{id}/pets")
-    public List<PetDTO> getAllPetsByUserId(@PathVariable(name = "id") UUID userId) {
+    public ResponseEntity<List<PetDTO>> getAllPetsByUserId(@PathVariable(name = "id") UUID userId) {
         if (!userService.userExistsById(userId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+            throw new UserNotFound("User not found with ID: " + userId);
         }
 
         List<Pet> pets = petService.getPetsByUserId(userId);
-        return pets.stream()
+        return new ResponseEntity<>(pets.stream()
                 .map(dtoConversionService::mapToPetDto)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList())
+                , HttpStatus.OK);
     }
 
     @PatchMapping(path = "/pet/{id}")
     public ResponseEntity<PetDTO> updatePetById(@PathVariable("id") UUID petId, @RequestBody UpdatePetDTO updatePetDto) {
 
         if (!petService.existsById(petId)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new PetNotFound("Pet not found with ID: " + petId);
         }
 
         Pet updatedPet = petService.partialUpdatePet(petId, updatePetDto);
@@ -111,9 +86,9 @@ public class PetController {
     }
 
     @DeleteMapping("/pet/{id}")
-    public ResponseEntity<Void> deletePetById(@PathVariable UUID petId) {
+    public ResponseEntity<Void> deletePetById(@PathVariable(name = "id") UUID petId) {
         if (!petService.existsById(petId)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new PetNotFound("Pet not found with ID: " + petId);
         }
 
         petService.deleteById(petId);

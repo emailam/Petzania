@@ -25,6 +25,9 @@ export default function TabLayout() {
           },
           default: {},
         }),
+      }} 
+      style = {{
+        backgroundColor:"#fff"
       }}>
       <Tabs.Screen
         name="index"
