@@ -1,6 +1,7 @@
 package com.example.registrationmodule.filter;
 
 import com.example.registrationmodule.exception.authenticationAndVerificattion.InvalidToken;
+import com.example.registrationmodule.model.entity.AdminPrincipal;
 import com.example.registrationmodule.model.entity.UserPrincipal;
 import com.example.registrationmodule.repository.RevokedRefreshTokenRepository;
 import com.example.registrationmodule.service.impl.JWTService;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Objects;
 
 @AllArgsConstructor
 @Component
@@ -50,14 +52,28 @@ public class JWTFilter extends OncePerRequestFilter {
         }
 
         if (token != null && email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserPrincipal userDetails = (UserPrincipal) context.getBean(MyUserDetailsService.class).loadUserByEmail(email);
-            userDetails.setGrantedAuthority(new SimpleGrantedAuthority(role));
+            if (Objects.equals(role, "ROLE_USER")) {
+                // User authentication
+                UserPrincipal userDetails = (UserPrincipal) context.getBean(MyUserDetailsService.class).loadUserByEmail(email);
+                userDetails.setGrantedAuthority(new SimpleGrantedAuthority(role));
 
-            // System.out.println("this is the user details " + userDetails.getEmail());
-            if (jwtService.validateToken(token, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                System.out.println("this is the user details " + userDetails.getEmail());
+                if (jwtService.validateTokenForUser(token, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            } else if (Objects.equals(role, "ROLE_ADMIN") || Objects.equals(role, "ROLE_SUPER_ADMIN")) {
+                // Admin authentication
+                AdminPrincipal adminDetails = (AdminPrincipal) context.getBean(MyUserDetailsService.class).loadAdminByUsername(email);
+                adminDetails.setGrantedAuthority(new SimpleGrantedAuthority(role));
+
+                System.out.println("this is the admin details " + adminDetails.getUsername());
+                if (jwtService.validateTokenForAdmin(token, adminDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(adminDetails, null, adminDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
         }
         filterChain.doFilter(request, response);

@@ -14,10 +14,7 @@ public class RevokedRefreshToken {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    private User user;
+
 
     @Column(unique = true, nullable = false)
     private String token;

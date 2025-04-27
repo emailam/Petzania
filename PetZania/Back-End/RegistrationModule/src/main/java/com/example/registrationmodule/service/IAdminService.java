@@ -1,6 +1,6 @@
 package com.example.registrationmodule.service;
 
-import com.example.registrationmodule.model.dto.UpdateAdminDto;
+import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.entity.Admin;
 
 import java.util.List;
@@ -10,7 +10,10 @@ import java.util.UUID;
 public interface IAdminService {
     boolean existsById(UUID adminId);
     Optional<Admin> getAdminById(UUID adminId);
-    Admin partialUpdateAdminById(UUID adminId, UpdateAdminDto updatedAdmin);
     Admin saveAdmin(Admin admin);
     void deleteById(UUID adminId);
+    ResponseLoginDTO login(LoginAdminDTO loginAdminDTO);
+    public void logout(AdminLogoutDTO adminLogoutDTO);
+
+    public TokenDTO refreshToken(String refreshToken);
 }

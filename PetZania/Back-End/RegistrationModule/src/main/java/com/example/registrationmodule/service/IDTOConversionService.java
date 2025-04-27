@@ -10,12 +10,9 @@ public interface IDTOConversionService {
     UserProfileDTO mapToUserProfileDto(User user);
 
     User mapToUser(UpdateUserProfileDto updateUserProfileDto);
+    AdminDTO mapToAdminDTO(Admin admin);
 
-    Admin mapToAdmin(UpdateAdminDto updateAdminDto);
-
-    AdminDto mapToAdminDto(Admin admin);
-
-
+    Admin mapToAdmin(AdminDTO adminDTO);
     PetDTO mapToPetDto(Pet pet);
 
     Pet mapToPet(PetDTO petDto);

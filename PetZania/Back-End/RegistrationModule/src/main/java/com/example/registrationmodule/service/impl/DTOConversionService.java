@@ -6,7 +6,8 @@ import com.example.registrationmodule.model.entity.Admin;
 import com.example.registrationmodule.model.dto.PetDTO;
 import com.example.registrationmodule.model.dto.RegisterUserDTO;
 import com.example.registrationmodule.model.dto.UpdateUserProfileDto;
-import com.example.registrationmodule.model.dto.UserProfileDTO;import com.example.registrationmodule.model.entity.Pet;
+import com.example.registrationmodule.model.dto.UserProfileDTO;
+import com.example.registrationmodule.model.entity.Pet;
 import com.example.registrationmodule.model.entity.User;
 
 import com.example.registrationmodule.repository.UserRepository;
@@ -65,22 +66,24 @@ public class DTOConversionService implements IDTOConversionService {
     }
 
     @Override
-    public Admin mapToAdmin(UpdateAdminDto updateAdminDto){
+    public Admin mapToAdmin(AdminDTO adminDTO) {
         Admin admin = new Admin();
-        admin.setUsername(updateAdminDto.getUsername());
-        //admin.setRole(updateAdminDto.getAdminRoles());
+        admin.setUsername(adminDTO.getUsername());
+        admin.setPassword(adminDTO.getPassword());
+        admin.setRole(adminDTO.getAdminRole());
         return admin;
     }
 
     @Override
-    public AdminDto mapToAdminDto(Admin admin){
+    public AdminDTO mapToAdminDTO(Admin admin) {
         if (admin == null) {
             return null;
         }
 
-        return new AdminDto(
+        return new AdminDTO(
                 admin.getAdminId(),
                 admin.getUsername(),
+                admin.getPassword(),
                 admin.getRole()
         );
     }

@@ -33,13 +33,30 @@ public class SecurityConfig {
 
         // make every request needs an authorization.
         http.authorizeHttpRequests(request ->
-                request.requestMatchers("/api/user/auth/signup", "/api/user/auth/sendResetPasswordOTP", "/api/user/auth/verifyResetOTP", "/api/user/auth/login",
-                                "/api/user/auth/refresh-token", "/api/user/auth/verify", "/api/user/auth/resendOTP", "/api/user/auth/resetPassword")
+                request.requestMatchers("/api/user/auth/signup",
+                                "/api/user/auth/sendResetPasswordOTP",
+                                "/api/user/auth/verifyResetOTP",
+                                "/api/user/auth/login",
+                                "/api/user/auth/refresh-token",
+                                "/api/user/auth/verify",
+                                "/api/user/auth/resendOTP",
+                                "/api/user/auth/resetPassword",
+                                "/api/admin/login",
+                                "/api/admin/refresh-token",
+                                "/api/admin")
                         .permitAll()
-                        .requestMatchers("api/payment/create").hasRole("USER")
-                        .requestMatchers("api/payment/refund").hasRole("ADMIN")
-                        .requestMatchers("api/payment/**").authenticated()
-                .requestMatchers("/api/user/auth/**").hasRole("USER").anyRequest().authenticated());
+
+                        .requestMatchers("/api/admin/create", "/api/admin/delete/**").hasRole("SUPER_ADMIN")
+                        .requestMatchers("/api/payment/create").hasRole("USER")
+                        .requestMatchers("/api/payment/refund").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                        .requestMatchers("/api/user/auth/block",
+                                "/api/user/auth/unblock",
+                                "/api/user/auth/deleteAll").hasAnyRole("ADMIN", "SUPER_ADMIN")
+
+                        .requestMatchers("/api/user/auth/delete", "/api/user/auth/users").hasAnyRole("ADMIN", "USER", "SUPER_ADMIN")
+                        .requestMatchers("/api/payment/**").authenticated()
+                        .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                        .requestMatchers("/api/user/auth/**").hasRole("USER").anyRequest().authenticated());
 
         // Enable the form login.
         // http.formLogin(Customizer.withDefaults());
