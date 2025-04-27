@@ -48,7 +48,9 @@ public class User {
     @Column(name = "user_role")
     private List<UserRole> userRoles;
 
-    // private List<UUID> posts;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Post> posts;
+
     // private List<UUID> savedPosts;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)

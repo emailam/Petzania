@@ -3,8 +3,8 @@ spring:
     name: RegistrationModule
 
   datasource:
-    password: admin
-    url: jdbc:postgresql://localhost:8090/postgres
+    password: 123
+    url: jdbc:postgresql://localhost:5432/postgres
     username: postgres
 
   jpa:
@@ -42,6 +42,15 @@ spring:
   email:
     sender:
       petzaniasystem@gmail.com
+
+  aws:
+    access-key:
+      AKIA4LWSL3LGHUPC3QWG
+    secret-access-key:
+      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
+    region: eu-north-1
+    bucket:
+      name: petzania-media
 
 
 

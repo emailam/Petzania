@@ -5,24 +5,28 @@ import com.example.registrationmodule.model.enumeration.Visibility;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PostDTO {
-    @NotNull(message = "Caption is required")
-    @Size(max = 1000,message = "Caption can't exceed 1000 characters")
+public class PostResponseDTO {
+    private UUID postId;
+    @NotNull
+    @Size(max = 1000)
     private String caption;
-    private Visibility visibility;
+    @Size(max = 10)
+    private List<MediaResponseDTO> mediaList;
     private Mood mood;
-    private boolean pinned;
-    private boolean turnedOnNotifications;
+    private Visibility visibility;
     private LocalDateTime createdAt;
-    @Size(max = 10,message = "Maximum 10 media files allowed")
-    private List<MediaDTO> mediaList;
+    private UUID userId;
 }
+

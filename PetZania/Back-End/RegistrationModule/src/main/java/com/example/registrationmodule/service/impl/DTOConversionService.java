@@ -1,12 +1,11 @@
 package com.example.registrationmodule.service.impl;
 
 import com.example.registrationmodule.model.dto.*;
-import com.example.registrationmodule.model.entity.Admin;
+import com.example.registrationmodule.model.entity.*;
 import com.example.registrationmodule.model.dto.PetDTO;
 import com.example.registrationmodule.model.dto.RegisterUserDTO;
 import com.example.registrationmodule.model.dto.UpdateUserProfileDto;
-import com.example.registrationmodule.model.dto.UserProfileDTO;import com.example.registrationmodule.model.entity.Pet;
-import com.example.registrationmodule.model.entity.User;
+import com.example.registrationmodule.model.dto.UserProfileDTO;
 
 import com.example.registrationmodule.repository.UserRepository;
 import com.example.registrationmodule.service.IDTOConversionService;
@@ -15,6 +14,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -62,7 +62,7 @@ public class DTOConversionService implements IDTOConversionService {
     }
 
     @Override
-    public Admin mapToAdmin(UpdateAdminDto updateAdminDto){
+    public Admin mapToAdmin(UpdateAdminDto updateAdminDto) {
         Admin admin = new Admin();
         admin.setUsername(updateAdminDto.getUsername());
         //admin.setRole(updateAdminDto.getAdminRoles());
@@ -70,7 +70,7 @@ public class DTOConversionService implements IDTOConversionService {
     }
 
     @Override
-    public AdminDto mapToAdminDto(Admin admin){
+    public AdminDto mapToAdminDto(Admin admin) {
         if (admin == null) {
             return null;
         }
@@ -84,9 +84,9 @@ public class DTOConversionService implements IDTOConversionService {
 
     @Override
     public PetDTO mapToPetDto(Pet pet) {
-    if (pet == null) {
-                return null;
-            }
+        if (pet == null) {
+            return null;
+        }
         return new PetDTO(
                 pet.getPetId(),
                 pet.getName(),
@@ -129,5 +129,41 @@ public class DTOConversionService implements IDTOConversionService {
         user.setPassword(registerUserDTO.getPassword());
         return user;
     }
+    
+    @Override
+    public Media convertToMedia(MediaDTO mediaDTO) {
+        Media media = new Media();
+        media.setUrl(mediaDTO.getUrl());
+        media.setFormat(mediaDTO.getFormat());
+        media.setType(mediaDTO.getType());
+        media.setUploadedAt(mediaDTO.getUploadedAt());
+        return media;
+    }
 
+    @Override
+    public PostResponseDTO postToDto(Post post) {
+        return PostResponseDTO.builder()
+                .postId(post.getPostId())
+                .caption(post.getCaption())
+                .mood(post.getMood())
+                .visibility(post.getVisibility())
+                .createdAt(post.getCreatedAt())
+                .mediaList(post.getMediaList()!= null ?
+                        post.getMediaList().stream().map(this::mediaToDto).collect(Collectors.toList())
+                        : new ArrayList<>())
+                .userId(post.getUser().getUserId())
+                .build();
+    }
+
+    @Override
+    public MediaResponseDTO mediaToDto(Media media) {
+        return MediaResponseDTO.builder()
+                .mediaId(media.getMediaId())
+                .url(media.getUrl())
+                .type(media.getType())
+                .format(media.getFormat())
+                .postId(media.getPost().getPostId())
+                .uploadedAt(media.getUploadedAt())
+                .build();
+    }
 }

@@ -34,7 +34,7 @@ public class SecurityConfig {
         // make every request needs an authorization.
         http.authorizeHttpRequests(request ->
                 request.requestMatchers("/api/user/auth/signup", "/api/user/auth/login",
-                                "/api/user/auth/refresh-token", "/api/user/auth/verify", "/api/user/auth/resendOTP")
+                                "/api/user/auth/refresh-token", "/api/user/auth/verify", "/api/user/auth/resendOTP", "api/posts/**")
                         .permitAll()
                 .requestMatchers("/api/user/auth/**").hasRole("USER").anyRequest().authenticated());
 

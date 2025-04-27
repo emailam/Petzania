@@ -1,2 +1,15 @@
-package com.example.registrationmodule.repository;public interface MediaRepository {
+package com.example.registrationmodule.repository;
+
+import com.example.registrationmodule.model.entity.Media;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public interface MediaRepository extends JpaRepository<Media, UUID> {
+
+    Optional<Media> findByUrl(String url);
 }

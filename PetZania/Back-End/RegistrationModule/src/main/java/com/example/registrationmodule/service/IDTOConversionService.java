@@ -1,9 +1,9 @@
 package com.example.registrationmodule.service;
 
 import com.example.registrationmodule.model.dto.*;
-import com.example.registrationmodule.model.entity.Admin;
-import com.example.registrationmodule.model.entity.Pet;
-import com.example.registrationmodule.model.entity.User;
+import com.example.registrationmodule.model.entity.*;
+
+import java.util.List;
 
 public interface IDTOConversionService {
 
@@ -21,4 +21,8 @@ public interface IDTOConversionService {
     Pet mapToPet(PetDTO petDto);
 
     User convertToUser(RegisterUserDTO registerUserDTO);
+
+    PostResponseDTO postToDto(Post post);
+    MediaResponseDTO mediaToDto(Media media);
+    Media convertToMedia(MediaDTO mediaDTO);
 }
