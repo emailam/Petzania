@@ -27,11 +27,10 @@ public class RefreshTokenService implements IRefreshTokenService {
 
     @Override
     @CachePut(value = CACHE_NAME, key = "#token", unless = "#result == null")
-    public boolean saveToken(String token, User user) {
+    public boolean saveToken(String token) {
         System.out.println("Saving in the database");
         Date expirationTime = jwtService.extractExpiration(token);
         RevokedRefreshToken revokedRefreshToken = new RevokedRefreshToken();
-        revokedRefreshToken.setUser(user);
         revokedRefreshToken.setToken(token);
         revokedRefreshToken.setExpirationTime(expirationTime);
 

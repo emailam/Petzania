@@ -31,7 +31,6 @@ public class PetDTO {
     @ValidEnum(enumClass = Gender.class, message = "Invalid gender value.")
     private Gender gender;
 
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // Allow setting, but not returning
     @NotNull(message = "Date of birth is required.")
     private LocalDate dateOfBirth;
 

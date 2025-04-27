@@ -1,6 +1,8 @@
 package com.example.registrationmodule;
 
+import com.example.registrationmodule.model.entity.Admin;
 import com.example.registrationmodule.model.entity.User;
+import com.example.registrationmodule.model.enumeration.AdminRole;
 import com.example.registrationmodule.model.enumeration.UserRole;
 import com.example.registrationmodule.service.IUserService;
 
@@ -29,6 +31,57 @@ public class TestDataUtil {
                 .storeProfileId(UUID.randomUUID())
                 .vetProfileId(UUID.randomUUID())
                 .verified(true)
+                .build();
+    }
+    public static User createTestUserB() {
+        return User.builder()
+                .username("testUserB")
+                .password("Password123#")
+                .loginTimes(0)
+                .email("testB@example.com")
+                .name("Test User")
+                .bio("I love pets!")
+                .profilePictureURL("http://example.com/profile.jpg")
+                .phoneNumber("1234567890")
+                .userRoles(List.of(UserRole.VET))
+                .friends(new ArrayList<>())
+                .followers(new ArrayList<>())
+                .following(new ArrayList<>())
+                .storeProfileId(UUID.randomUUID())
+                .vetProfileId(UUID.randomUUID())
+                .verified(true)
+                .build();
+    }
+
+    public static Admin createAdminA() {
+        return Admin.builder().
+                username("admin")
+                .password("Password123#")
+                .role(AdminRole.ADMIN)
+                .build();
+    }
+
+    public static Admin createAdminB() {
+        return Admin.builder()
+                .username("adminB")
+                .password("Password123#")
+                .role(AdminRole.ADMIN)
+                .build();
+    }
+
+    public static Admin createAdminC() {
+        return Admin.builder()
+                .username("adminC")
+                .password("Password123#")
+                .role(AdminRole.ADMIN)
+                .build();
+    }
+
+    public static Admin createSuperAdminA() {
+        return Admin.builder().
+                username("superadmin")
+                .password("Password123#")
+                .role(AdminRole.SUPER_ADMIN)
                 .build();
     }
 }

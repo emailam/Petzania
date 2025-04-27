@@ -23,12 +23,13 @@ import java.util.UUID;
 public class UserController {
     private final IUserService userService;
 
+
     @PostMapping("/logout")
     public ResponseEntity<String> logout(@RequestBody @Valid LogoutDTO logoutDTO) {
         userService.logout(logoutDTO);
         return ResponseEntity.ok("User logged out successfully");
     }
-    
+
     @PostMapping("/resendOTP")
     public ResponseEntity<String> resendOTP(@RequestBody @Valid EmailDTO emailDTO) {
         userService.sendVerificationCode(emailDTO.getEmail());
@@ -40,6 +41,7 @@ public class UserController {
         userService.blockUser(blockUserDTO);
         return ResponseEntity.ok("User is blocked successfully");
     }
+
     @PostMapping("/unblock")
     public ResponseEntity<String> unblockUser(@RequestBody @Valid BlockUserDTO blockUserDTO) {
         userService.unblockUser(blockUserDTO);
@@ -75,7 +77,6 @@ public class UserController {
         userService.verifyCode(otpValidationDTO);
         return ResponseEntity.ok("OTP verification successful");
     }
-
 
     @PutMapping("/changePassword")
     public ResponseEntity<String> changePassword(@RequestBody ChangePasswordDTO changePasswordDTO) {
