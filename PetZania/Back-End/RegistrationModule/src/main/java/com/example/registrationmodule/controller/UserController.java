@@ -1,6 +1,7 @@
 package com.example.registrationmodule.controller;
 
 import com.example.registrationmodule.model.dto.*;
+import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.model.entity.UserPrincipal;
 import com.example.registrationmodule.service.IUserService;
 import jakarta.validation.constraints.Email;
@@ -14,7 +15,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @RestController
@@ -67,7 +70,18 @@ public class UserController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<UserProfileDTO> updateUserProfile(@PathVariable("id") UUID userId,
-                                                            @RequestBody UpdateUserProfileDto updateUserProfileDto) {
+                                                            @RequestBody UpdateUserProfileDto updateUserProfileDto) throws AccessDeniedException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof UserPrincipal userPrincipal) {
+            System.out.println(((UserPrincipal) principal).getUserId());
+            System.out.println(userId);
+            if (!userPrincipal.getUserId().equals(userId)) {
+                throw new AccessDeniedException("You can only update your own profile");
+            }
+        }
+
         UserProfileDTO userProfileDTO = userService.updateUserById(userId, updateUserProfileDto);
         return ResponseEntity.ok(userProfileDTO);
     }
@@ -79,7 +93,16 @@ public class UserController {
     }
 
     @PutMapping("/changePassword")
-    public ResponseEntity<String> changePassword(@RequestBody ChangePasswordDTO changePasswordDTO) {
+    public ResponseEntity<String> changePassword(@RequestBody ChangePasswordDTO changePasswordDTO) throws AccessDeniedException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof UserPrincipal userPrincipal) {
+            if (!userPrincipal.getEmail().equals(changePasswordDTO.getEmail())) {
+                throw new AccessDeniedException("You can only change your own password");
+            }
+        }
+
         userService.changePassword(changePasswordDTO);
         return ResponseEntity.ok("Password changed successfully");
     }
@@ -103,7 +126,16 @@ public class UserController {
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<String> deleteUser(@Valid @RequestBody EmailDTO emailDTO) {
+    public ResponseEntity<String> deleteUser(@Valid @RequestBody EmailDTO emailDTO) throws AccessDeniedException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
+
+        if(principal instanceof UserPrincipal userPrincipal){
+            if(!userPrincipal.getEmail().equals(emailDTO.getEmail())){
+                throw new AccessDeniedException("You can delete your own account");
+            }
+        }
+
         userService.deleteUser(emailDTO);
         return ResponseEntity.ok("User deleted successfully");
     }

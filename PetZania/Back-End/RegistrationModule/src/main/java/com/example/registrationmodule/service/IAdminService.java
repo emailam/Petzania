@@ -16,4 +16,6 @@ public interface IAdminService {
     public void logout(AdminLogoutDTO adminLogoutDTO);
 
     public TokenDTO refreshToken(String refreshToken);
+
+    List<AdminDTO> getAllAdmins();
 }

@@ -10,6 +10,7 @@ import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.entity.Admin;
 import com.example.registrationmodule.repository.AdminRepository;
 import com.example.registrationmodule.service.IAdminService;
+import com.example.registrationmodule.service.IDTOConversionService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,9 +22,11 @@ import org.springframework.stereotype.Service;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -34,6 +37,7 @@ public class AdminService implements IAdminService {
     private final JWTService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
+    private final DTOConversionService dtoConversionService;
 
     @Override
     public boolean existsById(UUID adminId) {
@@ -90,6 +94,15 @@ public class AdminService implements IAdminService {
         String newAccessToken = jwtService.generateAccessToken(username, role);
         return new TokenDTO(newAccessToken, refreshToken);
     }
+
+    @Override
+    public List<AdminDTO> getAllAdmins() {
+        List<Admin> admins = adminRepository.findAll();
+        return admins.stream()
+                .map(dtoConversionService::mapToAdminDTO)
+                .collect(Collectors.toList());
+    }
+
 
     public ResponseLoginDTO loginFallback(LoginAdminDTO loginAdminDTO, RequestNotPermitted t) {
         throw new TooManyLoginRequests("Too many login attempts. Try again later.");

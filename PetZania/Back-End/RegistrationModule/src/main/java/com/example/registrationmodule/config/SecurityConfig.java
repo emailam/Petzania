@@ -56,7 +56,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/user/auth/delete", "/api/user/auth/users").hasAnyRole("ADMIN", "USER", "SUPER_ADMIN")
                         .requestMatchers("/api/payment/**").authenticated()
                         .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
-                        .requestMatchers("/api/user/auth/**").hasRole("USER").anyRequest().authenticated());
+                        .requestMatchers("/api/user/auth/**").hasAnyRole("USER", "ADMIN", "SUPER_ADMIN").anyRequest().authenticated());
 
         // Enable the form login.
         // http.formLogin(Customizer.withDefaults());

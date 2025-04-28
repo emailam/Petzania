@@ -6,14 +6,18 @@ import com.example.registrationmodule.exception.user.UserNotFound;
 import com.example.registrationmodule.model.dto.PetDTO;
 import com.example.registrationmodule.model.dto.UpdatePetDTO;
 import com.example.registrationmodule.model.entity.Pet;
+import com.example.registrationmodule.model.entity.UserPrincipal;
 import com.example.registrationmodule.service.IPetService;
 import com.example.registrationmodule.service.IUserService;
 import com.example.registrationmodule.service.IDTOConversionService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -28,9 +32,9 @@ public class PetController {
     private final IDTOConversionService dtoConversionService;
 
     @PostMapping(path = "/pet")
-    public ResponseEntity<PetDTO> createPet(@RequestBody PetDTO petDto) {
+    public ResponseEntity<PetDTO> createPet(@RequestBody PetDTO petDto) throws AccessDeniedException {
         UUID userId = petDto.getUserId();
-
+        
         if (userId == null) {
             throw new UserIdNull("User ID must not be null");
         }
