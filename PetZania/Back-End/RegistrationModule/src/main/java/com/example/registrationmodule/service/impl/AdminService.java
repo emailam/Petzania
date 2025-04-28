@@ -1,17 +1,27 @@
 package com.example.registrationmodule.service.impl;
 
 import com.example.registrationmodule.exception.admin.AdminNotFound;
+import com.example.registrationmodule.exception.authenticationAndVerificattion.RefreshTokenNotValid;
 import com.example.registrationmodule.exception.rateLimiting.TooManyAdminRequests;
-import com.example.registrationmodule.model.dto.UpdateAdminDto;
+import com.example.registrationmodule.exception.rateLimiting.TooManyLoginRequests;
+import com.example.registrationmodule.exception.user.UserAlreadyLoggedOut;
+import com.example.registrationmodule.exception.user.UsernameAlreadyExists;
+import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.entity.Admin;
 import com.example.registrationmodule.repository.AdminRepository;
 import com.example.registrationmodule.service.IAdminService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,10 +30,81 @@ import java.util.UUID;
 @Transactional
 public class AdminService implements IAdminService {
     private final AdminRepository adminRepository;
+    private final AuthenticationManager authenticationManager;
+    private final JWTService jwtService;
+    private final RefreshTokenService refreshTokenService;
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
     @Override
     public boolean existsById(UUID adminId) {
         return adminRepository.existsById(adminId);
+    }
+
+    @Override
+    @RateLimiter(name = "loginRateLimiter", fallbackMethod = "loginFallback")
+    public ResponseLoginDTO login(LoginAdminDTO loginAdminDTO) {
+        Admin admin = adminRepository.findByUsername(loginAdminDTO.getUsername()).orElseThrow(() -> new AdminNotFound("Username or password is incorrect"));
+
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginAdminDTO.getUsername(), loginAdminDTO.getPassword()));
+        if (authentication.isAuthenticated()) {
+            String role;
+            // if this is the credentials of the super admin.
+            if (Objects.equals(loginAdminDTO.getUsername(), "superadmin")) {
+                role = "ROLE_SUPER_ADMIN";
+            } else {
+                role = "ROLE_ADMIN";
+            }
+            String message = "Successful login";
+            TokenDTO tokenDTO = new TokenDTO(jwtService.generateAccessToken(loginAdminDTO.getUsername(), role),
+                    jwtService.generateRefreshToken(loginAdminDTO.getUsername(), role));
+            int loginTimes = 0; // ignore this for the admin.
+            UUID adminId = admin.getAdminId();
+            return new ResponseLoginDTO(message, tokenDTO, 0, adminId);
+        } else {
+            throw new AdminNotFound("Email or password is incorrect");
+        }
+    }
+
+    @Override
+    public TokenDTO refreshToken(String refreshToken) {
+        if (refreshToken == null) {
+            throw new RefreshTokenNotValid("There is no refresh token sent");
+        }
+
+        if (refreshTokenService.isTokenRevoked(refreshToken)) {
+            throw new RefreshTokenNotValid("The refresh token is invalid");
+        }
+
+        String username = jwtService.extractEmail(refreshToken);
+        String role = jwtService.extractRole(refreshToken);
+        boolean isExpired = jwtService.isTokenExpired(refreshToken);
+
+        if (username == null || role == null || isExpired) {
+            throw new RefreshTokenNotValid("Invalid or expired refresh token");
+        }
+
+        if (adminRepository.findByUsername(username).isEmpty()) {
+            throw new AdminNotFound("Admin does not exist");
+        }
+
+        String newAccessToken = jwtService.generateAccessToken(username, role);
+        return new TokenDTO(newAccessToken, refreshToken);
+    }
+
+    public ResponseLoginDTO loginFallback(LoginAdminDTO loginAdminDTO, RequestNotPermitted t) {
+        throw new TooManyLoginRequests("Too many login attempts. Try again later.");
+    }
+
+    @Override
+    public void logout(AdminLogoutDTO adminLogoutDTO) {
+        Admin admin = adminRepository.findByUsername(adminLogoutDTO.getUsername()).orElseThrow(() -> new AdminNotFound("Admin does not exist"));
+
+        if (refreshTokenService.isTokenRevoked(adminLogoutDTO.getRefreshToken())) {
+            throw new UserAlreadyLoggedOut("Admin already logged out");
+        }
+
+        // save it in the database
+        refreshTokenService.saveToken(adminLogoutDTO.getRefreshToken());
     }
 
     @Override
@@ -32,32 +113,25 @@ public class AdminService implements IAdminService {
     }
 
     @Override
-    @RateLimiter(name = "updateAdminRateLimiter", fallbackMethod = "updateAdminFallback")
-    public Admin partialUpdateAdminById(UUID adminId, UpdateAdminDto updatedAdmin) {
-        return adminRepository.findById(adminId).map(existingAdmin -> {
-            Optional.ofNullable(updatedAdmin.getUsername()).ifPresent(existingAdmin::setUsername);
-            Optional.ofNullable(updatedAdmin.getAdminRole()).ifPresent(existingAdmin::setRole);
-            return adminRepository.save(existingAdmin);
-        }).orElseThrow(() -> new AdminNotFound("Admin not found with ID: " + adminId));
-    }
-
-    @Override
     @RateLimiter(name = "saveAdminRateLimiter", fallbackMethod = "saveAdminFallback")
     public Admin saveAdmin(Admin admin) {
+        if (adminRepository.findByUsername(admin.getUsername()).isPresent()) {
+            throw new UsernameAlreadyExists("Username already exists");
+        }
+        admin.setPassword(passwordEncoder.encode(admin.getPassword()));
         return adminRepository.save(admin);
     }
 
     @Override
     @RateLimiter(name = "deleteAdminRateLimiter", fallbackMethod = "deleteAdminFallback")
     public void deleteById(UUID adminId) {
+        if (!adminRepository.existsById(adminId)) {
+            throw new AdminNotFound("Admin not found with ID: " + adminId);
+        }
         adminRepository.deleteById(adminId);
     }
 
     // Fallbacks for rate limiting
-    public Admin updateAdminFallback(UUID adminId, UpdateAdminDto updatedAdmin, RequestNotPermitted ex) {
-        throw new TooManyAdminRequests("Too many requests for updating admins. Please try again later.");
-    }
-
     public Admin saveAdminFallback(Admin admin, RequestNotPermitted ex) {
         throw new TooManyAdminRequests("Too many requests for saving admins. Please try again later.");
     }

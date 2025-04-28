@@ -70,6 +70,8 @@ public class UserService implements IUserService {
         return converter.mapToUserProfileDto(user);
     }
 
+
+
     public UserProfileDTO registerFallback(RegisterUserDTO registerUserDTO, RequestNotPermitted t) {
         throw new TooManyRegistrationRequests("Too many registration attempts. Try again later.");
     }
@@ -134,6 +136,7 @@ public class UserService implements IUserService {
 
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginUserDTO.getEmail(), loginUserDTO.getPassword()));
         if (authentication.isAuthenticated()) {
+            System.out.println("valid credentials");
             if (!user.isVerified()) {
                 throw new UserNotVerified("User is not verified");
             }
@@ -143,7 +146,8 @@ public class UserService implements IUserService {
             }
 
             String message = "Successful login";
-            TokenDTO tokenDTO = new TokenDTO(jwtService.generateAccessToken(loginUserDTO.getEmail(), "ROLE_USER"), jwtService.generateRefreshToken(loginUserDTO.getEmail(), "ROLE_USER"));
+            TokenDTO tokenDTO = new TokenDTO(jwtService.generateAccessToken(loginUserDTO.getEmail(), "ROLE_USER"),
+                    jwtService.generateRefreshToken(loginUserDTO.getEmail(), "ROLE_USER"));
             int loginTimes = user.getLoginTimes();
             UUID userId = user.getUserId();
             user.setLoginTimes(loginTimes + 1);
@@ -151,6 +155,7 @@ public class UserService implements IUserService {
 
             return new ResponseLoginDTO(message, tokenDTO, loginTimes + 1, userId);
         } else {
+            System.out.println("invalid credentials");
             throw new InvalidUserCredentials("Email or password is incorrect");
         }
     }
@@ -262,7 +267,7 @@ public class UserService implements IUserService {
         }
 
         // save it in the database
-        refreshTokenService.saveToken(logoutDTO.getRefreshToken(), user);
+        refreshTokenService.saveToken(logoutDTO.getRefreshToken());
     }
 
     public void logoutFallback(LogoutDTO logoutDTO, RequestNotPermitted t) {

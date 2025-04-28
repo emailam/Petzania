@@ -6,7 +6,7 @@ import com.example.registrationmodule.model.entity.User;
 import java.util.Optional;
 
 public interface IRefreshTokenService {
-    public boolean saveToken(String token, User user);
+    public boolean saveToken(String token);
 
     public boolean isTokenRevoked(String token);
 
