@@ -11,11 +11,11 @@ import { responsive } from "@/utilities/responsive";
 import { useAuthForm } from "@/components/useForm";
 import axios from "axios";
 
+import { saveToken } from '@/storage/tokenStorage';
+
 const { useRouter } = require("expo-router");
 
 import { UserContext } from "@/context/UserContext";
-import { AuthContext } from "@/context/AuthContext";
-
 
 export default function LoginForm(){
     const {control , handleSubmit , formState:{errors , isSubmitting} , setError} = useAuthForm("login");
@@ -24,35 +24,51 @@ export default function LoginForm(){
 
     const router = useRouter();
 
-    const {user, setUser} = useContext(UserContext);
-    const {setRefreshToken, setAccessToken} = useContext(AuthContext);
+    const { setUser } = useContext(UserContext);
 
-    const getUserDataById = async (userId) => {
+    const getUserDataById = async (userId, token) => {
         try {
-            const response = await axios.get(`http://192.168.1.4:8080/api/user/auth/login/${userId}`);
+            const response = await axios.get(`http://192.168.1.4:8080/api/user/auth/${userId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
             if (response.status === 200) {
                 setUser(response.data);
+                console.log("User data retrieved successfully:", response.data);
+                return response.data;
             } else {
                 console.error("Failed to retrieve user data. Status:", response.status);
+                return null;
             }
         } catch (error) {
             console.error("Error retrieving user data:", error.response?.data?.message || error.message);
+            return null;
         }
     };
 
     const Login = async (data) => {
+        data.email = data.email.toLowerCase();
+        data.email = data.email.trim();
         try {
             const response = await axios.post("http://192.168.1.4:8080/api/user/auth/login", data);
-            console.log(response, data);
+
             if (response.status === 200) {
-                getUserDataById(response.data.userId);
-                setRefreshToken(response.data.tokenDTO.refreshToken);
-                setAccessToken(response.data.tokenDTO.accessToken);
-                // Here we will check for login count from database
-                if(user.loginCount === 1){
+                const { accessToken, refreshToken } = response.data.tokenDTO;
+
+                // Save the tokens
+                await saveToken('accessToken', accessToken);
+                await saveToken('refreshToken', refreshToken);
+
+                const userData = await getUserDataById(response.data.userId, accessToken);
+
+                // To Be Removed after testing
+                router.push('/RegisterModule/ProfileSetUp1');
+                return ;
+
+                if (userData?.name === null) {
                     router.push('/RegisterModule/ProfileSetUp1');
-                }
-                else{
+                } else {
                     router.dismissAll();
                     router.replace('(tabs)');
                 }

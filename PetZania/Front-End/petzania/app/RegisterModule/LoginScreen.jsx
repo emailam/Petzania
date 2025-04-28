@@ -5,12 +5,11 @@ import { Link } from "expo-router";
 import { responsive } from "@/utilities/responsive";
 import ExternalSignIn from "@/components/ExternalSignIn";
 import LoginForm from "@/components/LoginForm";
-export default function LoginScreen() {
 
-  
+export default function LoginScreen() {
     return (
       <SafeAreaView style={styles.safeArea}>
-        
+
         <Text style={styles.title}>PetZania</Text>
   
         <ScrollView contentContainerStyle={styles.container}>

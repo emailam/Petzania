@@ -4,7 +4,6 @@ import { responsive } from "@/utilities/responsive";
 import OTPForm from "@/components/OTPForm";
 import RequestOTP from "@/components/RequestOTP";
 import { useLocalSearchParams } from "expo-router";
-import { UserContext } from "@/context/UserContext";
 
 
 export default function OTPVerificationScreen() {
@@ -23,7 +22,7 @@ export default function OTPVerificationScreen() {
 
         <Text style={styles.footerText}>Didn't receive any code?</Text>
 
-        <RequestOTP RESEND_COOLDOWN = {60} email = {email}/>
+        <RequestOTP RESEND_COOLDOWN = {60} email = {email} isRegister = {isRegister}/>
       </View>
     </SafeAreaView>
   );

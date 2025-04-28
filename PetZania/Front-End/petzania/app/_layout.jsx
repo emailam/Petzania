@@ -16,6 +16,7 @@ import { AuthProvider } from '@/context/AuthContext';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -239,6 +240,7 @@ export default function RootLayout() {
           </PetProvider>
         </UserProvider>
       </AuthProvider>
+      <Toast />
     </SafeAreaProvider>
   );
 }

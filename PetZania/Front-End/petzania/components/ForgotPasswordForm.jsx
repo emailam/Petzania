@@ -24,7 +24,6 @@ export default function ForgotPasswordForm() {
         });
 
         if (response.status === 200) {
-          // Show sucess Message
           router.push({
             pathname: "/RegisterModule/OTPVerificationScreen",
             params: { email: data.email, isRegister : false },

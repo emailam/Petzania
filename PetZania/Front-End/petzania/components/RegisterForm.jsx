@@ -34,7 +34,7 @@ export default function RegisterForm(){
             });
             router.push({
               pathname: "/RegisterModule/OTPVerificationScreen",
-              params: { isRegister: true},
+              params: { isRegister: true, email: data.email },
             });
           }
         } catch (error) {
@@ -62,7 +62,7 @@ export default function RegisterForm(){
         }
       };
     return(
-      <View style = {{gap:16}}>
+      <View style = {{width: '100%', gap: 16, paddingHorizontal: 20}}>
         <FormInput
             control={control}
             name="username"

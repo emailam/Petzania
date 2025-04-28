@@ -12,16 +12,19 @@ export default function AddPet3() {
     const router = useRouter();
 
     const fallbackImage = require('@/assets/images/Pets/Dog.png');
+    const [error, setError] = useState(''); // <-- Add error state
 
     const handleSelectPet = (name) => {
+        setError(''); // clear error when user selects
         setPet({ ...pet, breed: name });
     };
 
     const handleManualInput = (text) => {
+        setError(''); // clear error when user types
         setPet({ ...pet, breed: text });
     };
 
-    const allBreeds = PET_BREEDS[pet.type] || [];
+    const allBreeds = PET_BREEDS[pet.species] || [];
 
     const renderItem = ({ item }) => (
         <TouchableOpacity
@@ -43,6 +46,10 @@ export default function AddPet3() {
     );
 
     const goToNextStep = () => {
+        if (!pet.breed.trim()) {  // check if breed is empty
+            setError('Please enter or select a breed.');
+            return;
+        }
         router.push('/RegisterModule/AddPet4');
     };
 
@@ -64,6 +71,7 @@ export default function AddPet3() {
                     value={!allBreeds.some(p => p.name === pet.breed) ? pet.breed : ''}
                     onChangeText={handleManualInput}
                 />
+                {error ? <Text style={styles.error}>{error}</Text> : null}
                 <Button title="Next" borderRadius={10} fontSize={16} onPress={goToNextStep} />
             </View>
         </View>
