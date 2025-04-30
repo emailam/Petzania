@@ -139,7 +139,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UserAccessDenied.class)
     public ResponseEntity<Map<String, Object>> handleUserAccessDenied(UserAccessDenied ex) {
-        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
+        return buildErrorResponse(ex, HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(AuthenticatedUserNotFound.class)

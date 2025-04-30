@@ -6,6 +6,7 @@ import com.example.registrationmodule.model.entity.Admin;
 import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.service.IAdminService;
 import com.example.registrationmodule.service.IUserService;
+import com.example.registrationmodule.service.impl.AdminService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,13 +23,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import javax.print.attribute.standard.Media;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
-
-import static org.mockito.Mockito.verify;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
@@ -373,7 +371,7 @@ public class UserControllerIntegrationTests {
     }
 
     @Autowired
-    public UserControllerIntegrationTests(MockMvc mockMvc, IUserService userService, ObjectMapper objectMapper, IAdminService adminService) {
+    public UserControllerIntegrationTests(MockMvc mockMvc, IUserService userService, ObjectMapper objectMapper, AdminService adminService) {
         this.mockMvc = mockMvc;
         this.userService = userService;
         this.objectMapper = objectMapper;
@@ -397,6 +395,7 @@ public class UserControllerIntegrationTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(otpValidationDTO)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
+
     }
 
     @Test

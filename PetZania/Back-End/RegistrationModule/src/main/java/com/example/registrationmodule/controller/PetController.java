@@ -85,10 +85,10 @@ public class PetController {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();
 
-        if (petService.getPetById(petId)
+        if (!petService.getPetById(petId)
                 .orElseThrow(() -> new PetNotFound("Pet not found with ID: " + petId))
                 .getUser()
-                .getUserId() != userId) {
+                .getUserId().equals(userId)) {
             throw new UserAccessDenied("You can only update your pets");
         }
 
@@ -105,10 +105,10 @@ public class PetController {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();
 
-        if (petService.getPetById(petId)
+        if (!petService.getPetById(petId)
                 .orElseThrow(() -> new PetNotFound("Pet not found with ID: " + petId))
                 .getUser()
-                .getUserId() != userId) {
+                .getUserId().equals(userId)) {
             throw new UserAccessDenied("You can only delete your pets");
         }
 
