@@ -48,5 +48,6 @@ public class PetDTO {
     private List<String> myVaccinesURLs;
     private List<String> myPicturesURLs;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private UUID userId;
 }

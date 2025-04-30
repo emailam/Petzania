@@ -1,6 +1,7 @@
 package com.example.registrationmodule.controller;
 
 import com.example.registrationmodule.TestDataUtil;
+import com.example.registrationmodule.exception.pet.PetNotFound;
 import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.entity.Pet;
 import com.example.registrationmodule.model.entity.User;
@@ -85,7 +86,7 @@ public class PetControllerIntegrationTests {
     }
 
     @Test
-    public void testCreateValidPet() throws Exception {
+    public void testCreateValidPet_AddItToCurrentUser() throws Exception {
         Pet testPetA = TestDataUtil.createTestPetA(testUserA);
         PetDTO testPetDTO = dtoConversionService.mapToPetDto(testPetA);
 
@@ -99,6 +100,34 @@ public class PetControllerIntegrationTests {
         String response = result.getResponse().getContentAsString();
         UUID createdPetId = UUID.fromString(objectMapper.readTree(response).get("petId").asText());
         assertTrue(petService.existsById(createdPetId));
+        assertEquals(petService.getPetById(createdPetId)
+                .orElseThrow(() -> new PetNotFound("Pet not found with ID: " + createdPetId))
+                .getUser()
+                .getUserId(), testUserA.getUserId());
+
+    }
+
+    @Test
+    public void testCreateValidPet_SetInvalidUserId_ShouldAddItToCurrentUser() throws Exception {
+        Pet testPetA = TestDataUtil.createTestPetA(testUserA);
+        PetDTO testPetDTO = dtoConversionService.mapToPetDto(testPetA);
+        testPetDTO.setUserId(UUID.randomUUID());
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/api/pet")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", token)
+                        .content(objectMapper.writeValueAsString(testPetDTO)))
+                .andExpect(MockMvcResultMatchers.status().isCreated())
+                .andReturn();
+
+        String response = result.getResponse().getContentAsString();
+        UUID createdPetId = UUID.fromString(objectMapper.readTree(response).get("petId").asText());
+        assertTrue(petService.existsById(createdPetId));
+        assertEquals(petService.getPetById(createdPetId)
+                .orElseThrow(() -> new PetNotFound("Pet not found with ID: " + createdPetId))
+                .getUser()
+                .getUserId(), testUserA.getUserId());
+
     }
 
 //    @Test
@@ -187,7 +216,7 @@ public class PetControllerIntegrationTests {
     }
 
     @Test
-    public void testUpdatePetByValidId() throws Exception {
+    public void testUpdatePetByValidPetId() throws Exception {
         Pet testPetA = petService.savePet(TestDataUtil.createTestPetA(testUserA));
         UpdatePetDTO updatePetDTO = new UpdatePetDTO();
         updatePetDTO.setName("Koky");
@@ -210,7 +239,7 @@ public class PetControllerIntegrationTests {
     }
 
     @Test
-    public void testUpdatePetByInvalidId() throws Exception {
+    public void testUpdatePetByInvalidPetId() throws Exception {
         UpdatePetDTO updatePetDTO = new UpdatePetDTO();
 
         mockMvc.perform(MockMvcRequestBuilders.patch("/api/pet/{petId}", UUID.randomUUID())
@@ -221,7 +250,22 @@ public class PetControllerIntegrationTests {
     }
 
     @Test
-    public void testDeletePetByIdValid() throws Exception {
+    public void testUpdatePetByValidPetId_OtherUser() throws Exception {
+        User testUserB = userService.saveUser(TestDataUtil.createTestUserB());
+        Pet testPetB = petService.savePet(TestDataUtil.createTestPetA(testUserB));
+        UpdatePetDTO updatePetDTO = new UpdatePetDTO();
+        updatePetDTO.setName("Koky");
+        updatePetDTO.setDescription("Beshoy's cat");
+
+        mockMvc.perform(MockMvcRequestBuilders.patch("/api/pet/{petId}", testPetB.getPetId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", token)
+                        .content(objectMapper.writeValueAsString(updatePetDTO)))
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
+    }
+
+    @Test
+    public void testDeletePetByValidPetId() throws Exception {
         Pet testPetA = petService.savePet(TestDataUtil.createTestPetA(testUserA));
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/pet/{petId}", testPetA.getPetId())
@@ -233,10 +277,21 @@ public class PetControllerIntegrationTests {
     }
 
     @Test
-    public void testDeletePetByIdInvalid() throws Exception {
+    public void testDeletePetByInvalidPetId() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/pet/{petId}", UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Authorization", token))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
+    public void testDeletePetByValidPetId_OtherUser() throws Exception {
+        User testUserB = userService.saveUser(TestDataUtil.createTestUserB());
+        Pet testPetB = petService.savePet(TestDataUtil.createTestPetA(testUserB));
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/pet/{petId}", testPetB.getPetId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", token))
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
     }
 }
