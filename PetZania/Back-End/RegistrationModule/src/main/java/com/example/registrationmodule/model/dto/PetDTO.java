@@ -48,6 +48,5 @@ public class PetDTO {
     private List<String> myVaccinesURLs;
     private List<String> myPicturesURLs;
 
-    @NotNull(message = "User ID is required.")
     private UUID userId;
 }
