@@ -49,6 +49,7 @@ public class DTOConversionService implements IDTOConversionService {
                 user.getFriends() != null ? user.getFriends().size() : 0,
                 user.getFollowers() != null ? user.getFollowers().size() : 0,
                 user.getFollowing() != null ? user.getFollowing().size() : 0,
+                user.isBlocked(),
                 user.getStoreProfileId(),
                 user.getVetProfileId()
         );
