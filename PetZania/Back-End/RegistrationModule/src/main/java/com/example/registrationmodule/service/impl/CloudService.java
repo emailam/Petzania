@@ -2,9 +2,10 @@ package com.example.registrationmodule.service.impl;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.example.registrationmodule.config.CloudStorageConfig;
 import com.example.registrationmodule.exception.InvalidMediaFile;
 import com.example.registrationmodule.exception.PostDoesntExist;
-import com.example.registrationmodule.exception.user.UserNotFound;
+import com.example.registrationmodule.exception.media.MediaNotFound;
 import com.example.registrationmodule.model.entity.Media;
 import com.example.registrationmodule.model.entity.Post;
 import com.example.registrationmodule.repository.MediaRepository;
@@ -26,13 +27,26 @@ public class MediaService {
     private final MediaRepository mediaRepository;
     private final PostRepository postRepository;
     private final AmazonS3 s3Client;
+    private final CloudStorageConfig cloudStorageConfig;
     private static final long MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
     public static final long MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50 MB
-    private static final Set<String> ALLOWED_TYPES = Set.of("image/jpeg", "image/png", "video/mp4");
+    public static final long MAX_TEXT_SIZE = 5 * 1024 * 1024; // 5 MB
+    private static final Set<String> ALLOWED_TYPES = Set.of("image/jpeg", "image/png", "video/mp4", "text/plain");
     private final String bucketName = "petzania-media";
     @Transactional
     public String uploadMedia(MultipartFile file, UUID mediaId) throws IOException {
-        String key = "media/" + mediaId + "-" + file.getOriginalFilename();
+        String key = "";
+        String originalFilename = file.getOriginalFilename();
+        String sanitizedFilename = originalFilename
+                .replaceAll("[^a-zA-Z0-9\\.\\-]", "_"); // only letters, digits, dot, dash
+
+        if (file.getContentType().startsWith("image/")){
+            key = "image/" + mediaId + "-" + sanitizedFilename;
+        } else if (file.getContentType().startsWith("video/")) {
+            key = "video/" + mediaId + "-" + sanitizedFilename;
+        } else if (file.getContentType().startsWith("text/")) {
+            key = "doc/" + mediaId + "-" + sanitizedFilename;
+        }
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentLength(file.getSize());
         metadata.setContentType(file.getContentType());
@@ -57,7 +71,7 @@ public class MediaService {
                     .build();
                 media = saveMedia(media);
                 String key = uploadMedia(file,media.getMediaId());
-                media.setUrl("https://" + bucketName + ".s3.amazonaws.com/" + key);
+                media.setKey(key);
                 media = saveMedia(media);
                 mediaList.add(media);
 
@@ -75,13 +89,24 @@ public class MediaService {
                 throw new InvalidMediaFile("File: " + file.getOriginalFilename() + " has invalid file type: " + file.getContentType());
             }
             if (file.getContentType().startsWith("image/") && file.getSize() > MAX_IMAGE_SIZE){
-                throw new InvalidMediaFile("Image: " + file.getOriginalFilename() + " is too large. Max allowed is 10MB.");
+                throw new InvalidMediaFile("Image: " + file.getOriginalFilename() + " is too large. Max allowed is " + MAX_IMAGE_SIZE + " MB.");
 
             } else if (file.getContentType().startsWith("video/") && file.getSize() > MAX_VIDEO_SIZE) {
-                throw new InvalidMediaFile("Video: " + file.getOriginalFilename() + " is too large. Max allowed is 50MB.");
+                throw new InvalidMediaFile("Video: " + file.getOriginalFilename() + " is too large. Max allowed is " + MAX_VIDEO_SIZE + " MB.");
+
+            } else if (file.getContentType().startsWith("text/") && file.getSize() > MAX_TEXT_SIZE) {
+                throw new InvalidMediaFile("File: " + file.getOriginalFilename() + " is too large. Max allowed is " + MAX_TEXT_SIZE + " MB.");
             }
         }
     }
+
+    public String getMediaUrl(UUID mediaId) {
+        Media media = mediaRepository.findById(mediaId)
+                .orElseThrow(() -> new MediaNotFound("Media not found"));
+
+        return cloudStorageConfig.getCdnUrl() + "/" + media.getKey();
+    }
+
 
     public void deleteAllMediaForPost(UUID postId){
         Post post = postRepository.findByPostId(postId)
@@ -99,7 +124,6 @@ public class MediaService {
         return mediaRepository.existsById(mediaId);
     }
     public Optional<Media> getMediaByID(UUID mediaId) { return mediaRepository.findById(mediaId); }
-    public Optional<Media> getMediaByUrl(String url) { return mediaRepository.findByUrl(url); }
     public void deleteById(UUID mediaId) {
         if (!mediaRepository.existsById(mediaId)) {
             throw new EntityNotFoundException("Media not found with ID: " + mediaId);
