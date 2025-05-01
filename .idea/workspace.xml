@@ -7,7 +7,6 @@
     <list default="true" id="aacd7b49-acd6-447f-8aa4-f4265b4b3699" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/model/dto/UserProfileDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/model/dto/UserProfileDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl/DTOConversionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl/DTOConversionService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -67,7 +66,7 @@
   <component name="ReactorSettings">
     <option name="notificationShown" value="true" />
   </component>
-  <component name="RunManager" selected="JUnit.AdminControllerIntegrationTests">
+  <component name="RunManager" selected="JUnit.UserControllerIntegrationTests">
     <configuration name="AdminControllerIntegrationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="RegistrationModule" />
       <extension name="coverage">
@@ -78,6 +77,21 @@
       </extension>
       <option name="PACKAGE_NAME" value="com.example.registrationmodule.controller" />
       <option name="MAIN_CLASS_NAME" value="com.example.registrationmodule.controller.AdminControllerIntegrationTests" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="PetControllerIntegrationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="RegistrationModule" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.example.registrationmodule.controller.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.example.registrationmodule.controller" />
+      <option name="MAIN_CLASS_NAME" value="com.example.registrationmodule.controller.PetControllerIntegrationTests" />
       <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -94,22 +108,6 @@
       <option name="PACKAGE_NAME" value="com.example.registrationmodule.controller" />
       <option name="MAIN_CLASS_NAME" value="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
       <option name="TEST_OBJECT" value="class" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="UserControllerIntegrationTests.testAdminDeletesUser_ShouldReturnOk" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="RegistrationModule" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.example.registrationmodule.controller.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.example.registrationmodule.controller" />
-      <option name="MAIN_CLASS_NAME" value="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
-      <option name="METHOD_NAME" value="testAdminDeletesUser_ShouldReturnOk" />
-      <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -155,11 +153,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="JUnit.AdminControllerIntegrationTests" />
         <item itemvalue="JUnit.UserControllerIntegrationTests" />
+        <item itemvalue="JUnit.AdminControllerIntegrationTests" />
+        <item itemvalue="JUnit.PetControllerIntegrationTests" />
         <item itemvalue="JUnit.UserControllerIntegrationTests.testDeleteNonExistingUser_ShouldReturnNotFound" />
         <item itemvalue="JUnit.UserControllerIntegrationTests.testSuperAdminDeletesUser_ShouldReturnOk" />
-        <item itemvalue="JUnit.UserControllerIntegrationTests.testAdminDeletesUser_ShouldReturnOk" />
       </list>
     </recent_temporary>
   </component>
@@ -201,12 +199,12 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/test/java/com/example/registrationmodule/controller/UserControllerIntegrationTests.java</url>
-          <line>474</line>
+          <line>473</line>
           <option name="timeStamp" value="6" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/test/java/com/example/registrationmodule/controller/UserControllerIntegrationTests.java</url>
-          <line>542</line>
+          <line>541</line>
           <option name="timeStamp" value="15" />
         </line-breakpoint>
       </breakpoints>

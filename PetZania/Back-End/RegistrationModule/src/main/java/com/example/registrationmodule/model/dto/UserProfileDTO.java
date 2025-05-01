@@ -48,7 +48,7 @@ public class UserProfileDTO {
     private int followingCount;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private boolean isActive;
+    private boolean active;
 
     private UUID storeProfileId;
 
