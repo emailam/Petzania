@@ -1,14 +1,16 @@
 package com.example.registrationmodule.controller;
 
 import com.example.registrationmodule.exception.pet.PetNotFound;
-import com.example.registrationmodule.exception.user.UserIdNull;
+import com.example.registrationmodule.exception.user.UserAccessDenied;
 import com.example.registrationmodule.exception.user.UserNotFound;
 import com.example.registrationmodule.model.dto.PetDTO;
 import com.example.registrationmodule.model.dto.UpdatePetDTO;
 import com.example.registrationmodule.model.entity.Pet;
+import com.example.registrationmodule.model.entity.UserPrincipal;
 import com.example.registrationmodule.service.IPetService;
 import com.example.registrationmodule.service.IUserService;
 import com.example.registrationmodule.service.IDTOConversionService;
+import com.example.registrationmodule.util.SecurityUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,19 +30,23 @@ public class PetController {
     private final IDTOConversionService dtoConversionService;
 
     @PostMapping(path = "/pet")
-    public ResponseEntity<PetDTO> createPet(@RequestBody PetDTO petDto) {
-        UUID userId = petDto.getUserId();
+    public ResponseEntity<PetDTO> createPet(@RequestBody PetDTO petDto){
 
-        if (userId == null) {
-            throw new UserIdNull("User ID must not be null");
-        }
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId = userPrincipal.getUserId();
 
-        if (!userService.userExistsById(userId)) {
-            throw new UserNotFound("User not found with ID: " + userId);
-        }
+//        if (userId == null) {
+//            throw new UserIdNull("User ID must not be null");
+//        }
+//
+//        if (!userService.userExistsById(userId)) {
+//            throw new UserNotFound("User not found with ID: " + userId);
+//        }
 
         // Ensure the client cannot manually set petId
         petDto.setPetId(null);
+
+        petDto.setUserId(userId);
 
         Pet pet = dtoConversionService.mapToPet(petDto);
         Pet createdPet = petService.savePet(pet);
@@ -50,30 +56,40 @@ public class PetController {
         );
     }
 
-    @GetMapping(path = "/pet/{id}")
-    public ResponseEntity<PetDTO> getPetById(@PathVariable(name = "id") UUID petId) {
+    @GetMapping(path = "/pet/{petId}")
+    public ResponseEntity<PetDTO> getPetById(@PathVariable(name = "petId") UUID petId) {
+
         Pet pet = petService.getPetById(petId)
                 .orElseThrow(() -> new PetNotFound("Pet not found with ID: " + petId));
         return new ResponseEntity<>(dtoConversionService.mapToPetDto(pet), HttpStatus.OK);
     }
 
-    @GetMapping(path = "/user/{id}/pets")
-    public List<PetDTO> getAllPetsByUserId(@PathVariable(name = "id") UUID userId) {
+    @GetMapping(path = "/user/{userId}/pets")
+    public ResponseEntity<List<PetDTO>> getAllPetsByUserId(@PathVariable(name = "userId") UUID userId) {
         if (!userService.userExistsById(userId)) {
             throw new UserNotFound("User not found with ID: " + userId);
         }
 
         List<Pet> pets = petService.getPetsByUserId(userId);
-        return pets.stream()
+        return new ResponseEntity<>(
+                pets.stream()
                 .map(dtoConversionService::mapToPetDto)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()),
+                HttpStatus.OK);
     }
 
-    @PatchMapping(path = "/pet/{id}")
-    public ResponseEntity<PetDTO> updatePetById(@PathVariable("id") UUID petId, @RequestBody UpdatePetDTO updatePetDto) {
+    @PatchMapping(path = "/pet/{petId}")
+    public ResponseEntity<PetDTO> updatePetById(@PathVariable("petId") UUID petId,
+                                                @RequestBody UpdatePetDTO updatePetDto) {
 
-        if (!petService.existsById(petId)) {
-            throw new PetNotFound("Pet not found with ID: " + petId);
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId = userPrincipal.getUserId();
+
+        if (!petService.getPetById(petId)
+                .orElseThrow(() -> new PetNotFound("Pet not found with ID: " + petId))
+                .getUser()
+                .getUserId().equals(userId)) {
+            throw new UserAccessDenied("You can only update your pets");
         }
 
         Pet updatedPet = petService.partialUpdatePet(petId, updatePetDto);
@@ -86,8 +102,14 @@ public class PetController {
 
     @DeleteMapping("/pet/{id}")
     public ResponseEntity<Void> deletePetById(@PathVariable(name = "id") UUID petId) {
-        if (!petService.existsById(petId)) {
-            throw new PetNotFound("Pet not found with ID: " + petId);
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId = userPrincipal.getUserId();
+
+        if (!petService.getPetById(petId)
+                .orElseThrow(() -> new PetNotFound("Pet not found with ID: " + petId))
+                .getUser()
+                .getUserId().equals(userId)) {
+            throw new UserAccessDenied("You can only delete your pets");
         }
 
         petService.deleteById(petId);

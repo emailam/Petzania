@@ -8,8 +8,10 @@ import com.example.registrationmodule.exception.user.UserAlreadyLoggedOut;
 import com.example.registrationmodule.exception.user.UsernameAlreadyExists;
 import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.entity.Admin;
+import com.example.registrationmodule.model.enumeration.AdminRole;
 import com.example.registrationmodule.repository.AdminRepository;
 import com.example.registrationmodule.service.IAdminService;
+import com.example.registrationmodule.service.IDTOConversionService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,9 +23,11 @@ import org.springframework.stereotype.Service;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -34,6 +38,7 @@ public class AdminService implements IAdminService {
     private final JWTService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
+    private final DTOConversionService dtoConversionService;
 
     @Override
     public boolean existsById(UUID adminId) {
@@ -49,7 +54,7 @@ public class AdminService implements IAdminService {
         if (authentication.isAuthenticated()) {
             String role;
             // if this is the credentials of the super admin.
-            if (Objects.equals(loginAdminDTO.getUsername(), "superadmin")) {
+            if (admin.getRole() == AdminRole.SUPER_ADMIN) {
                 role = "ROLE_SUPER_ADMIN";
             } else {
                 role = "ROLE_ADMIN";
@@ -90,6 +95,15 @@ public class AdminService implements IAdminService {
         String newAccessToken = jwtService.generateAccessToken(username, role);
         return new TokenDTO(newAccessToken, refreshToken);
     }
+
+    @Override
+    public List<AdminDTO> getAllAdmins() {
+        List<Admin> admins = adminRepository.findAll();
+        return admins.stream()
+                .map(dtoConversionService::mapToAdminDTO)
+                .collect(Collectors.toList());
+    }
+
 
     public ResponseLoginDTO loginFallback(LoginAdminDTO loginAdminDTO, RequestNotPermitted t) {
         throw new TooManyLoginRequests("Too many login attempts. Try again later.");

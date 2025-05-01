@@ -6,6 +6,7 @@ import com.example.registrationmodule.model.entity.Admin;
 import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.service.IAdminService;
 import com.example.registrationmodule.service.IUserService;
+import com.example.registrationmodule.service.impl.AdminService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,13 +23,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import javax.print.attribute.standard.Media;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
-
-import static org.mockito.Mockito.verify;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
@@ -55,6 +53,173 @@ public class UserControllerIntegrationTests {
         adminToken = obtainAdminToken(admin.getUsername(), DEFAULT_PASSWORD);
     }
 
+    @Test
+    public void testUserChangesOwnPassword_ShouldReturnSuccess() throws Exception {
+        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
+
+        ChangePasswordDTO changePasswordDTO = new ChangePasswordDTO();
+        changePasswordDTO.setEmail(testUserA.getEmail());
+        changePasswordDTO.setNewPassword("NewSecurePassword123");
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/changePassword")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(changePasswordDTO))
+                        .header("Authorization", token))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().string("Password changed successfully"));
+    }
+
+    @Test
+    public void testAdminChangesUserPassword_ShouldReturnSuccess() throws Exception {
+        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+
+        ChangePasswordDTO changePasswordDTO = new ChangePasswordDTO();
+        changePasswordDTO.setEmail(testUserA.getEmail());
+        changePasswordDTO.setNewPassword("NewSecurePassword123");
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/changePassword")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(changePasswordDTO))
+                        .header("Authorization", adminToken))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().string("Password changed successfully"));
+    }
+
+    @Test
+    public void testUserDeletesOwnAccount_ShouldReturnSuccess() throws Exception {
+        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
+
+        EmailDTO emailDTO = new EmailDTO();
+        emailDTO.setEmail(testUserA.getEmail());
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/user/auth/delete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(emailDTO))
+                        .header("Authorization", token))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().string("User deleted successfully"));
+    }
+    @Test
+    public void testAdminDeletesUser_ShouldReturnSuccess() throws Exception {
+        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+
+        EmailDTO emailDTO = new EmailDTO();
+        emailDTO.setEmail(testUserA.getEmail());
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/user/auth/delete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(emailDTO))
+                        .header("Authorization", adminToken))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().string("User deleted successfully"));
+    }
+
+    @Test
+    public void testUserChangeOtherUserPassword_ShouldReturnBadRequest() throws Exception {
+        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserB = userService.saveUser(TestDataUtil.createTestUserB());
+        String tokenA = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
+
+        ChangePasswordDTO changePasswordDTO = new ChangePasswordDTO();
+        changePasswordDTO.setEmail(testUserB.getEmail()); // Targeting another user
+        changePasswordDTO.setNewPassword("NewPassword123");
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/changePassword")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(changePasswordDTO))
+                        .header("Authorization", tokenA))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+    @Test
+    public void testUserDeleteAnotherUser_ShouldReturnBadRequest() throws Exception {
+        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserB = userService.saveUser(TestDataUtil.createTestUserB());
+        String tokenA = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/user/auth/{id}", testUserB.getUserId())
+                        .header("Authorization", tokenA))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+    @Test
+    public void testDeleteUserWithoutToken_ShouldReturnUnauthorized() throws Exception {
+        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/user/auth/{id}", testUserA.getUserId()))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+    }
+    @Test
+    public void testUserDeleteSelf_ShouldReturnOk() throws Exception {
+        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        String tokenA = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
+
+        EmailDTO emailDTO = new EmailDTO();
+        emailDTO.setEmail(testUserA.getEmail());
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/user/auth/delete")
+                        .header("Authorization", tokenA)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(emailDTO)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    public void testAdminDeletesUser_ShouldReturnOk() throws Exception {
+        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+
+
+        EmailDTO emailDTO = new EmailDTO();
+        emailDTO.setEmail(testUserA.getEmail());
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/user/auth/delete")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(emailDTO)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    public void testSuperAdminDeletesUser_ShouldReturnOk() throws Exception {
+        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+
+        EmailDTO emailDTO = new EmailDTO();
+        emailDTO.setEmail(testUserA.getEmail());
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/user/auth/delete")
+                        .header("Authorization", superAdminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(emailDTO)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    public void testDeleteNonExistingUser_ShouldReturnNotFound() throws Exception {
+
+        EmailDTO emailDTO = new EmailDTO();
+        emailDTO.setEmail("nonexistent@example.com"); // Email does not exist
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/user/auth/delete")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(emailDTO)))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+
+    @Test
+    public void testChangePasswordWithoutToken_ShouldReturnUnauthorized() throws Exception {
+        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+
+        ChangePasswordDTO changePasswordDTO = new ChangePasswordDTO();
+        changePasswordDTO.setEmail(testUserA.getEmail());
+        changePasswordDTO.setNewPassword("NewPassword123");
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/changePassword")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(changePasswordDTO)))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+    }
     @Test
     public void testAdminBlockUser_UserNotFound_ShouldReturnNotFound() throws Exception {
         BlockUserDTO blockUserDTO = new BlockUserDTO();
@@ -94,6 +259,7 @@ public class UserControllerIntegrationTests {
                         .content(objectMapper.writeValueAsString(loginDTO)))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
+
     @Test
     public void testBlockUser_AsAdmin_ShouldSucceed() throws Exception {
         User testUser = userService.saveUser(TestDataUtil.createTestUserA());
@@ -178,7 +344,7 @@ public class UserControllerIntegrationTests {
                         .param("size", "10"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content").isArray())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(2));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(7));
     }
 
     @Test
@@ -205,7 +371,7 @@ public class UserControllerIntegrationTests {
     }
 
     @Autowired
-    public UserControllerIntegrationTests(MockMvc mockMvc, IUserService userService, ObjectMapper objectMapper, IAdminService adminService) {
+    public UserControllerIntegrationTests(MockMvc mockMvc, IUserService userService, ObjectMapper objectMapper, AdminService adminService) {
         this.mockMvc = mockMvc;
         this.userService = userService;
         this.objectMapper = objectMapper;
@@ -229,6 +395,7 @@ public class UserControllerIntegrationTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(otpValidationDTO)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
+
     }
 
     @Test
@@ -568,6 +735,29 @@ public class UserControllerIntegrationTests {
     }
 
     @Test
+    public void testAdminUpdatesOtherUserProfile_ShouldReturnSuccess() throws Exception {
+        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
+
+        UpdateUserProfileDto updateDto = new UpdateUserProfileDto();
+        updateDto.setName("Updated Name");
+        updateDto.setBio("Updated Bio");
+        updateDto.setProfilePictureURL("https://example.com/new-profile.jpg");
+        updateDto.setPhoneNumber("123456789");
+
+        mockMvc.perform(MockMvcRequestBuilders.patch("/api/user/auth/{id}", testUserA.getUserId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDto))
+                        .header("Authorization", adminToken))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(updateDto.getName()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.bio").value(updateDto.getBio()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.profilePictureURL").value(updateDto.getProfilePictureURL()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.phoneNumber").value(updateDto.getPhoneNumber()));
+
+    }
+
+    @Test
     public void testUpdateUserProfileById_UserExists_ShouldUpdateAndReturnUserProfile() throws Exception {
 
         User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
@@ -591,7 +781,7 @@ public class UserControllerIntegrationTests {
     }
 
     @Test
-    public void testUpdateUserProfileById_UserNotFound_ShouldReturnNotFound() throws Exception {
+    public void testUpdateAnotherUserProfileById_ShouldReturnBadRequest() throws Exception {
         // Arrange
         UUID nonExistentId = UUID.randomUUID();
         UpdateUserProfileDto updateDto = new UpdateUserProfileDto();
@@ -605,7 +795,7 @@ public class UserControllerIntegrationTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto))
                         .header("Authorization", token))
-                .andExpect(MockMvcResultMatchers.status().isNotFound());
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     @Test

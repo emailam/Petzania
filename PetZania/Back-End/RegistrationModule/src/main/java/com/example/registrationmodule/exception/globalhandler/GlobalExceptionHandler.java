@@ -137,6 +137,16 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(UserAccessDenied.class)
+    public ResponseEntity<Map<String, Object>> handleUserAccessDenied(UserAccessDenied ex) {
+        return buildErrorResponse(ex, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(AuthenticatedUserNotFound.class)
+    public ResponseEntity<Map<String, Object>> handleAuthenticatedUserNotFound(AuthenticatedUserNotFound ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(AdminNotFound.class)
     public ResponseEntity<Map<String, Object>> handleAdminNotFound(AdminNotFound ex) {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);

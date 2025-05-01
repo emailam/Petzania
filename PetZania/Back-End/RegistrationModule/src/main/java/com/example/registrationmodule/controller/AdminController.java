@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -54,6 +55,11 @@ public class AdminController {
                 .orElseThrow(() -> new AdminNotFound("Admin not found with ID: " + adminId));
         AdminDTO adminDto = dtoConversionService.mapToAdminDTO(admin);
         return new ResponseEntity<>(adminDto, HttpStatus.OK);
+    }
+
+    @GetMapping(path = "/admin/getAll")
+    public ResponseEntity<List<AdminDTO>> getAllAdmins(){
+        return ResponseEntity.ok(adminService.getAllAdmins());
     }
 
     @DeleteMapping("/admin/delete/{id}")

@@ -5,26 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="aacd7b49-acd6-447f-8aa4-f4265b4b3699" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(tabs)/Adoption/_layout.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(tabs)/Adoption/index.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(tabs)/Breeding/_layout.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(tabs)/Breeding/index.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(tabs)/Home/_layout.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(tabs)/Notifications/_layout.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(tabs)/Notifications/index.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(tabs)/Pet Services/_layout.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(tabs)/Pet Services/index.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/45fbe3f2-a468-4e9a-98f4-5ce17a483b46/storage_v2/_src_/database/postgres.edMnLQ/schema/public.abK9xQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/45fbe3f2-a468-4e9a-98f4-5ce17a483b46/storage_v2/_src_/database/postgres.edMnLQ/schema/public.abK9xQ.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/api/axiosInstance.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/api/axiosInstance.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(tabs)/_layout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(tabs)/_layout.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(tabs)/explore.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(tabs)/index.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/PetDetails.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/PetDetails.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/ProfileSetUp3.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/ProfileSetUp3.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/index.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/index.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/ui/IconSymbol.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/ui/IconSymbol.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/services/petService.js" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/services/petService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/model/dto/UserProfileDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/model/dto/UserProfileDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl/DTOConversionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl/DTOConversionService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -78,12 +61,15 @@
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;Spring Boot.RegistrationModuleApplication.executor&quot;: &quot;Run&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;Front-Back-Integration-Registration-Module&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/PC/Documents/GitHub/Petzania&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;reference.projectsettings.compiler.annotationProcessors&quot;,
     &quot;spring.configuration.checksum&quot;: &quot;e750f113bb97157825a84bd97017a404&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
@@ -99,7 +85,7 @@
   <component name="ReactorSettings">
     <option name="notificationShown" value="true" />
   </component>
-  <component name="RunManager" selected="Spring Boot.RegistrationModuleApplication">
+  <component name="RunManager" selected="JUnit.UserControllerIntegrationTests">
     <configuration name="AdminControllerIntegrationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="RegistrationModule" />
       <extension name="coverage">
@@ -110,6 +96,21 @@
       </extension>
       <option name="PACKAGE_NAME" value="com.example.registrationmodule.controller" />
       <option name="MAIN_CLASS_NAME" value="com.example.registrationmodule.controller.AdminControllerIntegrationTests" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="PetControllerIntegrationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="RegistrationModule" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.example.registrationmodule.controller.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.example.registrationmodule.controller" />
+      <option name="MAIN_CLASS_NAME" value="com.example.registrationmodule.controller.PetControllerIntegrationTests" />
       <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -130,7 +131,7 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="UserControllerIntegrationTests.testAdminBlockUser_UserNotFound_ShouldReturnNotFound" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="UserControllerIntegrationTests.testDeleteNonExistingUser_ShouldReturnNotFound" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="RegistrationModule" />
       <extension name="coverage">
         <pattern>
@@ -140,13 +141,13 @@
       </extension>
       <option name="PACKAGE_NAME" value="com.example.registrationmodule.controller" />
       <option name="MAIN_CLASS_NAME" value="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
-      <option name="METHOD_NAME" value="testAdminBlockUser_UserNotFound_ShouldReturnNotFound" />
+      <option name="METHOD_NAME" value="testDeleteNonExistingUser_ShouldReturnNotFound" />
       <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="UserControllerIntegrationTests.testAdminBlockedUser_ShouldPreventLogin" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="UserControllerIntegrationTests.testSuperAdminDeletesUser_ShouldReturnOk" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="RegistrationModule" />
       <extension name="coverage">
         <pattern>
@@ -156,23 +157,7 @@
       </extension>
       <option name="PACKAGE_NAME" value="com.example.registrationmodule.controller" />
       <option name="MAIN_CLASS_NAME" value="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
-      <option name="METHOD_NAME" value="testAdminBlockedUser_ShouldPreventLogin" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="UserControllerIntegrationTests.testDeleteNonExistentUser_ShouldReturnNotFound" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="RegistrationModule" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.example.registrationmodule.controller.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.example.registrationmodule.controller" />
-      <option name="MAIN_CLASS_NAME" value="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
-      <option name="METHOD_NAME" value="testDeleteNonExistentUser_ShouldReturnNotFound" />
+      <option name="METHOD_NAME" value="testSuperAdminDeletesUser_ShouldReturnOk" />
       <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -187,11 +172,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="JUnit.AdminControllerIntegrationTests" />
         <item itemvalue="JUnit.UserControllerIntegrationTests" />
-        <item itemvalue="JUnit.UserControllerIntegrationTests.testAdminBlockedUser_ShouldPreventLogin" />
-        <item itemvalue="JUnit.UserControllerIntegrationTests.testAdminBlockUser_UserNotFound_ShouldReturnNotFound" />
-        <item itemvalue="JUnit.UserControllerIntegrationTests.testDeleteNonExistentUser_ShouldReturnNotFound" />
+        <item itemvalue="JUnit.PetControllerIntegrationTests" />
+        <item itemvalue="JUnit.AdminControllerIntegrationTests" />
+        <item itemvalue="JUnit.UserControllerIntegrationTests.testDeleteNonExistingUser_ShouldReturnNotFound" />
+        <item itemvalue="JUnit.UserControllerIntegrationTests.testSuperAdminDeletesUser_ShouldReturnOk" />
       </list>
     </recent_temporary>
   </component>
@@ -221,9 +206,12 @@
       <workItem from="1745691027745" duration="760000" />
       <workItem from="1745704214260" duration="211000" />
       <workItem from="1745764496853" duration="25784000" />
-      <workItem from="1745867253926" duration="631000" />
-      <workItem from="1745937601261" duration="7000" />
-      <workItem from="1746105791853" duration="46000" />
+      <workItem from="1745838016060" duration="13796000" />
+      <workItem from="1745870947150" duration="382000" />
+      <workItem from="1745938849401" duration="1934000" />
+      <workItem from="1746028740467" duration="93000" />
+      <workItem from="1746039492644" duration="2496000" />
+      <workItem from="1746055953365" duration="1325000" />
     </task>
     <servers />
   </component>
@@ -238,12 +226,12 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/test/java/com/example/registrationmodule/controller/UserControllerIntegrationTests.java</url>
-          <line>306</line>
+          <line>473</line>
           <option name="timeStamp" value="6" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/test/java/com/example/registrationmodule/controller/UserControllerIntegrationTests.java</url>
-          <line>374</line>
+          <line>541</line>
           <option name="timeStamp" value="15" />
         </line-breakpoint>
       </breakpoints>
