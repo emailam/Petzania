@@ -7,6 +7,7 @@
     <list default="true" id="aacd7b49-acd6-447f-8aa4-f4265b4b3699" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/model/dto/UserProfileDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/model/dto/UserProfileDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl/DTOConversionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl/DTOConversionService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -154,8 +155,8 @@
     <recent_temporary>
       <list>
         <item itemvalue="JUnit.UserControllerIntegrationTests" />
-        <item itemvalue="JUnit.AdminControllerIntegrationTests" />
         <item itemvalue="JUnit.PetControllerIntegrationTests" />
+        <item itemvalue="JUnit.AdminControllerIntegrationTests" />
         <item itemvalue="JUnit.UserControllerIntegrationTests.testDeleteNonExistingUser_ShouldReturnNotFound" />
         <item itemvalue="JUnit.UserControllerIntegrationTests.testSuperAdminDeletesUser_ShouldReturnOk" />
       </list>
