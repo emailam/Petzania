@@ -92,6 +92,12 @@ public class UserService implements IUserService {
                 .orElseThrow(() -> new UserNotFound("User does not exist"));
     }
 
+    @Override
+    public UserProfileDTO getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .map(converter::mapToUserProfileDto)
+                .orElseThrow(() -> new UserNotFound("User does not exist"));
+    }
 
     @Override
     public void deleteUser(EmailDTO emailDTO) {

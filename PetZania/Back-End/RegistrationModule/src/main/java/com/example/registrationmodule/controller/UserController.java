@@ -162,4 +162,10 @@ public class UserController {
         UserProfileDTO user = userService.getUserById(userId);
         return ResponseEntity.ok(user);
     }
+
+    @GetMapping("/{username}")
+    public ResponseEntity<UserProfileDTO> getUserByUsername(@PathVariable("username") String username) {
+        UserProfileDTO user = userService.getUserByUsername(username);
+        return ResponseEntity.ok(user);
+    }
 }
