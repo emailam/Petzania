@@ -48,6 +48,6 @@ public class PetDTO {
     private List<String> myVaccinesURLs;
     private List<String> myPicturesURLs;
 
-    @NotNull(message = "User ID is required.")
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private UUID userId;
 }
