@@ -79,7 +79,7 @@ public class TestDataUtil {
 
     public static Admin createSuperAdminA() {
         return Admin.builder().
-                username("superadmin")
+                username("superadminA")
                 .password("Password123#")
                 .role(AdminRole.SUPER_ADMIN)
                 .build();

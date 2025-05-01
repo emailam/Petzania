@@ -346,7 +346,7 @@ public class UserControllerIntegrationTests {
                         .param("size", "10"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content").isArray())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(2));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(7));
     }
 
     @Test
