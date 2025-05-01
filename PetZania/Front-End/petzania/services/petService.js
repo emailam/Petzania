@@ -54,6 +54,7 @@ export async function deletePet(petId) {
 }
 
 export async function updatePet(petId, petData) {
+    console.log('Updating pet with ID:', petId, 'and data:', petData);
     try {
         const response = await api.patch(`/pet/${petId}`, petData);
         if (response.status !== 200) {

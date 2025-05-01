@@ -31,8 +31,6 @@ export default function ProfileSetUp3() {
         retrievePets();
     }, []);
 
-
-
     const goToNextStep = () => {
         router.push('/(tabs)');
     }
@@ -44,8 +42,8 @@ export default function ProfileSetUp3() {
                     style={styles.userImage}
                 />
                 <View style={styles.userInfo}>
-                    <Text style={styles.userName}>Tyler Gregory Okonma</Text>
-                    <Text style={styles.userHandle}>@tylerthecreator</Text>
+                    <Text style={styles.userName}>{user.name}</Text>
+                    <Text style={styles.userHandle}>@{user.username}</Text>
                 </View>
             </View>
 
