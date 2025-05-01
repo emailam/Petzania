@@ -34,12 +34,13 @@ public class SecurityConfig {
         // make every request needs an authorization.
         http.authorizeHttpRequests(request ->
                 request.requestMatchers("/api/user/auth/signup", "/api/user/auth/sendResetPasswordOTP", "/api/user/auth/verifyResetOTP", "/api/user/auth/login",
-                                "/api/user/auth/refresh-token", "/api/user/auth/verify", "/api/user/auth/resendOTP", "/api/user/auth/resetPassword", "api/posts/**")
+                                "/api/user/auth/refresh-token", "/api/user/auth/verify", "/api/user/auth/resendOTP", "/api/user/auth/resetPassword", "/api/post/**")
                         .permitAll()
-                        .requestMatchers("api/payment/create").hasRole("USER")
+                        .requestMatchers("api/payment/create","/api/post/create/**", "/api/post/delete/**").hasRole("USER")
                         .requestMatchers("api/payment/refund").hasRole("ADMIN")
                         .requestMatchers("api/payment/**").authenticated()
-                .requestMatchers("/api/user/auth/**").hasRole("USER").anyRequest().authenticated());
+                .requestMatchers("/api/user/auth/**").hasRole("USER").anyRequest().authenticated()
+        );
 
         // Enable the form login.
         // http.formLogin(Customizer.withDefaults());

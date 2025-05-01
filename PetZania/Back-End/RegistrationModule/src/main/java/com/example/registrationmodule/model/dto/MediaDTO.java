@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MediaDTO {
-    private String url;
+    private String key;
     private String type;
     private String format;
     private LocalDateTime uploadedAt;

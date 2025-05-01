@@ -6,21 +6,26 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
 
 @Getter
-@Configuration
+@Setter
+@Component
+@ConfigurationProperties(prefix = "spring.aws")
 public class CloudStorageConfig {
-    @Value("${spring.aws.access-key}")
     private String accessKey;
-    @Value("${spring.aws.secret-access-key}")
     private String secretAccessKey;
-    @Value("${spring.aws.region}")
     private String region;
-    @Value("${spring.aws.bucket.name}")
     private String bucketName;
+    private String cdnUrl;
+    private Map<String, Long> maxSize;
+    private List<String> allowedTypes;
     private AmazonS3 amazonS3;
 
     @PostConstruct

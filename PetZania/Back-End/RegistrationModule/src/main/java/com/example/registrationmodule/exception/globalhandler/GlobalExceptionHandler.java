@@ -1,9 +1,10 @@
 package com.example.registrationmodule.exception.globalhandler;
 
 
-import com.example.registrationmodule.exception.*;
 import com.example.registrationmodule.exception.admin.AdminNotFound;
 import com.example.registrationmodule.exception.authenticationAndVerificattion.*;
+import com.example.registrationmodule.exception.media.InvalidMediaFile;
+import com.example.registrationmodule.exception.media.MediaNotFound;
 import com.example.registrationmodule.exception.payPal.*;
 import com.example.registrationmodule.exception.pet.PetNotFound;
 import com.example.registrationmodule.exception.rateLimiting.*;
@@ -211,5 +212,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(TooManyRefreshRequests.class)
     public ResponseEntity<Map<String, Object>> TooManyRefreshRequests(TooManyRefreshRequests ex) {
         return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    @ExceptionHandler(MediaNotFound.class)
+    public ResponseEntity<Map<String, Object>> TooManyRefreshRequests(MediaNotFound ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
     }
 }

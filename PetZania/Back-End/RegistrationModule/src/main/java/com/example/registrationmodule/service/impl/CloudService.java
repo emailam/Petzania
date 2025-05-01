@@ -1,15 +1,21 @@
 package com.example.registrationmodule.service.impl;
 
+import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.example.registrationmodule.config.CloudStorageConfig;
-import com.example.registrationmodule.exception.InvalidMediaFile;
+import com.example.registrationmodule.exception.media.InvalidMediaFile;
 import com.example.registrationmodule.exception.PostDoesntExist;
 import com.example.registrationmodule.exception.media.MediaNotFound;
+import com.example.registrationmodule.exception.rateLimiting.TooManyCloudRequests;
 import com.example.registrationmodule.model.entity.Media;
 import com.example.registrationmodule.model.entity.Post;
 import com.example.registrationmodule.repository.MediaRepository;
 import com.example.registrationmodule.repository.PostRepository;
+import com.example.registrationmodule.service.ICloudService;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -23,91 +29,81 @@ import java.util.*;
 @Service
 @AllArgsConstructor
 @Transactional
-public class MediaService {
+public class CloudService implements ICloudService {
     private final MediaRepository mediaRepository;
     private final PostRepository postRepository;
     private final AmazonS3 s3Client;
     private final CloudStorageConfig cloudStorageConfig;
-    private static final long MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
-    public static final long MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50 MB
-    public static final long MAX_TEXT_SIZE = 5 * 1024 * 1024; // 5 MB
-    private static final Set<String> ALLOWED_TYPES = Set.of("image/jpeg", "image/png", "video/mp4", "text/plain");
-    private final String bucketName = "petzania-media";
     @Transactional
-    public String uploadMedia(MultipartFile file, UUID mediaId) throws IOException {
-        String key = "";
-        String originalFilename = file.getOriginalFilename();
-        String sanitizedFilename = originalFilename
-                .replaceAll("[^a-zA-Z0-9\\.\\-]", "_"); // only letters, digits, dot, dash
-
-        if (file.getContentType().startsWith("image/")){
-            key = "image/" + mediaId + "-" + sanitizedFilename;
-        } else if (file.getContentType().startsWith("video/")) {
-            key = "video/" + mediaId + "-" + sanitizedFilename;
-        } else if (file.getContentType().startsWith("text/")) {
-            key = "doc/" + mediaId + "-" + sanitizedFilename;
+    @Override
+    @RateLimiter(name = "mediaUploadLimiter", fallbackMethod = "uploadFallback")
+    public Media uploadAndSaveMedia(MultipartFile file, boolean validate) throws IOException {
+        if (validate) {
+            validateFile(file);
         }
-        ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentLength(file.getSize());
-        metadata.setContentType(file.getContentType());
-        s3Client.putObject(bucketName, key, file.getInputStream(), metadata);
-        return key;
+        System.out.println(cloudStorageConfig.getMaxSize().get("image"));
+        String originalFilename = Optional.ofNullable(file.getOriginalFilename()).orElse("file");
+        String sanitizedFilename = sanitizeFilename(originalFilename);
+        String format = extractFileFormat(originalFilename);
+        String contentType = Optional.ofNullable(file.getContentType()).orElse("application/octet-stream");
+
+        Media media = Media.builder()
+                .format(format)
+                .type(contentType)
+                .uploadedAt(LocalDateTime.now())
+                .build();
+
+        media = saveMedia(media); // Save to get mediaId for S3 key
+
+        String key = buildS3Key(contentType, media.getMediaId(), sanitizedFilename);
+        media.setKey(key);
+        media = saveMedia(media); // Save again with key
+
+        uploadToS3(file, key, contentType);
+
+        return media;
     }
-    public Post uploadAndSaveMedia(List<MultipartFile> mediaFiles, Post post) throws IOException {
-        validateFiles(mediaFiles);
+
+    @Override
+    public Post uploadAndSaveMediaWithPost(List<MultipartFile> mediaFiles, Post post) throws IOException {
         if (mediaFiles != null && !mediaFiles.isEmpty()) {
+            for (MultipartFile file : mediaFiles) {
+                validateFile(file);
+            }
             List<Media> mediaList = new ArrayList<>();
             for (MultipartFile file : mediaFiles) {
-                String fileName = file.getOriginalFilename();
-                String format = "";
-                if (fileName != null && fileName.contains(".")) {
-                    format = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
-                }
-                Media media = Media.builder()
-                    .format(format)
-                    .type(file.getContentType())
-                    .post(post)
-                    .uploadedAt(LocalDateTime.now())
-                    .build();
-                media = saveMedia(media);
-                String key = uploadMedia(file,media.getMediaId());
-                media.setKey(key);
+                Media media = uploadAndSaveMedia(file,false);
+                media.setPost(post);
                 media = saveMedia(media);
                 mediaList.add(media);
-
             }
             post.setMediaList(mediaList);
         }
         return post;
     }
-    private void validateFiles(List<MultipartFile> mediaFiles) {
-        for (MultipartFile file : mediaFiles) {
-            if (file.isEmpty()) {
-                throw new InvalidMediaFile("Empty file not allowed.");
-            }
-            if (!ALLOWED_TYPES.contains(file.getContentType())) {
-                throw new InvalidMediaFile("File: " + file.getOriginalFilename() + " has invalid file type: " + file.getContentType());
-            }
-            if (file.getContentType().startsWith("image/") && file.getSize() > MAX_IMAGE_SIZE){
-                throw new InvalidMediaFile("Image: " + file.getOriginalFilename() + " is too large. Max allowed is " + MAX_IMAGE_SIZE + " MB.");
-
-            } else if (file.getContentType().startsWith("video/") && file.getSize() > MAX_VIDEO_SIZE) {
-                throw new InvalidMediaFile("Video: " + file.getOriginalFilename() + " is too large. Max allowed is " + MAX_VIDEO_SIZE + " MB.");
-
-            } else if (file.getContentType().startsWith("text/") && file.getSize() > MAX_TEXT_SIZE) {
-                throw new InvalidMediaFile("File: " + file.getOriginalFilename() + " is too large. Max allowed is " + MAX_TEXT_SIZE + " MB.");
-            }
-        }
-    }
-
+    @Override
+    @RateLimiter(name = "mediaUrlLimiter", fallbackMethod = "mediaUrlFallback")
     public String getMediaUrl(UUID mediaId) {
         Media media = mediaRepository.findById(mediaId)
                 .orElseThrow(() -> new MediaNotFound("Media not found"));
 
         return cloudStorageConfig.getCdnUrl() + "/" + media.getKey();
     }
+    @Override
+    public String generatePresignedUrl(String bucketName, String key) {
+        Date expiration = new Date();
+        long expTimeMillis = expiration.getTime();
+        expTimeMillis += 1000 * 60 * 5; // 5 minutes
+        expiration.setTime(expTimeMillis);
 
+        GeneratePresignedUrlRequest request =
+                new GeneratePresignedUrlRequest(bucketName, key)
+                        .withMethod(HttpMethod.GET)
+                        .withExpiration(expiration);
 
+        return s3Client.generatePresignedUrl(request).toString();
+    }
+    @Override
     public void deleteAllMediaForPost(UUID postId){
         Post post = postRepository.findByPostId(postId)
                 .orElseThrow(() -> new PostDoesntExist("Post not found"));
@@ -116,18 +112,73 @@ public class MediaService {
             deleteById(media.getMediaId());
         }
     }
-
+    @Override
     public Media saveMedia(Media media) {
         return mediaRepository.save(media);
     }
+    @Override
     public boolean existsById(UUID mediaId) {
         return mediaRepository.existsById(mediaId);
     }
+    @Override
     public Optional<Media> getMediaByID(UUID mediaId) { return mediaRepository.findById(mediaId); }
+    @Override
     public void deleteById(UUID mediaId) {
         if (!mediaRepository.existsById(mediaId)) {
             throw new EntityNotFoundException("Media not found with ID: " + mediaId);
         }
         mediaRepository.deleteById(mediaId);
+    }
+
+    private String sanitizeFilename(String filename) {
+        return filename.replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
+    }
+
+    private String extractFileFormat(String filename) {
+        int lastDot = filename.lastIndexOf('.');
+        return (lastDot != -1) ? filename.substring(lastDot + 1).toLowerCase() : "";
+    }
+
+    private String buildS3Key(String contentType, UUID mediaId, String filename) {
+        String prefix = switch (contentType.split("/")[0]) {
+            case "image" -> "image/";
+            case "video" -> "video/";
+            case "text" -> "doc/";
+            default -> "misc/";
+        };
+        return prefix + mediaId + "-" + filename;
+    }
+
+    private void uploadToS3(MultipartFile file, String key, String contentType) throws IOException {
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentLength(file.getSize());
+        metadata.setContentType(contentType);
+        s3Client.putObject(cloudStorageConfig.getBucketName(), key, file.getInputStream(), metadata);
+    }
+
+    private void validateFile(MultipartFile mediaFiles) {
+        if (mediaFiles.isEmpty()) {
+            throw new InvalidMediaFile("Empty file not allowed.");
+        }
+        if (!cloudStorageConfig.getAllowedTypes().contains(mediaFiles.getContentType())) {
+            throw new InvalidMediaFile("File: " + mediaFiles.getOriginalFilename() + " has invalid file type: " + mediaFiles.getContentType());
+        }
+        if (mediaFiles.getContentType().startsWith("image/") && mediaFiles.getSize() > cloudStorageConfig.getMaxSize().get("image")){
+            throw new InvalidMediaFile("Image: " + mediaFiles.getOriginalFilename() + " is too large. Max allowed is " + cloudStorageConfig.getMaxSize().get("image") + " MB.");
+
+        } else if (mediaFiles.getContentType().startsWith("video/") && mediaFiles.getSize() > cloudStorageConfig.getMaxSize().get("video")) {
+            throw new InvalidMediaFile("Video: " + mediaFiles.getOriginalFilename() + " is too large. Max allowed is " + cloudStorageConfig.getMaxSize().get("video") + " MB.");
+
+        } else if (mediaFiles.getContentType().startsWith("text/") && mediaFiles.getSize() > cloudStorageConfig.getMaxSize().get("text")) {
+            throw new InvalidMediaFile("File: " + mediaFiles.getOriginalFilename() + " is too large. Max allowed is " + cloudStorageConfig.getMaxSize().get("text") + " MB.");
+        }
+    }
+
+    public Media uploadFallback(MultipartFile file, boolean validate, RequestNotPermitted ex) {
+        throw new TooManyCloudRequests("Media upload rate exceeded. Please try again later.");
+    }
+
+    public String mediaUrlFallback(UUID mediaId, RequestNotPermitted ex) {
+        throw new TooManyCloudRequests("Rate limit for getting media url's reached. Try again later.");
     }
 }

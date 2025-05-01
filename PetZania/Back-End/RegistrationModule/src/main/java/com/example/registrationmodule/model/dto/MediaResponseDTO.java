@@ -14,7 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class MediaResponseDTO {
     private UUID mediaId;
-    private String url;
+    private String key;
     private String type;
     private String format;
     private UUID postId;

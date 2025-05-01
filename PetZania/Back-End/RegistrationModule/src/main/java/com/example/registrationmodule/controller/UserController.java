@@ -1,20 +1,19 @@
 package com.example.registrationmodule.controller;
 
+import com.example.registrationmodule.exception.user.UserNotFound;
 import com.example.registrationmodule.model.dto.*;
-import com.example.registrationmodule.model.entity.UserPrincipal;
+import com.example.registrationmodule.model.entity.Media;
+import com.example.registrationmodule.service.ICloudService;
 import com.example.registrationmodule.service.IUserService;
-import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
+import java.io.IOException;
 import java.util.UUID;
 
 @RestController
@@ -22,6 +21,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserController {
     private final IUserService userService;
+    private final ICloudService cloudService;
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout(@RequestBody @Valid LogoutDTO logoutDTO) {
@@ -63,6 +63,24 @@ public class UserController {
         UserProfileDTO userProfileDTO = userService.registerUser(registerUserDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(new SignUpResponseDTO("User registered successfully", userProfileDTO));
     }
+
+    @PatchMapping("/{id}/profile-picture")
+    public ResponseEntity<UserProfileDTO> updateProfilePicture(@PathVariable UUID userId,
+                                                               @RequestParam("file") MultipartFile file) throws IOException {
+        if (!userService.userExistsById(userId)) {
+            throw new UserNotFound("User not found with ID: " + userId);
+        }
+
+        Media media = cloudService.uploadAndSaveMedia(file, true);
+        String cdnUrl = cloudService.getMediaUrl(media.getMediaId());
+
+        UpdateUserProfileDto dto = new UpdateUserProfileDto();
+        dto.setProfilePictureURL(cdnUrl);
+
+        UserProfileDTO userProfileDto = userService.updateUserById(userId, dto);
+        return ResponseEntity.ok(userProfileDto);
+    }
+
 
     @PatchMapping("/{id}")
     public ResponseEntity<UserProfileDTO> updateUserProfile(@PathVariable("id") UUID userId,

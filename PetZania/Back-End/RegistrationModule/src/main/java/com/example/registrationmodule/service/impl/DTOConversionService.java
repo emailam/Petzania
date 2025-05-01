@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -136,7 +135,7 @@ public class DTOConversionService implements IDTOConversionService {
     @Override
     public Media convertToMedia(MediaDTO mediaDTO) {
         Media media = new Media();
-        media.setUrl(mediaDTO.getUrl());
+        media.setKey(mediaDTO.getKey());
         media.setFormat(mediaDTO.getFormat());
         media.setType(mediaDTO.getType());
         media.setUploadedAt(mediaDTO.getUploadedAt());
@@ -162,7 +161,7 @@ public class DTOConversionService implements IDTOConversionService {
     public MediaResponseDTO mediaToDto(Media media) {
         return MediaResponseDTO.builder()
                 .mediaId(media.getMediaId())
-                .url(media.getUrl())
+                .key(media.getKey())
                 .type(media.getType())
                 .format(media.getFormat())
                 .postId(media.getPost().getPostId())

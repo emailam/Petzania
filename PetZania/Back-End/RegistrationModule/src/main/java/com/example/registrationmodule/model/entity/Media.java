@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.GenericGenerator;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -22,7 +21,7 @@ public class Media {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID mediaId;
 
-    private String url; // S3 URL
+    private String key; // S3 key
 
     private String type; // Content type like image/jpeg, video/mp4
 

@@ -5,7 +5,9 @@ import com.example.registrationmodule.exception.user.UserIdNull;
 import com.example.registrationmodule.exception.user.UserNotFound;
 import com.example.registrationmodule.model.dto.PetDTO;
 import com.example.registrationmodule.model.dto.UpdatePetDTO;
+import com.example.registrationmodule.model.entity.Media;
 import com.example.registrationmodule.model.entity.Pet;
+import com.example.registrationmodule.service.ICloudService;
 import com.example.registrationmodule.service.IPetService;
 import com.example.registrationmodule.service.IUserService;
 import com.example.registrationmodule.service.IDTOConversionService;
@@ -13,7 +15,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -24,6 +28,7 @@ import java.util.stream.Collectors;
 public class PetController {
 
     private final IUserService userService;
+    private final ICloudService cloudService;
     private final IPetService petService;
     private final IDTOConversionService dtoConversionService;
 
@@ -93,6 +98,23 @@ public class PetController {
 
         petService.deleteById(petId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @PatchMapping("/{id}/add-pet-picture")
+    public ResponseEntity<PetDTO> addPetPicture(@PathVariable UUID petId,
+                                                               @RequestParam("file") MultipartFile file) throws IOException {
+        if (!petService.existsById(petId)) {
+            throw new PetNotFound("Pet not found with ID: " + petId);
+        }
+        Media media = cloudService.uploadAndSaveMedia(file, true);
+        String cdnUrl = cloudService.getMediaUrl(media.getMediaId());
+
+        Pet updatedPet = petService.addPetPicture(petId,cdnUrl);
+
+        return new ResponseEntity<>(
+                dtoConversionService.mapToPetDto(updatedPet),
+                HttpStatus.OK
+        );
     }
 }
 

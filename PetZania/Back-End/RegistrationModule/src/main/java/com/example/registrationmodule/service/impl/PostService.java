@@ -1,5 +1,6 @@
 package com.example.registrationmodule.service.impl;
 
+import com.example.registrationmodule.exception.rateLimiting.TooManyPostRequests;
 import com.example.registrationmodule.exception.user.UserNotFound;
 import com.example.registrationmodule.model.dto.PostDTO;
 import com.example.registrationmodule.model.entity.Post;
@@ -9,6 +10,8 @@ import com.example.registrationmodule.model.enumeration.Visibility;
 import com.example.registrationmodule.repository.PostRepository;
 import com.example.registrationmodule.repository.UserRepository;
 import com.example.registrationmodule.service.IPostService;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -29,6 +32,7 @@ public class PostService implements IPostService {
     UserRepository userRepository;
 
     @Override
+    @RateLimiter(name = "createPostLimiter", fallbackMethod = "createPostFallback")
     public Post createPost(UUID userId, PostDTO request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFound("User not found"));
@@ -55,17 +59,20 @@ public class PostService implements IPostService {
         postRepository.delete(post);
     }
     @Override
+    @RateLimiter(name = "getAllPostsLimiter", fallbackMethod = "getAllPostsFallback")
     public List<Post> getAllPosts() {
         return postRepository.findAll();
     }
 
     @Override
+    @RateLimiter(name = "getPostByIdLimiter", fallbackMethod = "getPostByIdFallback")
     public Post getPostById(UUID postId) {
         return postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found with id: " + postId));
     }
 
     @Override
+    @RateLimiter(name = "findPostsByUserLimiter", fallbackMethod = "findByUserIdFallback")
     public List<Post> findByUserId(UUID userId) {
         return postRepository.findByUser_UserId(userId);
     }
@@ -83,5 +90,21 @@ public class PostService implements IPostService {
     @Override
     public List<Post> findByUserIdAndVisibility(UUID userId, Visibility visibility) {
         return postRepository.findByUser_UserIdAndVisibility(userId, visibility);
+    }
+
+    public Post createPostFallback(UUID userId, PostDTO request, RequestNotPermitted ex) {
+        throw new TooManyPostRequests("Rate limit exceeded for creating posts. Please try again later.");
+    }
+
+    public List<Post> getAllPostsFallback(RequestNotPermitted ex) {
+        throw new TooManyPostRequests("Rate limit exceeded for getting all posts. Please try again later.");
+    }
+
+    public Post getPostByIdFallback(UUID postId, RequestNotPermitted ex) {
+        throw new TooManyPostRequests("Rate limit exceeded while fetching post by post id. Try again later.");
+    }
+
+    public List<Post> findByUserIdFallback(UUID userId, RequestNotPermitted ex) {
+        throw new TooManyPostRequests("ate limit exceeded while fetching post by user id. Please try again later.");
     }
 }

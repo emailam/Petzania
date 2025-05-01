@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -61,6 +62,7 @@ public class PetService implements IPetService {
         }).orElseThrow(() -> new PetNotFound("Pet does not exist"));
     }
 
+
     @Override
     @RateLimiter(name = "deletePetRateLimiter", fallbackMethod = "deletePetFallback")
     public void deleteById(UUID petId) {
@@ -79,4 +81,26 @@ public class PetService implements IPetService {
     public void deletePetFallback(UUID petId, RequestNotPermitted t) {
         throw new TooManyPetRequests("Rate limit exceeded for deleting pets. Please try again later.");
     }
+
+    public Pet addPetPictureFallback(UUID petId, String picUrl, RequestNotPermitted t) {
+        throw new TooManyPetRequests("Rate limit exceeded for adding pet pictures. Please try again later.");
+    }
+
+    @Override
+    @RateLimiter(name = "addPetPictureRateLimiter", fallbackMethod = "addPetPictureFallback")
+    public Pet addPetPicture(UUID petId, String picUrl) {
+        Pet pet = petRepository.findById(petId)
+                .orElseThrow(() -> new PetNotFound("Pet not found"));
+
+        List<String> currentPictures = pet.getMyPicturesURLs();
+        if (currentPictures == null) {
+            currentPictures = new ArrayList<>();
+        }
+
+        currentPictures.add(picUrl);
+        pet.setMyPicturesURLs(currentPictures);
+
+        return petRepository.save(pet);
+    }
+
 }
