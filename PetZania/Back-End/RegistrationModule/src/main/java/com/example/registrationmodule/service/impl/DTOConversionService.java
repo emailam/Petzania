@@ -37,6 +37,7 @@ public class DTOConversionService implements IDTOConversionService {
         return new UserProfileDTO(
                 user.getUserId(),
                 user.getUsername(),
+                user.getEmail(),
                 user.getName(),
                 user.getLoginTimes(),
                 user.getBio(),
@@ -49,6 +50,7 @@ public class DTOConversionService implements IDTOConversionService {
                 user.getFriends() != null ? user.getFriends().size() : 0,
                 user.getFollowers() != null ? user.getFollowers().size() : 0,
                 user.getFollowing() != null ? user.getFollowing().size() : 0,
+                user.isBlocked(),
                 user.getStoreProfileId(),
                 user.getVetProfileId()
         );
@@ -137,6 +139,7 @@ public class DTOConversionService implements IDTOConversionService {
         return user;
     }
 
+    @Override
     public String getPetAge(LocalDate dateOfBirth) {
         Period period = Period.between(dateOfBirth, LocalDate.now());
         int years = period.getYears();

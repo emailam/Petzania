@@ -8,6 +8,7 @@ import com.example.registrationmodule.exception.user.UserAlreadyLoggedOut;
 import com.example.registrationmodule.exception.user.UsernameAlreadyExists;
 import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.entity.Admin;
+import com.example.registrationmodule.model.enumeration.AdminRole;
 import com.example.registrationmodule.repository.AdminRepository;
 import com.example.registrationmodule.service.IAdminService;
 import com.example.registrationmodule.service.IDTOConversionService;
@@ -53,7 +54,7 @@ public class AdminService implements IAdminService {
         if (authentication.isAuthenticated()) {
             String role;
             // if this is the credentials of the super admin.
-            if (Objects.equals(loginAdminDTO.getUsername(), "superadmin")) {
+            if (admin.getRole() == AdminRole.SUPER_ADMIN) {
                 role = "ROLE_SUPER_ADMIN";
             } else {
                 role = "ROLE_ADMIN";
