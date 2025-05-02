@@ -27,15 +27,6 @@ public class Post {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID postId;
 
-
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Media> mediaList;
-
-
     private String caption;
 
     @Enumerated(EnumType.STRING)

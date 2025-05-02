@@ -13,13 +13,10 @@ public interface ICloudService {
 
     Media uploadAndSaveMedia(MultipartFile file, boolean validate) throws IOException;
 
-    Post uploadAndSaveMediaWithPost(List<MultipartFile> mediaFiles, Post post) throws IOException;
 
     String getMediaUrl(UUID mediaId);
 
     String generatePresignedUrl(String bucketName, String key);
-
-    void deleteAllMediaForPost(UUID postId);
 
     Media saveMedia(Media media);
 

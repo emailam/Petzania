@@ -6,13 +6,10 @@ import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.example.registrationmodule.config.CloudStorageConfig;
 import com.example.registrationmodule.exception.media.InvalidMediaFile;
-import com.example.registrationmodule.exception.PostDoesntExist;
 import com.example.registrationmodule.exception.media.MediaNotFound;
 import com.example.registrationmodule.exception.rateLimiting.TooManyCloudRequests;
 import com.example.registrationmodule.model.entity.Media;
-import com.example.registrationmodule.model.entity.Post;
 import com.example.registrationmodule.repository.MediaRepository;
-import com.example.registrationmodule.repository.PostRepository;
 import com.example.registrationmodule.service.ICloudService;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
@@ -31,7 +28,6 @@ import java.util.*;
 @Transactional
 public class CloudService implements ICloudService {
     private final MediaRepository mediaRepository;
-    private final PostRepository postRepository;
     private final AmazonS3 s3Client;
     private final CloudStorageConfig cloudStorageConfig;
     @Transactional
@@ -65,23 +61,6 @@ public class CloudService implements ICloudService {
     }
 
     @Override
-    public Post uploadAndSaveMediaWithPost(List<MultipartFile> mediaFiles, Post post) throws IOException {
-        if (mediaFiles != null && !mediaFiles.isEmpty()) {
-            for (MultipartFile file : mediaFiles) {
-                validateFile(file);
-            }
-            List<Media> mediaList = new ArrayList<>();
-            for (MultipartFile file : mediaFiles) {
-                Media media = uploadAndSaveMedia(file,false);
-                media.setPost(post);
-                media = saveMedia(media);
-                mediaList.add(media);
-            }
-            post.setMediaList(mediaList);
-        }
-        return post;
-    }
-    @Override
     @RateLimiter(name = "mediaUrlLimiter", fallbackMethod = "mediaUrlFallback")
     public String getMediaUrl(UUID mediaId) {
         Media media = mediaRepository.findById(mediaId)
@@ -103,15 +82,7 @@ public class CloudService implements ICloudService {
 
         return s3Client.generatePresignedUrl(request).toString();
     }
-    @Override
-    public void deleteAllMediaForPost(UUID postId){
-        Post post = postRepository.findByPostId(postId)
-                .orElseThrow(() -> new PostDoesntExist("Post not found"));
-        List<Media> mediaList = post.getMediaList();
-        for(Media media : mediaList){
-            deleteById(media.getMediaId());
-        }
-    }
+
     @Override
     public Media saveMedia(Media media) {
         return mediaRepository.save(media);

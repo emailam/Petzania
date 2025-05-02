@@ -26,9 +26,6 @@ public class Media {
     private String type; // Content type like image/jpeg, video/mp4
 
     private String format; // jpg, png, mp4, etc.
-    @ManyToOne
-    @JoinColumn(name = "post_id")
-    private Post post;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime uploadedAt;

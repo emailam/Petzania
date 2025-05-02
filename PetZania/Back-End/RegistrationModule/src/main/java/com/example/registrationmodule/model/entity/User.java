@@ -80,10 +80,6 @@ public class User {
     private List<UserRole> userRoles;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Post> posts;
-
-    // private List<UUID> savedPosts;
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Pet> myPets;
 
     @ElementCollection

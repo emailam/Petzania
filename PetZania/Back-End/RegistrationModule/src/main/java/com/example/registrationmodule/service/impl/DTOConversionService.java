@@ -150,10 +150,6 @@ public class DTOConversionService implements IDTOConversionService {
                 .mood(post.getMood())
                 .visibility(post.getVisibility())
                 .createdAt(post.getCreatedAt())
-                .mediaList(post.getMediaList() != null ?
-                        post.getMediaList().stream().map(this::mediaToDto).collect(Collectors.toList())
-                        : new ArrayList<>())
-                .userId(post.getUser().getUserId())
                 .build();
     }
 
@@ -164,7 +160,6 @@ public class DTOConversionService implements IDTOConversionService {
                 .key(media.getKey())
                 .type(media.getType())
                 .format(media.getFormat())
-                .postId(media.getPost().getPostId())
                 .uploadedAt(media.getUploadedAt())
                 .build();
     }
