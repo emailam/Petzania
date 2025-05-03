@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     fontSize: responsive.fonts.title,
     color: '#9188E5',
     fontWeight: 'bold',
-    marginLeft: responsive.margins.screenEdge + 30,
+    marginLeft: responsive.margins.screenEdge,
   },
   container: {
     flexGrow: 1,

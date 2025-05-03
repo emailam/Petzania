@@ -2,6 +2,7 @@ package com.example.registrationmodule.model.dto;
 
 import com.example.registrationmodule.model.enumeration.UserRole;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.paypal.http.serializer.Json;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -22,8 +23,12 @@ public class UserProfileDTO {
     @NotBlank(message = "Username is required.")
     private String username;
 
+    @Email
+    private String email;
+
     @NotBlank(message = "Name is required.")
     private String name;
+    private Integer loginTimes;
 
     private String bio;
 
@@ -44,6 +49,9 @@ public class UserProfileDTO {
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private int followingCount;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private boolean active;
 
     private UUID storeProfileId;
 

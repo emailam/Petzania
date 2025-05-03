@@ -4,16 +4,25 @@ import com.example.registrationmodule.exception.user.UserNotFound;
 import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.entity.Media;
 import com.example.registrationmodule.service.ICloudService;
+import com.example.registrationmodule.model.entity.User;
+import com.example.registrationmodule.model.entity.UserPrincipal;
 import com.example.registrationmodule.service.IUserService;
+import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @RestController
@@ -23,13 +32,13 @@ public class UserController {
     private final IUserService userService;
     private final ICloudService cloudService;
 
+
     @PostMapping("/logout")
     public ResponseEntity<String> logout(@RequestBody @Valid LogoutDTO logoutDTO) {
         userService.logout(logoutDTO);
         return ResponseEntity.ok("User logged out successfully");
     }
 
-    
     @PostMapping("/resendOTP")
     public ResponseEntity<String> resendOTP(@RequestBody @Valid EmailDTO emailDTO) {
         userService.sendVerificationCode(emailDTO.getEmail());
@@ -41,6 +50,7 @@ public class UserController {
         userService.blockUser(blockUserDTO);
         return ResponseEntity.ok("User is blocked successfully");
     }
+
     @PostMapping("/unblock")
     public ResponseEntity<String> unblockUser(@RequestBody @Valid BlockUserDTO blockUserDTO) {
         userService.unblockUser(blockUserDTO);
@@ -49,8 +59,8 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<ResponseLoginDTO> login(@RequestBody @Valid LoginUserDTO loginUserDTO) {
-        TokenDTO token = userService.login(loginUserDTO);
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseLoginDTO("Successful login", token));
+        ResponseLoginDTO token = userService.login(loginUserDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(token);
     }
 
     @PostMapping("/refresh-token")
@@ -84,7 +94,18 @@ public class UserController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<UserProfileDTO> updateUserProfile(@PathVariable("id") UUID userId,
-                                                            @RequestBody UpdateUserProfileDto updateUserProfileDto) {
+                                                            @RequestBody UpdateUserProfileDto updateUserProfileDto) throws AccessDeniedException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof UserPrincipal userPrincipal) {
+            System.out.println(((UserPrincipal) principal).getUserId());
+            System.out.println(userId);
+            if (!userPrincipal.getUserId().equals(userId)) {
+                throw new AccessDeniedException("You can only update your own profile");
+            }
+        }
+
         UserProfileDTO userProfileDTO = userService.updateUserById(userId, updateUserProfileDto);
         return ResponseEntity.ok(userProfileDTO);
     }
@@ -95,9 +116,17 @@ public class UserController {
         return ResponseEntity.ok("OTP verification successful");
     }
 
-
     @PutMapping("/changePassword")
-    public ResponseEntity<String> changePassword(@RequestBody ChangePasswordDTO changePasswordDTO) {
+    public ResponseEntity<String> changePassword(@RequestBody ChangePasswordDTO changePasswordDTO) throws AccessDeniedException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof UserPrincipal userPrincipal) {
+            if (!userPrincipal.getEmail().equals(changePasswordDTO.getEmail())) {
+                throw new AccessDeniedException("You can only change your own password");
+            }
+        }
+
         userService.changePassword(changePasswordDTO);
         return ResponseEntity.ok("Password changed successfully");
     }
@@ -121,7 +150,16 @@ public class UserController {
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<String> deleteUser(@Valid @RequestBody EmailDTO emailDTO) {
+    public ResponseEntity<String> deleteUser(@Valid @RequestBody EmailDTO emailDTO) throws AccessDeniedException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
+
+        if(principal instanceof UserPrincipal userPrincipal){
+            if(!userPrincipal.getEmail().equals(emailDTO.getEmail())){
+                throw new AccessDeniedException("You can delete your own account");
+            }
+        }
+
         userService.deleteUser(emailDTO);
         return ResponseEntity.ok("User deleted successfully");
     }
@@ -136,7 +174,7 @@ public class UserController {
     public ResponseEntity<Page<UserProfileDTO>> getUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "userId") String sortBy,
             @RequestParam(defaultValue = "asc") String direction
     ) {
         Page<UserProfileDTO> users = userService.getUsers(page, size, sortBy, direction);
@@ -146,6 +184,12 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<UserProfileDTO> getUserById(@PathVariable("id") UUID userId) {
         UserProfileDTO user = userService.getUserById(userId);
+        return ResponseEntity.ok(user);
+    }
+
+    @GetMapping("/{username}")
+    public ResponseEntity<UserProfileDTO> getUserByUsername(@PathVariable("username") String username) {
+        UserProfileDTO user = userService.getUserByUsername(username);
         return ResponseEntity.ok(user);
     }
 }

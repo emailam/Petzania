@@ -7,7 +7,7 @@ export default function PetCard({ pet }) {
     const router = useRouter();
 
     const showPetInfo = (pet) => {
-        router.push({ pathname: '/RegisterModule/PetDetails', params: { name: pet.name } });
+        router.push({ pathname: '/RegisterModule/PetDetails', params: { petId: pet.petId } });
     };
 
     return (
@@ -19,12 +19,12 @@ export default function PetCard({ pet }) {
                         {pet.name}
                     </Text>
                     <Text style={styles.subHeader}>
-                        {pet.type} | {pet.breed}
+                        {pet.species.charAt(0).toUpperCase() + pet.species.slice(1).toLowerCase()} | {pet.breed}
                     </Text>
                 </View>
             </View>
             <View style={styles.rightContainer}>
-                {pet.gender === 'Female' ? <Foundation name="female-symbol" size={35} color="#FF9AD5"  /> : <Foundation name="male-symbol" size={35} color="#1B85F3"  />}
+                {pet.gender === 'FEMALE' ? <Foundation name="female-symbol" size={35} color="#FF9AD5"  /> : <Foundation name="male-symbol" size={35} color="#1B85F3"  />}
             </View>
         </TouchableOpacity>
     );

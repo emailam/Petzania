@@ -1,5 +1,5 @@
 export const PET_BREEDS = {
-    Dog: [
+    DOG: [
         {
             name: "Labrador Retriever",
             image: require('../assets/images/Breeds/Dog/Labrador.png'),
@@ -17,7 +17,7 @@ export const PET_BREEDS = {
             image: require('../assets/images/Breeds/Dog/Labrador.png'),
         },
     ],
-    // Cat: [
+    // CAT: [
     //     {
     //         name: "Persian",
     //         image: require('../assets/images/Breeds/Cat/Persian.png'),

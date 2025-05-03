@@ -70,6 +70,8 @@ public class UserService implements IUserService {
         return converter.mapToUserProfileDto(user);
     }
 
+
+
     public UserProfileDTO registerFallback(RegisterUserDTO registerUserDTO, RequestNotPermitted t) {
         throw new TooManyRegistrationRequests("Too many registration attempts. Try again later.");
     }
@@ -90,17 +92,15 @@ public class UserService implements IUserService {
                 .orElseThrow(() -> new UserNotFound("User does not exist"));
     }
 
+    @Override
+    public UserProfileDTO getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .map(converter::mapToUserProfileDto)
+                .orElseThrow(() -> new UserNotFound("User does not exist"));
+    }
 
     @Override
     public void deleteUser(EmailDTO emailDTO) {
-        if (userRepository.findByEmail(emailDTO.getEmail()).isPresent()) {
-            sendDeactivationMessage(emailDTO.getEmail());
-            userRepository.deleteUserByEmail(emailDTO.getEmail());
-        } else {
-            throw new UserNotFound("User does not exist");
-        }
-
-        System.out.println(emailDTO.getEmail());
         User user = userRepository.findByEmail(emailDTO.getEmail()).orElseThrow(() -> new UserNotFound("User does not exist"));
 
         // Send delete email
@@ -137,25 +137,36 @@ public class UserService implements IUserService {
 
     @Override
     @RateLimiter(name = "loginRateLimiter", fallbackMethod = "loginFallback")
-    public TokenDTO login(LoginUserDTO loginUserDTO) {
+    public ResponseLoginDTO login(LoginUserDTO loginUserDTO) {
         User user = userRepository.findByEmail(loginUserDTO.getEmail()).orElseThrow(() -> new InvalidUserCredentials("Email is incorrect"));
-
-        if (!user.isVerified()) {
-            throw new UserNotVerified("User is not verified");
-        }
-        if (user.isBlocked()) {
-            throw new UserIsBlocked("User is blocked");
-        }
 
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginUserDTO.getEmail(), loginUserDTO.getPassword()));
         if (authentication.isAuthenticated()) {
-            return new TokenDTO(jwtService.generateAccessToken(loginUserDTO.getEmail(), "ROLE_USER"), jwtService.generateRefreshToken(loginUserDTO.getEmail(), "ROLE_USER"));
+            System.out.println("valid credentials");
+            if (!user.isVerified()) {
+                throw new UserNotVerified("User is not verified");
+            }
+
+            if (user.isBlocked()) {
+                throw new UserIsBlocked("User is blocked");
+            }
+
+            String message = "Successful login";
+            TokenDTO tokenDTO = new TokenDTO(jwtService.generateAccessToken(loginUserDTO.getEmail(), "ROLE_USER"),
+                    jwtService.generateRefreshToken(loginUserDTO.getEmail(), "ROLE_USER"));
+            int loginTimes = user.getLoginTimes();
+            UUID userId = user.getUserId();
+            user.setLoginTimes(loginTimes + 1);
+            userRepository.save(user);
+
+            return new ResponseLoginDTO(message, tokenDTO, loginTimes + 1, userId);
         } else {
+            System.out.println("invalid credentials");
             throw new InvalidUserCredentials("Email or password is incorrect");
         }
     }
 
-    public TokenDTO loginFallback(LoginUserDTO loginUserDTO, RequestNotPermitted t) {
+    public ResponseLoginDTO loginFallback(LoginUserDTO loginUserDTO, RequestNotPermitted t) {
         throw new TooManyLoginRequests("Too many login attempts. Try again later.");
     }
 
@@ -260,8 +271,9 @@ public class UserService implements IUserService {
         if (refreshTokenService.isTokenRevoked(logoutDTO.getRefreshToken())) {
             throw new UserAlreadyLoggedOut("User already logged out");
         }
+
         // save it in the database
-        refreshTokenService.saveToken(logoutDTO.getRefreshToken(), user);
+        refreshTokenService.saveToken(logoutDTO.getRefreshToken());
     }
 
     public void logoutFallback(LogoutDTO logoutDTO, RequestNotPermitted t) {
@@ -275,6 +287,7 @@ public class UserService implements IUserService {
             throw new UserAlreadyBlocked("User is blocked already");
         } else {
             user.setBlocked(true);
+            sendDeactivationMessage(blockUserDTO.getEmail());
         }
     }
 

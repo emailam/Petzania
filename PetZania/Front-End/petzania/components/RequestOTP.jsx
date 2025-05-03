@@ -3,10 +3,11 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 import axios from "axios";
 import { responsive } from '@/utilities/responsive';
 
-export default function RequestOTP({ RESEND_COOLDOWN }) {
-  const [resendActive, setResendActive] = useState(true);
+
+export default function RequestOTP({ RESEND_COOLDOWN, email, isRegister }) {
+  const [resendActive, setResendActive] = useState(false);
   const [remainingTime, setRemainingTime] = useState(RESEND_COOLDOWN);
-  
+
   useEffect(() => {
     let timer;
     if (!resendActive && remainingTime > 0) {
@@ -19,26 +20,34 @@ export default function RequestOTP({ RESEND_COOLDOWN }) {
     }
     return () => clearInterval(timer);
   }, [resendActive, remainingTime, RESEND_COOLDOWN]);
-  
 
-  
   const handleRequestNewCode = async () => {
     if (!resendActive) return;
-    
     try {
-      // Replace the endpoint URL with your actual API endpoint.
-      const response = await axios.post("/api/request-otp");
-      if (response.status === 200) {
-        console.log("New OTP requested successfully:", response.data);
-        // Optionally, you can update a success message state here.
-      } else {
-        console.error("Failed to request new OTP. Status:", response.status);
+      if (isRegister === "true") {
+        const response = await axios.put("http://192.168.1.4:8080/api/user/auth/resendOTP", {
+          email: email,
+        });
+        if (response.status === 200) {
+          console.log("New OTP requested successfully:", response.data);
+        } else {
+          console.error("Failed to request new OTP. Status:", response.status);
+        }
+      }
+      else {
+        const response = await axios.put("http://192.168.1.4:8080/api/user/auth/sendResetPasswordOTP", {
+          email: email,
+        });
+        if (response.status === 200) {
+          console.log("Reset password OTP requested successfully:", response.data);
+        } else {
+          console.error("Failed to request reset password OTP. Status:", response.status);
+        }
       }
     } catch (error) {
-      console.error("Error requesting new OTP:", error.response?.data?.message || error.message);
+      console.error("Error requesting OTP:", error.response?.data?.message || error.message);
     }
-    
-    // Disable the resend button and start the cooldown.
+
     setResendActive(false);
   };
 

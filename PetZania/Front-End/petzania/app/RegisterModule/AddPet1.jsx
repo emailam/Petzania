@@ -29,6 +29,7 @@ const AddPet1 = () => {
             aspect: [1, 1],
             quality: 1,
             allowsEditing: true,
+            allowsMultipleSelection: true,
         });
 
         if (!result.canceled) {

@@ -2,15 +2,16 @@ import { Text , StyleSheet} from "react-native"
 import { responsive } from "@/utilities/responsive";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ResetPasswordForm from "@/components/ResetPasswordForm";
+import { useLocalSearchParams } from "expo-router";
+
 export default function ResetPasswordScreen(){
-    
-    
+    const {otp} = useLocalSearchParams();
     return(
       <SafeAreaView style={styles.safeArea}>
         <Text style={styles.title}>Reset Password</Text>
         <Text style = {styles.text}>Create a new password. Ensure it differs from previous ones for security</Text>
-        <ResetPasswordForm/>
-    </SafeAreaView>
+        <ResetPasswordForm otp={otp} />
+      </SafeAreaView>
     )
 }
 const styles = StyleSheet.create({

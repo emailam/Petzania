@@ -1,13 +1,16 @@
+import React, { useContext } from "react";
 import { View, Text, StyleSheet,SafeAreaView } from "react-native";
 import { responsive } from "@/utilities/responsive";
 import OTPForm from "@/components/OTPForm";
 import RequestOTP from "@/components/RequestOTP";
 import { useLocalSearchParams } from "expo-router";
+
+
 export default function OTPVerificationScreen() {
-  const { email , isRegister } = useLocalSearchParams();
+  const { isRegister, email } = useLocalSearchParams();
   return (
     <SafeAreaView style={styles.safeArea}>
-      
+
       <View style={styles.container}>
 
         <Text style={styles.title}>Almost there</Text>
@@ -15,11 +18,11 @@ export default function OTPVerificationScreen() {
           <Text style={styles.emailText}>{email}</Text> for verification.
         </Text>
 
-        <OTPForm CELL_COUNT={6} isRegister={isRegister} email={email}/>
-        
-        <Text style={styles.footerText}>Didn’t receive any code?</Text>
+        <OTPForm CELL_COUNT={6} isRegister={isRegister} email={email} />
 
-        <RequestOTP RESEND_COOLDOWN = {60}/>
+        <Text style={styles.footerText}>Didn't receive any code?</Text>
+
+        <RequestOTP RESEND_COOLDOWN = {60} email = {email} isRegister = {isRegister}/>
       </View>
     </SafeAreaView>
   );

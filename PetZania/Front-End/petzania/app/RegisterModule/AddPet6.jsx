@@ -2,26 +2,39 @@ import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image} from 'react-
 import PetCard from '@/components/PetCard'
 import React, { useContext, useEffect } from 'react';
 
+import Button from '@/components/Button';
+
 import { PetContext } from '@/context/PetContext';
+import { UserContext } from '@/context/UserContext';
+
 import { useRouter } from 'expo-router';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-import Button from '@/components/Button';
+import { getAllPetsByUserId } from '@/services/petService'
+
 
 export default function AddPet6() {
-
-    const { pets, createNewPet } = useContext(PetContext);
+    const { pets, createNewPet, setPets } = useContext(PetContext);
+    const { user } = useContext(UserContext);
 
     const router = useRouter();
 
+    const retrievePets = async () => {
+        try {
+            const userPets = await getAllPetsByUserId(user.userId);
+            setPets(userPets);
+        } catch (error) {
+            console.error('Error fetching pets:', error);
+        }
+    };
+
     useEffect(() => {
+        retrievePets();
         createNewPet();
-    }, [router]);
+    }, []);
 
     const goToNextPage = () => {
-        // Here we will add the pet to the database
-        // and then navigate to the next page
         router.push('/RegisterModule/ProfileSetUp3');
     }
 
@@ -29,7 +42,7 @@ export default function AddPet6() {
         <View style={styles.container}>
             <FlatList
                 data={pets}
-                keyExtractor={(item) => item.name}
+                keyExtractor={(item) => item.petId}
                 renderItem={({ item }) => <PetCard pet={item} />}
                 ListFooterComponent={() => (
                     <TouchableOpacity style={styles.addPetButton} onPress={() => router.push('/RegisterModule/AddPet1')}>

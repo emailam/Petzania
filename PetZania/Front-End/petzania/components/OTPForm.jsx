@@ -1,43 +1,112 @@
-import { CodeField, Cursor, useBlurOnFulfill, useClearByFocusCell } from "react-native-confirmation-code-field";
+import {
+  CodeField,
+  Cursor,
+  useBlurOnFulfill,
+  useClearByFocusCell,
+} from "react-native-confirmation-code-field";
 import Button from "@/components/Button";
 import { useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { responsive } from '@/utilities/responsive';
+import { responsive } from "@/utilities/responsive";
 import axios from "axios";
 import { useRouter } from "expo-router";
-export default function OTPForm({ CELL_COUNT , isRegister , email }) {
+
+import Toast from 'react-native-toast-message';
+
+const showToastSuccess = (message) => {
+  Toast.show({
+    type: 'success',
+    text1: message,
+    position: 'top',
+    visibilityTime: 3000,
+    autoHide: true,
+    topOffset: 30,
+    swipeable: true,
+  });
+};
+
+const showToastError = (message) => {
+  Toast.show({
+    type: 'error',
+    text1: message,
+    position: 'top',
+    visibilityTime: 3000,
+    autoHide: true,
+    topOffset: 30,
+  });
+};
+
+export default function OTPForm({ CELL_COUNT, isRegister, email }) {
   const [value, setValue] = useState("");
   const ref = useBlurOnFulfill({ value, cellCount: CELL_COUNT });
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({ value, setValue });
   const [errorMessage, setErrorMessage] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-  const router = useRouter();
-  const handleVerify = async () => {
 
-    console.log("OTP entered:", value);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const router = useRouter();
+
+  // ✅ Case 1: Register - verify OTP and go to Login
+  const handleVerifyAccount = async () => {
+    setIsLoading(true);
     try {
-      // Replace the URL below with your actual OTP verification endpoint.
-      const response = await axios.post("/api/verify-otp", { otp: value });
-      
-      // Assuming a response structure like { success: true, message: "OTP verified" }
-      if (response.data.success) {
+      const response = await axios.put("http://192.168.1.4:8080/api/user/auth/verify", {
+        otp: value,
+        email,
+      });
+
+      if (response.status === 200) {
+        showToastSuccess(response.data.message || "Account verified successfully!");
+        setSuccessMessage("Account verified successfully!");
+        setErrorMessage(null);
+        if(isRegister === "true"){
+          router.replace("/RegisterModule/LoginScreen");
+          return;
+        }
+        router.replace("/RegisterModule/ProfileSetUp1");
+      } else {
+        showToastError(response.data.message || "Verification failed.");
+        setErrorMessage(response.data.message || "Verification failed.");
+        setSuccessMessage(null);
+      }
+    } catch (error) {
+      const errMsg = error.response?.data?.message || error.message;
+      showToastError(errMsg || "Verification failed.");
+      setErrorMessage(errMsg);
+      setSuccessMessage(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyResetPassword = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.put("http://192.168.1.4:8080/api/user/auth/verifyResetOTP", {
+        otp: value,
+        email,
+      });
+      if (response.status === 200) {
+        showToastSuccess(response.data.message || "OTP verified successfully!");
         setSuccessMessage("OTP verified successfully!");
         setErrorMessage(null);
-        if(isRegister) {
-        router.replace("/RegisterModule/LoginScreen");
-        }
-        else {
-          router.replace("/RegisterModule/ResetPasswordScreen", { email: email });
-        }
+        router.replace({
+          pathname: "/RegisterModule/ResetPasswordScreen",
+          params: { email, otp: value },
+        });
       } else {
+        showToastError(response.data.message || "OTP verification failed.");
         setErrorMessage(response.data.message || "OTP verification failed.");
         setSuccessMessage(null);
       }
     } catch (error) {
-      // Handle any unexpected errors
       const errMsg = error.response?.data?.message || error.message;
+      showToastError(errMsg || "OTP verification failed.");
       setErrorMessage(errMsg);
       setSuccessMessage(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -64,12 +133,21 @@ export default function OTPForm({ CELL_COUNT , isRegister , email }) {
           </View>
         )}
       />
+
       {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
       {successMessage && <Text style={styles.successText}>{successMessage}</Text>}
+
       <Button
         title="Verify"
-        onPress={handleVerify}
         disabled={value.length !== CELL_COUNT}
+        loading={isLoading}
+        onPress={() => {
+          if(isRegister === "true") {
+            handleVerifyAccount();
+          } else {
+            handleVerifyResetPassword();
+          }
+      }}
       />
     </View>
   );
@@ -79,11 +157,11 @@ const styles = StyleSheet.create({
   codeFieldRoot: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: responsive.hp('3%'),
+    marginBottom: responsive.hp("3%"),
   },
   cellRoot: {
-    width: responsive.wp('12%'),
-    height: responsive.hp('6%'),
+    width: responsive.wp("12%"),
+    height: responsive.hp("6%"),
     backgroundColor: "#F3F3F3",
     justifyContent: "center",
     alignItems: "center",
@@ -102,11 +180,11 @@ const styles = StyleSheet.create({
   errorText: {
     color: "red",
     textAlign: "center",
-    marginBottom: responsive.hp('2%'),
+    marginBottom: responsive.hp("2%"),
   },
   successText: {
     color: "green",
     textAlign: "center",
-    marginBottom: responsive.hp('2%'),
+    marginBottom: responsive.hp("2%"),
   },
 });

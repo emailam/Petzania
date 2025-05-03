@@ -18,7 +18,6 @@ export default function ProfileSetUp2() {
                 <Text style={styles.description}>
                     Add your pets now to begin tracking their adventures!
                 </Text>
-
             </View>
 
             <View style={styles.buttonContainer}>

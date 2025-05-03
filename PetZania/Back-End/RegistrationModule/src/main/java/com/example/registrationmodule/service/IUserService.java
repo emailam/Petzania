@@ -35,7 +35,7 @@ public interface IUserService {
 
     User saveUser(User user);
 
-    TokenDTO login(LoginUserDTO loginUserDTO);
+    ResponseLoginDTO login(LoginUserDTO loginUserDTO);
 
     TokenDTO refreshToken(String refreshToken);
 
@@ -56,4 +56,6 @@ public interface IUserService {
 //    boolean isUserCredentialsValid(String email, String password);
 
     UserProfileDTO updateUserById(UUID userId, UpdateUserProfileDto updateUserProfileDto);
+
+    UserProfileDTO getUserByUsername(String username);
 }

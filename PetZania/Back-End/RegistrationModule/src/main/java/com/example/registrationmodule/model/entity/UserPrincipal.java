@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.UUID;
 
 public class UserPrincipal implements UserDetails {
 
@@ -16,13 +17,13 @@ public class UserPrincipal implements UserDetails {
         this.user = user;
     }
 
-    public void setGrantedAuthority(GrantedAuthority grantedAuthority){
+    public void setGrantedAuthority(GrantedAuthority grantedAuthority) {
         this.grantedAuthority = grantedAuthority;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        if(grantedAuthority == null){
+        if (grantedAuthority == null) {
             return Collections.singleton(new SimpleGrantedAuthority("NONE"));
         }
         return Collections.singleton(grantedAuthority);
@@ -40,5 +41,9 @@ public class UserPrincipal implements UserDetails {
 
     public String getEmail() {
         return user.getEmail();
+    }
+
+    public UUID getUserId() {
+        return user.getUserId();
     }
 }

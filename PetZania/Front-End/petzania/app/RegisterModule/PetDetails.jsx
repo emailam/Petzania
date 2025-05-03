@@ -7,99 +7,126 @@ import { useContext, useEffect, useState } from 'react';
 import { Dropdown } from 'react-native-element-dropdown';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
-import { AntDesign } from '@expo/vector-icons';
+
 import { PetContext } from '@/context/PetContext';
 
-const PetDetails = () => {
-    const { name } = useLocalSearchParams();
-    const { pets, setPets, deletePet } = useContext(PetContext);
+import Button from '@/components/Button';
 
-    const petIndex = pets.findIndex((pet) => pet.name === name);
-    const [pet, setPet] = useState(pets[petIndex]);
+import DateOfBirthInput from '@/components/DateOfBirthInput';
+import { PETS } from '@/constants/PETS';
+import { PET_BREEDS } from '@/constants/PETBREEDS';
+import { updatePet, deletePet, getAllPetsByUserId } from '@/services/petService';
+import Toast from 'react-native-toast-message';
+
+const PetDetails = () => {
+    const { petId } = useLocalSearchParams();
+    const { pets, setPets } = useContext(PetContext);
+
+    const showSuccessMessage = (message) => {
+        Toast.show({
+            type: 'success',
+            text1: message,
+            position: 'top',
+            visibilityTime: 3000,
+            swipeable: true,
+        });
+    }
+
+    const showErrorMessage = (message, description = '') => {
+        Toast.show({
+            type: 'error',
+            text1: message,
+            text2: description,
+            position: 'top',
+            visibilityTime: 3000,
+            swipeable: true,
+        });
+    }
+
+
 
     const router = useRouter();
-    const [gender, setGender] = useState(pet.gender || '');
-    const [type, setType] = useState(pet.type || '');
-    const [image, setImage] = useState(pet.image || null);
-    const [vaccines, setVaccines] = useState(pet.vaccines || '');
-    const [vaccineFiles, setVaccineFiles] = useState([]);
 
+    const petIndex = pets.findIndex((pet) => pet.petId === petId);
+    const [pet, setPet] = useState(() => pets[petIndex] || null);
+
+    const [gender, setGender] = useState(pet?.gender || '');
+    const [species, setSpecies] = useState(pet?.species || '');
+    const [breed, setBreed] = useState(pet?.breed || '');
+    const [dateOfBirth, setDateOfBirth] = useState(pet?.dateOfBirth || '');
+
+    // const [image, setImage] = useState(pet?.myPicturesURLs || null);
+
+    const [vaccineFiles, setVaccineFiles] = useState(pet?.myVaccinesURLs || []);
+
+    const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState({
         name: '',
-        type: '',
+        species: '',
         gender: '',
+        breed: '',
+        dateOfBirth: '',
     });
 
     const genderOptions = [
-        { label: 'Male', value: 'Male' },
-        { label: 'Female', value: 'Female' },
+        { label: 'Male', value: 'MALE' },
+        { label: 'Female', value: 'FEMALE' },
     ];
 
+    const speciesOptions = PETS.map(p => ({ label: p.name, value: p.value }));
+    const breedOptions = species
+        ? (PET_BREEDS[species]?.map(b => ({ label: b.name, value: b.name })) || [])
+        : [];
+
     useEffect(() => {
-        if (pets.length === 0) {
-            router.dismissTo('/RegisterModule/ProfileSetUp2');
+        if (!pet) {
+            Alert.alert('Pet not found', 'Returning to previous page.');
+            router.back();
         }
-    }, [pets]);
+    }, [pet]);
 
     const handleInputChange = (key, value) => {
-        setPet((prevPet) => ({ ...prevPet, [key]: value }));
+        setPet((prev) => prev ? { ...prev, [key]: value } : null);
         setErrors((prev) => ({ ...prev, [key]: '' }));
     };
 
-    const handleDeletePet = () => {
-        Alert.alert(
-            'Delete Pet',
-            `Are you sure you want to delete ${pet.name}?`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete',
-                    onPress: () => {
-                        deletePet(pet.name);
-                        router.back();
-                    },
-                },
-            ]
-        );
-    };
-
     const pickImage = async () => {
-        let result = await ImagePicker.launchImageLibraryAsync({
+        const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
             allowsEditing: true,
             aspect: [1, 1],
             quality: 1,
         });
 
-        if (!result.canceled) {
-            setImage(result.assets[0].uri);
-            handleInputChange('image', result.assets[0].uri);
+        if (!result.canceled && result.assets?.length > 0) {
+            const uri = result.assets[0].uri;
+            setImage(uri);
+            handleInputChange('myPicturesURLs', uri);
         }
     };
 
     const deleteImage = () => {
         setImage(null);
-        handleInputChange('image', null);
+        handleInputChange('myPicturesURLs', null);
     };
 
     const handleFilePick = async () => {
         try {
             setIsLoading(true);
             const result = await DocumentPicker.getDocumentAsync({
-                type: ['application/pdf'],
-                copyToCacheDirectory: true,
-                multiple: false,
+                type: 'application/pdf',
+                multiple: true,
             });
 
-            if (result?.assets) {
-                const file = result.assets[0];
-                setPet((prev) => ({ ...prev, vaccines: file }));
-                setVaccineFiles((prev) => [...prev, file]);
-            } else if (result?.name) {
-                setPet((prev) => ({ ...prev, vaccines: result }));
-                setVaccineFiles((prev) => [...prev, result]);
-            } else {
-                console.log('User canceled or no file selected');
+            if (!result.canceled && result.assets?.length > 0) {
+                const files = result.assets.map(file => ({
+                    uri: file.uri,
+                    name: file.name,
+                    size: file.size,
+                }));
+                const updatedVaccines = [...vaccineFiles, ...files];
+                setVaccineFiles(updatedVaccines);
+                handleInputChange('myVaccinesURLs', updatedVaccines);
             }
         } catch (err) {
             console.error('Picker Error:', err);
@@ -108,54 +135,105 @@ const PetDetails = () => {
         }
     };
 
-    const handleSaveChanges = () => {
+    const handleSaveChanges = async () => {  // <-- make it async
+        if (!pet) return;
+    
         const newErrors = {
-            name: !pet.name.trim() ? 'Name is required' : '',
-            type: !type.trim() ? 'Type is required' : '',
-            gender: !gender.trim() ? 'Gender is required' : '',
+            name: !pet.name?.trim() ? 'Name is required' : '',
+            species: !species?.trim() ? 'Type is required' : '',
+            gender: !gender?.trim() ? 'Gender is required' : '',
+            breed: !breed?.trim() ? 'Breed is required' : '',
+            dateOfBirth: !dateOfBirth?.trim() ? 'Date of birth is required' : '',
         };
 
         setErrors(newErrors);
 
-        const hasErrors = Object.values(newErrors).some((error) => error !== '');
-        if (hasErrors) return;
+        if (Object.values(newErrors).some(error => error)) return;
 
-        const updatedPets = [...pets];
-        updatedPets[petIndex] = { ...pet, gender, type, image, vaccines };
-        setPets(updatedPets);
-        Alert.alert('Success', 'Pet details updated successfully!');
-        setTimeout(() => {
+        const petData = {
+            name: pet.name || undefined,
+            description: pet.description || undefined,
+            gender: gender || undefined,
+            dateOfBirth: dateOfBirth || undefined,
+            breed: breed || undefined,
+            species: species ? species.toUpperCase() : undefined,
+            myVaccinesURLs: vaccineFiles.map(file => file.uri || file),
+            myPicturesURLs: Array.isArray(pet.myPicturesURLs) ? pet.myPicturesURLs : [],
+        };
+    
+        try {
+            setIsLoading(true);
+            await updatePet(petId, petData);  // <-- await here!
+    
+            setPets(prevPets => prevPets.map(p =>
+                p.petId === petId ? { ...p, ...petData } : p
+            ));
+            showSuccessMessage('Pet updated successfully!');
             router.back();
-        }, 1000);
+        } catch (error) {
+            showErrorMessage('Failed to update pet', error);
+            console.error('Error updating pet:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+
+    const deletePetByPetId = () => {
+        setIsLoading(true);
+        deletePet(petId)
+            .then(() => {
+                setPets(prevPets => prevPets.filter(pet => pet.petId !== petId));
+                showSuccessMessage('Pet deleted successfully!');
+                router.back();
+            })
+            .catch((error) => {
+                showErrorMessage('Failed to delete pet.', 'Please try again later.');
+            })
+            .finally(() => setIsLoading(false));
+    };
+
+    const handleDeletePet = () => {
+        Alert.alert(
+            'Delete Pet',
+            `Are you sure you want to delete ${pet?.name}?`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: deletePetByPetId,
+                },
+            ]
+        );
     };
 
     const defaultImage = require('@/assets/images/Defaults/default-pet.png');
 
+    if (!pet) return null;
+
     return (
         <ScrollView contentContainerStyle={styles.container}>
             <View style={styles.petInfoContainer}>
-                <View style={styles.imageContainer}>
+                {/* Image */}
+                {/* <View style={styles.imageContainer}>
                     <TouchableOpacity onPress={pickImage} style={styles.imageWrapper}>
-                        <Image source={image ? { uri: image } : defaultImage} style={styles.image} />
+                        <Image source={ {uri: defaultImage} } style={styles.image} />
                         {image && (
                             <TouchableOpacity onPress={deleteImage} style={styles.trashIcon}>
                                 <AntDesign name="delete" size={20} style={styles.icon} />
                             </TouchableOpacity>
                         )}
                     </TouchableOpacity>
-                </View>
+                </View> */}
 
+                {/* Inputs */}
                 <View style={styles.inputsContainer}>
-                    {/* Pet Name */}
+                    {/* Name */}
                     <View style={styles.inputContainer}>
-                        <Text style={styles.label}>
-                            Name <Text style={{ color: 'red' }}>*</Text>
-                        </Text>
+                        <Text style={styles.label}>Name <Text style={{ color: 'red' }}>*</Text></Text>
                         <TextInput
-                            style={[
-                                styles.input,
-                                errors.name ? styles.inputError : null
-                            ]}
+                            style={[styles.input, errors.name && styles.inputError]}
                             placeholder="Pet's name"
                             value={pet.name}
                             onChangeText={(text) => handleInputChange('name', text)}
@@ -163,78 +241,94 @@ const PetDetails = () => {
                         {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
                     </View>
 
-                    {/* Pet Type */}
+                    {/* Species */}
                     <View style={styles.inputContainer}>
-                        <Text style={styles.label}>
-                            Type <Text style={{ color: 'red' }}>*</Text>
-                        </Text>
-                        <TextInput
-                            style={[
-                                styles.input,
-                                errors.type ? styles.inputError : null
-                            ]}
-                            placeholder="Enter pet type"
-                            value={type}
-                            onChangeText={(text) => {
-                                setType(text);
-                                setErrors((prev) => ({ ...prev, type: '' }));
-                                handleInputChange('type', text);
+                        <Text style={styles.label}>Type <Text style={{ color: 'red' }}>*</Text></Text>
+                        <Dropdown
+                            style={[styles.input, errors.species && styles.inputError]}
+                            placeholder="Select Type"
+                            data={speciesOptions}
+                            labelField="label"
+                            valueField="value"
+                            value={species}
+                            onChange={(item) => {
+                                setSpecies(item.value);
+                                setBreed('');
+                                handleInputChange('species', item.value);
                             }}
                         />
-                        {errors.type && <Text style={styles.errorText}>{errors.type}</Text>}
+                        {errors.species && <Text style={styles.errorText}>{errors.species}</Text>}
                     </View>
 
-                    {/* Gender */}
+                    {/* Breed */}
                     <View style={styles.inputContainer}>
                         <Text style={styles.label}>
-                            Gender <Text style={{ color: 'red' }}>*</Text>
+                            Breed <Text style={{ color: 'red' }}>*</Text>
                         </Text>
+                        <TextInput
+                            style={[styles.input, errors.breed && styles.inputError]}
+                            placeholder="Enter breed"
+                            value={breed}
+                            onChangeText={(text) => {
+                                setBreed(text);
+                                handleInputChange('breed', text);
+                            }}
+                        />
+                        {errors.breed && <Text style={styles.errorText}>{errors.breed}</Text>}
+                    </View>
+
+
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.label}>Gender <Text style={{ color: 'red' }}>*</Text></Text>
                         <Dropdown
-                            style={[
-                                styles.input,
-                                errors.gender ? styles.inputError : null
-                            ]}
-                            placeholder="Select gender"
+                            style={[styles.input, errors.gender && styles.inputError]}
+                            placeholder="Select Gender"
                             data={genderOptions}
                             labelField="label"
                             valueField="value"
                             value={gender}
                             onChange={(item) => {
                                 setGender(item.value);
-                                setErrors((prev) => ({ ...prev, gender: '' }));
                                 handleInputChange('gender', item.value);
                             }}
                         />
                         {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
                     </View>
 
-                    {/* Optional Fields */}
-                    {[{ label: 'Breed', key: 'breed' },
-                    { label: 'Age', key: 'age' },
-                    { label: 'Color', key: 'color' },
-                    { label: 'Description', key: 'description' },
-                    { label: 'Health Condition', key: 'healthCondition' }].map(({ label, key }) => (
-                        <View key={key} style={styles.inputContainer}>
-                            <Text style={styles.label}>{label}</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder={`Enter ${label.toLowerCase()}`}
-                                value={pet[key]}
-                                onChangeText={(value) => handleInputChange(key, value)}
-                            />
-                        </View>
-                    ))}
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.label}>Description</Text>
+                        <TextInput
+                            style={[styles.input, { height: 100, textAlignVertical: 'top' }]} // taller input
+                            placeholder="Pet's description"
+                            value={pet.description || ''}
+                            onChangeText={(text) => handleInputChange('description', text)}
+                            multiline
+                            numberOfLines={4}
+                        />
+                    </View>
+
+                    <View style={styles.inputContainer}>
+                        <DateOfBirthInput
+                            value={dateOfBirth}
+                            onChange={(date) => {
+                                setDateOfBirth(date);
+                                handleInputChange('dateOfBirth', date);
+                            }}
+                            errorMessage={errors.dateOfBirth}
+                        />
+                    </View>
                 </View>
             </View>
-
             <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
+                <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges} disabled={isLoading}>
                     <Text style={styles.buttonText}>Save changes</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.deleteButton} onPress={handleDeletePet}>
+                <TouchableOpacity style={styles.deleteButton} onPress={handleDeletePet} disabled={isLoading}>
                     <Text style={styles.buttonText}>Delete</Text>
                 </TouchableOpacity>
             </View>
+
+            {isLoading && <ActivityIndicator size="large" color="#000" style={styles.loading} />}
         </ScrollView>
     );
 };
@@ -283,7 +377,7 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     inputContainer: {
-        alignItems: 'left',
+        alignItems: 'flex-start',
         paddingVertical: 15,
     },
     label: {

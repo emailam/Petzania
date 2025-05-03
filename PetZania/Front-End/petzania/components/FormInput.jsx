@@ -26,7 +26,6 @@ export default function FormInput({ control, name, errors, icon, ...props }) {
 }
 
 const styles = StyleSheet.create({
-  
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',

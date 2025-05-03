@@ -1,16 +1,35 @@
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image } from 'react-native'
-import React, { useContext } from 'react'
+import React, { useContext, useEffect } from 'react'
 import { PetContext } from '@/context/PetContext';
 import PetCard from '@/components/PetCard'
 import { useRouter } from 'expo-router';
 import Button from '@/components/Button';
 
+import { UserContext } from '@/context/UserContext';
+
+import { getAllPetsByUserId } from '@/services/petService';
+
 export default function ProfileSetUp3() {
-    const { pets } = useContext(PetContext);
+    const { pets, setPets } = useContext(PetContext);
     const router = useRouter();
 
     const numOfPets = pets.length;
     const defaultUserImage = require('@/assets/images/Defaults/default-user.png');
+
+    const { user } = useContext(UserContext);
+
+    const retrievePets = async () => {
+        try {
+            const userPets = await getAllPetsByUserId(user.userId);
+            setPets(userPets);
+        } catch (error) {
+            console.error('Error fetching pets:', error);
+        }
+    };
+
+    useEffect(() => {
+        retrievePets();
+    }, []);
 
     const goToNextStep = () => {
         router.push('/(tabs)');
@@ -23,8 +42,8 @@ export default function ProfileSetUp3() {
                     style={styles.userImage}
                 />
                 <View style={styles.userInfo}>
-                    <Text style={styles.userName}>Tyler Gregory Okonma</Text>
-                    <Text style={styles.userHandle}>@tylerthecreator</Text>
+                    <Text style={styles.userName}>{user.name}</Text>
+                    <Text style={styles.userHandle}>@{user.username}</Text>
                 </View>
             </View>
 
@@ -38,7 +57,7 @@ export default function ProfileSetUp3() {
 
                 <FlatList
                     data={pets}
-                    keyExtractor={(item) => item.name}
+                    keyExtractor={(item) => item.petId}
                     renderItem={({ item }) => <PetCard pet={item} />}
                     style={styles.petList}
                 />

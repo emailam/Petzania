@@ -1,5 +1,6 @@
 package com.example.registrationmodule.service.impl;
 
+import com.example.registrationmodule.model.entity.AdminPrincipal;
 import com.example.registrationmodule.model.entity.UserPrincipal;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -76,7 +77,7 @@ public class JWTService {
                 .getBody();
     }
 
-    public boolean validateToken(String token, UserPrincipal userDetails) {
+    public boolean validateTokenForUser(String token, UserPrincipal userDetails) {
         final String extractedEmail = extractEmail(token);
         if (extractedEmail.equals(userDetails.getEmail()) && !isTokenExpired(token)) {
             return true;
@@ -84,6 +85,16 @@ public class JWTService {
             return false;
         }
     }
+
+    public boolean validateTokenForAdmin(String token, AdminPrincipal adminDetails) {
+        final String extractedUsername = extractEmail(token);
+        if (extractedUsername.equals(adminDetails.getUsername()) && !isTokenExpired(token)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 
     public boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());

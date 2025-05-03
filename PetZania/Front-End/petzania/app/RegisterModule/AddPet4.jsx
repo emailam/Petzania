@@ -1,29 +1,44 @@
-import { StyleSheet, View, Text, TextInput, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
+import { StyleSheet, View, Text, TextInput, KeyboardAvoidingView, ScrollView, Platform, TouchableOpacity } from 'react-native';
 import React, { useState, useContext } from 'react';
 import { Dropdown } from 'react-native-element-dropdown';
 import { useRouter } from 'expo-router';
+import DateOfBirthInput from '@/components/DateOfBirthInput';
 
 import Button from '@/components/Button';
 import { PetContext } from '@/context/PetContext';
 
 export default function AddPet4() {
     const { pet, setPet } = useContext(PetContext);
-    const [error, setError] = useState('');
+    const [genderError, setGenderError] = useState('');
+    const [dobError, setDobError] = useState('');
     const [value, setValue] = useState(pet.gender);
     const router = useRouter();
 
     const data = [
-        { label: 'Male', value: 'Male' },
-        { label: 'Female', value: 'Female' },
+        { label: 'Male', value: 'MALE' },
+        { label: 'Female', value: 'FEMALE' },
     ];
 
     const goToNextStep = () => {
-        if (!pet.gender.trim()) {
-            setError("Pet's gender is required!");
-            return;
+        let hasError = false;
+
+        if (!pet.gender?.trim()) {
+            setGenderError("Pet's gender is required!");
+            hasError = true;
+        } else {
+            setGenderError('');
         }
-        setError('');
-        router.push('/RegisterModule/AddPet5');
+
+        if (!pet.dateOfBirth) {
+            setDobError("Date of birth is required!");
+            hasError = true;
+        } else {
+            setDobError('');
+        }
+
+        if (!hasError) {
+            router.push('/RegisterModule/AddPet5');
+        }
     };
 
     return (
@@ -36,7 +51,7 @@ export default function AddPet4() {
                 keyboardShouldPersistTaps="handled"
             >
                 <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Gender<Text style = {{fontSize: '18', color: 'red'}}>*</Text></Text>
+                    <Text style={styles.label}>Gender<Text style={{ fontSize: 18, color: 'red' }}>*</Text></Text>
                     <Dropdown
                         style={styles.input}
                         placeholder="Select gender"
@@ -49,27 +64,14 @@ export default function AddPet4() {
                             setPet({ ...pet, gender: item.value });
                         }}
                     />
-                    {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
+                    {genderError ? <Text style={{ color: 'red' }}>{genderError}</Text> : null}
                 </View>
 
                 <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Age</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Enter age"
-                        keyboardType="number-pad"
-                        value={pet.age}
-                        onChangeText={(text) => setPet({ ...pet, age: text })}
-                    />
-                </View>
-
-                <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Color</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Enter color"
-                        value={pet.color}
-                        onChangeText={(text) => setPet({ ...pet, color: text })}
+                    <DateOfBirthInput
+                        value={pet.dateOfBirth}
+                        onChange={(date) => setPet({ ...pet, dateOfBirth: date })}
+                        errorMessage={dobError}
                     />
                 </View>
 
@@ -119,11 +121,12 @@ const styles = StyleSheet.create({
         borderColor: '#9188E5',
         borderRadius: 10,
         paddingHorizontal: 15,
-        fontSize: 16,
+        justifyContent: 'center',
         backgroundColor: '#fff',
     },
     descriptionInput: {
         height: 120,
+        paddingTop: 10,
     },
     buttonContainer: {
         padding: 20,

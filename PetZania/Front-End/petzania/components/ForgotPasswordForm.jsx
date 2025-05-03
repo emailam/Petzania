@@ -1,29 +1,33 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React from "react";
 import Button from "@/components/Button";
-import { Link, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import FormInput from "@/components/FormInput";
 import { useAuthForm } from "@/components/useForm";
 import axios from "axios";
-import { ScrollView , StyleSheet } from "react-native"
+import { ScrollView , StyleSheet, TouchableOpacity, Text } from "react-native"
 import { responsive } from "@/utilities/responsive";
 
 export default function ForgotPasswordForm() {
     const {control , handleSubmit , formState:{errors , isSubmitting} , setError} = useAuthForm("forgotPassword");
     const router = useRouter();
+
+    const goToRegisterScreen = () => {
+      router.dismissAll();
+      router.push('/RegisterModule/RegisterScreen');
+    }
+
     const ResetPassword = async (data) => {
       try {
-        const response = await axios.post("https://api.example.com/reset-password", {
+        const response = await axios.put("http://192.168.1.4:8080/api/user/auth/sendResetPasswordOTP", {
           email: data.email,
         });
-        
-        if (response.ok) {
-          // Show sucess Message
+
+        if (response.status === 200) {
           router.push({
             pathname: "/RegisterModule/OTPVerificationScreen",
-            params: { email: data.email, isRegister : false }, 
+            params: { email: data.email, isRegister : false },
           });
-          
         } else {
           setError("email", {
             type: "manual",
@@ -43,14 +47,12 @@ export default function ForgotPasswordForm() {
         <ScrollView contentContainerStyle={styles.container}>
                   
             <FormInput
-                control={control}
-                name="email"
-                errors={errors}
-                placeholder="example@gmail.com"
-                icon={<Ionicons name="person" size={24} color="#8188E5" />}
+              control={control}
+              name="email"
+              errors={errors}
+              placeholder="example@gmail.com"
+              icon={<Ionicons name="person" size={24} color="#8188E5" />}
             />
-            
-            
             <Button
                 title="Reset Password"
                 onPress={handleSubmit(ResetPassword)}
@@ -59,8 +61,10 @@ export default function ForgotPasswordForm() {
                 fontSize={responsive.fonts.body}
                 loading={isSubmitting}
             />
-            
-            <Link href={""} style={styles.link}>Create an account </Link>
+
+            <TouchableOpacity >
+              <Text style={styles.link} onPress={goToRegisterScreen}>Create an account</Text>
+            </TouchableOpacity>
         </ScrollView>
     )
 }

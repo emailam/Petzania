@@ -8,15 +8,21 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import * as DocumentPicker from 'expo-document-picker';
 import Button from '@/components/Button';
 import { PetContext } from '@/context/PetContext';
+import { UserContext } from '@/context/UserContext';
+
+import { addPetToUser } from '@/services/petService';
 
 export default function AddPet5() {
-    const { pet, setPet, addPet } = useContext(PetContext); // merged context usage
+    const { pet, setPet } = useContext(PetContext); // merged context usage
     const [vaccineFiles, setVaccineFiles] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
 
-    const goToNextStep = () => {
-        addPet(pet);
+    const { user } = useContext(UserContext);
+
+
+    const goToNextStep = async () => {
+        await addPetToUser(pet, user.userId);
         router.dismissAll();
         router.push('/RegisterModule/AddPet6');
     };
@@ -31,10 +37,10 @@ export default function AddPet5() {
             });
             if (result?.assets) {
                 const file = result.assets[0];
-                setPet({ ...pet, vaccines: file });
+                setPet({ ...pet, myVaccinesURLs: file });
                 setVaccineFiles((prev) => [...prev, file]);
             } else if (result?.name) {
-                setPet({ ...pet, vaccines: result });
+                setPet({ ...pet, myVaccinesURLs: result });
                 setVaccineFiles((prev) => [...prev, result]);
             } else {
                 console.log('User canceled or no file selected');
@@ -54,19 +60,6 @@ export default function AddPet5() {
             <FlatList
                 ListHeaderComponent={
                     <>
-                        <View style={styles.inputContainer}>
-                            <Text style={styles.label}>Health Condition</Text>
-                            <TextInput
-                                style={[styles.input, styles.healthConditionInput]}
-                                placeholder="Enter health condition"
-                                value={pet.healthCondition}
-                                onChangeText={(text) => setPet({ ...pet, healthCondition: text })}
-                                multiline
-                                numberOfLines={6}
-                                textAlignVertical="top"
-                            />
-                        </View>
-
                         <TouchableOpacity style={styles.vaccinesInput} onPress={handleFilePick}>
                             <View style={styles.leftContainer}>
                                 <Image source={require('@/assets/images/AddPet/Vaccines.png')} style={styles.image} />
@@ -112,26 +105,6 @@ const styles = StyleSheet.create({
     },
     scrollContainer: {
         paddingBottom: 20,
-    },
-    inputContainer: {
-        paddingHorizontal: '5%',
-        marginTop: 20,
-    },
-    label: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 10,
-        color: '#333',
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#9188E5',
-        borderRadius: 10,
-        paddingHorizontal: 15,
-        fontSize: 16,
-    },
-    healthConditionInput: {
-        height: 120,
     },
     buttonContainer: {
         padding: 20,

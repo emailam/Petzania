@@ -12,24 +12,20 @@ export default function AddPet2() {
     const router = useRouter();
     const [error, setError] = useState('');
 
-    const handleSelectPet = (name) => {
-        setPet({ ...pet, type: name });
+    const handleSelectPet = (value) => {
+        setPet({ ...pet, species: value });
         setError('');
-    };
-
-    const handleManualInput = (text) => {
-        setPet({ ...pet, type: text });
     };
 
     const renderItem = ({ item }) => (
         <TouchableOpacity
-            onPress={() => handleSelectPet(item.name)}
+            onPress={() => handleSelectPet(item.value)}
             activeOpacity={1}
             style={styles.cardWrapper}
         >
-            <Card style={[styles.card, pet.type === item.name && styles.selectedCard]}>
+            <Card style={[styles.card, pet.species === item.value && styles.selectedCard]}>
                 <Image source={item.image} style={styles.image} resizeMode="contain" />
-                <Text style={[styles.text, pet.type === item.name && styles.selectedText]}>
+                <Text style={[styles.text, pet.species === item.value && styles.selectedText]}>
                     {item.name}
                 </Text>
             </Card>
@@ -37,7 +33,7 @@ export default function AddPet2() {
     );
 
     const goToNextStep = () => {
-        if (!pet.type.trim()) {
+        if (!pet.species) {
             setError("Pet's type is required!");
             return;
         }
@@ -56,13 +52,6 @@ export default function AddPet2() {
             />
 
             <View style={styles.buttonContainer}>
-                <Text style={styles.orText}>Or enter it manually</Text>
-                <TextInput
-                    placeholder="Enter pet type"
-                    style={styles.input}
-                    value={!PETS.some(p => p.name === pet.type) ? pet.type : ''}
-                    onChangeText={handleManualInput}
-                />
                 {error ? <Text style={styles.error}>{error}</Text> : null}
                 <Button title="Next" borderRadius={10} fontSize={16} onPress={goToNextStep} />
             </View>
