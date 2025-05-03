@@ -61,13 +61,13 @@ public class PetService implements IPetService {
         }).orElseThrow(() -> new PetNotFound("Pet does not exist"));
     }
 
+
     @Override
     @RateLimiter(name = "deletePetRateLimiter", fallbackMethod = "deletePetFallback")
     public void deleteById(UUID petId) {
         petRepository.deleteById(petId);
     }
 
-    // Fallback methods
     public Pet savePetFallback(Pet pet, RequestNotPermitted t) {
         throw new TooManyPetRequests("Rate limit exceeded for saving pets. Please try again later.");
     }
@@ -79,4 +79,5 @@ public class PetService implements IPetService {
     public void deletePetFallback(UUID petId, RequestNotPermitted t) {
         throw new TooManyPetRequests("Rate limit exceeded for deleting pets. Please try again later.");
     }
+
 }

@@ -420,7 +420,12 @@ public class UserService implements IUserService {
         return userRepository.findById(userId).map(existingUser -> {
             Optional.ofNullable(updateUserProfileDto.getName()).ifPresent(existingUser::setName);
             Optional.ofNullable(updateUserProfileDto.getBio()).ifPresent(existingUser::setBio);
-            Optional.ofNullable(updateUserProfileDto.getProfilePictureURL()).ifPresent(existingUser::setProfilePictureURL);
+
+            String profilePictureURL = updateUserProfileDto.getProfilePictureURL();
+            if (profilePictureURL != null) {
+                existingUser.setProfilePictureURL(profilePictureURL.isBlank() ? null : profilePictureURL);
+            }
+
             Optional.ofNullable(updateUserProfileDto.getPhoneNumber()).ifPresent(existingUser::setPhoneNumber);
 
             User updatedUser = userRepository.save(existingUser);

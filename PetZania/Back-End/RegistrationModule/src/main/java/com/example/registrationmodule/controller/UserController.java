@@ -1,6 +1,9 @@
 package com.example.registrationmodule.controller;
 
+import com.example.registrationmodule.exception.user.UserNotFound;
 import com.example.registrationmodule.model.dto.*;
+import com.example.registrationmodule.model.entity.Media;
+import com.example.registrationmodule.service.ICloudService;
 import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.model.entity.UserPrincipal;
 import com.example.registrationmodule.service.IUserService;
@@ -14,7 +17,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.Objects;
@@ -25,6 +30,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserController {
     private final IUserService userService;
+    private final ICloudService cloudService;
 
 
     @PostMapping("/logout")
@@ -67,6 +73,31 @@ public class UserController {
         UserProfileDTO userProfileDTO = userService.registerUser(registerUserDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(new SignUpResponseDTO("User registered successfully", userProfileDTO));
     }
+
+    @PatchMapping("/{id}/files")
+    public ResponseEntity<UserProfileDTO> updateUserFiles(@PathVariable(name = "id") UUID userId,
+                                                               @RequestPart(value = "profile picture", required = false) MultipartFile profilePicture) throws IOException {
+        if (!userService.userExistsById(userId)) {
+            throw new UserNotFound("User not found with ID: " + userId);
+        }
+
+        UpdateUserProfileDto updateUserProfileDto = new UpdateUserProfileDto();
+
+        if(profilePicture != null) {
+            if(!profilePicture.isEmpty()) {
+                Media media = cloudService.uploadAndSaveMedia(profilePicture, true);
+                String cdnUrl = cloudService.getMediaUrl(media.getMediaId());
+                updateUserProfileDto.setProfilePictureURL(cdnUrl);
+            }
+            else {
+                updateUserProfileDto.setProfilePictureURL("");
+            }
+        }
+
+        UserProfileDTO userProfileDto = userService.updateUserById(userId, updateUserProfileDto);
+        return ResponseEntity.ok(userProfileDto);
+    }
+
 
     @PatchMapping("/{id}")
     public ResponseEntity<UserProfileDTO> updateUserProfile(@PathVariable("id") UUID userId,

@@ -4,6 +4,7 @@ import com.example.registrationmodule.config.PayPalConfig;
 import com.example.registrationmodule.exception.payPal.PayPalApprovalUrlNotFound;
 import com.example.registrationmodule.exception.payPal.PayPalOrderNotFound;
 import com.example.registrationmodule.exception.payPal.PayPalPaymentCapture;
+import com.example.registrationmodule.exception.rateLimiting.TooManyPaymentRequests;
 import com.example.registrationmodule.model.entity.Payment;
 import com.example.registrationmodule.model.enumeration.PaymentStatus;
 import com.example.registrationmodule.repository.PaymentRepository;
@@ -11,6 +12,8 @@ import com.paypal.core.PayPalHttpClient;
 import com.paypal.orders.*;
 import com.paypal.payments.CapturesRefundRequest;
 import com.paypal.payments.RefundRequest;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.paypal.payments.Refund;
@@ -29,6 +32,7 @@ public class PayPalService {
     private final PayPalConfig config;
     private final PaymentRepository paymentRepository;
 
+    @RateLimiter(name = "paypalCreateOrderLimiter", fallbackMethod = "createOrderFallback")
     public Order createOrder(String amount, String currency, String description) throws IOException {
         OrdersCreateRequest request = new OrdersCreateRequest();
         request.header("prefer", "return=representation");
@@ -62,6 +66,7 @@ public class PayPalService {
         return orderRequest;
     }
 
+    @RateLimiter(name = "paypalCaptureOrderLimiter", fallbackMethod = "captureOrderFallback")
     public Order captureOrder(String token) throws IOException {
         OrdersCaptureRequest request = new OrdersCaptureRequest(token);
         request.requestBody(new OrderRequest());
@@ -69,6 +74,7 @@ public class PayPalService {
         return client.execute(request).result();
     }
 
+    @RateLimiter(name = "paypalApprovalUrlLimiter", fallbackMethod = "getApprovalUrlFallback")
     public String getApprovalUrl(Order order) {
         for (LinkDescription link : order.links()) {
             if ("approve".equalsIgnoreCase(link.rel())) {
@@ -78,11 +84,13 @@ public class PayPalService {
         throw new PayPalApprovalUrlNotFound("PayPal approval URL not found");
     }
 
+    @RateLimiter(name = "paypalGetOrderDetailsLimiter", fallbackMethod = "getOrderDetailsFallback")
     public Order getOrderDetails(String orderId) throws IOException {
         OrdersGetRequest request = new OrdersGetRequest(orderId);
         return client.execute(request).result();
     }
 
+    @RateLimiter(name = "paypalRefundLimiter", fallbackMethod = "refundPaymentFallback")
     public Refund refundPayment(String captureId, String reason) throws IOException {
         CapturesRefundRequest request = new CapturesRefundRequest(captureId);
 
@@ -95,6 +103,7 @@ public class PayPalService {
         return client.execute(request).result();
     }
 
+    @RateLimiter(name = "paypalProcessCaptureLimiter", fallbackMethod = "processPaymentCaptureFallback")
     public String processPaymentCapture(String token) throws IOException {
         Order order = getOrderDetails(token);
 
@@ -158,6 +167,28 @@ public class PayPalService {
         return payment.getTransactionId();
     }
 
+    public Order createOrderFallback(String amount, String currency, String description, RequestNotPermitted ex) {
+        throw new TooManyPaymentRequests("Rate limit exceeded for creating PayPal orders. Please try again later.");
+    }
 
+    public Order captureOrderFallback(String token, RequestNotPermitted ex) {
+        throw new TooManyPaymentRequests("Rate limit exceeded while capturing PayPal order. Try again later.");
+    }
+
+    public String getApprovalUrlFallback(Order order, RequestNotPermitted ex) {
+        throw new TooManyPaymentRequests("Rate limit exceeded while retrieving approval URL. Try again later.");
+    }
+
+    public Order getOrderDetailsFallback(String orderId, RequestNotPermitted ex) {
+        throw new TooManyPaymentRequests("Rate limit exceeded while getting order details. Try again later.");
+    }
+
+    public Refund refundPaymentFallback(String captureId, String reason, RequestNotPermitted ex) {
+        throw new TooManyPaymentRequests("Rate limit exceeded for refunding payments. Try again later.");
+    }
+
+    public String processPaymentCaptureFallback(String token, RequestNotPermitted ex) {
+        throw new TooManyPaymentRequests("Rate limit exceeded while processing payment capture. Try again later.");
+    }
 }
 
