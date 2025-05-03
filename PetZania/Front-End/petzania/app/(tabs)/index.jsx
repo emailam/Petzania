@@ -9,4 +9,7 @@ export default function HomeScreen() {
     return (
         <Home />
     );
+  return (
+    <RegisterScreen />
+  );
 }
