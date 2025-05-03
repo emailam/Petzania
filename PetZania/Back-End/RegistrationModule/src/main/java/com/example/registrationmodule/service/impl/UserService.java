@@ -71,7 +71,6 @@ public class UserService implements IUserService {
     }
 
 
-
     public UserProfileDTO registerFallback(RegisterUserDTO registerUserDTO, RequestNotPermitted t) {
         throw new TooManyRegistrationRequests("Too many registration attempts. Try again later.");
     }
@@ -82,6 +81,15 @@ public class UserService implements IUserService {
         Pageable pageable = PageRequest.of(page, size, sort);
 
         return userRepository.findAll(pageable)
+                .map(converter::mapToUserProfileDto);
+    }
+
+    @Override
+    public Page<UserProfileDTO> getUsersByPrefixUsername(int page, int size, String sortBy, String direction, String prefix) {
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return userRepository.findByUsernameStartingWithIgnoreCase(prefix, pageable)
                 .map(converter::mapToUserProfileDto);
     }
 
