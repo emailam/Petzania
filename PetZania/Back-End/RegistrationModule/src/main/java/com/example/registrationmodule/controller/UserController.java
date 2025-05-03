@@ -188,15 +188,27 @@ public class UserController {
         return users.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(users);
     }
 
+    @GetMapping("/users/{prefix}")
+    public ResponseEntity<Page<UserProfileDTO>> getUsersByPrefixUsername(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "username") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction,
+            @PathVariable("prefix") String prefix
+    ) {
+        Page<UserProfileDTO> users = userService.getUsersByPrefixUsername(page, size, sortBy, direction, prefix);
+        return users.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(users);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<UserProfileDTO> getUserById(@PathVariable("id") UUID userId) {
         UserProfileDTO user = userService.getUserById(userId);
         return ResponseEntity.ok(user);
     }
 
-    @GetMapping("/{username}")
-    public ResponseEntity<UserProfileDTO> getUserByUsername(@PathVariable("username") String username) {
-        UserProfileDTO user = userService.getUserByUsername(username);
-        return ResponseEntity.ok(user);
-    }
+//    @GetMapping("/{username}")
+//    public ResponseEntity<UserProfileDTO> getUserByUsername(@PathVariable("username") String username) {
+//        UserProfileDTO user = userService.getUserByUsername(username);
+//        return ResponseEntity.ok(user);
+//    }
 }
