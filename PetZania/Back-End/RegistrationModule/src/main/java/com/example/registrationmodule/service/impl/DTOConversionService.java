@@ -151,17 +151,6 @@ public class DTOConversionService implements IDTOConversionService {
     }
 
     @Override
-    public PostResponseDTO postToDto(Post post) {
-        return PostResponseDTO.builder()
-                .postId(post.getPostId())
-                .caption(post.getCaption())
-                .mood(post.getMood())
-                .visibility(post.getVisibility())
-                .createdAt(post.getCreatedAt())
-                .build();
-    }
-
-    @Override
     public MediaResponseDTO mediaToDto(Media media) {
         return MediaResponseDTO.builder()
                 .mediaId(media.getMediaId())

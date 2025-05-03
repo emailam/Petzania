@@ -62,11 +62,13 @@ spring:
       image: 10485760
       video: 52428800
       text: 5242880
+      application-pdf: 10485760
     allowed-types:
         - image/jpeg
         - image/png
         - video/mp4
         - text/plain
+        - application/pdf
 
 paypal:
   client-id: AcWmUFleXWmsAqACRIjcrfCwEwSfrBy7v3kYe5ejrwqxceOsh8kwdmzm0fkLeRgWe6Md5h1Nfv36_YGU

@@ -18,7 +18,6 @@ public interface IDTOConversionService {
     PetDTO mapToPetDto(Pet pet);
 
     Pet mapToPet(PetDTO petDto);
-    PostResponseDTO postToDto(Post post);
     MediaResponseDTO mediaToDto(Media media);
     Media convertToMedia(MediaDTO mediaDTO);
     User mapToUser(RegisterUserDTO registerUserDTO);

@@ -30,10 +30,12 @@ public class CloudService implements ICloudService {
     private final MediaRepository mediaRepository;
     private final AmazonS3 s3Client;
     private final CloudStorageConfig cloudStorageConfig;
+
     @Transactional
     @Override
     @RateLimiter(name = "mediaUploadLimiter", fallbackMethod = "uploadFallback")
     public Media uploadAndSaveMedia(MultipartFile file, boolean validate) throws IOException {
+
         if (validate) {
             validateFile(file);
         }
@@ -43,21 +45,21 @@ public class CloudService implements ICloudService {
         String format = extractFileFormat(originalFilename);
         String contentType = Optional.ofNullable(file.getContentType()).orElse("application/octet-stream");
 
-        Media media = Media.builder()
+        Media curMedia = Media.builder()
                 .format(format)
                 .type(contentType)
                 .uploadedAt(LocalDateTime.now())
                 .build();
 
-        media = saveMedia(media); // Save to get mediaId for S3 key
+        curMedia = saveMedia(curMedia); // Save to get mediaId for S3 key
 
-        String key = buildS3Key(contentType, media.getMediaId(), sanitizedFilename);
-        media.setKey(key);
-        media = saveMedia(media); // Save again with key
+        String key = buildS3Key(contentType, curMedia.getMediaId(), sanitizedFilename);
+        curMedia.setKey(key);
+        curMedia = saveMedia(curMedia); // Save again with key
 
         uploadToS3(file, key, contentType);
 
-        return media;
+        return curMedia;
     }
 
     @Override
@@ -68,6 +70,7 @@ public class CloudService implements ICloudService {
 
         return cloudStorageConfig.getCdnUrl() + "/" + media.getKey();
     }
+
     @Override
     public String generatePresignedUrl(String bucketName, String key) {
         Date expiration = new Date();
@@ -87,12 +90,17 @@ public class CloudService implements ICloudService {
     public Media saveMedia(Media media) {
         return mediaRepository.save(media);
     }
+
     @Override
     public boolean existsById(UUID mediaId) {
         return mediaRepository.existsById(mediaId);
     }
+
     @Override
-    public Optional<Media> getMediaByID(UUID mediaId) { return mediaRepository.findById(mediaId); }
+    public Optional<Media> getMediaByID(UUID mediaId) {
+        return mediaRepository.findById(mediaId);
+    }
+
     @Override
     public void deleteById(UUID mediaId) {
         if (!mediaRepository.existsById(mediaId)) {
@@ -111,11 +119,14 @@ public class CloudService implements ICloudService {
     }
 
     private String buildS3Key(String contentType, UUID mediaId, String filename) {
-        String prefix = switch (contentType.split("/")[0]) {
-            case "image" -> "image/";
-            case "video" -> "video/";
-            case "text" -> "doc/";
-            default -> "misc/";
+        String prefix = switch (contentType) {
+            case "application/pdf" -> "doc/";
+            default -> switch (contentType.split("/")[0]) {
+                case "image" -> "image/";
+                case "video" -> "video/";
+                case "text" -> "doc/";
+                default -> "misc/";
+            };
         };
         return prefix + mediaId + "-" + filename;
     }
@@ -134,18 +145,19 @@ public class CloudService implements ICloudService {
         if (!cloudStorageConfig.getAllowedTypes().contains(mediaFiles.getContentType())) {
             throw new InvalidMediaFile("File: " + mediaFiles.getOriginalFilename() + " has invalid file type: " + mediaFiles.getContentType());
         }
-        if (mediaFiles.getContentType().startsWith("image/") && mediaFiles.getSize() > cloudStorageConfig.getMaxSize().get("image")){
+        if (mediaFiles.getContentType().startsWith("image/") && mediaFiles.getSize() > cloudStorageConfig.getMaxSize().get("image")) {
             throw new InvalidMediaFile("Image: " + mediaFiles.getOriginalFilename() + " is too large. Max allowed is " + cloudStorageConfig.getMaxSize().get("image") + " MB.");
 
         } else if (mediaFiles.getContentType().startsWith("video/") && mediaFiles.getSize() > cloudStorageConfig.getMaxSize().get("video")) {
             throw new InvalidMediaFile("Video: " + mediaFiles.getOriginalFilename() + " is too large. Max allowed is " + cloudStorageConfig.getMaxSize().get("video") + " MB.");
-
         } else if (mediaFiles.getContentType().startsWith("text/") && mediaFiles.getSize() > cloudStorageConfig.getMaxSize().get("text")) {
             throw new InvalidMediaFile("File: " + mediaFiles.getOriginalFilename() + " is too large. Max allowed is " + cloudStorageConfig.getMaxSize().get("text") + " MB.");
+        } else if (mediaFiles.getContentType().equals("application/pdf") && mediaFiles.getSize() > cloudStorageConfig.getMaxSize().get("application-pdf")) {
+            throw new InvalidMediaFile("PDF: " + mediaFiles.getOriginalFilename() + " is too large. Max allowed is " + cloudStorageConfig.getMaxSize().get("application-pdf") + " MB.");
         }
     }
 
-    public Media uploadFallback(MultipartFile file, boolean validate, RequestNotPermitted ex) {
+    public Media uploadFallback(MultipartFile files, boolean validate, RequestNotPermitted ex) {
         throw new TooManyCloudRequests("Media upload rate exceeded. Please try again later.");
     }
 

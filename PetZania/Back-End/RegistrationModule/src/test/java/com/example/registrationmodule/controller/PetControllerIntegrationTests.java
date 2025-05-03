@@ -130,30 +130,6 @@ public class PetControllerIntegrationTests {
 
     }
 
-//    @Test
-//    public void testCreatePetUserNull() throws Exception {
-//        testUserA.setUserId(null);
-//        Pet testPetA = TestDataUtil.createTestPetA(testUserA);
-//        PetDTO testPetDTO = dtoConversionService.mapToPetDto(testPetA);
-//        mockMvc.perform(MockMvcRequestBuilders.post("/api/pet")
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .header("Authorization", token)
-//                        .content(objectMapper.writeValueAsString(testPetDTO)))
-//                .andExpect(MockMvcResultMatchers.status().isBadRequest());
-//    }
-//
-//    @Test
-//    public void testCreatePetUserNotFound() throws Exception {
-//        testUserA.setUserId(UUID.randomUUID());
-//        Pet testPetA = TestDataUtil.createTestPetA(testUserA);
-//        PetDTO testPetDTO = dtoConversionService.mapToPetDto(testPetA);
-//        mockMvc.perform(MockMvcRequestBuilders.post("/api/pet")
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .header("Authorization", token)
-//                        .content(objectMapper.writeValueAsString(testPetDTO)))
-//                .andExpect(MockMvcResultMatchers.status().isNotFound());
-//    }
-
     @Test
     public void testGetValidPetById() throws Exception {
         Pet testPetA = petService.savePet(TestDataUtil.createTestPetA(testUserA));
@@ -293,5 +269,10 @@ public class PetControllerIntegrationTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Authorization", token))
                 .andExpect(MockMvcResultMatchers.status().isForbidden());
+    }
+
+    @Test
+    public void testUpdatePetFiles_validPetId() {
+        Pet testPetA = petService.savePet(TestDataUtil.createTestPetA(testUserA));
     }
 }

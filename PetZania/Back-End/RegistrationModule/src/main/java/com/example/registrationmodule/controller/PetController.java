@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -39,14 +40,6 @@ public class PetController {
 
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();
-
-//        if (userId == null) {
-//            throw new UserIdNull("User ID must not be null");
-//        }
-//
-//        if (!userService.userExistsById(userId)) {
-//            throw new UserNotFound("User not found with ID: " + userId);
-//        }
 
         // Ensure the client cannot manually set petId
         petDto.setPetId(null);
@@ -105,8 +98,8 @@ public class PetController {
         );
     }
 
-    @DeleteMapping("/pet/{id}")
-    public ResponseEntity<Void> deletePetById(@PathVariable(name = "id") UUID petId) {
+    @DeleteMapping("/pet/{petId}")
+    public ResponseEntity<Void> deletePetById(@PathVariable(name = "petId") UUID petId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();
 
@@ -121,16 +114,45 @@ public class PetController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @PatchMapping("/{id}/add-pet-picture")
-    public ResponseEntity<PetDTO> addPetPicture(@PathVariable UUID petId,
-                                                               @RequestParam("file") MultipartFile file) throws IOException {
-        if (!petService.existsById(petId)) {
-            throw new PetNotFound("Pet not found with ID: " + petId);
-        }
-        Media media = cloudService.uploadAndSaveMedia(file, true);
-        String cdnUrl = cloudService.getMediaUrl(media.getMediaId());
+    @PatchMapping("/pet/{petId}/files")
+    public ResponseEntity<PetDTO> updatePetFiles(@PathVariable(name = "petId") UUID petId,
+                                                 @RequestPart(value = "pictures", required = false) List<MultipartFile> pictures,
+                                                 @RequestPart(value = "vaccines", required = false) List<MultipartFile> vaccines) throws IOException {
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId = userPrincipal.getUserId();
 
-        Pet updatedPet = petService.addPetPicture(petId,cdnUrl);
+        if (!petService.getPetById(petId)
+                .orElseThrow(() -> new PetNotFound("Pet not found with ID: " + petId))
+                .getUser()
+                .getUserId().equals(userId)) {
+            throw new UserAccessDenied("You can only update your pets");
+        }
+
+        UpdatePetDTO updatePetDTO = new UpdatePetDTO();
+
+        if(pictures != null) {
+            List<String> urls = new ArrayList<>();
+            for(MultipartFile picture : pictures) {
+                if(picture.isEmpty()) continue;
+                Media media = cloudService.uploadAndSaveMedia(picture, true);
+                String cdnUrl = cloudService.getMediaUrl(media.getMediaId());
+                urls.add(cdnUrl);
+            }
+            updatePetDTO.setMyPicturesURLs(urls);
+        }
+
+        if(vaccines != null) {
+            List<String> urls = new ArrayList<>();
+            for(MultipartFile vaccine : vaccines) {
+                if(vaccine.isEmpty()) continue;
+                Media media = cloudService.uploadAndSaveMedia(vaccine, true);
+                String cdnUrl = cloudService.getMediaUrl(media.getMediaId());
+                urls.add(cdnUrl);
+            }
+            updatePetDTO.setMyVaccinesURLs(urls);
+        }
+
+        Pet updatedPet = petService.partialUpdatePet(petId,updatePetDTO);
 
         return new ResponseEntity<>(
                 dtoConversionService.mapToPetDto(updatedPet),

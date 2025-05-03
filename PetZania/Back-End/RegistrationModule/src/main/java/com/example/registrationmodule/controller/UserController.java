@@ -74,20 +74,27 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SignUpResponseDTO("User registered successfully", userProfileDTO));
     }
 
-    @PatchMapping("/{id}/profile-picture")
-    public ResponseEntity<UserProfileDTO> updateProfilePicture(@PathVariable UUID userId,
-                                                               @RequestParam("file") MultipartFile file) throws IOException {
+    @PatchMapping("/{id}/files")
+    public ResponseEntity<UserProfileDTO> updateUserFiles(@PathVariable(name = "id") UUID userId,
+                                                               @RequestPart(value = "profile picture", required = false) MultipartFile profilePicture) throws IOException {
         if (!userService.userExistsById(userId)) {
             throw new UserNotFound("User not found with ID: " + userId);
         }
 
-        Media media = cloudService.uploadAndSaveMedia(file, true);
-        String cdnUrl = cloudService.getMediaUrl(media.getMediaId());
+        UpdateUserProfileDto updateUserProfileDto = new UpdateUserProfileDto();
 
-        UpdateUserProfileDto dto = new UpdateUserProfileDto();
-        dto.setProfilePictureURL(cdnUrl);
+        if(profilePicture != null) {
+            if(!profilePicture.isEmpty()) {
+                Media media = cloudService.uploadAndSaveMedia(profilePicture, true);
+                String cdnUrl = cloudService.getMediaUrl(media.getMediaId());
+                updateUserProfileDto.setProfilePictureURL(cdnUrl);
+            }
+            else {
+                updateUserProfileDto.setProfilePictureURL("");
+            }
+        }
 
-        UserProfileDTO userProfileDto = userService.updateUserById(userId, dto);
+        UserProfileDTO userProfileDto = userService.updateUserById(userId, updateUserProfileDto);
         return ResponseEntity.ok(userProfileDto);
     }
 

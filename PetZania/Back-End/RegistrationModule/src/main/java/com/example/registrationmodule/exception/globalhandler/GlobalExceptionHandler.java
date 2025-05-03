@@ -135,10 +135,6 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex, HttpStatus.UNAUTHORIZED);
     }
 
-    @ExceptionHandler(InvalidMediaFile.class)
-    public ResponseEntity<String> handleInvalidMediaFile(InvalidMediaFile ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-    }
     @ExceptionHandler(UserIdNull.class)
     public ResponseEntity<Map<String, Object>> handleUserIdNull(UserIdNull ex) {
         return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
@@ -205,27 +201,37 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(TooManyLoginRequests.class)
-    public ResponseEntity<Map<String, Object>> TooManyLoginRequests(TooManyLoginRequests ex) {
+    public ResponseEntity<Map<String, Object>> handleTooManyLoginRequests(TooManyLoginRequests ex) {
         return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
     }
 
     @ExceptionHandler(TooManyLogoutRequests.class)
-    public ResponseEntity<Map<String, Object>> TooManyLogoutRequests(TooManyLogoutRequests ex) {
+    public ResponseEntity<Map<String, Object>> handleTooManyLogoutRequests(TooManyLogoutRequests ex) {
         return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
     }
 
     @ExceptionHandler(TooManyOtpRequests.class)
-    public ResponseEntity<Map<String, Object>> TooManyOtpRequests(TooManyOtpRequests ex) {
+    public ResponseEntity<Map<String, Object>> handleTooManyOtpRequests(TooManyOtpRequests ex) {
         return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
     }
 
     @ExceptionHandler(TooManyRefreshRequests.class)
-    public ResponseEntity<Map<String, Object>> TooManyRefreshRequests(TooManyRefreshRequests ex) {
+    public ResponseEntity<Map<String, Object>> handleTooManyRefreshRequests(TooManyRefreshRequests ex) {
         return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
     }
 
+    @ExceptionHandler(TooManyCloudRequests.class)
+    public ResponseEntity<Map<String, Object>> handleTooManyCloudRequests(TooManyCloudRequests ex) {
+        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    @ExceptionHandler(InvalidMediaFile.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidMediaFile(InvalidMediaFile ex) {
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(MediaNotFound.class)
-    public ResponseEntity<Map<String, Object>> TooManyRefreshRequests(MediaNotFound ex) {
+    public ResponseEntity<Map<String, Object>> handleMediaNotFound(MediaNotFound ex) {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
     }
 }
