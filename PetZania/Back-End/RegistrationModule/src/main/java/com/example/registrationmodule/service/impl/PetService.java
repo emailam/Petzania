@@ -46,27 +46,20 @@ public class PetService implements IPetService {
 
     @Override
     @RateLimiter(name = "updatePetRateLimiter", fallbackMethod = "updatePetFallback")
-    public Pet partialUpdatePet(UUID petId, UpdatePetDTO petDto, boolean areFiles) {
-        if(!areFiles) {
-            return petRepository.findById(petId).map(existingPet -> {
-                Optional.ofNullable(petDto.getName()).ifPresent(existingPet::setName);
-                Optional.ofNullable(petDto.getDescription()).ifPresent(existingPet::setDescription);
-                Optional.ofNullable(petDto.getGender()).ifPresent(existingPet::setGender);
-                Optional.ofNullable(petDto.getDateOfBirth()).ifPresent(existingPet::setDateOfBirth);
-                Optional.ofNullable(petDto.getBreed()).ifPresent(existingPet::setBreed);
-                Optional.ofNullable(petDto.getSpecies()).ifPresent(existingPet::setSpecies);
+    public Pet partialUpdatePet(UUID petId, UpdatePetDTO petDto) {
 
-                return petRepository.save(existingPet);
-            }).orElseThrow(() -> new PetNotFound("Pet does not exist"));
-        }
-        else {
-            return petRepository.findById(petId).map(existingPet -> {
-                Optional.ofNullable(petDto.getMyVaccinesURLs()).ifPresent(existingPet::setMyVaccinesURLs);
-                Optional.ofNullable(petDto.getMyPicturesURLs()).ifPresent(existingPet::setMyPicturesURLs);
+        return petRepository.findById(petId).map(existingPet -> {
+            Optional.ofNullable(petDto.getName()).ifPresent(existingPet::setName);
+            Optional.ofNullable(petDto.getDescription()).ifPresent(existingPet::setDescription);
+            Optional.ofNullable(petDto.getGender()).ifPresent(existingPet::setGender);
+            Optional.ofNullable(petDto.getDateOfBirth()).ifPresent(existingPet::setDateOfBirth);
+            Optional.ofNullable(petDto.getBreed()).ifPresent(existingPet::setBreed);
+            Optional.ofNullable(petDto.getSpecies()).ifPresent(existingPet::setSpecies);
+            Optional.ofNullable(petDto.getMyVaccinesURLs()).ifPresent(existingPet::setMyVaccinesURLs);
+            Optional.ofNullable(petDto.getMyPicturesURLs()).ifPresent(existingPet::setMyPicturesURLs);
 
-                return petRepository.save(existingPet);
-            }).orElseThrow(() -> new PetNotFound("Pet does not exist"));
-        }
+            return petRepository.save(existingPet);
+        }).orElseThrow(() -> new PetNotFound("Pet does not exist"));
     }
 
 
@@ -80,7 +73,7 @@ public class PetService implements IPetService {
         throw new TooManyPetRequests("Rate limit exceeded for saving pets. Please try again later.");
     }
 
-    public Pet updatePetFallback(UUID petId, UpdatePetDTO petDto, boolean areFiles, RequestNotPermitted t) {
+    public Pet updatePetFallback(UUID petId, UpdatePetDTO petDto, RequestNotPermitted t) {
         throw new TooManyPetRequests("Rate limit exceeded for updating pets. Please try again later.");
     }
 
