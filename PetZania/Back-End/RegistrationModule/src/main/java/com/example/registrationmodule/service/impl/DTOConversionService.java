@@ -2,10 +2,11 @@ package com.example.registrationmodule.service.impl;
 
 import com.example.registrationmodule.exception.user.UserNotFound;
 import com.example.registrationmodule.model.dto.*;
-import com.example.registrationmodule.model.entity.Admin;
+import com.example.registrationmodule.model.entity.*;
 import com.example.registrationmodule.model.dto.PetDTO;
 import com.example.registrationmodule.model.dto.RegisterUserDTO;
 import com.example.registrationmodule.model.dto.UpdateUserProfileDto;
+import com.example.registrationmodule.model.dto.UserProfileDTO;
 import com.example.registrationmodule.model.dto.UserProfileDTO;
 import com.example.registrationmodule.model.entity.Pet;
 import com.example.registrationmodule.model.entity.User;
@@ -140,6 +141,26 @@ public class DTOConversionService implements IDTOConversionService {
     }
 
     @Override
+    public Media convertToMedia(MediaDTO mediaDTO) {
+        Media media = new Media();
+        media.setKey(mediaDTO.getKey());
+        media.setFormat(mediaDTO.getFormat());
+        media.setType(mediaDTO.getType());
+        media.setUploadedAt(mediaDTO.getUploadedAt());
+        return media;
+    }
+
+    @Override
+    public MediaResponseDTO mediaToDto(Media media) {
+        return MediaResponseDTO.builder()
+                .mediaId(media.getMediaId())
+                .key(media.getKey())
+                .type(media.getType())
+                .format(media.getFormat())
+                .uploadedAt(media.getUploadedAt())
+                .build();
+    }
+
     public String getPetAge(LocalDate dateOfBirth) {
         Period period = Period.between(dateOfBirth, LocalDate.now());
         int years = period.getYears();

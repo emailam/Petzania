@@ -26,7 +26,7 @@ public class DummyDataConfig {
                     .password(passwordEncoder.encode("superadmin"))
                     .role(AdminRole.SUPER_ADMIN)
                     .build();
-            if (adminRepository.findByUsername(superAdmin.getUsername()).isEmpty()) {
+            if (adminRepository.findByUsernameIgnoreCase(superAdmin.getUsername()).isEmpty()) {
                 adminRepository.save(superAdmin);
             }
 
@@ -98,7 +98,7 @@ public class DummyDataConfig {
 
             List<User> users = new ArrayList<>(List.of(user1, user2, user3, user4, user5));
             for (User user : users) {
-                if (userRepository.findByUsername(user.getUsername()).isEmpty()) {
+                if (userRepository.findByUsernameIgnoreCase(user.getUsername()).isEmpty()) {
                     userRepository.save(user);
                 }
             }

@@ -97,12 +97,6 @@ public class TestDataUtil {
                 .dateOfBirth(LocalDate.now().minusYears(2))
                 .breed("Golden Retriever")
                 .species(PetSpecies.DOG)
-                .myVaccinesURLs(List.of(
-                        "https://example.org/vaccines/rabies.jpg",
-                        "https://example.org/vaccines/distemper.jpg"))
-                .myPicturesURLs(List.of(
-                        "https://example.org/pics/fluffy1.jpg",
-                        "https://example.org/pics/fluffy2.jpg"))
                 .user(owner)
                 .build();
     }

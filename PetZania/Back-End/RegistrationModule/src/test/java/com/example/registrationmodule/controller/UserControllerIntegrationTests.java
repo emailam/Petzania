@@ -54,6 +54,39 @@ public class UserControllerIntegrationTests {
     }
 
     @Test
+    public void testGetUsersByPrefixUsername_WithMatchingPrefix_ShouldReturnUsers() throws Exception {
+        // Arrange
+        User user1 = userService.saveUser(TestDataUtil.createTestUserA());
+        User user2 = userService.saveUser(TestDataUtil.createTestUserB());
+
+        // Act & Assert
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/users/test")
+                        .header("Authorization", adminToken)
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sortBy", "username")
+                        .param("direction", "asc"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(2))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].username").value("testUser"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[1].username").value("testUserB"));
+    }
+
+    @Test
+    public void testGetUsersByPrefixUsername_WithNoMatches_ShouldReturnNoContent() throws Exception {
+        // Arrange
+        userService.saveUser(TestDataUtil.createTestUserA());
+        userService.saveUser(TestDataUtil.createTestUserB());
+
+        // Act & Assert
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/users/xyz")
+                        .header("Authorization", adminToken)
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
+    }
+
+    @Test
     public void testUserChangesOwnPassword_ShouldReturnSuccess() throws Exception {
         User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
         String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);

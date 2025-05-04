@@ -17,7 +17,9 @@ public interface IPetService {
 
     boolean existsById(UUID petId);
 
-    Pet partialUpdatePet(UUID petId, UpdatePetDTO petDto);
+    Pet partialUpdatePet(UUID petId, UpdatePetDTO petDto, boolean areFiles);
 
     void deleteById(UUID petId);
+//
+//    Pet addPetPicture(UUID petId, String picUrl);
 }

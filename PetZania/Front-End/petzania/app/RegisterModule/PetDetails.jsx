@@ -9,14 +9,42 @@ import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 
 import { PetContext } from '@/context/PetContext';
+
+import Button from '@/components/Button';
+
 import DateOfBirthInput from '@/components/DateOfBirthInput';
 import { PETS } from '@/constants/PETS';
 import { PET_BREEDS } from '@/constants/PETBREEDS';
-import { updatePet, deletePet } from '@/services/petService';
+import { updatePet, deletePet, getAllPetsByUserId } from '@/services/petService';
+import Toast from 'react-native-toast-message';
 
 const PetDetails = () => {
     const { petId } = useLocalSearchParams();
     const { pets, setPets } = useContext(PetContext);
+
+    const showSuccessMessage = (message) => {
+        Toast.show({
+            type: 'success',
+            text1: message,
+            position: 'top',
+            visibilityTime: 3000,
+            swipeable: true,
+        });
+    }
+
+    const showErrorMessage = (message, description = '') => {
+        Toast.show({
+            type: 'error',
+            text1: message,
+            text2: description,
+            position: 'top',
+            visibilityTime: 3000,
+            swipeable: true,
+        });
+    }
+
+
+
     const router = useRouter();
 
     const petIndex = pets.findIndex((pet) => pet.petId === petId);
@@ -45,7 +73,7 @@ const PetDetails = () => {
         { label: 'Female', value: 'FEMALE' },
     ];
 
-    const speciesOptions = PETS.map(p => ({ label: p.name, value: p.name }));
+    const speciesOptions = PETS.map(p => ({ label: p.name, value: p.value }));
     const breedOptions = species
         ? (PET_BREEDS[species]?.map(b => ({ label: b.name, value: b.name })) || [])
         : [];
@@ -107,9 +135,9 @@ const PetDetails = () => {
         }
     };
 
-    const handleSaveChanges = () => {
+    const handleSaveChanges = async () => {  // <-- make it async
         if (!pet) return;
-
+    
         const newErrors = {
             name: !pet.name?.trim() ? 'Name is required' : '',
             species: !species?.trim() ? 'Type is required' : '',
@@ -122,34 +150,45 @@ const PetDetails = () => {
 
         if (Object.values(newErrors).some(error => error)) return;
 
-        const updatedPet = {
-            ...pet,
-            gender,
-            species,
-            breed,
-            dateOfBirth,
-            myVaccinesURLs: vaccineFiles,
+        const petData = {
+            name: pet.name || undefined,
+            description: pet.description || undefined,
+            gender: gender || undefined,
+            dateOfBirth: dateOfBirth || undefined,
+            breed: breed || undefined,
+            species: species ? species.toUpperCase() : undefined,
+            myVaccinesURLs: vaccineFiles.map(file => file.uri || file),
+            myPicturesURLs: Array.isArray(pet.myPicturesURLs) ? pet.myPicturesURLs : [],
         };
-
-        updatePet(updatedPet);
-
-        Alert.alert('Success', 'Pet details updated successfully!');
-        setTimeout(() => router.back(), 1000);
+    
+        try {
+            setIsLoading(true);
+            await updatePet(petId, petData);  // <-- await here!
+    
+            setPets(prevPets => prevPets.map(p =>
+                p.petId === petId ? { ...p, ...petData } : p
+            ));
+            showSuccessMessage('Pet updated successfully!');
+            router.back();
+        } catch (error) {
+            showErrorMessage('Failed to update pet', error);
+            console.error('Error updating pet:', error);
+        } finally {
+            setIsLoading(false);
+        }
     };
+    
 
     const deletePetByPetId = () => {
         setIsLoading(true);
         deletePet(petId)
             .then(() => {
                 setPets(prevPets => prevPets.filter(pet => pet.petId !== petId));
-
-                Alert.alert('Success', 'Pet deleted successfully!');
-
-                setTimeout(() => router.back(), 1000);
+                showSuccessMessage('Pet deleted successfully!');
+                router.back();
             })
             .catch((error) => {
-                console.error('Error deleting pet:', error);
-                Alert.alert('Error', 'Failed to delete pet. Please try again later.');
+                showErrorMessage('Failed to delete pet.', 'Please try again later.');
             })
             .finally(() => setIsLoading(false));
     };
@@ -222,24 +261,22 @@ const PetDetails = () => {
                     </View>
 
                     {/* Breed */}
-                    {species && (
-                        <View style={styles.inputContainer}>
-                            <Text style={styles.label}>Breed <Text style={{ color: 'red' }}>*</Text></Text>
-                            <Dropdown
-                                style={[styles.input, errors.breed && styles.inputError]}
-                                placeholder="Select Breed"
-                                data={breedOptions}
-                                labelField="label"
-                                valueField="value"
-                                value={breed}
-                                onChange={(item) => {
-                                    setBreed(item.value);
-                                    handleInputChange('breed', item.value);
-                                }}
-                            />
-                            {errors.breed && <Text style={styles.errorText}>{errors.breed}</Text>}
-                        </View>
-                    )}
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.label}>
+                            Breed <Text style={{ color: 'red' }}>*</Text>
+                        </Text>
+                        <TextInput
+                            style={[styles.input, errors.breed && styles.inputError]}
+                            placeholder="Enter breed"
+                            value={breed}
+                            onChangeText={(text) => {
+                                setBreed(text);
+                                handleInputChange('breed', text);
+                            }}
+                        />
+                        {errors.breed && <Text style={styles.errorText}>{errors.breed}</Text>}
+                    </View>
+
 
                     <View style={styles.inputContainer}>
                         <Text style={styles.label}>Gender <Text style={{ color: 'red' }}>*</Text></Text>
@@ -259,6 +296,18 @@ const PetDetails = () => {
                     </View>
 
                     <View style={styles.inputContainer}>
+                        <Text style={styles.label}>Description</Text>
+                        <TextInput
+                            style={[styles.input, { height: 100, textAlignVertical: 'top' }]} // taller input
+                            placeholder="Pet's description"
+                            value={pet.description || ''}
+                            onChangeText={(text) => handleInputChange('description', text)}
+                            multiline
+                            numberOfLines={4}
+                        />
+                    </View>
+
+                    <View style={styles.inputContainer}>
                         <DateOfBirthInput
                             value={dateOfBirth}
                             onChange={(date) => {
@@ -271,10 +320,10 @@ const PetDetails = () => {
                 </View>
             </View>
             <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
+                <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges} disabled={isLoading}>
                     <Text style={styles.buttonText}>Save changes</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.deleteButton} onPress={handleDeletePet}>
+                <TouchableOpacity style={styles.deleteButton} onPress={handleDeletePet} disabled={isLoading}>
                     <Text style={styles.buttonText}>Delete</Text>
                 </TouchableOpacity>
             </View>
