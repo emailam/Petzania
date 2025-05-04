@@ -1,11 +1,9 @@
 package com.example.registrationmodule.service;
 
 import com.example.registrationmodule.model.entity.Media;
-import com.example.registrationmodule.model.entity.Post;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 

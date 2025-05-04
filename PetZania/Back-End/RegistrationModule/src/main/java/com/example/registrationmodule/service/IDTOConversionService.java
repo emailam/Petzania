@@ -3,8 +3,6 @@ package com.example.registrationmodule.service;
 import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.entity.*;
 
-import java.util.List;
-
 import java.time.LocalDate;
 
 public interface IDTOConversionService {
@@ -19,7 +17,7 @@ public interface IDTOConversionService {
 
     Pet mapToPet(PetDTO petDto);
     MediaResponseDTO mediaToDto(Media media);
-    Media convertToMedia(MediaDTO mediaDTO);
+    Media mapToMedia(MediaDTO mediaDTO);
     User mapToUser(RegisterUserDTO registerUserDTO);
 
     String getPetAge(LocalDate dateOfBirth);

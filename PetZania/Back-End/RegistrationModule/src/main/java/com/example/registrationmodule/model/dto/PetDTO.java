@@ -45,10 +45,7 @@ public class PetDTO {
     @ValidEnum(enumClass = PetSpecies.class, message = "Invalid species value.")
     private PetSpecies species;
 
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private List<String> myVaccinesURLs;
-
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private List<String> myPicturesURLs;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
