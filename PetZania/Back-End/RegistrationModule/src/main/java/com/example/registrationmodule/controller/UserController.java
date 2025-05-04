@@ -77,8 +77,16 @@ public class UserController {
     @PatchMapping("/{id}/files")
     public ResponseEntity<UserProfileDTO> updateUserFiles(@PathVariable(name = "id") UUID userId,
                                                                @RequestPart(value = "profile picture", required = false) MultipartFile profilePicture) throws IOException {
-        if (!userService.userExistsById(userId)) {
-            throw new UserNotFound("User not found with ID: " + userId);
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof UserPrincipal userPrincipal) {
+            System.out.println(((UserPrincipal) principal).getUserId());
+            System.out.println(userId);
+            if (!userPrincipal.getUserId().equals(userId)) {
+                throw new AccessDeniedException("You can only update your own profile");
+            }
         }
 
         UpdateUserProfileDto updateUserProfileDto = new UpdateUserProfileDto();

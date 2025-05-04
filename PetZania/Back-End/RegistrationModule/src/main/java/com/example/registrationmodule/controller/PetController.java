@@ -90,7 +90,7 @@ public class PetController {
             throw new UserAccessDenied("You can only update your pets");
         }
 
-        Pet updatedPet = petService.partialUpdatePet(petId, updatePetDto);
+        Pet updatedPet = petService.partialUpdatePet(petId, updatePetDto, false);
 
         return new ResponseEntity<>(
                 dtoConversionService.mapToPetDto(updatedPet),
@@ -152,7 +152,7 @@ public class PetController {
             updatePetDTO.setMyVaccinesURLs(urls);
         }
 
-        Pet updatedPet = petService.partialUpdatePet(petId,updatePetDTO);
+        Pet updatedPet = petService.partialUpdatePet(petId,updatePetDTO, true);
 
         return new ResponseEntity<>(
                 dtoConversionService.mapToPetDto(updatedPet),
