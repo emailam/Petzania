@@ -48,7 +48,7 @@ public class AdminService implements IAdminService {
     @Override
     @RateLimiter(name = "loginRateLimiter", fallbackMethod = "loginFallback")
     public ResponseLoginDTO login(LoginAdminDTO loginAdminDTO) {
-        Admin admin = adminRepository.findByUsername(loginAdminDTO.getUsername()).orElseThrow(() -> new AdminNotFound("Username or password is incorrect"));
+        Admin admin = adminRepository.findByUsernameIgnoreCase(loginAdminDTO.getUsername()).orElseThrow(() -> new AdminNotFound("Username or password is incorrect"));
 
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginAdminDTO.getUsername(), loginAdminDTO.getPassword()));
         if (authentication.isAuthenticated()) {
@@ -88,7 +88,7 @@ public class AdminService implements IAdminService {
             throw new RefreshTokenNotValid("Invalid or expired refresh token");
         }
 
-        if (adminRepository.findByUsername(username).isEmpty()) {
+        if (adminRepository.findByUsernameIgnoreCase(username).isEmpty()) {
             throw new AdminNotFound("Admin does not exist");
         }
 
@@ -111,7 +111,7 @@ public class AdminService implements IAdminService {
 
     @Override
     public void logout(AdminLogoutDTO adminLogoutDTO) {
-        Admin admin = adminRepository.findByUsername(adminLogoutDTO.getUsername()).orElseThrow(() -> new AdminNotFound("Admin does not exist"));
+        Admin admin = adminRepository.findByUsernameIgnoreCase(adminLogoutDTO.getUsername()).orElseThrow(() -> new AdminNotFound("Admin does not exist"));
 
         if (refreshTokenService.isTokenRevoked(adminLogoutDTO.getRefreshToken())) {
             throw new UserAlreadyLoggedOut("Admin already logged out");
@@ -129,7 +129,7 @@ public class AdminService implements IAdminService {
     @Override
     @RateLimiter(name = "saveAdminRateLimiter", fallbackMethod = "saveAdminFallback")
     public Admin saveAdmin(Admin admin) {
-        if (adminRepository.findByUsername(admin.getUsername()).isPresent()) {
+        if (adminRepository.findByUsernameIgnoreCase(admin.getUsername()).isPresent()) {
             throw new UsernameAlreadyExists("Username already exists");
         }
         admin.setPassword(passwordEncoder.encode(admin.getPassword()));
