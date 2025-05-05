@@ -15,7 +15,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -34,14 +33,6 @@ public class PetController {
 
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();
-
-//        if (userId == null) {
-//            throw new UserIdNull("User ID must not be null");
-//        }
-//
-//        if (!userService.userExistsById(userId)) {
-//            throw new UserNotFound("User not found with ID: " + userId);
-//        }
 
         // Ensure the client cannot manually set petId
         petDto.setPetId(null);
@@ -100,8 +91,8 @@ public class PetController {
         );
     }
 
-    @DeleteMapping("/pet/{id}")
-    public ResponseEntity<Void> deletePetById(@PathVariable(name = "id") UUID petId) {
+    @DeleteMapping("/pet/{petId}")
+    public ResponseEntity<Void> deletePetById(@PathVariable(name = "petId") UUID petId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();
 

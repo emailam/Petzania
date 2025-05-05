@@ -9,9 +9,15 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
-    Optional<User> findByUsername(String username);
-    Optional<User> findByEmail(String email);
+    Optional<User> findByUsernameIgnoreCase(String username);
+
+    Optional<User> findByEmailIgnoreCase(String email);
+
     void deleteUserByEmail(String email);
+
     Page<User> findAll(Pageable pageable);
+
+    Page<User> findByUsernameStartingWithIgnoreCase(String prefix, Pageable pageable);
+
     void deleteByEmail(String email);
 }

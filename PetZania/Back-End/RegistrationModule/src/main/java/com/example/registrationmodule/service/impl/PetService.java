@@ -47,6 +47,7 @@ public class PetService implements IPetService {
     @Override
     @RateLimiter(name = "updatePetRateLimiter", fallbackMethod = "updatePetFallback")
     public Pet partialUpdatePet(UUID petId, UpdatePetDTO petDto) {
+
         return petRepository.findById(petId).map(existingPet -> {
             Optional.ofNullable(petDto.getName()).ifPresent(existingPet::setName);
             Optional.ofNullable(petDto.getDescription()).ifPresent(existingPet::setDescription);
@@ -61,13 +62,13 @@ public class PetService implements IPetService {
         }).orElseThrow(() -> new PetNotFound("Pet does not exist"));
     }
 
+
     @Override
     @RateLimiter(name = "deletePetRateLimiter", fallbackMethod = "deletePetFallback")
     public void deleteById(UUID petId) {
         petRepository.deleteById(petId);
     }
 
-    // Fallback methods
     public Pet savePetFallback(Pet pet, RequestNotPermitted t) {
         throw new TooManyPetRequests("Rate limit exceeded for saving pets. Please try again later.");
     }
@@ -79,4 +80,5 @@ public class PetService implements IPetService {
     public void deletePetFallback(UUID petId, RequestNotPermitted t) {
         throw new TooManyPetRequests("Rate limit exceeded for deleting pets. Please try again later.");
     }
+
 }

@@ -22,6 +22,8 @@ public interface IUserService {
 
     Page<UserProfileDTO> getUsers(int page, int size, String sortBy, String direction);
 
+    Page<UserProfileDTO> getUsersByPrefixUsername(int page, int size, String sortBy, String direction, String prefix);
+
     public void sendResetPasswordOTP(EmailDTO emailDTO);
 
     public void verifyResetOTP(String email, String otp);
@@ -56,4 +58,6 @@ public interface IUserService {
 //    boolean isUserCredentialsValid(String email, String password);
 
     UserProfileDTO updateUserById(UUID userId, UpdateUserProfileDto updateUserProfileDto);
+
+    UserProfileDTO getUserByUsername(String username);
 }

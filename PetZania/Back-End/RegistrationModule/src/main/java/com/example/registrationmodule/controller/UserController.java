@@ -1,12 +1,9 @@
 package com.example.registrationmodule.controller;
 
 import com.example.registrationmodule.model.dto.*;
-import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.model.entity.UserPrincipal;
 import com.example.registrationmodule.service.IUserService;
-import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,10 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
-
 import java.nio.file.AccessDeniedException;
-import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 @RestController
@@ -25,7 +19,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserController {
     private final IUserService userService;
-
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout(@RequestBody @Valid LogoutDTO logoutDTO) {
@@ -157,9 +150,27 @@ public class UserController {
         return users.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(users);
     }
 
+    @GetMapping("/users/{prefix}")
+    public ResponseEntity<Page<UserProfileDTO>> getUsersByPrefixUsername(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "username") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction,
+            @PathVariable("prefix") String prefix
+    ) {
+        Page<UserProfileDTO> users = userService.getUsersByPrefixUsername(page, size, sortBy, direction, prefix);
+        return users.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(users);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<UserProfileDTO> getUserById(@PathVariable("id") UUID userId) {
         UserProfileDTO user = userService.getUserById(userId);
         return ResponseEntity.ok(user);
     }
+
+//    @GetMapping("/{username}")
+//    public ResponseEntity<UserProfileDTO> getUserByUsername(@PathVariable("username") String username) {
+//        UserProfileDTO user = userService.getUserByUsername(username);
+//        return ResponseEntity.ok(user);
+//    }
 }

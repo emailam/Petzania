@@ -1,8 +1,10 @@
 package com.example.registrationmodule.exception.globalhandler;
 
+
 import com.example.registrationmodule.exception.admin.AdminNotFound;
 import com.example.registrationmodule.exception.authenticationAndVerificattion.*;
-import com.example.registrationmodule.exception.payPal.*;
+import com.example.registrationmodule.exception.media.InvalidMediaFile;
+import com.example.registrationmodule.exception.media.MediaNotFound;
 import com.example.registrationmodule.exception.pet.PetNotFound;
 import com.example.registrationmodule.exception.rateLimiting.*;
 import com.example.registrationmodule.exception.user.*;
@@ -157,31 +159,6 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
     }
 
-    @ExceptionHandler(PayPalOrderCreation.class)
-    public ResponseEntity<Map<String, Object>> handlePayPalOrderCreationException(PayPalOrderCreation ex) {
-        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler(PayPalPaymentCapture.class)
-    public ResponseEntity<Map<String, Object>> handlePayPalPaymentCaptureException(PayPalPaymentCapture ex) {
-        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler(PayPalRefund.class)
-    public ResponseEntity<Map<String, Object>> handlePayPalRefundException(PayPalRefund ex) {
-        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler(PayPalOrderNotFound.class)
-    public ResponseEntity<Map<String, Object>> handlePayPalOrderNotFoundException(PayPalOrderNotFound ex) {
-        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(PayPalApprovalUrlNotFound.class)
-    public ResponseEntity<Map<String, Object>> handlePayPalApprovalUrlNotFound(PayPalApprovalUrlNotFound ex) {
-        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
-    }
-
     @ExceptionHandler(PetNotFound.class)
     public ResponseEntity<Map<String, Object>> handlePetNotFound(PetNotFound ex) {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
@@ -198,22 +175,37 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(TooManyLoginRequests.class)
-    public ResponseEntity<Map<String, Object>> TooManyLoginRequests(TooManyLoginRequests ex) {
+    public ResponseEntity<Map<String, Object>> handleTooManyLoginRequests(TooManyLoginRequests ex) {
         return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
     }
 
     @ExceptionHandler(TooManyLogoutRequests.class)
-    public ResponseEntity<Map<String, Object>> TooManyLogoutRequests(TooManyLogoutRequests ex) {
+    public ResponseEntity<Map<String, Object>> handleTooManyLogoutRequests(TooManyLogoutRequests ex) {
         return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
     }
 
     @ExceptionHandler(TooManyOtpRequests.class)
-    public ResponseEntity<Map<String, Object>> TooManyOtpRequests(TooManyOtpRequests ex) {
+    public ResponseEntity<Map<String, Object>> handleTooManyOtpRequests(TooManyOtpRequests ex) {
         return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
     }
 
     @ExceptionHandler(TooManyRefreshRequests.class)
-    public ResponseEntity<Map<String, Object>> TooManyRefreshRequests(TooManyRefreshRequests ex) {
+    public ResponseEntity<Map<String, Object>> handleTooManyRefreshRequests(TooManyRefreshRequests ex) {
         return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    @ExceptionHandler(TooManyCloudRequests.class)
+    public ResponseEntity<Map<String, Object>> handleTooManyCloudRequests(TooManyCloudRequests ex) {
+        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    @ExceptionHandler(InvalidMediaFile.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidMediaFile(InvalidMediaFile ex) {
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MediaNotFound.class)
+    public ResponseEntity<Map<String, Object>> handleMediaNotFound(MediaNotFound ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
     }
 }

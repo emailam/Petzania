@@ -4,11 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PaymentRequestDTO {
-    private String amount;
-    private String currency;
-    private String description;
+public class MediaDTO {
+    private String key;
+    private String type;
+    private String format;
+    private LocalDateTime uploadedAt;
 }

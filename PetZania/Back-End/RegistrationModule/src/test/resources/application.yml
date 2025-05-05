@@ -55,6 +55,27 @@ spring:
   email:
     sender:
       petzaniasystem@gmail.com
+
+  aws:
+    access-key:
+      AKIA4LWSL3LGHUPC3QWG
+    secret-access-key:
+      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
+    region: eu-north-1
+    bucket-name: petzania-media
+    cdn-url: "https://d1xkc8gz1va7ak.cloudfront.net"
+    max-size:
+      image: 10485760
+      video: 52428800
+      text: 5242880
+      application/pdf: 10485760
+    allowed-types:
+      - image/jpeg
+      - image/png
+      - video/mp4
+      - text/plain
+      - application/pdf
+
 paypal:
   client-id: AcWmUFleXWmsAqACRIjcrfCwEwSfrBy7v3kYe5ejrwqxceOsh8kwdmzm0fkLeRgWe6Md5h1Nfv36_YGU
   client-secret: ENw9DhaESNiPv6XmjDjtEPTw2_6Y5KxPOkOiSPI64sY8vZsKaI1lVJGNpePSg6YBB4d6-d9Wu8yrbdge
@@ -112,6 +133,10 @@ resilience4j.ratelimiter:
       limitForPeriod: 10
       limitRefreshPeriod: 3m
 
+    addPetPictureRateLimiter:
+      limitForPeriod: 10
+      limitRefreshPeriod: 2m
+
     ### Admin Service Limiters
     updateAdminRateLimiter:
       limitForPeriod: 5
@@ -127,6 +152,70 @@ resilience4j.ratelimiter:
       limitForPeriod: 3
       limitRefreshPeriod: 2m
       timeoutDuration: 0
+
+    ### Cloud Service Limiters
+    mediaUploadLimiter:
+      limit-for-period: 5
+      limit-refresh-period: 10s
+      timeout-duration: 0
+
+    mediaUrlLimiter:
+      limit-for-period: 10
+      limit-refresh-period: 10s
+      timeout-duration: 0
+
+    ### Post Service Limiters
+    createPostLimiter:
+      limit-for-period: 3
+      limit-refresh-period: 10s
+      timeout-duration: 0
+
+    getAllPostsLimiter:
+      limit-for-period: 5
+      limit-refresh-period: 5s
+      timeout-duration: 0
+
+    getPostByIdLimiter:
+      limit-for-period: 5
+      limit-refresh-period: 5s
+      timeout-duration: 0
+
+    findPostsByUserLimiter:
+      limit-for-period: 5
+      limit-refresh-period: 5s
+      timeout-duration: 0
+
+    ### PayPal Service Limiters
+    paypalCreateOrderLimiter:
+      limit-for-period: 3
+      limit-refresh-period: 10s
+      timeout-duration: 0
+
+    paypalCaptureOrderLimiter:
+      limit-for-period: 5
+      limit-refresh-period: 10s
+      timeout-duration: 0
+
+    paypalApprovalUrlLimiter:
+      limit-for-period: 5
+      limit-refresh-period: 10s
+      timeout-duration: 0
+
+    paypalGetOrderDetailsLimiter:
+      limit-for-period: 5
+      limit-refresh-period: 10s
+      timeout-duration: 0
+
+    paypalRefundLimiter:
+      limit-for-period: 2
+      limit-refresh-period: 20s
+      timeout-duration: 0
+
+    paypalProcessCaptureLimiter:
+      limit-for-period: 3
+      limit-refresh-period: 10s
+      timeout-duration: 0
+
 logging:
   level:
     org.springframework.cache: DEBUG

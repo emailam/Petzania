@@ -38,12 +38,12 @@ public class MyUserDetailsService implements UserDetailsService {
     }
 
     public UserDetails loadAdminByUsername(String username) throws AdminNotFound {
-        Admin admin = adminRepository.findByUsername(username).orElseThrow(() -> new AdminNotFound("Admin does not exist"));
+        Admin admin = adminRepository.findByUsernameIgnoreCase(username).orElseThrow(() -> new AdminNotFound("Admin does not exist"));
         return new AdminPrincipal(admin);
     }
 
     public UserDetails loadUserByEmail(String email) throws UserNotFound {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFound("Email does not exist"));
+        User user = userRepository.findByEmailIgnoreCase(email).orElseThrow(() -> new UserNotFound("Email does not exist"));
         return new UserPrincipal(user);
     }
 }
