@@ -1,6 +1,9 @@
 import { Tabs } from 'expo-router';
-import React, {useState} from 'react';
-import { Platform, View, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { DrawerActions, useNavigation } from '@react-navigation/native';
+
+
+import React, { useState, useContext } from 'react';
+import { Platform, View, TouchableOpacity, Image, StyleSheet, Text } from 'react-native';
 
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -8,24 +11,36 @@ import TabBarBackground from '@/components/ui/TabBarBackground';
 
 import { Ionicons, Feather } from '@expo/vector-icons'; // or any icon pack you prefer
 
+import { UserContext } from '@/context/UserContext';
+
 export default function TabLayout() {
 
   const defaultImage = require('@/assets/images/AddPet/Pet Default Pic.png');
   const [image, setImage] = useState(null);
 
+  const { user } = useContext(UserContext);
+
+  const navigation = useNavigation();
+
   const HeaderLeft = () => (
-    <TouchableOpacity onPress={() => { /* navigate to profile */ }} style={{ marginLeft: 16 }}>
-      <View style={styles.imageContainer}>
-        <Image source={image ? { uri: image } : defaultImage} style={styles.image} />
-      </View>
-    </TouchableOpacity>
+    <View style={styles.leftHeader}>
+      <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())} style={{ marginRight: 8 }}>
+        <Ionicons name="menu" size={26} color="#9188E5" />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => { /* navigate to profile */ }} >
+        <View style={styles.imageContainer}>
+          <Image source={image ? { uri: image } : defaultImage} style={styles.image} />
+        </View>
+      </TouchableOpacity>
+    </View>
   );
 
   const HeaderRight = () => (
-    <View style={{ flexDirection: 'row', gap: 16, marginRight: 16 }}>
+    <View style={{ flexDirection: 'row', gap: 4, marginRight: 16, alignItems: 'center' }}>
       <TouchableOpacity onPress={() => {  }}>
         <Feather name="search" size={22} color="#9188E5" />
       </TouchableOpacity>
+      <Text style={{ fontSize: 22, color: '#808B9A' }}> | </Text>
       <TouchableOpacity onPress={() => { /* handle chat */ }}>
         <Ionicons name="chatbubble-ellipses-outline" size={24} color="#9188E5" />
       </TouchableOpacity>
@@ -39,16 +54,20 @@ export default function TabLayout() {
         tabBarInactiveTintColor: '#9188E5',
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
-        tabBarLabelStyle: {
-          fontSize: 11,
-          paddingBottom: Platform.OS === 'ios' ? 12 : 7,
-        },
         tabBarItemStyle: {
           justifyContent: 'center',
           alignItems: 'center',
         },
         headerLeft: () => <HeaderLeft />,
         headerRight: () => <HeaderRight />,
+        headerTitle: () => (
+          <View style={{ marginLeft: 4 }}>
+            <Text style={{ fontSize: 14, fontWeight: '', color: '#808B9A' }}>Hello,</Text>
+            <Text style={{ fontSize: 18, fontWeight: '700', color: '#9188E5' }}>
+              {user ? user.username : 'User'}
+            </Text>
+          </View>
+        ),
       }}
     >
       <Tabs.Screen
@@ -116,5 +135,10 @@ const styles = StyleSheet.create({
     borderRadius: 23,
     borderWidth: 1,
     borderColor: '#9188E5',
+  },
+  leftHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 16,
   },
 });

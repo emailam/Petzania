@@ -16,5 +16,5 @@ export default function App() {
         );
     }
     // return <Redirect href="/RegisterModule/RegisterScreen" />;
-    return <Redirect href="(tabs)/Home" />;
+    return <Redirect href="/Home" />;
 }

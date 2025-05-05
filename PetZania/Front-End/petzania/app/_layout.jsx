@@ -14,14 +14,12 @@ import { PetProvider } from '@/context/PetContext';
 import { UserProvider } from '@/context/UserContext';
 import { AuthProvider } from '@/context/AuthContext';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
@@ -47,7 +45,7 @@ export default function RootLayout() {
               <ThemeProvider value={DefaultTheme}>
                 <Stack>
                   <Stack.Screen name="index" options={{ headerShown: false }} />
-                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
                   <Stack.Screen name="RegisterModule/Onboarding" options={{ headerShown: false }} />
                   <Stack.Screen name="RegisterModule/RegisterScreen" options={{ headerShown: false }} />
                   <Stack.Screen name="RegisterModule/OTPVerificationScreen" options={{ headerShown: false }} />

@@ -9,6 +9,8 @@ import { UserContext } from '@/context/UserContext';
 
 import { getAllPetsByUserId } from '@/services/petService';
 
+import Toast from 'react-native-toast-message';
+
 export default function ProfileSetUp3() {
     const { pets, setPets } = useContext(PetContext);
     const router = useRouter();
@@ -32,7 +34,7 @@ export default function ProfileSetUp3() {
     }, []);
 
     const goToNextStep = () => {
-        router.push('/(tabs)');
+        router.push('/Home');
     }
     return (
         <View style={styles.container}>
@@ -42,8 +44,8 @@ export default function ProfileSetUp3() {
                     style={styles.userImage}
                 />
                 <View style={styles.userInfo}>
-                    <Text style={styles.userName}>{user.name}</Text>
-                    <Text style={styles.userHandle}>@{user.username}</Text>
+                    <Text style={styles.userName}>{user ? user.name : "Name"}</Text>
+                    <Text style={styles.userHandle}>@{user ? user.username : "username"}</Text>
                 </View>
             </View>
 

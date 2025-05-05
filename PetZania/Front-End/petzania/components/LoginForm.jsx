@@ -62,15 +62,11 @@ export default function LoginForm(){
 
                 const userData = await getUserDataById(response.data.userId, accessToken);
 
-                // To Be Removed after testing
-                router.push('/RegisterModule/ProfileSetUp1');
-                return ;
-
                 if (userData?.name === null) {
                     router.push('/RegisterModule/ProfileSetUp1');
                 } else {
                     router.dismissAll();
-                    router.replace('(tabs)');
+                    router.replace('/(drawer)/(tabs)/Home');
                 }
             }
         }

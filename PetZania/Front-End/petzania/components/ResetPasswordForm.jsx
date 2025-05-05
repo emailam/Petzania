@@ -7,6 +7,8 @@ import { useAuthForm } from "@/components/useForm";
 import { responsive } from "@/utilities/responsive";
 import React from "react";
 
+import Toast from "react-native-toast-message";
+
 export default function ResetPasswordForm() {
     const { control, handleSubmit, formState: { errors, isSubmitting }, setError, getValues } = useAuthForm("resetPassword");
 
@@ -14,6 +16,28 @@ export default function ResetPasswordForm() {
     const [displayConfirmPassword, setDisplayConfirmPassword] = React.useState(false);
     const { email, otp } = useLocalSearchParams();
     const router = useRouter();
+
+    const showSuccessMessage = (message, description = '') => {
+        Toast.show({
+            type: 'success',
+            text1: message,
+            text2: description,
+            position: 'top',
+            visibilityTime: 3000,
+            swipeable: true,
+        });
+    }
+
+    const showErrorMessage = (message, description = '') => {
+        Toast.show({
+            type: 'error',
+            text1: message,
+            text2: description,
+            position: 'top',
+            visibilityTime: 3000,
+            swipeable: true,
+        });
+    }
 
     const setNewPassword = async (data) => {
         const { password, confirmPassword } = data;
@@ -33,12 +57,15 @@ export default function ResetPasswordForm() {
 
             if (response.status === 200) {
                 router.replace("/RegisterModule/LoginScreen");
+                showSuccessMessage("Password reset successfully", "You can now log in with your new password.");
             } else {
                 console.error("Unexpected response status:", response.status);
             }
         } catch (error) {
+
             const errorMsg = error.response?.data?.message || error.message;
             const field = errorMsg.toLowerCase().includes("password") ? "password" : null;
+            showErrorMessage("Error", errorMsg);
 
             if (field) {
                 setError(field, { type: "manual", message: errorMsg });
