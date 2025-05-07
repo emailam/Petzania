@@ -12,8 +12,8 @@ import org.springframework.cache.annotation.EnableCaching;
 @ConfigurationPropertiesScan
 @EnableAspectJAutoProxy
 @EnableCaching
-public class RegistrationModuleApplication {
+public class FriendsAndChatsModuleApplication {
     public static void main(String[] args) {
-        SpringApplication.run(RegistrationModuleApplication.class, args);
+        SpringApplication.run(FriendsAndChatsModuleApplication.class, args);
     }
 }
