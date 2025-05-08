@@ -1,4 +1,4 @@
-package com.example.registrationmodule;
+package com.example.friendsAndChatsModule;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

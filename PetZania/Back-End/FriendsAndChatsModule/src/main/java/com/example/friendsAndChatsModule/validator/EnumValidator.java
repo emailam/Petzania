@@ -1,4 +1,4 @@
-package com.example.registrationmodule.validator;
+package com.example.friendsAndChatsModule.validator;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
