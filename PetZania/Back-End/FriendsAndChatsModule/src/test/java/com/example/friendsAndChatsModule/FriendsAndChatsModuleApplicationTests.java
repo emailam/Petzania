@@ -1,4 +1,4 @@
-package com.example.registrationmodule;
+package com.example.friendsAndChatsModule;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

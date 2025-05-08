@@ -1,4 +1,4 @@
-package com.example.registrationmodule.exception.globalhandler;
+package com.example.friendsAndChatsModule.exception.globalhandler;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
