@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.UUID;
 
 public class UserPrincipal implements UserDetails {
 
@@ -41,5 +42,13 @@ public class UserPrincipal implements UserDetails {
 
     public String getEmail() {
         return user.getEmail();
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public UUID getUserId() {
+        return user.getUserId();
     }
 }

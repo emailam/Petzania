@@ -1,6 +1,7 @@
 package com.example.friends.and.chats.module.exception.globalhandler;
 
 import com.example.friends.and.chats.module.exception.admin.AdminNotFound;
+import com.example.friends.and.chats.module.exception.user.AuthenticatedUserNotFound;
 import com.example.friends.and.chats.module.exception.user.UserNotFound;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -60,6 +61,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AdminNotFound.class)
     public ResponseEntity<Map<String, Object>> handleAdminNotFoundException(AdminNotFound ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(AuthenticatedUserNotFound.class)
+    public ResponseEntity<Map<String, Object>> handleAuthenticatedUserNotFoundException(AuthenticatedUserNotFound ex) {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
     }
 }
