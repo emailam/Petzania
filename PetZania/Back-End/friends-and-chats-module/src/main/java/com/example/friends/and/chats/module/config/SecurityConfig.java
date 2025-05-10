@@ -1,6 +1,6 @@
-package com.example.friendsAndChatsModule.config;
+package com.example.friends.and.chats.module.config;
 
-import com.example.friendsAndChatsModule.filter.JWTFilter;
+import com.example.friends.and.chats.module.filter.JWTFilter;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

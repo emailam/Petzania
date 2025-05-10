@@ -1,5 +1,6 @@
-package com.example.friendsAndChatsModule.model.principal;
+package com.example.friends.and.chats.module.model.principal;
 
+import com.example.friends.and.chats.module.model.entity.Admin;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

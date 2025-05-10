@@ -1,7 +1,8 @@
-package com.example.friendsAndChatsModule.repository;
+package com.example.friends.and.chats.module.repository;
 
-import com.example.friendsAndChatsModule.model.entity.Chat;
-import com.example.friendsAndChatsModule.model.entity.User;
+
+import com.example.friends.and.chats.module.model.entity.Chat;
+import com.example.friends.and.chats.module.model.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

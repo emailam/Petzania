@@ -1,6 +1,6 @@
-package com.example.friendsAndChatsModule.model.entity;
+package com.example.friends.and.chats.module.model.entity;
 
-import com.example.friendsAndChatsModule.model.enumeration.AdminRole;
+import com.example.friends.and.chats.module.model.enumeration.AdminRole;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
