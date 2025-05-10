@@ -1,11 +1,12 @@
-package com.example.friendsAndChatsModule.service.impl;
+package com.example.friends.and.chats.module.service.impl;
 
-import com.example.friendsAndChatsModule.exception.user.UserNotFound;
-import com.example.friendsAndChatsModule.model.dto.ChatDTO;
-import com.example.friendsAndChatsModule.model.entity.Chat;
-import com.example.friendsAndChatsModule.model.entity.User;
-import com.example.friendsAndChatsModule.repository.UserRepository;
-import com.example.friendsAndChatsModule.service.IDTOConversionService;
+
+import com.example.friends.and.chats.module.exception.user.UserNotFound;
+import com.example.friends.and.chats.module.model.dto.ChatDTO;
+import com.example.friends.and.chats.module.model.entity.Chat;
+import com.example.friends.and.chats.module.model.entity.User;
+import com.example.friends.and.chats.module.repository.UserRepository;
+import com.example.friends.and.chats.module.service.IDTOConversionService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;

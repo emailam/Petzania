@@ -1,10 +1,8 @@
-package com.example.friendsAndChatsModule.controller;
+package com.example.friends.and.chats.module.controller;
 
-import com.example.friendsAndChatsModule.model.dto.ChatDTO;
-import com.example.friendsAndChatsModule.model.entity.Chat;
-import com.example.friendsAndChatsModule.model.entity.User;
-import com.example.friendsAndChatsModule.model.entity.UserChat;
-import com.example.friendsAndChatsModule.service.IChatService;
+
+import com.example.friends.and.chats.module.model.dto.ChatDTO;
+import com.example.friends.and.chats.module.service.IChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

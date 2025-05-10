@@ -1,5 +1,6 @@
-package com.example.friendsAndChatsModule.model.entity;
-import com.example.friendsAndChatsModule.model.enumeration.MessageStatus;
+package com.example.friends.and.chats.module.model.entity;
+
+import com.example.friends.and.chats.module.model.enumeration.MessageStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;

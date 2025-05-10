@@ -1,9 +1,10 @@
-package com.example.friendsAndChatsModule.filter;
+package com.example.friends.and.chats.module.filter;
 
-import com.example.friendsAndChatsModule.model.principal.AdminPrincipal;
-import com.example.friendsAndChatsModule.model.principal.UserPrincipal;
-import com.example.friendsAndChatsModule.service.JWTService;
-import com.example.friendsAndChatsModule.service.MyUserDetailsService;
+
+import com.example.friends.and.chats.module.model.principal.AdminPrincipal;
+import com.example.friends.and.chats.module.model.principal.UserPrincipal;
+import com.example.friends.and.chats.module.service.impl.JWTService;
+import com.example.friends.and.chats.module.service.impl.MyUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

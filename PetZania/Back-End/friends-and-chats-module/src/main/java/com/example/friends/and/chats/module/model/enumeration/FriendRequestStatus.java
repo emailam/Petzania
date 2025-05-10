@@ -1,4 +1,4 @@
-package com.example.friendsAndChatsModule.model.enumeration;
+package com.example.friends.and.chats.module.model.enumeration;
 
 public enum FriendRequestStatus {
     PENDING,

@@ -1,7 +1,8 @@
-package com.example.friendsAndChatsModule.service;
+package com.example.friends.and.chats.module.service;
 
-import com.example.friendsAndChatsModule.model.dto.ChatDTO;
-import com.example.friendsAndChatsModule.model.entity.Chat;
+
+import com.example.friends.and.chats.module.model.dto.ChatDTO;
+import com.example.friends.and.chats.module.model.entity.Chat;
 
 public interface IDTOConversionService {
     ChatDTO mapToChatDTO(Chat chat);

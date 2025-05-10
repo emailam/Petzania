@@ -1,6 +1,8 @@
-package com.example.friendsAndChatsModule.model.entity;
+package com.example.friends.and.chats.module.model.entity;
 
-import com.example.friendsAndChatsModule.model.enumeration.FriendRequestStatus;
+
+
+import com.example.friends.and.chats.module.model.enumeration.FriendRequestStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

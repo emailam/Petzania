@@ -1,4 +1,5 @@
-package com.example.friendsAndChatsModule.model.entity;
+package com.example.friends.and.chats.module.model.entity;
+
 import jakarta.persistence.*;
 import lombok.*;
 

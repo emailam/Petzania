@@ -1,5 +1,7 @@
-package com.example.friendsAndChatsModule.exception.globalhandler;
-import com.example.friendsAndChatsModule.exception.user.UserNotFound;
+package com.example.friends.and.chats.module.exception.globalhandler;
+
+import com.example.friends.and.chats.module.exception.admin.AdminNotFound;
+import com.example.friends.and.chats.module.exception.user.UserNotFound;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -53,6 +55,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UserNotFound.class)
     public ResponseEntity<Map<String, Object>> handleUserNotFoundException(UserNotFound ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(AdminNotFound.class)
+    public ResponseEntity<Map<String, Object>> handleAdminNotFoundException(AdminNotFound ex) {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
     }
 }

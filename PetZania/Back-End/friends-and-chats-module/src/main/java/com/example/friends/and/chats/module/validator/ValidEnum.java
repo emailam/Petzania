@@ -1,4 +1,4 @@
-package com.example.friendsAndChatsModule.validator;
+package com.example.friends.and.chats.module.validator;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
