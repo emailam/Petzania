@@ -12,11 +12,11 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ChatDTO {
+public class SendMessageDTO {
 
     private UUID chatId;
-    private UUID user1Id;
-    private UUID user2Id;
-    private LocalDateTime createdAt;
+    private String content;
+    private UUID replyToMessageId;
+    private boolean isFile;
 
 }

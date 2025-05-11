@@ -2,6 +2,8 @@ package com.example.friends.and.chats.module.controller;
 
 
 import com.example.friends.and.chats.module.model.dto.ChatDTO;
+import com.example.friends.and.chats.module.model.dto.UpdateUserChatDTO;
+import com.example.friends.and.chats.module.model.dto.UserChatDTO;
 import com.example.friends.and.chats.module.service.IChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,33 +20,42 @@ public class ChatController {
 
     private final IChatService chatService;
 
-    @PostMapping("/{user1Id}/{user2Id}")
-    public ResponseEntity<ChatDTO> createChat(@PathVariable(name = "user1Id") UUID user1Id, @PathVariable(name = "user2Id") UUID user2Id) {
+    @PostMapping("/user/{user2Id}")
+    public ResponseEntity<ChatDTO> createChatIfNotExists(@PathVariable(name = "user2Id") UUID user2Id) {
+        // get user1Id from authentication context
+        UUID user1Id = UUID.randomUUID();
         ChatDTO chatDTO = chatService.createChatIfNotExists(user1Id, user2Id);
         return ResponseEntity.status(HttpStatus.CREATED).body(chatDTO);
     }
 
-//    @GetMapping("/user/{userId}")
-//    public ResponseEntity<List<ChatDTO>> getUserChats(@PathVariable UUID userId) {
-//        return ResponseEntity.ok(chatService.getChatsForUser(userId));
-//    }
-//
-//    @PatchMapping("/{chatId}/pin")
-//    public ResponseEntity<Void> updatePinStatus(@PathVariable UUID chatId, @RequestParam UUID userId, @RequestParam boolean pinned) {
-//        chatService.setPinned(chatId, userId, pinned);
-//        return ResponseEntity.noContent().build();
-//    }
-//
-//    @PatchMapping("/{chatId}/mute")
-//    public ResponseEntity<Void> updateMuteStatus(@PathVariable UUID chatId, @RequestParam UUID userId, @RequestParam boolean muted) {
-//        chatService.setMuted(chatId, userId, muted);
-//        return ResponseEntity.noContent().build();
-//    }
-//
-//    @PatchMapping("/{chatId}/unread")
-//    public ResponseEntity<Void> updateUnreadStatus(@PathVariable UUID chatId, @RequestParam UUID userId, @RequestParam boolean unread) {
-//        chatService.setUnread(chatId, userId, unread);
-//        return ResponseEntity.noContent().build();
-//    }
+    @GetMapping("{chatId}")
+    public ResponseEntity<ChatDTO> getChatById(@PathVariable(name = "chatId") UUID chatId) {
+        // get user1Id from authentication context
+        UUID userId = UUID.randomUUID();
+        return ResponseEntity.ok(chatService.getChatById(chatId, userId));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ChatDTO>> getUserChats() {
+        // get user1Id from authentication context
+        UUID userId = UUID.randomUUID();
+        return ResponseEntity.ok(chatService.getChatsForUser(userId));
+    }
+
+    @PatchMapping("/{chatId}")
+    public ResponseEntity<UserChatDTO> partialUpdateUserChat(@PathVariable(name = "chatId") UUID chatId,
+                                                      @RequestBody UpdateUserChatDTO updateUserChatDTO) {
+        // get user1Id from authentication context
+        UUID userId = UUID.randomUUID();
+        return ResponseEntity.ok(chatService.partialUpdateUserChat(chatId, userId, updateUserChatDTO));
+    }
+
+    @DeleteMapping("/user/{userChatId}")
+    public ResponseEntity<Void> deleteUserChatById(@PathVariable(name = "userChatId") UUID userChatId) {
+        // get user1Id from authentication context
+        UUID userId = UUID.randomUUID();
+        chatService.deleteUserChatById(userChatId, userId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }
 
