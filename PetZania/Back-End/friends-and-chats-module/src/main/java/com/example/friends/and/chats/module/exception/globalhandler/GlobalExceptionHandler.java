@@ -3,7 +3,9 @@ package com.example.friends.and.chats.module.exception.globalhandler;
 import com.example.friends.and.chats.module.exception.admin.AdminNotFound;
 import com.example.friends.and.chats.module.exception.chat.ChatNotFound;
 import com.example.friends.and.chats.module.exception.chat.UserChatNotFound;
+import com.example.friends.and.chats.module.exception.message.InvalidMessageStatusTransition;
 import com.example.friends.and.chats.module.exception.message.MessageNotFound;
+import com.example.friends.and.chats.module.exception.message.MessageNotUpdatable;
 import com.example.friends.and.chats.module.exception.user.AuthenticatedUserNotFound;
 import com.example.friends.and.chats.module.exception.user.UserAccessDenied;
 import com.example.friends.and.chats.module.exception.user.UserNotFound;
@@ -91,5 +93,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MessageNotFound.class)
     public ResponseEntity<Map<String, Object>> handleMessageNotFoundException(MessageNotFound ex) {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(MessageNotUpdatable.class)
+    public ResponseEntity<Map<String, Object>> handleMessageNotUpdatableException(MessageNotUpdatable ex) {
+        return buildErrorResponse(ex, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(InvalidMessageStatusTransition.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidMessageStatusTransitionException(InvalidMessageStatusTransition ex) {
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
     }
 }

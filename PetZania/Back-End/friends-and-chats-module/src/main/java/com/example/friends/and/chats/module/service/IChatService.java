@@ -1,9 +1,9 @@
 package com.example.friends.and.chats.module.service;
 
 
-import com.example.friends.and.chats.module.model.dto.ChatDTO;
-import com.example.friends.and.chats.module.model.dto.UpdateUserChatDTO;
-import com.example.friends.and.chats.module.model.dto.UserChatDTO;
+import com.example.friends.and.chats.module.model.dto.chat.ChatDTO;
+import com.example.friends.and.chats.module.model.dto.chat.UpdateUserChatDTO;
+import com.example.friends.and.chats.module.model.dto.chat.UserChatDTO;
 
 import java.util.List;
 import java.util.UUID;

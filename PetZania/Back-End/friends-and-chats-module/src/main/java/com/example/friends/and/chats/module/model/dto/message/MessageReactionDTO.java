@@ -1,5 +1,6 @@
-package com.example.friends.and.chats.module.model.dto;
+package com.example.friends.and.chats.module.model.dto.message;
 
+import com.example.friends.and.chats.module.model.enumeration.MessageReact;
 import com.example.friends.and.chats.module.model.enumeration.MessageStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,14 +14,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MessageDTO {
+public class MessageReactionDTO {
+    private UUID messageReactionId;
+    private UUID userId;
     private UUID messageId;
-    private UUID chatId;
-    private UUID senderId;
-    private String content;
-    private UUID replyToMessageId;
-    private LocalDateTime sentAt;
-    private MessageStatus status;
-    private boolean isFile;
-    private boolean isEdited;
+    private MessageReact reactionType;
 }

@@ -1,4 +1,4 @@
-package com.example.friends.and.chats.module.model.dto;
+package com.example.friends.and.chats.module.model.dto.message;
 
 import com.example.friends.and.chats.module.model.enumeration.EventType;
 import lombok.AllArgsConstructor;
@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MessageEventDTO {
-    MessageDTO messageDTO;
+public class MessageReactionEventDTO {
+    MessageReactionDTO messageReactionDTO;
     EventType eventType;
 }

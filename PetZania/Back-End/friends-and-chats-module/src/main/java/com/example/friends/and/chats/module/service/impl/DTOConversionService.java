@@ -2,13 +2,11 @@ package com.example.friends.and.chats.module.service.impl;
 
 
 import com.example.friends.and.chats.module.exception.user.UserNotFound;
-import com.example.friends.and.chats.module.model.dto.ChatDTO;
-import com.example.friends.and.chats.module.model.dto.MessageDTO;
-import com.example.friends.and.chats.module.model.dto.UserChatDTO;
-import com.example.friends.and.chats.module.model.entity.Chat;
-import com.example.friends.and.chats.module.model.entity.Message;
-import com.example.friends.and.chats.module.model.entity.User;
-import com.example.friends.and.chats.module.model.entity.UserChat;
+import com.example.friends.and.chats.module.model.dto.chat.ChatDTO;
+import com.example.friends.and.chats.module.model.dto.message.MessageDTO;
+import com.example.friends.and.chats.module.model.dto.chat.UserChatDTO;
+import com.example.friends.and.chats.module.model.dto.message.MessageReactionDTO;
+import com.example.friends.and.chats.module.model.entity.*;
 import com.example.friends.and.chats.module.repository.UserRepository;
 import com.example.friends.and.chats.module.service.IDTOConversionService;
 import jakarta.transaction.Transactional;
@@ -85,6 +83,18 @@ public class DTOConversionService implements IDTOConversionService {
                 .status(message.getStatus())
                 .isFile(message.isFile())
                 .isEdited(message.isEdited())
+                .build();
+    }
+
+    @Override
+    public MessageReactionDTO mapToMessageReactionDTO(MessageReaction messageReaction) {
+        if(messageReaction == null) return null;
+
+        return MessageReactionDTO.builder()
+                .messageReactionId(messageReaction.getMessageReactionId())
+                .messageId(messageReaction.getMessage().getMessageId())
+                .userId(messageReaction.getUser().getUserId())
+                .reactionType(messageReaction.getReactionType())
                 .build();
     }
 

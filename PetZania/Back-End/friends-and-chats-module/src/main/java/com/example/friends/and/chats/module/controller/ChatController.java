@@ -1,9 +1,9 @@
 package com.example.friends.and.chats.module.controller;
 
 
-import com.example.friends.and.chats.module.model.dto.ChatDTO;
-import com.example.friends.and.chats.module.model.dto.UpdateUserChatDTO;
-import com.example.friends.and.chats.module.model.dto.UserChatDTO;
+import com.example.friends.and.chats.module.model.dto.chat.ChatDTO;
+import com.example.friends.and.chats.module.model.dto.chat.UpdateUserChatDTO;
+import com.example.friends.and.chats.module.model.dto.chat.UserChatDTO;
 import com.example.friends.and.chats.module.service.IChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/chat")
+@RequestMapping("/api/chats")
 @RequiredArgsConstructor
 public class ChatController {
 
