@@ -49,9 +49,9 @@ public class Message {
     private boolean isFile;
 
     @Column(name = "is_edited", nullable = false)
-    private boolean isEdited;
+    private boolean isEdited = false;
 
-    @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<MessageReaction> reactions;
 
     @PrePersist

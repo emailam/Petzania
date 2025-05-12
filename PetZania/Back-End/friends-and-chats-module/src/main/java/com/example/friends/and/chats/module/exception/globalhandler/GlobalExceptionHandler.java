@@ -3,6 +3,7 @@ package com.example.friends.and.chats.module.exception.globalhandler;
 import com.example.friends.and.chats.module.exception.admin.AdminNotFound;
 import com.example.friends.and.chats.module.exception.chat.ChatNotFound;
 import com.example.friends.and.chats.module.exception.chat.UserChatNotFound;
+import com.example.friends.and.chats.module.exception.message.MessageNotFound;
 import com.example.friends.and.chats.module.exception.user.AuthenticatedUserNotFound;
 import com.example.friends.and.chats.module.exception.user.UserAccessDenied;
 import com.example.friends.and.chats.module.exception.user.UserNotFound;
@@ -85,5 +86,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UserAccessDenied.class)
     public ResponseEntity<Map<String, Object>> handleUserAccessDeniedException(UserAccessDenied ex) {
         return buildErrorResponse(ex, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(MessageNotFound.class)
+    public ResponseEntity<Map<String, Object>> handleMessageNotFoundException(MessageNotFound ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
     }
 }

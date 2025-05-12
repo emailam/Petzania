@@ -3,8 +3,10 @@ package com.example.friends.and.chats.module.service.impl;
 
 import com.example.friends.and.chats.module.exception.user.UserNotFound;
 import com.example.friends.and.chats.module.model.dto.ChatDTO;
+import com.example.friends.and.chats.module.model.dto.MessageDTO;
 import com.example.friends.and.chats.module.model.dto.UserChatDTO;
 import com.example.friends.and.chats.module.model.entity.Chat;
+import com.example.friends.and.chats.module.model.entity.Message;
 import com.example.friends.and.chats.module.model.entity.User;
 import com.example.friends.and.chats.module.model.entity.UserChat;
 import com.example.friends.and.chats.module.repository.UserRepository;
@@ -64,6 +66,25 @@ public class DTOConversionService implements IDTOConversionService {
                 .pinned(userChat.isPinned())
                 .unread(userChat.isUnread())
                 .muted(userChat.isMuted())
+                .build();
+    }
+
+    @Override
+    public MessageDTO mapToMessageDTO(Message message) {
+        if (message == null) return null;
+
+        return MessageDTO.builder()
+                .messageId(message.getMessageId())
+                .chatId(message.getChat().getChatId())
+                .senderId(message.getSender().getUserId())
+                .content(message.getContent())
+                .replyToMessageId(
+                        message.getReplyTo() != null ? message.getReplyTo().getMessageId() : null
+                )
+                .sentAt(message.getSentAt())
+                .status(message.getStatus())
+                .isFile(message.isFile())
+                .isEdited(message.isEdited())
                 .build();
     }
 
