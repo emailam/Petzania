@@ -15,7 +15,10 @@ import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -50,9 +53,14 @@ public class UserService implements IUserService {
     private String emailSender;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     @Autowired
-    private AmqpTemplate amqpTemplate;
+    private EventPublishingService eventPublishingService;
+
+    @Value("${spring.application.name}")
+    private String moduleName;
+
     @Override
     @RateLimiter(name = "registerRateLimiter", fallbackMethod = "registerFallback")
     public UserProfileDTO registerUser(RegisterUserDTO registerUserDTO) {
@@ -67,12 +75,7 @@ public class UserService implements IUserService {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             user.setVerified(false);
             userRepository.save(user);
-            UserCreatedEventDTO event = new UserCreatedEventDTO(user.getUserId(), user.getUsername(), user.getEmail(), user.getProfilePictureURL());
-            amqpTemplate.convertAndSend(
-                    RabbitMQConfig.EXCHANGE,
-                    RabbitMQConfig.ROUTING_KEY,
-                    event
-            );
+            publishUserCreatedEvent(user);
         }
 
         // send verification code.
@@ -83,6 +86,30 @@ public class UserService implements IUserService {
 
     public UserProfileDTO registerFallback(RegisterUserDTO registerUserDTO, RequestNotPermitted t) {
         throw new TooManyRegistrationRequests("Too many registration attempts. Try again later.");
+    }
+
+    private void publishUserCreatedEvent(User user) {
+        try {
+            // Create event with unique ID and source module identifier
+            UserCreatedEventDTO event = new UserCreatedEventDTO();
+            event.setEventId(UUID.randomUUID());
+            event.setModuleName(moduleName);                       // Source module identifier
+            event.setUserId(user.getUserId());
+            event.setUsername(user.getUsername());
+            event.setEmail(user.getEmail());
+            event.setProfilePictureURL(user.getProfilePictureURL());
+
+            // Delegate to specialized event publishing service
+            eventPublishingService.publishUserCreatedEvent(event);
+
+            logger.info("User created event published for user: {}", user.getUserId());
+        } catch (Exception e) {
+            // Log error but don't fail the user creation
+            logger.error("Failed to publish user created event for user: {}", user.getUserId(), e);
+
+            // Option 1: Store failed events for retry (transactional outbox pattern)
+            eventPublishingService.saveForRetry(user, "USER_CREATED", e.getMessage());
+        }
     }
 
     @Override

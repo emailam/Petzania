@@ -20,6 +20,10 @@ import java.util.UUID;
 public class UserCreatedEventDTO {
     @Id
     @NotBlank
+    private UUID eventId;
+    private String moduleName;
+    @Id
+    @NotBlank
     private UUID userId;
 
     @Size(min = 5, max = 32, message = "Username must be between 5 and 30 characters")
