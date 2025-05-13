@@ -1,5 +1,6 @@
 package com.example.registrationmodule.service.impl;
 
+import com.example.registrationmodule.config.RabbitMQConfig;
 import com.example.registrationmodule.exception.authenticationAndVerificattion.*;
 import com.example.registrationmodule.exception.rateLimiting.*;
 import com.example.registrationmodule.exception.user.*;
@@ -14,6 +15,8 @@ import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -48,6 +51,8 @@ public class UserService implements IUserService {
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
+    @Autowired
+    private AmqpTemplate amqpTemplate;
     @Override
     @RateLimiter(name = "registerRateLimiter", fallbackMethod = "registerFallback")
     public UserProfileDTO registerUser(RegisterUserDTO registerUserDTO) {
@@ -62,6 +67,12 @@ public class UserService implements IUserService {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             user.setVerified(false);
             userRepository.save(user);
+            UserCreatedEventDTO event = new UserCreatedEventDTO(user.getUserId(), user.getUsername(), user.getEmail(), user.getProfilePictureURL());
+            amqpTemplate.convertAndSend(
+                    RabbitMQConfig.EXCHANGE,
+                    RabbitMQConfig.ROUTING_KEY,
+                    event
+            );
         }
 
         // send verification code.
