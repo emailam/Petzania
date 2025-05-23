@@ -1,8 +1,7 @@
 package com.example.friends.and.chats.module.exception.globalhandler;
 
 import com.example.friends.and.chats.module.exception.admin.AdminNotFound;
-import com.example.friends.and.chats.module.exception.user.AuthenticatedUserNotFound;
-import com.example.friends.and.chats.module.exception.user.UserNotFound;
+import com.example.friends.and.chats.module.exception.user.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -67,5 +66,25 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AuthenticatedUserNotFound.class)
     public ResponseEntity<Map<String, Object>> handleAuthenticatedUserNotFoundException(AuthenticatedUserNotFound ex) {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(InvalidFriendRequest.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidFriendRequestException(InvalidFriendRequest ex) {
+        return buildErrorResponse(ex, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(BlockingExist.class)
+    public ResponseEntity<Map<String, Object>> handleBlockingExistException(BlockingExist ex) {
+        return buildErrorResponse(ex, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(FriendRequestAlreadyExists.class)
+    public ResponseEntity<Map<String, Object>> handleFriendRequestAlreadyExistsException(FriendRequestAlreadyExists ex) {
+        return buildErrorResponse(ex, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(FollowingAlreadyExists.class)
+    public ResponseEntity<Map<String, Object>> handleFollowingAlreadyExistsException(FollowingAlreadyExists ex) {
+        return buildErrorResponse(ex, HttpStatus.CONFLICT);
     }
 }

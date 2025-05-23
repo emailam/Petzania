@@ -1,42 +1,16 @@
 package com.example.friends.and.chats.module.service;
 
-import com.example.friends.and.chats.module.model.entity.FriendRequest;
-import com.example.friends.and.chats.module.model.entity.User;
+import com.example.friends.and.chats.module.model.dto.FriendRequestDTO;
+import com.example.friends.and.chats.module.model.dto.FriendshipDTO;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface IFriendService {
-    void sendFriendRequest();
+    public FriendRequestDTO sendFriendRequest(UUID senderId, UUID receiveId);
 
-    void acceptFriendRequest();
+    public FriendshipDTO acceptFriendRequest(UUID requestId);
 
-    void declineFriendRequest();
-
-    void cancelFriendRequest();
-
-    void getPendingRequests();
-
-    void removeFriend();
-
-    void getFriends();
-
-    void areFriends();
-
-    void follow();
-
-    void unfollow();
-
-    void getFollowers();
-
-    void getFollowing();
-
-    void block();
-
-    void unblock();
-
-    void isBlocked();
-
-    void getBlockedUsers();
+    public void declineFriendRequest(UUID requestId);
+    public void removeFriend(UUID userId, UUID friendId);
 
 }

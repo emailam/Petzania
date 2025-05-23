@@ -2,7 +2,6 @@ package com.example.friends.and.chats.module.model.entity;
 
 
 
-import com.example.friends.and.chats.module.model.enumeration.FriendRequestStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,9 +34,5 @@ public class FriendRequest {
     @ManyToOne
     @JoinColumn(name = "receiver_id", referencedColumnName = "user_id")
     private User receiver;
-
-    @Enumerated(EnumType.STRING)
-    private FriendRequestStatus status;
-
     private Timestamp createdAt;
 }
