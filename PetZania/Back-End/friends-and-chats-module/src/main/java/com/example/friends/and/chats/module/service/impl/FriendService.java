@@ -1,6 +1,8 @@
 package com.example.friends.and.chats.module.service.impl;
 
 import com.example.friends.and.chats.module.exception.user.*;
+import com.example.friends.and.chats.module.model.dto.BlockDTO;
+import com.example.friends.and.chats.module.model.dto.FollowDTO;
 import com.example.friends.and.chats.module.model.dto.FriendRequestDTO;
 import com.example.friends.and.chats.module.model.dto.FriendshipDTO;
 import com.example.friends.and.chats.module.model.entity.*;
@@ -118,96 +120,96 @@ public class FriendService implements IFriendService {
     }
 
 
-//    private void validateExistingFollow(User follower, User followed) {
-//        if (followRepository.existsByFollowerAndFollowed(follower, followed)) {
-//            throw new FollowingAlreadyExists("Already following this user");
-//        }
-//    }
-//
-//
-//    private void cleanupRelationships(User blocker, User blocked) {
-//        // Remove friend requests
-//        friendRequestRepository.deleteBySenderAndReceiver(blocker, blocked);
-//        friendRequestRepository.deleteBySenderAndReceiver(blocked, blocker);
-//
-//        // Remove follows
-//        followRepository.deleteByFollowerAndFollowed(blocker, blocked);
-//        followRepository.deleteByFollowerAndFollowed(blocked, blocker);
-//
-//        // Remove friendships
-//        friendshipRepository.deleteByUser1AndUser2(blocker, blocked);
-//        friendshipRepository.deleteByUser1AndUser2(blocked, blocker);
-//    }
-//
-//    public boolean isBlocked(User user1, User user2) {
-//        return blockRepository.existsByBlockerAndBlocked(user1, user2) ||
-//                blockRepository.existsByBlockerAndBlocked(user2, user1);
-//    }
-//
-//    public boolean isFriend(User user1, User user2) {
-//        return friendshipRepository.existsByUser1AndUser2(user1, user2) ||
-//                friendshipRepository.existsByUser1AndUser2(user2, user1);
-//    }
-//
-//
+    private void validateExistingFollow(User follower, User followed) {
+        if (followRepository.existsByFollowerAndFollowed(follower, followed)) {
+            throw new FollowingAlreadyExists("Already following this user");
+        }
+    }
 
-//
-//    // Friendship Operations
-//
-//    public List<FriendshipDTO> getFriends(UUID userId) {
-//        User user = getUser(userId);
-//        List<Friendship> friendships;
-//        return friendshipRepository.findAllByUser1OrUser2(user, user).stream()
-//    }
-//
-//    // Follow Operations
-//    public FollowDTO followUser(UUID followerId, UUID followedId) {
-//        validateSelfOperation(followerId, followedId);
-//        User follower = getUser(followerId);
-//        User followed = getUser(followedId);
-//
-//        validateBlockRelationship(followed, follower);
-//        validateExistingFollow(follower, followed);
-//
-//        Follow follow = Follow.builder()
-//                .follower(follower)
-//                .followed(followed)
-//                .createdAt(new Timestamp(System.currentTimeMillis()))
-//                .build();
-//
-//        //return convertToFollowDTO(followRepository.save(follow));
-//    }
-//
-//    public void unfollowUser(UUID followerId, UUID followedId) {
-//        Follow follow = followRepository.findByFollowerAndFollowed(
-//                getUser(followerId),
-//                getUser(followedId))
-//        //.orElseThrow(() -> new NotFoundException("Follow relationship not found"));
-//        followRepository.delete(follow);
-//    }
-//
-//    // Block Operations
-//    public BlockDTO blockUser(UUID blockerId, UUID blockedId) {
-//        validateSelfOperation(blockerId, blockedId);
-//        User blocker = getUser(blockerId);
-//        User blocked = getUser(blockedId);
-//
-//        cleanupRelationships(blocker, blocked);
-//
-//        Block block = Block.builder()
-//                .blocker(blocker)
-//                .blocked(blocked)
-//                .createdAt(new Timestamp(System.currentTimeMillis()))
-//                .build();
-//
-//        //return convertToBlockDTO(blockRepository.save(block));
-//    }
-//
-//    public void unblockUser(UUID blockerId, UUID blockedId) {
-//        Block block = blockRepository.findByBlockerAndBlocked(
-//                getUser(blockerId),
-//                getUser(blockedId))
-//        //.orElseThrow(() -> new NotFoundException("Block relationship not found"));
-//        blockRepository.delete(block);
-//    }
+    private void cleanupRelationships(User blocker, User blocked) {
+        // Remove friend requests
+        friendRequestRepository.deleteBySenderAndReceiver(blocker, blocked);
+        friendRequestRepository.deleteBySenderAndReceiver(blocked, blocker);
+
+        // Remove follows
+        followRepository.deleteByFollowerAndFollowed(blocker, blocked);
+        followRepository.deleteByFollowerAndFollowed(blocked, blocker);
+
+
+        if (blocker.getUserId().compareTo(blocked.getUserId()) > 0) {
+            User temp = blocker;
+            blocker = blocked;
+            blocked = temp;
+        }
+        // Remove friendship
+        friendshipRepository.deleteByUser1AndUser2(blocker, blocked);
+    }
+
+    @Override
+    public boolean isBlockingExists(User user1, User user2) {
+        return blockRepository.existsByBlockerAndBlocked(user1, user2) ||
+                blockRepository.existsByBlockerAndBlocked(user2, user1);
+    }
+
+    @Override
+    public boolean isFriendshipExists(User user1, User user2) {
+        if (user1.getUserId().compareTo(user2.getUserId()) > 0) {
+            User temp = user1;
+            user1 = user2;
+            user2 = temp;
+        }
+        return friendshipRepository.existsByUser1AndUser2(user1, user2);
+    }
+
+    @Override
+    public FollowDTO followUser(UUID followerId, UUID followedId) {
+        validateSelfOperation(followerId, followedId);
+        User follower = getUser(followerId);
+        User followed = getUser(followedId);
+
+        validateBlockRelationship(follower, followed);
+        validateExistingFollow(follower, followed);
+
+        Follow follow = Follow.builder()
+                .follower(follower)
+                .followed(followed)
+                .createdAt(new Timestamp(System.currentTimeMillis()))
+                .build();
+
+        return dtoConversionService.mapToFollowDTO(followRepository.save(follow));
+    }
+
+    @Override
+    public void unfollowUser(UUID followerId, UUID followedId) {
+        Follow follow = followRepository.findByFollowerAndFollowed(
+                getUser(followerId),
+                getUser(followedId)).orElseThrow(() -> new FollowingDoesNotExist("User with ID: " + followerId + " " + "is not following the User with ID: " + followedId));
+        followRepository.delete(follow);
+    }
+
+    @Override
+    public BlockDTO blockUser(UUID blockerId, UUID blockedId) {
+        validateSelfOperation(blockerId, blockedId);
+        User blocker = getUser(blockerId);
+        User blocked = getUser(blockedId);
+
+        cleanupRelationships(blocker, blocked);
+
+        Block block = Block.builder()
+                .blocker(blocker)
+                .blocked(blocked)
+                .createdAt(new Timestamp(System.currentTimeMillis()))
+                .build();
+
+        return dtoConversionService.mapToBlockDTO(blockRepository.save(block));
+    }
+
+    @Override
+    public void unblockUser(UUID blockerId, UUID blockedId) {
+        Block block = blockRepository.findByBlockerAndBlocked(
+                        getUser(blockerId),
+                        getUser(blockedId))
+                .orElseThrow(() -> new BlockingDoesNotExist("Block relationship not found"));
+        blockRepository.delete(block);
+    }
 }

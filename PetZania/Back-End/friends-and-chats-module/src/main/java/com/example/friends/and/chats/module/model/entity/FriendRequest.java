@@ -19,8 +19,6 @@ import java.util.UUID;
 @Table(name = "friend_requests", indexes = {
         // Composite index for sender + receiver
         @Index(name = "idx_friend_request_sender_receiver", columnList = "sender_id, receiver_id"),
-        // Composite index for receiver + status
-        @Index(name = "idx_friend_request_receiver_status", columnList = "receiver_id, status")
 })
 public class FriendRequest {
     @Id

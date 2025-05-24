@@ -75,7 +75,6 @@ public class DTOConversionService implements IDTOConversionService {
                 .build();
     }
 
-    // Friendship conversions
     @Override
     public FriendshipDTO mapToFriendshipDTO(Friendship friendship) {
         if (friendship == null) return null;
@@ -99,55 +98,52 @@ public class DTOConversionService implements IDTOConversionService {
                 .build();
     }
 
-//    // Follow conversions
-//    @Override
-//    public FollowDTO mapToFollowDTO(Follow follow) {
-//        if (follow == null) return null;
-//
-//        return FollowDTO.builder()
-//                .followId(follow.getId())
-//                .follower(mapToUserDTO(follow.getFollower()))
-//                .followed(mapToUserDTO(follow.getFollowed()))
-//                .createdAt(follow.getCreatedAt())
-//                .build();
-//    }
-//
-//    @Override
-//    public Follow mapToFollow(FollowDTO followDTO) {
-//        if (followDTO == null) return null;
-//
-//        return Follow.builder()
-//                .follower(getUser(followDTO.getFollower().getUserId()))
-//                .followed(getUser(followDTO.getFollowed().getUserId()))
-//                .createdAt(followDTO.getCreatedAt())
-//                .build();
-//    }
-//
-//    // Block conversions
-//    @Override
-//    public BlockDTO mapToBlockDTO(Block block) {
-//        if (block == null) return null;
-//
-//        return BlockDTO.builder()
-//                .blockId(block.getId())
-//                .blocker(mapToUserDTO(block.getBlocker()))
-//                .blocked(mapToUserDTO(block.getBlocked()))
-//                .createdAt(block.getCreatedAt())
-//                .build();
-//    }
-//
-//    @Override
-//    public Block mapToBlock(BlockDTO blockDTO) {
-//        if (blockDTO == null) return null;
-//
-//        return Block.builder()
-//                .blocker(getUser(blockDTO.getBlocker().getUserId()))
-//                .blocked(getUser(blockDTO.getBlocked().getUserId()))
-//                .createdAt(blockDTO.getCreatedAt())
-//                .build();
-//    }
-//
-    // User conversion
+    @Override
+    public FollowDTO mapToFollowDTO(Follow follow) {
+        if (follow == null) return null;
+
+        return FollowDTO.builder()
+                .followId(follow.getId())
+                .follower(mapToUserDTO(follow.getFollower()))
+                .followed(mapToUserDTO(follow.getFollowed()))
+                .createdAt(follow.getCreatedAt())
+                .build();
+    }
+
+    @Override
+    public Follow mapToFollow(FollowDTO followDTO) {
+        if (followDTO == null) return null;
+
+        return Follow.builder()
+                .follower(getUser(followDTO.getFollower().getUserId()))
+                .followed(getUser(followDTO.getFollowed().getUserId()))
+                .createdAt(followDTO.getCreatedAt())
+                .build();
+    }
+
+    @Override
+    public BlockDTO mapToBlockDTO(Block block) {
+        if (block == null) return null;
+
+        return BlockDTO.builder()
+                .blockId(block.getId())
+                .blocker(mapToUserDTO(block.getBlocker()))
+                .blocked(mapToUserDTO(block.getBlocked()))
+                .createdAt(block.getCreatedAt())
+                .build();
+    }
+
+    @Override
+    public Block mapToBlock(BlockDTO blockDTO) {
+        if (blockDTO == null) return null;
+
+        return Block.builder()
+                .blocker(getUser(blockDTO.getBlocker().getUserId()))
+                .blocked(getUser(blockDTO.getBlocked().getUserId()))
+                .createdAt(blockDTO.getCreatedAt())
+                .build();
+    }
+
     @Override
     public UserDTO mapToUserDTO(User user) {
         if (user == null) return null;

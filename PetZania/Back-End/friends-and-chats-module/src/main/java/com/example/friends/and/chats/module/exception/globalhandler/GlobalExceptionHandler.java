@@ -87,4 +87,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleFollowingAlreadyExistsException(FollowingAlreadyExists ex) {
         return buildErrorResponse(ex, HttpStatus.CONFLICT);
     }
+
+    @ExceptionHandler(FollowingDoesNotExist.class)
+    public ResponseEntity<Map<String, Object>> handleFollowingDoesNotExistException(FollowingDoesNotExist ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(BlockingDoesNotExist.class)
+    public ResponseEntity<Map<String, Object>> handleBlockingDoesNotExistException(BlockingDoesNotExist ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
 }

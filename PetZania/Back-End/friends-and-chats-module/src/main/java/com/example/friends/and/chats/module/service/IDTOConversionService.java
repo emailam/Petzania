@@ -8,14 +8,14 @@ public interface IDTOConversionService {
     ChatDTO mapToChatDTO(Chat chat);
 
     Chat mapToChat(ChatDTO chatDTO);
-//
-//    FollowDTO mapToFollowDTO(Follow follow);
-//
-//    Follow mapToFollow(FollowDTO followDTO);
-//
-//    BlockDTO mapToBlockDTO(Block block);
-//
-//    Block mapToBlock(BlockDTO blockDTO);
+
+    FollowDTO mapToFollowDTO(Follow follow);
+
+    Follow mapToFollow(FollowDTO followDTO);
+
+    BlockDTO mapToBlockDTO(Block block);
+
+    Block mapToBlock(BlockDTO blockDTO);
 
     FriendRequestDTO mapToFriendRequestDTO(FriendRequest friendRequest);
 
