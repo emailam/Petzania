@@ -32,7 +32,7 @@ public class FriendController {
     @PostMapping("/accept-request/{requestId}")
     public ResponseEntity<FriendshipDTO> acceptFriendRequest(@PathVariable UUID requestId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
-        return ResponseEntity.status(HttpStatus.CREATED).body(friendService.acceptFriendRequest(requestId));
+        return ResponseEntity.status(HttpStatus.CREATED).body(friendService.acceptFriendRequest(requestId, userPrincipal.getUserId()));
     }
 
     @Tag(name = "put", description = "Decline Friend Request")
@@ -48,7 +48,7 @@ public class FriendController {
     public ResponseEntity<String> removeFriend(@PathVariable UUID friendId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         friendService.removeFriend(userPrincipal.getUserId(), friendId);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Friend was removed successfully!");
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Friend was removed successfully!");
     }
 
     @Tag(name = "post", description = "Follow User")

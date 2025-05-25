@@ -11,7 +11,7 @@ import java.util.UUID;
 public interface IFriendService {
     FriendRequestDTO sendFriendRequest(UUID senderId, UUID receiveId);
 
-    FriendshipDTO acceptFriendRequest(UUID requestId);
+    FriendshipDTO acceptFriendRequest(UUID requestId, UUID receiverId);
 
     void declineFriendRequest(UUID requestId);
 

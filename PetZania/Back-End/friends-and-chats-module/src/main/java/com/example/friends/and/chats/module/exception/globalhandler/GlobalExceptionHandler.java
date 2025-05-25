@@ -103,4 +103,14 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(FriendRequestNotFound.class)
+    public ResponseEntity<Map<String, Object>> handleFriendRequestNotFoundException(FriendRequestNotFound ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(ForbiddenOperation.class)
+    public ResponseEntity<Map<String, Object>> handleForbiddenOperation(ForbiddenOperation ex) {
+        return buildErrorResponse(ex, HttpStatus.FORBIDDEN);
+    }
+
 }

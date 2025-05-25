@@ -11,7 +11,6 @@ import com.example.friends.and.chats.module.service.IDTOConversionService;
 import com.example.friends.and.chats.module.service.IFriendService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.hibernate.event.spi.SaveOrUpdateEvent;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -92,9 +91,11 @@ public class FriendService implements IFriendService {
     }
 
     @Override
-    public FriendshipDTO acceptFriendRequest(UUID requestId) {
+    public FriendshipDTO acceptFriendRequest(UUID requestId, UUID receiverId) {
         FriendRequest request = getFriendRequest(requestId);
-
+        if(!request.getReceiver().equals(receiverId)){
+            throw new ForbiddenOperation("You cannot do this operation");
+        }
         Friendship friendship = createFriendship(request.getSender(), request.getReceiver());
         friendRequestRepository.deleteById(requestId);
 
