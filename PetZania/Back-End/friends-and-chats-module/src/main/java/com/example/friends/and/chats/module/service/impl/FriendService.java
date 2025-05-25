@@ -29,7 +29,7 @@ public class FriendService implements IFriendService {
 
     public void validateSelfOperation(UUID senderId, UUID receiverId) {
         if (senderId.equals(receiverId)) {
-            throw new InvalidFriendRequest("Cannot perform this action on yourself");
+            throw new InvalidOperation("Cannot perform this action on yourself");
         }
     }
 
@@ -46,6 +46,19 @@ public class FriendService implements IFriendService {
         }
     }
 
+    public void validateAlreadyFriends(UUID senderId, UUID receiverId) {
+        if (senderId.compareTo(receiverId) > 0) {
+            UUID temp = senderId;
+            senderId = receiverId;
+            receiverId = temp;
+        }
+        User user1 = getUser(senderId);
+        User user2 = getUser(receiverId);
+        if (friendshipRepository.existsByUser1AndUser2(user1, user2)) {
+            throw new FriendshipAlreadyExist("Friendship Already exists between both users");
+        }
+    }
+
     public User getUser(UUID userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFound("User not found with ID: " + userId));
@@ -54,9 +67,9 @@ public class FriendService implements IFriendService {
     @Override
     public FriendRequestDTO sendFriendRequest(UUID senderId, UUID receiverId) {
         validateSelfOperation(senderId, receiverId);
+        validateAlreadyFriends(senderId, receiverId);
         User sender = getUser(senderId);
         User receiver = getUser(receiverId);
-
         validateBlockRelationship(sender, receiver);
         validateExistingRequest(sender, receiver);
 
@@ -66,7 +79,6 @@ public class FriendService implements IFriendService {
                 .createdAt(new Timestamp(System.currentTimeMillis()))
                 .build();
 
-        System.out.println(request);
         return dtoConversionService.mapToFriendRequestDTO(friendRequestRepository.save(request));
     }
 
@@ -75,7 +87,8 @@ public class FriendService implements IFriendService {
                 .orElseThrow(() -> new FriendRequestNotFound("Friend request not found"));
     }
 
-    private Friendship createFriendship(User user1, User user2) {
+    @Override
+    public Friendship createFriendship(User user1, User user2) {
         // Ensure consistent ordering to prevent duplicate entries
         if (user1.getUserId().compareTo(user2.getUserId()) > 0) {
             User temp = user1;
@@ -93,8 +106,8 @@ public class FriendService implements IFriendService {
     @Override
     public FriendshipDTO acceptFriendRequest(UUID requestId, UUID receiverId) {
         FriendRequest request = getFriendRequest(requestId);
-        if(!request.getReceiver().equals(receiverId)){
-            throw new ForbiddenOperation("You cannot do this operation");
+        if (!request.getReceiver().getUserId().equals(receiverId)) {
+            throw new ForbiddenOperation("User with ID: " + receiverId + " is trying to accept a request which does not belong to him");
         }
         Friendship friendship = createFriendship(request.getSender(), request.getReceiver());
         friendRequestRepository.deleteById(requestId);
@@ -118,7 +131,7 @@ public class FriendService implements IFriendService {
             user = friend;
             friend = temp;
         }
-        if(isFriendshipExists(user, friend)){
+        if (isFriendshipExists(user, friend)) {
             friendshipRepository.deleteByUser1AndUser2(user, friend);
         } else {
             throw new FriendshipDoesNotExist("User with ID: " + userId + " is not friend with User with ID: " + friendId);
@@ -199,8 +212,10 @@ public class FriendService implements IFriendService {
         User blocker = getUser(blockerId);
         User blocked = getUser(blockedId);
 
+        if (blockRepository.existsByBlockerAndBlocked(blocker, blocked)) {
+            throw new BlockingAlreadyExist("Blocking Already Exist");
+        }
         cleanupRelationships(blocker, blocked);
-
         Block block = Block.builder()
                 .blocker(blocker)
                 .blocked(blocked)

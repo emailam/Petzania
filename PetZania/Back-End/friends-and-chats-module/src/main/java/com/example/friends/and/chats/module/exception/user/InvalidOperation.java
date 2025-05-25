@@ -1,8 +1,8 @@
 package com.example.friends.and.chats.module.exception.user;
 
 // 403 forbidden
-public class InvalidFriendRequest extends RuntimeException {
-    public InvalidFriendRequest(String message) {
+public class InvalidOperation extends RuntimeException {
+    public InvalidOperation(String message) {
         super(message);
     }
 }

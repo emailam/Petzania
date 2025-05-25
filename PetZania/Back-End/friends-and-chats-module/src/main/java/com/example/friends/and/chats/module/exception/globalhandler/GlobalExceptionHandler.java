@@ -68,9 +68,9 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(InvalidFriendRequest.class)
-    public ResponseEntity<Map<String, Object>> handleInvalidFriendRequestException(InvalidFriendRequest ex) {
-        return buildErrorResponse(ex, HttpStatus.FORBIDDEN);
+    @ExceptionHandler(InvalidOperation.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidOperationException(InvalidOperation ex) {
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(BlockingExist.class)
@@ -109,8 +109,18 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ForbiddenOperation.class)
-    public ResponseEntity<Map<String, Object>> handleForbiddenOperation(ForbiddenOperation ex) {
+    public ResponseEntity<Map<String, Object>> handleForbiddenOperationException(ForbiddenOperation ex) {
         return buildErrorResponse(ex, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(BlockingAlreadyExist.class)
+    public ResponseEntity<Map<String, Object>> handleBlockingAlreadyExistException(BlockingAlreadyExist ex){
+        return buildErrorResponse(ex, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(FriendshipAlreadyExist.class)
+    public ResponseEntity<Map<String, Object>>handleFriendshipAlreadyExistException(FriendshipAlreadyExist ex){
+        return buildErrorResponse(ex, HttpStatus.CONFLICT);
     }
 
 }

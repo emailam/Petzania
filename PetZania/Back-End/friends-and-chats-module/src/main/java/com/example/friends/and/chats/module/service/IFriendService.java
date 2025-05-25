@@ -4,6 +4,7 @@ import com.example.friends.and.chats.module.model.dto.BlockDTO;
 import com.example.friends.and.chats.module.model.dto.FollowDTO;
 import com.example.friends.and.chats.module.model.dto.FriendRequestDTO;
 import com.example.friends.and.chats.module.model.dto.FriendshipDTO;
+import com.example.friends.and.chats.module.model.entity.Friendship;
 import com.example.friends.and.chats.module.model.entity.User;
 
 import java.util.UUID;
@@ -14,6 +15,7 @@ public interface IFriendService {
     FriendshipDTO acceptFriendRequest(UUID requestId, UUID receiverId);
 
     void declineFriendRequest(UUID requestId);
+    public Friendship createFriendship(User user1, User user2);
 
     void removeFriend(UUID userId, UUID friendId);
 
