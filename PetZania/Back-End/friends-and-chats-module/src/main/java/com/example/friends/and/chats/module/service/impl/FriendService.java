@@ -11,6 +11,7 @@ import com.example.friends.and.chats.module.service.IDTOConversionService;
 import com.example.friends.and.chats.module.service.IFriendService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.hibernate.event.spi.SaveOrUpdateEvent;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -66,6 +67,7 @@ public class FriendService implements IFriendService {
                 .createdAt(new Timestamp(System.currentTimeMillis()))
                 .build();
 
+        System.out.println(request);
         return dtoConversionService.mapToFriendRequestDTO(friendRequestRepository.save(request));
     }
 
@@ -115,8 +117,11 @@ public class FriendService implements IFriendService {
             user = friend;
             friend = temp;
         }
-
-        friendshipRepository.deleteByUser1AndUser2(user, friend);
+        if(isFriendshipExists(user, friend)){
+            friendshipRepository.deleteByUser1AndUser2(user, friend);
+        } else {
+            throw new FriendshipDoesNotExist("User with ID: " + userId + " is not friend with User with ID: " + friendId);
+        }
     }
 
 

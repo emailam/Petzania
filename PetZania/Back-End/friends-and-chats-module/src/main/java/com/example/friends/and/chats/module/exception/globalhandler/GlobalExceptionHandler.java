@@ -97,4 +97,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleBlockingDoesNotExistException(BlockingDoesNotExist ex) {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(FriendshipDoesNotExist.class)
+    public ResponseEntity<Map<String, Object>> handleFriendshipDoesNotExistException(FriendshipDoesNotExist ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
 }
