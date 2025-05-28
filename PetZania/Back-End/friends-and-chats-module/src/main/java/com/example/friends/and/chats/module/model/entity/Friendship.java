@@ -16,7 +16,8 @@ import java.util.UUID;
 @Builder
 @Data
 @Table(name = "friendships", indexes = {
-        // Index for user1 + user2
+        @Index(name = "idx_friendship_user1", columnList = "user1_id"),
+        @Index(name = "idx_friendship_user2", columnList = "user2_id"),
         @Index(name = "idx_friendship_user1_user2", columnList = "user1_id, user2_id")
 })
 public class Friendship {

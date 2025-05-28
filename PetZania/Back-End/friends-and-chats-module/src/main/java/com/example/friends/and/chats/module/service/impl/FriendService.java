@@ -11,6 +11,10 @@ import com.example.friends.and.chats.module.service.IDTOConversionService;
 import com.example.friends.and.chats.module.service.IFriendService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -171,6 +175,37 @@ public class FriendService implements IFriendService {
     }
 
     @Override
+    public Page<FollowDTO> getFollowing(UUID userId, int page, int size, String sortBy, String direction) {
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        User follower = getUser(userId);
+        return followRepository.findFollowsByFollower(follower, pageable).map(dtoConversionService::mapToFollowDTO);
+    }
+
+    @Override
+    public Page<FollowDTO> getFollowers(UUID userId, int page, int size, String sortBy, String direction) {
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        User followed = getUser(userId);
+        return followRepository.findFollowsByFollowed(followed, pageable).map(dtoConversionService::mapToFollowDTO);
+    }
+
+    @Override
+    public Page<BlockDTO> getBlockedUsers(UUID userId, int page, int size, String sortBy, String direction) {
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        User blocker = getUser(userId);
+        return blockRepository.findBlocksByBlocker(blocker, pageable).map(dtoConversionService::mapToBlockDTO);
+    }
+
+    @Override
+    public Page<FriendshipDTO> getFriendships(UUID userId, int page, int size, String sortBy, String direction) {
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return friendshipRepository.findFriendsByUserId(userId, pageable).map(dtoConversionService::mapToFriendshipDTO);
+    }
+
+    @Override
     public boolean isFriendshipExists(User user1, User user2) {
         if (user1.getUserId().compareTo(user2.getUserId()) > 0) {
             User temp = user1;
@@ -233,4 +268,29 @@ public class FriendService implements IFriendService {
                 .orElseThrow(() -> new BlockingDoesNotExist("Block relationship not found"));
         blockRepository.delete(block);
     }
+
+    @Override
+    public int getFollowingCount(UUID userId) {
+        User user = getUser(userId);
+        return followRepository.countByFollower(user);
+    }
+
+    @Override
+    public int getFollowersCount(UUID userId) {
+        User user = getUser(userId);
+        return followRepository.countByFollowed(user);
+    }
+
+    @Override
+    public int getBlockedUsersCount(UUID userId) {
+        User user = getUser(userId);
+        return blockRepository.countByBlocker(user);
+    }
+
+    @Override
+    public int getNumberOfFriends(UUID userId) {
+        return friendshipRepository.countFriendsByUserId(userId);
+    }
+
+
 }

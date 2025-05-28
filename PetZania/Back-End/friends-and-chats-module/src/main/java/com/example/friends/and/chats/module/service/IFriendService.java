@@ -6,6 +6,8 @@ import com.example.friends.and.chats.module.model.dto.FriendRequestDTO;
 import com.example.friends.and.chats.module.model.dto.FriendshipDTO;
 import com.example.friends.and.chats.module.model.entity.Friendship;
 import com.example.friends.and.chats.module.model.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
 
@@ -15,7 +17,8 @@ public interface IFriendService {
     FriendshipDTO acceptFriendRequest(UUID requestId, UUID receiverId);
 
     void declineFriendRequest(UUID requestId);
-    public Friendship createFriendship(User user1, User user2);
+
+    Friendship createFriendship(User user1, User user2);
 
     void removeFriend(UUID userId, UUID friendId);
 
@@ -30,4 +33,20 @@ public interface IFriendService {
     boolean isFriendshipExists(User user1, User user2);
 
     boolean isBlockingExists(User user1, User user2);
+
+    Page<FollowDTO> getFollowing(UUID userId, int page, int size, String sortBy, String direction);
+
+    Page<FollowDTO> getFollowers(UUID userId, int page, int size, String sortBy, String direction);
+
+    Page<BlockDTO> getBlockedUsers(UUID userId, int page, int size, String sortBy, String direction);
+
+    Page<FriendshipDTO> getFriendships(UUID userId, int page, int size, String sortBy, String direction);
+
+    int getFollowingCount(UUID userId);
+
+    int getFollowersCount(UUID userId);
+
+    int getBlockedUsersCount(UUID userId);
+
+    int getNumberOfFriends(UUID userId);
 }

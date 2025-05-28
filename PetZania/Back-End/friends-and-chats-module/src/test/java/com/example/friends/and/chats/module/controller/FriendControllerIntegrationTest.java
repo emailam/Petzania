@@ -18,9 +18,12 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.util.AssertionErrors.assertFalse;
@@ -52,6 +55,7 @@ public class FriendControllerIntegrationTest {
     private User userA;
     private User userB;
     private User userC;
+    private User userD;
 
     @BeforeEach
     void setup() {
@@ -66,6 +70,7 @@ public class FriendControllerIntegrationTest {
         userA = userRepository.save(TestDataUtil.createTestUser("userA"));
         userB = userRepository.save(TestDataUtil.createTestUser("UserB"));
         userC = userRepository.save(TestDataUtil.createTestUser("UserC"));
+        userD = userRepository.save(TestDataUtil.createTestUser("UserD"));
 
         // Set up security context
         UserPrincipal userPrincipal = new UserPrincipal(userA);
@@ -296,7 +301,313 @@ public class FriendControllerIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
-    // Helper method to switch security context
+    @Test
+    void getFriendships_Success() throws Exception {
+        // Create friendships
+        Friendship friendship1 = friendService.createFriendship(userA, userB);
+        Friendship friendship2 = friendService.createFriendship(userA, userC);
+
+        mockMvc.perform(get("/api/friends/getFriends"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[0].friendshipId").value(friendship1.getId().toString()))
+                .andExpect(jsonPath("$.content[1].friendshipId").value(friendship2.getId().toString()));
+    }
+
+    @Test
+    void getFriendships_Pagination() throws Exception {
+        friendService.createFriendship(userA, userB);
+        friendService.createFriendship(userA, userC);
+        friendService.createFriendship(userA, userD);
+
+        mockMvc.perform(get("/api/friends/getFriends?page=0&size=2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.totalPages").value(2));
+    }
+
+    @Test
+    void getNumberOfFriends_Success() throws Exception {
+        friendService.createFriendship(userA, userB);
+        friendService.createFriendship(userC, userA);
+        friendService.createFriendship(userA, userC);
+
+        mockMvc.perform(get("/api/friends/getNumberOfFriends"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("3"));
+    }
+
+    @Test
+    void getFollowing_ReturnsPaginatedResults() throws Exception {
+        createFollows(userA, userB, userC, userD);
+
+        mockMvc.perform(get("/api/friends/getFollowing"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].follower.userId").value(userA.getUserId().toString()))
+                .andExpect(jsonPath("$.content[0].followed.userId").value(userB.getUserId().toString()))
+                .andExpect(jsonPath("$.content[1].follower.userId").value(userA.getUserId().toString()))
+                .andExpect(jsonPath("$.content[1].followed.userId").value(userC.getUserId().toString()))
+                .andExpect(jsonPath("$.content[2].follower.userId").value(userA.getUserId().toString()))
+                .andExpect(jsonPath("$.content[2].followed.userId").value(userD.getUserId().toString()))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.totalElements").value(3));
+    }
+
+    @Test
+    void getFollowed_ReturnsPaginatedResults() throws Exception {
+        createFollows(userB, userA);
+        createFollows(userC, userA);
+        createFollows(userD, userA);
+
+        mockMvc.perform(get("/api/friends/getFollowers"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].follower.userId").value(userB.getUserId().toString()))
+                .andExpect(jsonPath("$.content[0].followed.userId").value(userA.getUserId().toString()))
+                .andExpect(jsonPath("$.content[1].follower.userId").value(userC.getUserId().toString()))
+                .andExpect(jsonPath("$.content[1].followed.userId").value(userA.getUserId().toString()))
+                .andExpect(jsonPath("$.content[2].follower.userId").value(userD.getUserId().toString()))
+                .andExpect(jsonPath("$.content[2].followed.userId").value(userA.getUserId().toString()))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.totalElements").value(3));
+    }
+
+    @Test
+    void getFollowing_WithCustomPagination() throws Exception {
+        createFollows(userA, userB, userC, userD);
+
+        mockMvc.perform(get("/api/friends/getFollowing?page=1&size=2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.totalElements").value(3));
+    }
+
+    @Test
+    void getFollowers_WithCustomPagination() throws Exception {
+        createFollows(userB, userA);
+        createFollows(userC, userA);
+        createFollows(userD, userA);
+
+        mockMvc.perform(get("/api/friends/getFollowers?page=1&size=2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.totalElements").value(3));
+    }
+
+    @Test
+    void getBlockedUsers_WithCustomPagination() throws Exception {
+        createBlocks(userA, userB, userC, userD);
+
+        mockMvc.perform(get("/api/friends/getBlockedUsers?page=1&size=2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.totalElements").value(3));
+    }
+
+    @Test
+    void getFollowing_WithSorting() throws Exception {
+        createFollows(userA, userB, userC);
+
+        // Test sort by createdAt desc
+        mockMvc.perform(get("/api/friends/getFollowing?sortBy=createdAt&direction=desc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].follower.userId").value(userA.getUserId().toString()))
+                .andExpect(jsonPath("$.content[0].followed.userId").value(userC.getUserId().toString()))
+                .andExpect(jsonPath("$.content[1].follower.userId").value(userA.getUserId().toString()))
+                .andExpect(jsonPath("$.content[1].followed.userId").value(userB.getUserId().toString()));
+
+        // Test sort by createdAt asc
+        mockMvc.perform(get("/api/friends/getFollowing?sortBy=createdAt&direction=asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].follower.userId").value(userA.getUserId().toString()))
+                .andExpect(jsonPath("$.content[0].followed.userId").value(userB.getUserId().toString()))
+                .andExpect(jsonPath("$.content[1].follower.userId").value(userA.getUserId().toString()))
+                .andExpect(jsonPath("$.content[1].followed.userId").value(userC.getUserId().toString()));
+    }
+
+    @Test
+    void getFollowers_WithSorting() throws Exception {
+        createFollows(userB, userA);
+        createFollows(userC, userA);
+
+        // Test sort by createdAt desc
+        mockMvc.perform(get("/api/friends/getFollowers?sortBy=createdAt&direction=desc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].follower.userId").value(userC.getUserId().toString()))
+                .andExpect(jsonPath("$.content[0].followed.userId").value(userA.getUserId().toString()))
+                .andExpect(jsonPath("$.content[1].follower.userId").value(userB.getUserId().toString()))
+                .andExpect(jsonPath("$.content[1].followed.userId").value(userA.getUserId().toString()));
+
+        // Test sort by createdAt asc
+        mockMvc.perform(get("/api/friends/getFollowers?sortBy=createdAt&direction=asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].follower.userId").value(userB.getUserId().toString()))
+                .andExpect(jsonPath("$.content[0].followed.userId").value(userA.getUserId().toString()))
+                .andExpect(jsonPath("$.content[1].follower.userId").value(userC.getUserId().toString()))
+                .andExpect(jsonPath("$.content[1].followed.userId").value(userA.getUserId().toString()));
+    }
+
+    @Test
+    void getBlockedUsers_WithSorting() throws Exception {
+        createBlocks(userA, userB, userC, userD);
+
+        // Test sort by createdAt desc
+        mockMvc.perform(get("/api/friends/getBlockedUsers?sortBy=createdAt&direction=desc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].blocker.userId").value(userA.getUserId().toString()))
+                .andExpect(jsonPath("$.content[0].blocked.userId").value(userD.getUserId().toString()))
+                .andExpect(jsonPath("$.content[1].blocker.userId").value(userA.getUserId().toString()))
+                .andExpect(jsonPath("$.content[1].blocked.userId").value(userC.getUserId().toString()))
+                .andExpect(jsonPath("$.content[2].blocker.userId").value(userA.getUserId().toString()))
+                .andExpect(jsonPath("$.content[2].blocked.userId").value(userB.getUserId().toString()));
+
+        // Test sort by createdAt asc
+        mockMvc.perform(get("/api/friends/getBlockedUsers?sortBy=createdAt&direction=asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].blocker.userId").value(userA.getUserId().toString()))
+                .andExpect(jsonPath("$.content[0].blocked.userId").value(userB.getUserId().toString()))
+                .andExpect(jsonPath("$.content[1].blocker.userId").value(userA.getUserId().toString()))
+                .andExpect(jsonPath("$.content[1].blocked.userId").value(userC.getUserId().toString()))
+                .andExpect(jsonPath("$.content[2].blocker.userId").value(userA.getUserId().toString()))
+                .andExpect(jsonPath("$.content[2].blocked.userId").value(userD.getUserId().toString()));
+    }
+
+    @Test
+    void getFollowing_InvalidSortField() throws Exception {
+        createFollows(userA, userB);
+
+        mockMvc.perform(get("/api/friends/getFollowing?sortBy=invalidField"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getBlocked_InvalidSortField() throws Exception {
+        createBlocks(userA, userB, userC, userD);
+
+        mockMvc.perform(get("/api/friends/getBlockedUsers?sortBy=invalidField"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getNumberOfFollowing_Success() throws Exception {
+        createFollows(userA, userB, userC);
+
+        mockMvc.perform(get("/api/friends/getNumberOfFollowing"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("2"));
+    }
+
+    @Test
+    void getNumberOfFollowing_Zero() throws Exception {
+        mockMvc.perform(get("/api/friends/getNumberOfFollowing"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("0"));
+    }
+
+    @Test
+    void getNumberOfFollowers_Success() throws Exception {
+        createFollows(userB, userA);
+        createFollows(userC, userA);
+        createFollows(userD, userA);
+
+        mockMvc.perform(get("/api/friends/getNumberOfFollowers"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("3"));
+    }
+
+    @Test
+    void getNumberOfBlockedUsers_Success() throws Exception {
+        friendService.blockUser(userA.getUserId(), userB.getUserId());
+        friendService.blockUser(userA.getUserId(), userC.getUserId());
+
+        mockMvc.perform(get("/api/friends/getNumberOfBlockedUsers"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("2"));
+    }
+
+    @Test
+    void getNumberOfBlockedUsers_Zero() throws Exception {
+        mockMvc.perform(get("/api/friends/getNumberOfBlockedUsers"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("0"));
+    }
+
+    @Test
+    void getFriendships_ReturnsAllFriendshipsForUser() throws Exception {
+        // Given
+        Friendship friendship1 = friendService.createFriendship(userA, userB);
+        Friendship friendship2 = friendService.createFriendship(userA, userC);
+        Friendship friendship3 = createFriendship(userB, userC);
+
+        mockMvc.perform(get("/api/friends/getFriends"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[0].friendshipId").value(friendship1.getId().toString()))
+                .andExpect(jsonPath("$.content[1].friendshipId").value(friendship2.getId().toString()))
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.totalPages").value(1));
+    }
+
+    @Test
+    void getFriendships_PaginationWorksCorrectly() throws Exception {
+        // Given - 3 friendships
+        createFriendship(userA, userB);
+        createFriendship(userA, userC);
+        createFriendship(userA, userD);
+
+        // When/Then - Page 1
+        mockMvc.perform(get("/api/friends/getFriends?page=0&size=2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.totalElements").value(3));
+
+        // Page 2
+        mockMvc.perform(get("/api/friends/getFriends?page=1&size=2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)));
+    }
+
+    @Test
+    void getFriendships_SortingByCreatedAtDesc() throws Exception {
+        Friendship oldFriendship = createFriendship(userA, userB);
+        oldFriendship.setCreatedAt(Timestamp.from(Instant.now().minusSeconds(3600)));
+        friendshipRepository.save(oldFriendship);
+
+        Friendship newFriendship = createFriendship(userA, userC);
+
+        // When/Then
+        mockMvc.perform(get("/api/friends/getFriends?sortBy=createdAt&direction=desc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].friendshipId").value(newFriendship.getId().toString()))
+                .andExpect(jsonPath("$.content[1].friendshipId").value(oldFriendship.getId().toString()));
+    }
+
+    @Test
+    void getFriendships_SortingByCreatedAtAsc() throws Exception {
+        // Given - friendships created at different times
+        Friendship oldFriendship = createFriendship(userA, userB);
+        oldFriendship.setCreatedAt(Timestamp.from(Instant.now().minusSeconds(3600)));
+        friendshipRepository.save(oldFriendship);
+
+        Friendship newFriendship = createFriendship(userA, userC);
+
+        // When/Then
+        mockMvc.perform(get("/api/friends/getFriends?sortBy=createdAt&direction=asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].friendshipId").value(oldFriendship.getId().toString()))
+                .andExpect(jsonPath("$.content[1].friendshipId").value(newFriendship.getId().toString()));
+    }
+
+    @Test
+    void getFriendships_ReturnsEmptyWhenNoFriendships() throws Exception {
+        mockMvc.perform(get("/api/friends/getFriends"))
+                .andExpect(status().isNoContent());
+    }
+
+
     private void changeSecurityContext(User user) {
         UserPrincipal principal = new UserPrincipal(user);
         SecurityContextHolder.getContext().setAuthentication(
@@ -306,6 +617,26 @@ public class FriendControllerIntegrationTest {
                         principal.getAuthorities()
                 )
         );
+    }
+
+    private void createFollows(User follower, User... followedUsers) {
+        for (User followed : followedUsers) {
+            friendService.followUser(follower.getUserId(), followed.getUserId());
+        }
+    }
+
+    private void createBlocks(User blocker, User... blockedUsers) {
+        for (User blocked : blockedUsers) {
+            friendService.blockUser(blocker.getUserId(), blocked.getUserId());
+        }
+    }
+
+    private Friendship createFriendship(User user1, User user2) {
+        return friendshipRepository.save(Friendship.builder()
+                .user1(user1)
+                .user2(user2)
+                .createdAt(Timestamp.from(Instant.now()))
+                .build());
     }
 
 

@@ -4,11 +4,14 @@ import com.example.friends.and.chats.module.model.dto.BlockDTO;
 import com.example.friends.and.chats.module.model.dto.FollowDTO;
 import com.example.friends.and.chats.module.model.dto.FriendRequestDTO;
 import com.example.friends.and.chats.module.model.dto.FriendshipDTO;
+import com.example.friends.and.chats.module.model.entity.Friendship;
+import com.example.friends.and.chats.module.model.entity.User;
 import com.example.friends.and.chats.module.model.principal.UserPrincipal;
 import com.example.friends.and.chats.module.service.IFriendService;
 import com.example.friends.and.chats.module.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -80,49 +83,88 @@ public class FriendController {
         friendService.unblockUser(userPrincipal.getUserId(), userId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Block was removed successfully!");
     }
-//
-//    @GetMapping("/getFriends/{userId}")
-//    public ResponseEntity<?> getFriends(@PathVariable UUID userId) {
-//        return new ResponseEntity<>(null);
-//    }
-//
-//    @GetMapping("/getNumberOfFriends/{userId}")
-//    public ResponseEntity<?> getNumberOfFriends(@PathVariable UUID userId) {
-//        return new ResponseEntity<>(null);
-//    }
-//
-//    // follow
-//
-//
-//    @GetMapping("/getFollowing")
-//    public ResponseEntity<?> getFollowing() {
-//        return new ResponseEntity<>(null);
-//    }
-//
-//    @GetMapping("/getFollowers")
-//    public ResponseEntity<?> getFollowers() {
-//        return new ResponseEntity<>(null);
-//    }
-//
-//    @GetMapping("/getNumberOfFollowing/{userId}")
-//    public ResponseEntity<?> getNumberOfFollowing(@PathVariable UUID userId) {
-//        return new ResponseEntity<>(null);
-//    }
-//
-//    @GetMapping("/getNumberOfFollowers/{userId}")
-//    public ResponseEntity<?> getNumberOfFollowers(@PathVariable UUID userId) {
-//        return new ResponseEntity<>(null);
-//    }
-//
-//    // block
-//
-//    @PostMapping("/report/{userId}")
-//    public ResponseEntity<?> reportUser(@PathVariable UUID userId) {
-//        return new ResponseEntity<>(null);
-//    }
-//
-//    @PostMapping("/getBlockedUsers")
-//    public ResponseEntity<?> getBlockedUsers() {
-//        return new ResponseEntity<>(null);
-//    }
+
+    @Tag(name = "get", description = "Get Friends")
+    @GetMapping("/getFriends")
+    public ResponseEntity<Page<FriendshipDTO>> getFriends(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        Page<FriendshipDTO> friendshipDTOS = friendService.getFriendships(userPrincipal.getUserId(), page, size, sortBy, direction);
+        return friendshipDTOS.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(friendshipDTOS);
+
+    }
+
+    @Tag(name = "get", description = "Get Following")
+    @GetMapping("/getFollowing")
+    public ResponseEntity<Page<FollowDTO>> getFollowing(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        Page<FollowDTO> followDTOS = friendService.getFollowing(userPrincipal.getUserId(), page, size, sortBy, direction);
+        return followDTOS.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(followDTOS);
+    }
+
+    @Tag(name = "get", description = "Get Followers")
+    @GetMapping("/getFollowers")
+    public ResponseEntity<Page<FollowDTO>> getFollowers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        Page<FollowDTO> followDTOS = friendService.getFollowers(userPrincipal.getUserId(), page, size, sortBy, direction);
+        return followDTOS.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(followDTOS);
+    }
+
+
+    @Tag(name = "get", description = "Get Blocked Users")
+    @GetMapping("/getBlockedUsers")
+    public ResponseEntity<Page<BlockDTO>> getBlockedUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        Page<BlockDTO> blockDTOS = friendService.getBlockedUsers(userPrincipal.getUserId(), page, size, sortBy, direction);
+        return blockDTOS.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(blockDTOS);
+    }
+
+    @Tag(name = "get", description = "Get Number Of Following")
+    @GetMapping("/getNumberOfFollowing")
+    public ResponseEntity<Integer> getNumberOfFollowing() {
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        int count = friendService.getFollowingCount(userPrincipal.getUserId());
+        return ResponseEntity.ok(count);
+    }
+
+    @Tag(name = "get", description = "Get Number Of Followers")
+    @GetMapping("/getNumberOfFollowers")
+    public ResponseEntity<Integer> getNumberOfFollowers() {
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        int count = friendService.getFollowersCount(userPrincipal.getUserId());
+        return ResponseEntity.ok(count);
+    }
+
+    @Tag(name = "get", description = "Get Number Of Blocked Users")
+    @GetMapping("/getNumberOfBlockedUsers")
+    public ResponseEntity<Integer> getNumberOfBlockedUsers() {
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        int count = friendService.getBlockedUsersCount(userPrincipal.getUserId());
+        return ResponseEntity.ok(count);
+    }
+
+
+    @Tag(name = "get", description = "Get Number Of Friends")
+    @GetMapping("/getNumberOfFriends")
+    public ResponseEntity<Integer> getNumberOfFriends() {
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        return ResponseEntity.ok(friendService.getNumberOfFriends(userPrincipal.getUserId()));
+    }
+
+
 }
