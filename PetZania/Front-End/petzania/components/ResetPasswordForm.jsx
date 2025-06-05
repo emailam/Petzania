@@ -91,7 +91,7 @@ export default function ResetPasswordForm() {
                 errors={errors}
                 placeholder="Confirm your new password"
                 showPassword={displayConfirmPassword}
-                toggleShow={() => setDisplayConfirmPassword(!displayConfirmPassword)} // 🔥 Fixed this line
+                toggleShow={() => setDisplayConfirmPassword(!displayConfirmPassword)} 
             />
             <Button
                 title="Reset Password"
