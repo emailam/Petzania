@@ -1,4 +1,8 @@
-import { StyleSheet, View, Text, TextInput, KeyboardAvoidingView, ScrollView, Platform, Image, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import {
+    StyleSheet, View, Text, TextInput, KeyboardAvoidingView,
+    ScrollView, Platform, Image, TouchableOpacity,
+    FlatList, ActivityIndicator
+} from 'react-native';
 import React, { useState, useContext } from 'react';
 import { useRouter } from 'expo-router';
 
@@ -11,20 +15,43 @@ import { PetContext } from '@/context/PetContext';
 import { UserContext } from '@/context/UserContext';
 
 import { addPetToUser } from '@/services/petService';
+import { uploadFiles } from '@/services/uploadService';
 
 export default function AddPet5() {
-    const { pet, setPet } = useContext(PetContext); // merged context usage
-    const [vaccineFiles, setVaccineFiles] = useState([]);
+    const { pet, setPet } = useContext(PetContext);
+    const [vaccineFiles, setVaccineFiles] = useState(pet.myVaccinesURLs || []);
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
 
     const { user } = useContext(UserContext);
 
-
     const goToNextStep = async () => {
-        await addPetToUser(pet, user.userId);
-        router.dismissAll();
-        router.push('/RegisterModule/AddPet6');
+        try {
+            setIsLoading(true);
+
+            if (vaccineFiles.length > 0) {
+                const files = vaccineFiles.map(file => ({
+                    uri: file.uri,
+                    name: file.name,
+                    type: 'application/pdf',
+                }));
+
+                const uploadedUrls = await uploadFiles(files);
+
+                setPet(prev => ({
+                    ...prev,
+                    myVaccinesURLs: uploadedUrls,
+                }));
+            }
+
+            await addPetToUser(pet, user.userId);
+            router.dismissAll();
+            router.push('/RegisterModule/AddPet6');
+        } catch (err) {
+            console.error('Error uploading vaccine files:', err);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleFilePick = async () => {
@@ -33,15 +60,16 @@ export default function AddPet5() {
             const result = await DocumentPicker.getDocumentAsync({
                 type: ['application/pdf'],
                 copyToCacheDirectory: true,
-                multiple: false,
+                multiple: true,
             });
-            if (result?.assets) {
-                const file = result.assets[0];
-                setPet({ ...pet, myVaccinesURLs: file });
-                setVaccineFiles((prev) => [...prev, file]);
-            } else if (result?.name) {
-                setPet({ ...pet, myVaccinesURLs: result });
-                setVaccineFiles((prev) => [...prev, result]);
+
+            if (result?.assets?.length) {
+                const newFiles = result.assets.map(file => ({
+                    uri: file.uri,
+                    name: file.name,
+                }));
+
+                setVaccineFiles(prev => [...prev, ...newFiles]);
             } else {
                 console.log('User canceled or no file selected');
             }
@@ -52,6 +80,11 @@ export default function AddPet5() {
         }
     };
 
+    const deleteFile = (uriToDelete) => {
+        const updated = vaccineFiles.filter(file => file.uri !== uriToDelete);
+        setVaccineFiles(updated);
+    };
+
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -59,21 +92,17 @@ export default function AddPet5() {
         >
             <FlatList
                 ListHeaderComponent={
-                    <>
-                        <TouchableOpacity style={styles.vaccinesInput} onPress={handleFilePick}>
-                            <View style={styles.leftContainer}>
-                                <Image source={require('@/assets/images/AddPet/Vaccines.png')} style={styles.image} />
-                                <Text style={styles.vaccineLabel}>Vaccines</Text>
-                            </View>
-                            <View style={styles.rightContainer}>
-                                {isLoading ? (
-                                    <ActivityIndicator size="small" color="#9188E5" />
-                                ) : (
-                                    <Feather name="file-plus" size={28} color="#9188E5" />
-                                )}
-                            </View>
-                        </TouchableOpacity>
-                    </>
+                    <TouchableOpacity style={styles.vaccinesInput} onPress={handleFilePick} disabled={isLoading}>
+                        <View style={styles.leftContainer}>
+                            <Image source={require('@/assets/images/AddPet/Vaccines.png')} style={styles.image} />
+                            <Text style={styles.vaccineLabel}>Vaccines</Text>
+                        </View>
+                        <View style={styles.rightContainer}>
+                            {isLoading
+                                ? <ActivityIndicator size="small" color="#9188E5" />
+                                : <Feather name="file-plus" size={28} color="#9188E5" />}
+                        </View>
+                    </TouchableOpacity>
                 }
                 data={vaccineFiles}
                 keyExtractor={(item, index) => index.toString()}
@@ -83,7 +112,11 @@ export default function AddPet5() {
                             <Image source={require('@/assets/images/AddPet/PDF.png')} style={styles.image} />
                             <Text style={styles.vaccineLabel}>{item.name}</Text>
                         </View>
-                        <TouchableOpacity style={styles.rightContainer} onPress={() => setVaccineFiles((prev) => prev.filter((file) => file.uri !== item.uri))}>
+                        <TouchableOpacity
+                            style={styles.rightContainer}
+                            onPress={() => deleteFile(item.uri)}
+                            disabled={isLoading}
+                        >
                             <AntDesign name="delete" size={22} color="#C70000" />
                         </TouchableOpacity>
                     </View>
@@ -91,8 +124,9 @@ export default function AddPet5() {
                 contentContainerStyle={styles.scrollContainer}
                 keyboardShouldPersistTaps="handled"
             />
+
             <View style={styles.buttonContainer}>
-                <Button title="Next" borderRadius={10} fontSize={16} onPress={goToNextStep} />
+                <Button title="Next" borderRadius={10} fontSize={16} onPress={goToNextStep} loading={isLoading} />
             </View>
         </KeyboardAvoidingView>
     );

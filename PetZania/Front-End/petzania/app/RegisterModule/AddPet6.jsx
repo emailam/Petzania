@@ -29,6 +29,8 @@ export default function AddPet6() {
         }
     };
 
+    console.log('Pets:', pets);
+
     useEffect(() => {
         retrievePets();
         createNewPet();

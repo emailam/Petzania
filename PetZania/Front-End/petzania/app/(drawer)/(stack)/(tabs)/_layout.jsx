@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { DrawerActions, useNavigation } from '@react-navigation/native';
-
+import { useRouter } from 'expo-router';
 
 import React, { useState, useContext } from 'react';
 import { Platform, View, TouchableOpacity, Image, StyleSheet, Text } from 'react-native';
@@ -16,11 +16,11 @@ import { UserContext } from '@/context/UserContext';
 export default function TabLayout() {
 
   const defaultImage = require('@/assets/images/AddPet/Pet Default Pic.png');
-  const [image, setImage] = useState(null);
 
   const { user } = useContext(UserContext);
 
   const navigation = useNavigation();
+  const router = useRouter();
 
   const HeaderLeft = () => (
     <View style={styles.leftHeader}>
@@ -29,7 +29,7 @@ export default function TabLayout() {
       </TouchableOpacity>
       <TouchableOpacity onPress={() => { /* navigate to profile */ }} >
         <View style={styles.imageContainer}>
-          <Image source={image ? { uri: image } : defaultImage} style={styles.image} />
+          <Image source={user?.profilePictureURL ? { uri: user.profilePictureURL } : defaultImage} style={styles.image} />
         </View>
       </TouchableOpacity>
     </View>
@@ -37,11 +37,11 @@ export default function TabLayout() {
 
   const HeaderRight = () => (
     <View style={{ flexDirection: 'row', gap: 4, marginRight: 16, alignItems: 'center' }}>
-      <TouchableOpacity onPress={() => {  }}>
+      <TouchableOpacity onPress={() => { router.push('Search') }}>
         <Feather name="search" size={22} color="#9188E5" />
       </TouchableOpacity>
       <Text style={{ fontSize: 22, color: '#808B9A' }}> | </Text>
-      <TouchableOpacity onPress={() => { /* handle chat */ }}>
+      <TouchableOpacity onPress={() => { router.push('Chat') }}>
         <Ionicons name="chatbubble-ellipses-outline" size={24} color="#9188E5" />
       </TouchableOpacity>
     </View>

@@ -5,7 +5,6 @@ import {
     TouchableOpacity,
     Text,
     TextInput,
-    Dimensions,
     KeyboardAvoidingView,
     ScrollView,
     Platform,
@@ -17,40 +16,25 @@ import { useRouter } from 'expo-router';
 import Button from '@/components/Button';
 import { isValidPhoneNumber } from 'libphonenumber-js';
 
-import { UserContext } from '@/context/UserContext';
+import { uploadFile } from '@/services/uploadService';
+import { updateUserData } from '@/services/userService';
 
-import api from '@/api/axiosInstance';
+import { UserContext } from '@/context/UserContext';
 
 const ProfileSetUp1 = () => {
     const defaultImage = require('@/assets/images/Defaults/default-user.png');
     const router = useRouter();
 
-    const [image, setImage] = useState(null);
-    const [name, setName] = useState('');
-    const [bio, setBio] = useState('');
-    const [phoneNumber, setPhoneNumber] = useState('');
+    const { user, setUser } = useContext(UserContext);
+
+    const [image, setImage] = useState(user?.profilePictureURL || null);
+    const [name, setName] = useState(user?.name || '');
+    const [bio, setBio] = useState(user?.bio || '');
+    const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || '');
     const [error, setError] = useState('');
     const [phoneError, setPhoneError] = useState('');
 
-    const { user, setUser } = useContext(UserContext);
-
-    const updateUserData = async (userData) => {
-        console.log('Updating user data:', user);
-        try {
-            const response = await api.patch(`/user/auth/${user.userId}`, userData);
-            if (response.status === 200) {
-                setUser((prevUser) => ({ ...prevUser, ...userData }));
-                console.log('User data updated successfully:', response.data);
-            } else {
-                console.error('Failed to update user data. Status:', response.status);
-            }
-        } catch (error) {
-            console.error('Error updating user data:', error.response?.data?.message || error.message);
-        }
-        finally {
-            
-        }
-    };
+    const [isLoading, setIsLoading] = useState(false);
 
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
@@ -83,85 +67,107 @@ const ProfileSetUp1 = () => {
             return;
         }
 
+        let uploadedImageUrl = user?.profilePictureURL;
+        if(image && image !== user?.profilePictureURL) {
+            try {
+                const file = {
+                    uri: image,
+                    type: 'image/jpeg',
+                    name: 'profile.jpg',
+                };
+                setIsLoading(true);
+                uploadedImageUrl = await uploadFile(file);
+            } catch (err) {
+                console.error('Failed to upload profile picture:', err.message);
+                return;
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
         const userData = {
             name,
             phoneNumber,
             bio,
-            profilePictureURL: image || '',
+            profilePictureURL: uploadedImageUrl || "",
         };
 
-        await updateUserData(userData);
-
-        setError('');
-        setPhoneError('');
-
-        router.push('/RegisterModule/ProfileSetUp2');
+        try {
+            setIsLoading(true);
+            const updatedUser = await updateUserData(user.userId, userData);
+            setUser((prevUser) => ({ ...prevUser, ...updatedUser }));
+            setError('');
+            setPhoneError('');
+            router.push('/RegisterModule/ProfileSetUp2');
+        } catch (err) {
+            console.error('Error updating user profile:', err.message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
-    <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
-    >
-        <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
-        <View style={styles.imageContainer}>
-            <TouchableOpacity onPress={pickImage} style={styles.imageWrapper}>
-            <Image source={image ? { uri: image } : defaultImage} style={styles.image} />
-            {image && (
-                <TouchableOpacity onPress={deleteImage} style={styles.trashIcon}>
-                <AntDesign name="delete" size={20} style={styles.icon} />
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.container}
+        >
+            <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+            <View style={styles.imageContainer}>
+                <TouchableOpacity onPress={pickImage} style={styles.imageWrapper}>
+                <Image source={image ? { uri: image } : defaultImage} style={styles.image} />
+                {image && (
+                    <TouchableOpacity onPress={deleteImage} style={styles.trashIcon}>
+                    <AntDesign name="delete" size={20} style={styles.icon} />
+                    </TouchableOpacity>
+                )}
                 </TouchableOpacity>
-            )}
-            </TouchableOpacity>
-        </View>
+            </View>
 
-        <View style={styles.inputContainer}>
-            <Text style={styles.label}>
-                Full Name <Text style={{ color: 'red' }}>*</Text>
-            </Text>
-            <TextInput
-                style={[styles.input, error ? styles.inputError : null]}
-                placeholder="Tyler Gregory Okonma"
-                value={name}
-                onChangeText={(text) => {
-                    setName(text);
-                    setError('');
-                }}
-            />
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>
+                    Full Name <Text style={{ color: 'red' }}>*</Text>
+                </Text>
+                <TextInput
+                    style={[styles.input, error ? styles.inputError : null]}
+                    placeholder="Tyler Gregory Okonma"
+                    value={name}
+                    onChangeText={(text) => {
+                        setName(text);
+                        setError('');
+                    }}
+                />
+                {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-            <Text style={[styles.label, { marginTop: 12 }]}>Phone Number</Text>
-            <TextInput
-                style={[styles.input, phoneError ? styles.inputError : null]}
-                placeholder="+20 101 234 5678"
-                keyboardType="phone-pad"
-                value={phoneNumber}
-                onChangeText={(text) => {
-                    setPhoneNumber(text);
-                    setPhoneError('');
-                }}
-            />
-            {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
+                <Text style={[styles.label, { marginTop: 12 }]}>Phone Number</Text>
+                <TextInput
+                    style={[styles.input, phoneError ? styles.inputError : null]}
+                    placeholder="+20 101 234 5678"
+                    keyboardType="phone-pad"
+                    value={phoneNumber}
+                    onChangeText={(text) => {
+                        setPhoneNumber(text);
+                        setPhoneError('');
+                    }}
+                />
+                {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
 
-            <Text style={[styles.label, { marginTop: 12 }]}>Bio</Text>
-            <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="About"
-                multiline
-                value={bio}
-                onChangeText={setBio}
-            />
-        </View>
-        </ScrollView>
+                <Text style={[styles.label, { marginTop: 12 }]}>Bio</Text>
+                <TextInput
+                    style={[styles.input, styles.textArea]}
+                    placeholder="About"
+                    multiline
+                    value={bio}
+                    onChangeText={setBio}
+                />
+            </View>
+            </ScrollView>
 
-        <View style={styles.buttonContainer}>
-            <Button title="Next" borderRadius={10} fontSize={16} onPress={goToNextStep} />
-        </View>
-    </KeyboardAvoidingView>
+            <View style={styles.buttonContainer}>
+                <Button title="Next" borderRadius={10} fontSize={16} onPress={goToNextStep} loading={isLoading}/>
+            </View>
+        </KeyboardAvoidingView>
     );
 };
-
-export default ProfileSetUp1;
 
 const styles = StyleSheet.create({
     container: {
@@ -257,3 +263,5 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
 });
+
+export default ProfileSetUp1;

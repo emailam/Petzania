@@ -22,7 +22,7 @@ export default function OTPVerificationScreen() {
 
         <Text style={styles.footerText}>Didn't receive any code?</Text>
 
-        <RequestOTP RESEND_COOLDOWN = {60} email = {email} isRegister = {isRegister}/>
+        <RequestOTP RESEND_COOLDOWN = {180} email = {email} isRegister = {isRegister}/>
       </View>
     </SafeAreaView>
   );

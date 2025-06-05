@@ -25,7 +25,7 @@ export default function RequestOTP({ RESEND_COOLDOWN, email, isRegister }) {
     if (!resendActive) return;
     try {
       if (isRegister === "true") {
-        const response = await axios.put("http://192.168.1.4:8080/api/user/auth/resendOTP", {
+        const response = await axios.post("http://192.168.1.4:8080/api/user/auth/resendOTP", {
           email: email,
         });
         if (response.status === 200) {

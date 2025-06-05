@@ -13,7 +13,7 @@ export default function PetCard({ pet }) {
     return (
         <TouchableOpacity style={styles.container} onPress={() => {showPetInfo(pet)}} >
             <View style={styles.leftContainer}>
-                <Image style={styles.imageContainer} source={pet.image ? { uri: pet.image } : require('@/assets/images/AddPet/Pet Default Pic.png')}  />
+                <Image style={styles.imageContainer} source={pet?.myPicturesURLs?.length ? { uri: pet.myPicturesURLs[0] } : require('@/assets/images/AddPet/Pet Default Pic.png')}  />
                 <View>
                     <Text style={styles.header}>
                         {pet.name}

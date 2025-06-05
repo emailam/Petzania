@@ -1,5 +1,5 @@
-import React from "react";
-import { ScrollView, Text , StyleSheet, View } from 'react-native';
+import React, { useContext, useEffect }from "react";
+import { ScrollView, Text , StyleSheet, View, Image } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Link } from "expo-router";
 import { responsive } from "@/utilities/responsive";
@@ -7,27 +7,26 @@ import ExternalSignIn from "@/components/ExternalSignIn";
 import LoginForm from "@/components/LoginForm";
 
 export default function LoginScreen() {
-    return (
-      <SafeAreaView style={styles.safeArea}>
+  return (
+    <SafeAreaView style={styles.safeArea}>
 
-        <Text style={styles.title}>PetZania</Text>
-  
-        <ScrollView contentContainerStyle={styles.container}>
-          
-            <LoginForm/>
-            
-            <Text style={styles.text}> Don't have an account?{" "}
-              <Link href={""} style={styles.link}> Sign up now </Link>
-            </Text>
+      <Text style={styles.title}>PetZania</Text>
 
-            <View style = {styles.button}>
-              <ExternalSignIn/>
-            </View>
-  
-        </ScrollView>
-        
-      </SafeAreaView>
-    );
+      <ScrollView contentContainerStyle={styles.container}>
+
+          <LoginForm/>
+          <Text style={styles.text}> Don't have an account?{" "}
+            <Link href={""} style={styles.link}> Sign up now </Link>
+          </Text>
+
+          <View style = {styles.button}>
+            <ExternalSignIn/>
+          </View>
+
+      </ScrollView>
+
+    </SafeAreaView>
+  );
 }
 
 
@@ -37,16 +36,18 @@ const styles = StyleSheet.create({
     gap: responsive.hp('2%'),
     paddingTop: responsive.hp('10%'),
     height: responsive.hp('100%'),
+    width: responsive.wp('100%'),
+    paddingHorizontal: '5%',
   },
   title: {
     fontSize: responsive.fonts.title,
     color: '#9188E5',
     fontWeight: 'bold',
-    marginLeft: responsive.margins.screenEdge + 20,
+    paddingHorizontal: '5%',
   },
   container: {
     alignItems: 'center',
-    gap: responsive.hp('2%'),     
+    gap: responsive.hp('2%'),
   },
   link: {
     color: '#9188E5',

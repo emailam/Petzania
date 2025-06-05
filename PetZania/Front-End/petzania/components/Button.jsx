@@ -1,5 +1,7 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, ActivityIndicator } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+
+import LottieView from "lottie-react-native";
 
 export default function Button({ title, onPress, disabled, loading, fontSize }) {
   const isDisabled = disabled || loading;
@@ -16,7 +18,12 @@ export default function Button({ title, onPress, disabled, loading, fontSize }) 
       disabled={isDisabled}
     >
       {loading ? (
-        <ActivityIndicator color="#ffffff" />
+        <LottieView
+          source={require("@/assets/lottie/loading.json")}
+          autoPlay
+          loop
+          style={styles.lottie}
+        />
       ) : React.isValidElement(title) ? (
         title
       ) : (
@@ -34,13 +41,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 12,
     width: "100%",
+    height: 52,
   },
   disabledButton: {
-    backgroundColor: "#BDB9F1", // lighter version of the purple when disabled
+    backgroundColor: "#BDB9F1",
     opacity: 0.8,
   },
   text: {
     color: "#ffffff",
     fontFamily: "Inter-Bold",
+  },
+  lottie: {
+    width: 70,
+    height: 70,
   },
 });

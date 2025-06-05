@@ -9,8 +9,6 @@ import { UserContext } from '@/context/UserContext';
 
 import { getAllPetsByUserId } from '@/services/petService';
 
-import Toast from 'react-native-toast-message';
-
 export default function ProfileSetUp3() {
     const { pets, setPets } = useContext(PetContext);
     const router = useRouter();
@@ -40,7 +38,7 @@ export default function ProfileSetUp3() {
         <View style={styles.container}>
             <View style={styles.userContainer}>
                 <Image
-                    source={defaultUserImage}
+                    source={{uri: user?.profilePictureURL || defaultUserImage}}
                     style={styles.userImage}
                 />
                 <View style={styles.userInfo}>

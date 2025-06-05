@@ -5,14 +5,41 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="aacd7b49-acd6-447f-8aa4-f4265b4b3699" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/45fbe3f2-a468-4e9a-98f4-5ce17a483b46.xml" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/(stack)/Chat/ChatDetails.jsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/(stack)/Chat/index.jsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/(stack)/Help/_layout.jsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/(stack)/Search/_layout.jsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/(stack)/Search/index.jsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/assets/images/Login.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/assets/lottie/loading.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/services/uploadService.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/services/userService.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/storage/userStorage.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/45fbe3f2-a468-4e9a-98f4-5ce17a483b46.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/45fbe3f2-a468-4e9a-98f4-5ce17a483b46.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/45fbe3f2-a468-4e9a-98f4-5ce17a483b46/storage_v2/_src_/database/postgres.edMnLQ/schema/public.abK9xQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/45fbe3f2-a468-4e9a-98f4-5ce17a483b46/storage_v2/_src_/database/postgres.edMnLQ/schema/public.abK9xQ.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/config/DummyDataConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/config/DummyDataConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/repository/AdminRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/repository/AdminRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/repository/UserRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl/AdminService.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl/AdminService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl/MyUserDetailsService.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl/MyUserDetailsService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/main/java/com/example/registrationmodule/service/impl/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/api/axiosInstance.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/api/axiosInstance.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/(stack)/(tabs)/_layout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/(stack)/(tabs)/_layout.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/(stack)/_layout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/(stack)/_layout.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/_layout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/_layout.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/AddPet1.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/AddPet1.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/AddPet2.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/AddPet2.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/AddPet5.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/AddPet5.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/AddPet6.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/AddPet6.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/LoginScreen.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/LoginScreen.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/OTPVerificationScreen.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/OTPVerificationScreen.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/ProfileSetUp1.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/ProfileSetUp1.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/ProfileSetUp3.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/ProfileSetUp3.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/index.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/index.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/Button.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/Button.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/CustomDrawer.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/CustomDrawer.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/LoginForm.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/LoginForm.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/PetCard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/PetCard.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/RequestOTP.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/RequestOTP.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/context/PetContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/context/PetContext.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/storage/tokenStorage.js" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/storage/tokenStorage.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -70,7 +97,7 @@
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
     &quot;git-widget-placeholder&quot;: &quot;Front-Back-Integration-Registration-Module&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/PC/Documents/GitHub/Petzania&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/AliveTube/Desktop/Seniro Year/Final Semester/Theory Of Computations/Assignments/TOC_Assignment_3/PDA&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
@@ -224,6 +251,21 @@
       <workItem from="1746380447926" duration="21000" />
       <workItem from="1746380477533" duration="7000" />
       <workItem from="1746380493675" duration="3193000" />
+      <workItem from="1746482115278" duration="4750000" />
+      <workItem from="1746603463478" duration="597000" />
+      <workItem from="1746697550445" duration="2362000" />
+      <workItem from="1746706083032" duration="1850000" />
+      <workItem from="1746716879706" duration="633000" />
+      <workItem from="1746735151070" duration="82000" />
+      <workItem from="1746819638591" duration="3208000" />
+      <workItem from="1746880454033" duration="101000" />
+      <workItem from="1747003306183" duration="3977000" />
+      <workItem from="1747081063623" duration="15000" />
+      <workItem from="1747174623232" duration="2307000" />
+      <workItem from="1747259244097" duration="613000" />
+      <workItem from="1747407648593" duration="813000" />
+      <workItem from="1747433327307" duration="404000" />
+      <workItem from="1747499772958" duration="27000" />
     </task>
     <servers />
   </component>
@@ -238,12 +280,12 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/test/java/com/example/registrationmodule/controller/UserControllerIntegrationTests.java</url>
-          <line>506</line>
+          <line>539</line>
           <option name="timeStamp" value="6" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/PetZania/Back-End/RegistrationModule/src/test/java/com/example/registrationmodule/controller/UserControllerIntegrationTests.java</url>
-          <line>574</line>
+          <line>607</line>
           <option name="timeStamp" value="15" />
         </line-breakpoint>
       </breakpoints>
