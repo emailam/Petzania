@@ -11,11 +11,11 @@ const passwordSchema = yup.string()
   ).matches(
     /^\S*$/,
     "Password must not contain spaces"
-  );;
+  );
 const usernameSchema = yup.string().required('Username is required').min(5,"Username must be at least 5 characters").max(30, "Password cannot exceed 30 characters").matches(
     /^\S*$/,
     "Username must not contain spaces"
-  );;
+  );
 export const schemas = 
     {
     register : yup.object({
