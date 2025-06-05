@@ -1,15 +1,9 @@
 package com.example.registrationmodule.controller;
 
-import com.example.registrationmodule.exception.user.UserNotFound;
 import com.example.registrationmodule.model.dto.*;
-import com.example.registrationmodule.model.entity.Media;
-import com.example.registrationmodule.service.ICloudService;
-import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.model.entity.UserPrincipal;
 import com.example.registrationmodule.service.IUserService;
-import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,12 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
 import java.nio.file.AccessDeniedException;
-import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 @RestController
@@ -30,8 +19,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserController {
     private final IUserService userService;
-    private final ICloudService cloudService;
-
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout(@RequestBody @Valid LogoutDTO logoutDTO) {
@@ -73,39 +60,6 @@ public class UserController {
         UserProfileDTO userProfileDTO = userService.registerUser(registerUserDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(new SignUpResponseDTO("User registered successfully", userProfileDTO));
     }
-
-    @PatchMapping("/{id}/files")
-    public ResponseEntity<UserProfileDTO> updateUserFiles(@PathVariable(name = "id") UUID userId,
-                                                               @RequestPart(value = "profile picture", required = false) MultipartFile profilePicture) throws IOException {
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Object principal = authentication.getPrincipal();
-
-        if (principal instanceof UserPrincipal userPrincipal) {
-            System.out.println(((UserPrincipal) principal).getUserId());
-            System.out.println(userId);
-            if (!userPrincipal.getUserId().equals(userId)) {
-                throw new AccessDeniedException("You can only update your own profile");
-            }
-        }
-
-        UpdateUserProfileDto updateUserProfileDto = new UpdateUserProfileDto();
-
-        if(profilePicture != null) {
-            if(!profilePicture.isEmpty()) {
-                Media media = cloudService.uploadAndSaveMedia(profilePicture, true);
-                String cdnUrl = cloudService.getMediaUrl(media.getMediaId());
-                updateUserProfileDto.setProfilePictureURL(cdnUrl);
-            }
-            else {
-                updateUserProfileDto.setProfilePictureURL("");
-            }
-        }
-
-        UserProfileDTO userProfileDto = userService.updateUserById(userId, updateUserProfileDto);
-        return ResponseEntity.ok(userProfileDto);
-    }
-
 
     @PatchMapping("/{id}")
     public ResponseEntity<UserProfileDTO> updateUserProfile(@PathVariable("id") UUID userId,

@@ -141,7 +141,7 @@ public class DTOConversionService implements IDTOConversionService {
     }
 
     @Override
-    public Media convertToMedia(MediaDTO mediaDTO) {
+    public Media mapToMedia(MediaDTO mediaDTO) {
         Media media = new Media();
         media.setKey(mediaDTO.getKey());
         media.setFormat(mediaDTO.getFormat());
