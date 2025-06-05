@@ -16,7 +16,7 @@ export default function LoginScreen() {
 
           <LoginForm/>
           <Text style={styles.text}> Don't have an account?{" "}
-            <Link href={""} style={styles.link}> Sign up now </Link>
+            <Link href={"/RegisterModule/RegisterScreen"} style={styles.link}> Sign up now </Link>
           </Text>
 
           <View style = {styles.button}>

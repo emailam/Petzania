@@ -46,7 +46,7 @@ export default function AddPet3() {
     );
 
     const goToNextStep = () => {
-        if (!pet.breed.trim()) {  // check if breed is empty
+        if (!pet.breed.trim()) {
             setError('Please enter or select a breed.');
             return;
         }
