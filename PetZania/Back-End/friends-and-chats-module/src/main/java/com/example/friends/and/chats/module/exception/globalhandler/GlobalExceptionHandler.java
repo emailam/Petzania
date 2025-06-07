@@ -1,5 +1,6 @@
 package com.example.friends.and.chats.module.exception.globalhandler;
 
+import com.example.friends.and.chats.module.exception.RateLimitExceeded;
 import com.example.friends.and.chats.module.exception.admin.AdminNotFound;
 import com.example.friends.and.chats.module.exception.chat.ChatNotFound;
 import com.example.friends.and.chats.module.exception.chat.UserChatNotFound;
@@ -103,5 +104,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidMessageStatusTransition.class)
     public ResponseEntity<Map<String, Object>> handleInvalidMessageStatusTransitionException(InvalidMessageStatusTransition ex) {
         return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
+    }
+    @ExceptionHandler(RateLimitExceeded.class)
+    public ResponseEntity<Map<String, Object>> handleRateLimitExceededException(RateLimitExceeded ex) {
+        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
     }
 }

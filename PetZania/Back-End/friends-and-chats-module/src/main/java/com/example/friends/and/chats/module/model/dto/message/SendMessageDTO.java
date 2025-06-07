@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.UUID;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Data
 @NoArgsConstructor
@@ -13,9 +15,13 @@ import java.util.UUID;
 @Builder
 public class SendMessageDTO {
 
+    @NotNull
     private UUID chatId;
-    private String content;
-    private UUID replyToMessageId;
-    private boolean isFile;
 
+    @Size(max = 1000)
+    private String content;
+
+    private UUID replyToMessageId;
+
+    private boolean isFile;
 }

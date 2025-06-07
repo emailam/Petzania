@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface UserChatRepository extends JpaRepository<UserChat, UUID> {
     Optional<UserChat> findByChat_ChatIdAndUser_UserId(UUID chatId, UUID userId);
     List<UserChat> findByUser_UserId(UUID userId);
+    boolean existsByChat_ChatIdAndUser_UserId(UUID chatId, UUID userId);
 }
