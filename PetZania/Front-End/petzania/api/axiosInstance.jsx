@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { getToken, saveToken, clearAllTokens } from '../storage/tokenStorage';
 
+const BASE_URL = "http://192.168.1.6:8080/api";
+
 const api = axios.create({
-    baseURL: 'http://192.168.1.4:8080/api',
+    baseURL: BASE_URL,
 });
 
 let isRefreshing = false;
@@ -52,9 +54,11 @@ api.interceptors.response.use(
 
             try {
                 const refreshToken = await getToken('refreshToken');
-                const response = await axios.post('http://192.168.1.4:8080/api/user/auth/refresh-token', {
+
+                const response = await axios.post(`${BASE_URL}/user/auth/refresh-token`, {
                     refreshToken,
                 });
+
                 console.log('New access token:', response.data);
                 const newAccessToken = response.data.accessToken;
                 await saveToken('accessToken', newAccessToken);

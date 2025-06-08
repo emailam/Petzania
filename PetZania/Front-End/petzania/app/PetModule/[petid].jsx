@@ -15,7 +15,7 @@ import Button from '@/components/Button';
 import DateOfBirthInput from '@/components/DateOfBirthInput';
 import { PETS } from '@/constants/PETS';
 import { PET_BREEDS } from '@/constants/PETBREEDS';
-import { updatePet, deletePet, getAllPetsByUserId } from '@/services/petService';
+import { updatePet, deletePet } from '@/services/petService';
 import Toast from 'react-native-toast-message';
 
 const PetDetails = () => {
@@ -160,11 +160,11 @@ const PetDetails = () => {
             myVaccinesURLs: vaccineFiles.map(file => file.uri || file),
             myPicturesURLs: Array.isArray(pet.myPicturesURLs) ? pet.myPicturesURLs : [],
         };
-    
+
         try {
             setIsLoading(true);
-            await updatePet(petId, petData);  // <-- await here!
-    
+            await updatePet(petId, petData);
+
             setPets(prevPets => prevPets.map(p =>
                 p.petId === petId ? { ...p, ...petData } : p
             ));

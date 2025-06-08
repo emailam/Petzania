@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet } from "react-native";
 import PasswordInput from "@/components/PasswordInput";
-import axios from "axios";
+
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Button from "@/components/Button";
 import { useAuthForm } from "@/components/useForm";
@@ -8,6 +8,8 @@ import { responsive } from "@/utilities/responsive";
 import React from "react";
 
 import Toast from "react-native-toast-message";
+
+import { resetPassword } from "@/services/userService";
 
 export default function ResetPasswordForm() {
     const { control, handleSubmit, formState: { errors, isSubmitting }, setError, getValues } = useAuthForm("resetPassword");
@@ -49,17 +51,15 @@ export default function ResetPasswordForm() {
         }
 
         try {
-            const response = await axios.put("http://192.168.1.4:8080/api/user/auth/resetPassword", {
-                email,
-                password,
-                otp
-            });
+            const response = await resetPassword(email, password, otp);
 
-            if (response.status === 200) {
-                router.replace("/RegisterModule/LoginScreen");
-                showSuccessMessage("Password reset successfully", "You can now log in with your new password.");
-            } else {
-                console.error("Unexpected response status:", response.status);
+            if (response) {
+                showSuccessMessage("Password Reset Successful", "You can now log in with your new password.");
+                router.dismissAll();
+                router.push("/RegisterModule/LoginScreen");
+            }
+            else {
+                showErrorMessage("Password Reset Failed", "Please try again later.");
             }
         } catch (error) {
 
@@ -106,8 +106,9 @@ export default function ResetPasswordForm() {
 
 const styles = StyleSheet.create({
     container: {
-        width: "80%",
-        alignSelf: "center",
-        gap: responsive.hp("2%"),
-    },
+        alignSelf: 'center',
+        width: '100%',
+        gap: 16,
+        paddingHorizontal: 20
+    }
 });

@@ -2,32 +2,43 @@ import { StyleSheet, Text, View, FlatList, Image, TouchableOpacity, TextInput } 
 import React, { useContext, useState } from 'react';
 import { Card } from 'react-native-paper';
 import { PetContext } from '@/context/PetContext';
-import { PETS } from '@/constants/PETS';
+import { PET_BREEDS } from '@/constants/PETBREEDS';
 
 import Button from '@/components/Button';
 import { useRouter } from 'expo-router';
 
-export default function AddPet2() {
+export default function AddPet3() {
     const { pet, setPet } = useContext(PetContext);
     const router = useRouter();
-    const [error, setError] = useState('');
 
-    console.log(pet);
+    const fallbackImage = require('@/assets/images/Pets/Dog.png');
+    const [error, setError] = useState(''); // <-- Add error state
 
-    const handleSelectPet = (value) => {
-        setPet({ ...pet, species: value });
-        setError('');
+    const handleSelectPet = (name) => {
+        setError(''); // clear error when user selects
+        setPet({ ...pet, breed: name });
     };
+
+    const handleManualInput = (text) => {
+        setError(''); // clear error when user types
+        setPet({ ...pet, breed: text });
+    };
+
+    const allBreeds = PET_BREEDS[pet.species] || [];
 
     const renderItem = ({ item }) => (
         <TouchableOpacity
-            onPress={() => handleSelectPet(item.value)}
+            onPress={() => handleSelectPet(item.name)}
             activeOpacity={1}
             style={styles.cardWrapper}
         >
-            <Card style={[styles.card, pet.species === item.value && styles.selectedCard]}>
-                <Image source={item.image} style={styles.image} resizeMode="contain" />
-                <Text style={[styles.text, pet.species === item.value && styles.selectedText]}>
+            <Card style={[styles.card, pet.breed === item.name && styles.selectedCard]}>
+                <Image
+                    source={item.image || fallbackImage}
+                    style={styles.image}
+                    resizeMode="contain"
+                />
+                <Text style={[styles.text, pet.breed === item.name && styles.selectedText]}>
                     {item.name}
                 </Text>
             </Card>
@@ -35,12 +46,11 @@ export default function AddPet2() {
     );
 
     const goToNextStep = () => {
-        if (!pet.species) {
-            setError("Pet's type is required!");
+        if (!pet.breed.trim()) {
+            setError('Please enter or select a breed.');
             return;
         }
-        setError('');
-        router.push('/RegisterModule/AddPet3');
+        router.push('/PetModule/AddPet4');
     };
 
     return (
@@ -48,12 +58,19 @@ export default function AddPet2() {
             <FlatList
                 numColumns={2}
                 renderItem={renderItem}
-                data={PETS}
+                data={allBreeds}
                 keyExtractor={(item) => item.name}
                 columnWrapperStyle={styles.row}
             />
 
             <View style={styles.buttonContainer}>
+                <Text style={styles.orText}>Or enter it manually</Text>
+                <TextInput
+                    placeholder="Enter pet breed"
+                    style={styles.input}
+                    value={!allBreeds.some(p => p.name === pet.breed) ? pet.breed : ''}
+                    onChangeText={handleManualInput}
+                />
                 {error ? <Text style={styles.error}>{error}</Text> : null}
                 <Button title="Next" borderRadius={10} fontSize={16} onPress={goToNextStep} />
             </View>
@@ -111,9 +128,9 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderRadius: 10,
         paddingHorizontal: 15,
-        backgroundColor: '#fff',
         marginBottom: 10,
         fontSize: 16,
+        backgroundColor : '#fff'
     },
     buttonContainer: {
         padding: 20,

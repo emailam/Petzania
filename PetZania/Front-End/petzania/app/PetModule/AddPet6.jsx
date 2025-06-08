@@ -12,24 +12,25 @@ import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { getAllPetsByUserId } from '@/services/petService'
+import { FlowContext } from '@/context/FlowContext'
 
 
 export default function AddPet6() {
     const { pets, createNewPet, setPets } = useContext(PetContext);
     const { user } = useContext(UserContext);
+    const { fromPage, setFromPage } = useContext(FlowContext);
 
     const router = useRouter();
 
     const retrievePets = async () => {
         try {
-            const userPets = await getAllPetsByUserId(user.userId);
+            const userPets = await getAllPetsByUserId(user?.userId);
             setPets(userPets);
+            user.myPets = pets; // Update user context with the retrieved pets
         } catch (error) {
             console.error('Error fetching pets:', error);
         }
     };
-
-    console.log('Pets:', pets);
 
     useEffect(() => {
         retrievePets();
@@ -37,7 +38,16 @@ export default function AddPet6() {
     }, []);
 
     const goToNextPage = () => {
-        router.push('/RegisterModule/ProfileSetUp3');
+        console.log('From Page:', fromPage);
+        if(fromPage === 'Home'){
+            router.dismiss();
+            setFromPage(null);
+            router.push('/Home');
+        }
+        else if(fromPage === 'Register'){
+            setFromPage(null);
+            router.push('/RegisterModule/ProfileSetUp3');
+        }
     }
 
     return (
@@ -47,7 +57,7 @@ export default function AddPet6() {
                 keyExtractor={(item) => item.petId}
                 renderItem={({ item }) => <PetCard pet={item} />}
                 ListFooterComponent={() => (
-                    <TouchableOpacity style={styles.addPetButton} onPress={() => router.push('/RegisterModule/AddPet1')}>
+                    <TouchableOpacity style={styles.addPetButton} onPress={() => router.push('/PetModule/AddPet1')}>
                         <Ionicons name="add-circle-outline" size={55} color="#9188E5" />
                         <Text style={styles.text}>Add a new pet</Text>
                     </TouchableOpacity>

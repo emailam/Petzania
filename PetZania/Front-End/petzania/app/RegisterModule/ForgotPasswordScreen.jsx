@@ -17,7 +17,7 @@ export default function ForgotPasswordScreen(){
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    paddingTop: responsive.hp('12%'),
+    paddingTop: responsive.hp('10%'),
     backgroundColor: 'white',
     alignItems: 'left',
   },
@@ -25,15 +25,14 @@ const styles = StyleSheet.create({
     fontSize: responsive.fonts.title,
     color: '#9188E5',
     fontWeight: 'bold',
-    marginLeft: responsive.margins.screenEdge + 20,
+    marginLeft: responsive.margins.screenEdge,
     marginBottom: responsive.hp('1%'),
   },
   text: {
     color: "gray",
     fontSize: responsive.fonts.small,
     marginBottom: responsive.hp('2%'),
-    marginLeft: responsive.margins.screenEdge + 25,
-    width : "80%",
-
+    marginLeft: responsive.margins.screenEdge,
+    width : "100%",
   },
 });

@@ -9,6 +9,8 @@ import { getUserId } from '@/storage/userStorage';
 import { UserContext } from '@/context/UserContext';
 import { PetContext } from '@/context/PetContext';
 
+import 'react-native-gesture-handler';
+
 export default function App() {
     const [fontsLoaded] = useFonts({
         'Inter-Bold': require('@/assets/fonts/Inter-Bold.ttf'),
@@ -27,13 +29,11 @@ export default function App() {
                 const refreshToken = await getToken('refreshToken');
                 const userId = await getUserId('userId');
 
-                // If tokens or user ID are missing, go to login
                 if (!accessToken || !refreshToken || !userId) {
-                    setRedirectPath('/RegisterModule/LoginScreen');
+                    setRedirectPath('/RegisterModule/Onboarding');
                     return;
                 }
 
-                // Try to get user data (interceptor will refresh token if needed)
                 const userData = await getUserById(userId);
                 setUser(userData);
                 setPets(userData.myPets);

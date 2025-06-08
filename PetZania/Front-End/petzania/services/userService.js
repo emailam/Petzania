@@ -13,7 +13,6 @@ export async function getUserById(userId) {
 
         return response.data;
     } catch (error) {
-        console.error('Error fetching user data:', error.response?.data?.message || error.message);
         throw error;
     }
 }
@@ -35,7 +34,6 @@ export async function loginUser(data) {
 
         return response.data;
     } catch (error) {
-        console.error('Error logging in:', error.response?.data?.message || error.message);
         throw error;
     }
 }
@@ -50,7 +48,88 @@ export async function updateUserData(userId, userData) {
 
         return response.data;
     } catch (error) {
-        console.error('Error updating user data:', error.response?.data?.message || error.message);
+        throw error;
+    }
+}
+
+export async function registerUser(data) {
+    try {
+        const response = await api.post('/user/auth/signup', data);
+
+        if (response.status !== 201) {
+            throw new Error('Failed to register user. Please check your details and try again.');
+        }
+
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function sendResetPasswordOTP(email){
+    try {
+        const response = await api.put('/user/auth/sendResetPasswordOTP', { email });
+
+        if (response.status !== 200) {
+            throw new Error('Failed to send reset password request. Please try again later.');
+        }
+
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function resetPassword(email, password, otp) {
+    try {
+        const response = await api.put('/user/auth/resetPassword', { email, password, otp });
+        if (response.status !== 200) {
+            throw new Error('Failed to reset password. Please try again later.');
+        }
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function resendOTP(email) {
+    try {
+        const response = await api.post('/user/auth/resendOTP', { email });
+
+        if (response.status !== 200) {
+            throw new Error('Failed to resend OTP. Please try again later.');
+        }
+
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function verifyOTP(email, otp) {
+    try {
+        const response = await api.put('/user/auth/verify', { email, otp });
+
+        if (response.status !== 200) {
+            throw new Error('Failed to verify OTP. Please try again later.');
+        }
+
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function verifyResetOTP(email, otp) {
+    try {
+        const response = await api.put('/user/auth/verifyResetOTP', { email, otp });
+
+        if (response.status !== 200) {
+            throw new Error('Failed to verify reset OTP. Please try again later.');
+        }
+
+        return response.data;
+    } catch (error) {
         throw error;
     }
 }
@@ -71,7 +150,6 @@ export async function logout(email) {
         await clearAllTokens();
         return response.data;
     } catch (error) {
-        console.error('Error logging out:', error.response?.data?.message || error.message);
         throw error;
     }
 }

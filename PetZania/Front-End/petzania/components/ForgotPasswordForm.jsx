@@ -4,9 +4,10 @@ import Button from "@/components/Button";
 import { useRouter } from "expo-router";
 import FormInput from "@/components/FormInput";
 import { useAuthForm } from "@/components/useForm";
-import axios from "axios";
 import { ScrollView , StyleSheet, TouchableOpacity, Text } from "react-native"
 import { responsive } from "@/utilities/responsive";
+
+import { sendResetPasswordOTP } from '@/services/userService';
 
 export default function ForgotPasswordForm() {
     const {control , handleSubmit , formState:{errors , isSubmitting} , setError} = useAuthForm("forgotPassword");
@@ -17,13 +18,11 @@ export default function ForgotPasswordForm() {
       router.push('/RegisterModule/RegisterScreen');
     }
 
-    const ResetPassword = async (data) => {
+    const SendResetPasswordOTP = async (data) => {
       try {
-        const response = await axios.put("http://192.168.1.4:8080/api/user/auth/sendResetPasswordOTP", {
-          email: data.email,
-        });
+        const response = await sendResetPasswordOTP(data.email);
 
-        if (response.status === 200) {
+        if (response) {
           router.push({
             pathname: "/RegisterModule/OTPVerificationScreen",
             params: { email: data.email, isRegister : false },
@@ -45,7 +44,6 @@ export default function ForgotPasswordForm() {
     };
     return(
         <ScrollView contentContainerStyle={styles.container}>
-                  
             <FormInput
               control={control}
               name="email"
@@ -55,7 +53,7 @@ export default function ForgotPasswordForm() {
             />
             <Button
                 title="Reset Password"
-                onPress={handleSubmit(ResetPassword)}
+                onPress={handleSubmit(SendResetPasswordOTP)}
                 width={responsive.buttons.width.primary}
                 borderRadius={12}
                 fontSize={responsive.fonts.body}
@@ -69,7 +67,6 @@ export default function ForgotPasswordForm() {
     )
 }
 const styles = StyleSheet.create({
-
   link: {
     color: '#9188E5',
     fontWeight: 'bold',
@@ -77,7 +74,8 @@ const styles = StyleSheet.create({
   },
   container: {
     alignSelf: 'center',
-    width: '80%',
-    gap: responsive.hp('2%')
+    width: '100%',
+    gap: 16,
+    paddingHorizontal: 20
   }
 });

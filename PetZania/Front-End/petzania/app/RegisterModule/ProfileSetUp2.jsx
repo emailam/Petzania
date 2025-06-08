@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import Button from '@/components/Button';
+import { FlowContext } from '@/context/FlowContext';
 
 export default function ProfileSetUp2() {
     const router = useRouter();
+    const { setFromPage } = useContext(FlowContext);
 
     const goToNextStep = () => {
-        router.push('/RegisterModule/AddPet1');
+        setFromPage('Register');
+        router.push('/PetModule/AddPet1');
     }
 
     return (

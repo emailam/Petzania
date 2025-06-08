@@ -37,7 +37,7 @@ export default function AddPet4() {
         }
 
         if (!hasError) {
-            router.push('/RegisterModule/AddPet5');
+            router.push('/PetModule/AddPet5');
         }
     };
 

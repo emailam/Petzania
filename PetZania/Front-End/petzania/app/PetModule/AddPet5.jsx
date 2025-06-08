@@ -46,7 +46,7 @@ export default function AddPet5() {
 
             await addPetToUser(pet, user.userId);
             router.dismissAll();
-            router.push('/RegisterModule/AddPet6');
+            router.push('/PetModule/AddPet6');
         } catch (err) {
             console.error('Error uploading vaccine files:', err);
         } finally {

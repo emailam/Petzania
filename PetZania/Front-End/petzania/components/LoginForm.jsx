@@ -9,13 +9,14 @@ import FormInput from "@/components/FormInput";
 import PasswordInput from "@/components/PasswordInput";
 import { responsive } from "@/utilities/responsive";
 import { useAuthForm } from "@/components/useForm";
-import axios from "axios";
+
 
 const { useRouter } = require("expo-router");
 
 import { UserContext } from "@/context/UserContext";
+import { PetContext } from "@/context/PetContext";
 
-import { getUserById, loginUser } from "@/services/userService";
+import { getUserById, loginUser, resendOTP } from "@/services/userService";
 
 export default function LoginForm(){
     const {control , handleSubmit , formState:{errors , isSubmitting} , setError} = useAuthForm("login");
@@ -25,6 +26,7 @@ export default function LoginForm(){
     const router = useRouter();
 
     const { setUser } = useContext(UserContext);
+    const { setPets } = useContext(PetContext);
 
     const Login = async (data) => {
         data.email = data.email.trim();
@@ -34,16 +36,14 @@ export default function LoginForm(){
 
             if (response) {
                 const userData = await getUserById(response.userId);
-                console.log("User data:", userData);
-                console.log("User ID:", response.userId);
                 setUser(userData);
-                if (userData?.name === null) {
+                setPets(userData.myPets || []);
+                if (userData.name === null) {
                     router.push("/RegisterModule/ProfileSetUp1");
                 } else {
-                    router.replace("/RegisterModule/ProfileSetUp1"); // TODO: replace with Home when ready
+                    router.replace("/RegisterModule/ProfileSetUp1");
                 }
             }
-
         } catch (error) {
             const status = error.response?.status;
             const errorMsg = error.response?.data?.message || error.message;
@@ -58,25 +58,28 @@ export default function LoginForm(){
 
             if (status === 400 || errorMsg === "Email is incorrect") {
                 showBothFieldsError("Invalid email or password.");
-            } else if (status === 401 && errorMsg === "User is not verified") {
+            }
+            else if (status === 401 && errorMsg === "User is not verified") {
                 try {
-                    const otpRes = await axios.post("http://192.168.1.4:8080/api/user/auth/resendOTP", {
-                        email: data.email,
+                    await resendOTP(data.email);
+
+                    Toast.show({
+                        type: "success",
+                        text1: "OTP sent",
+                        text2: `A verification code has been sent to ${data.email}`,
                     });
 
-                    if (otpRes.status === 200) {
-                        console.log("New OTP sent:", otpRes.data);
-                    } else {
-                        console.error("Failed to resend OTP. Status:", otpRes.status);
-                    }
+                    router.push({
+                        pathname: "/RegisterModule/OTPVerificationScreen",
+                        params: { isRegister: true, email: data.email },
+                    });
                 } catch (otpError) {
-                    console.error("OTP resend error:", otpError.response?.data?.message || otpError.message);
-                }
 
-                router.push({
-                    pathname: "/RegisterModule/OTPVerificationScreen",
-                    params: { isRegister: true, email: data.email },
-                });
+                    setError("email", {
+                        type: "manual",
+                        message: otpError.response?.data?.message || "Failed to send OTP. Please try again later.",
+                    });
+                }
             } else if (status === 429) {
                 showBothFieldsError("Too many login attempts. Please try again later.");
             } else {

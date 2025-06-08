@@ -98,7 +98,7 @@ const AddPet1 = () => {
             setError('Something went wrong while uploading. Please try again.');
         } finally {
             setLoading(false);
-            router.push('/RegisterModule/AddPet2');
+            router.push('/PetModule/AddPet2');
         }
     };
 
