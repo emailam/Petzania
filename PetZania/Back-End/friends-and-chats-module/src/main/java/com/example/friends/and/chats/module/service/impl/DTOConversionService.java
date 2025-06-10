@@ -2,6 +2,7 @@ package com.example.friends.and.chats.module.service.impl;
 
 
 import com.example.friends.and.chats.module.exception.user.UserNotFound;
+import com.example.friends.and.chats.module.model.dto.*;
 import com.example.friends.and.chats.module.model.dto.chat.ChatDTO;
 import com.example.friends.and.chats.module.model.dto.message.MessageDTO;
 import com.example.friends.and.chats.module.model.dto.chat.UserChatDTO;
@@ -12,6 +13,8 @@ import com.example.friends.and.chats.module.service.IDTOConversionService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -52,6 +55,17 @@ public class DTOConversionService implements IDTOConversionService {
                 .build();
     }
 
+    // Friend Request conversions
+    @Override
+    public FriendRequestDTO mapToFriendRequestDTO(FriendRequest friendRequest) {
+        if (friendRequest == null) return null;
+
+        return FriendRequestDTO.builder()
+                .requestId(friendRequest.getId())
+                .sender(mapToUserDTO(friendRequest.getSender()))
+                .receiver(mapToUserDTO(friendRequest.getReceiver()))
+                .createdAt(friendRequest.getCreatedAt())
+    }
     @Override
     public UserChatDTO mapToUserChatDTO(UserChat userChat) {
         if (userChat == null)
@@ -64,10 +78,20 @@ public class DTOConversionService implements IDTOConversionService {
                 .pinned(userChat.isPinned())
                 .unread(userChat.isUnread())
                 .muted(userChat.isMuted())
+
                 .build();
     }
 
     @Override
+    public FriendRequest mapToFriendRequest(FriendRequestDTO friendRequestDTO) {
+        if (friendRequestDTO == null) return null;
+
+        return FriendRequest.builder()
+                .sender(getUser(friendRequestDTO.getSender().getUserId()))
+                .receiver(getUser(friendRequestDTO.getReceiver().getUserId()))
+                .createdAt(friendRequestDTO.getCreatedAt())
+    }
+
     public MessageDTO mapToMessageDTO(Message message) {
         if (message == null) return null;
 
@@ -87,6 +111,90 @@ public class DTOConversionService implements IDTOConversionService {
     }
 
     @Override
+    public FriendshipDTO mapToFriendshipDTO(Friendship friendship) {
+        if (friendship == null) return null;
+
+        return FriendshipDTO.builder()
+                .friendshipId(friendship.getId())
+                .user1(mapToUserDTO(friendship.getUser1()))
+                .user2(mapToUserDTO(friendship.getUser2()))
+                .createdAt(friendship.getCreatedAt())
+                .build();
+    }
+
+    @Override
+    public Friendship mapToFriendship(FriendshipDTO friendshipDTO) {
+        if (friendshipDTO == null) return null;
+
+        return Friendship.builder()
+                .user1(getUser(friendshipDTO.getUser1().getUserId()))
+                .user2(getUser(friendshipDTO.getUser2().getUserId()))
+                .createdAt(friendshipDTO.getCreatedAt())
+                .build();
+    }
+
+    @Override
+    public FollowDTO mapToFollowDTO(Follow follow) {
+        if (follow == null) return null;
+
+        return FollowDTO.builder()
+                .followId(follow.getId())
+                .follower(mapToUserDTO(follow.getFollower()))
+                .followed(mapToUserDTO(follow.getFollowed()))
+                .createdAt(follow.getCreatedAt())
+                .build();
+    }
+
+    @Override
+    public Follow mapToFollow(FollowDTO followDTO) {
+        if (followDTO == null) return null;
+
+        return Follow.builder()
+                .follower(getUser(followDTO.getFollower().getUserId()))
+                .followed(getUser(followDTO.getFollowed().getUserId()))
+                .createdAt(followDTO.getCreatedAt())
+                .build();
+    }
+
+    @Override
+    public BlockDTO mapToBlockDTO(Block block) {
+        if (block == null) return null;
+
+        return BlockDTO.builder()
+                .blockId(block.getId())
+                .blocker(mapToUserDTO(block.getBlocker()))
+                .blocked(mapToUserDTO(block.getBlocked()))
+                .createdAt(block.getCreatedAt())
+                .build();
+    }
+
+    @Override
+    public Block mapToBlock(BlockDTO blockDTO) {
+        if (blockDTO == null) return null;
+
+        return Block.builder()
+                .blocker(getUser(blockDTO.getBlocker().getUserId()))
+                .blocked(getUser(blockDTO.getBlocked().getUserId()))
+                .createdAt(blockDTO.getCreatedAt())
+                .build();
+    }
+
+    @Override
+    public UserDTO mapToUserDTO(User user) {
+        if (user == null) return null;
+
+        return UserDTO.builder()
+                .userId(user.getUserId())
+                .username(user.getUsername())
+                .profilePictureURL(user.getProfilePictureURL())
+                .build();
+    }
+
+    private User getUser(UUID userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFound("User not found with ID: " + userId));
+    }
+  
     public MessageReactionDTO mapToMessageReactionDTO(MessageReaction messageReaction) {
         if(messageReaction == null) return null;
 
@@ -97,5 +205,4 @@ public class DTOConversionService implements IDTOConversionService {
                 .reactionType(messageReaction.getReactionType())
                 .build();
     }
-
 }

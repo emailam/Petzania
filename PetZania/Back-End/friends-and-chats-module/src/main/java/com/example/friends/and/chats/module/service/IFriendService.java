@@ -1,42 +1,52 @@
 package com.example.friends.and.chats.module.service;
 
-import com.example.friends.and.chats.module.model.entity.FriendRequest;
+import com.example.friends.and.chats.module.model.dto.BlockDTO;
+import com.example.friends.and.chats.module.model.dto.FollowDTO;
+import com.example.friends.and.chats.module.model.dto.FriendRequestDTO;
+import com.example.friends.and.chats.module.model.dto.FriendshipDTO;
+import com.example.friends.and.chats.module.model.entity.Friendship;
 import com.example.friends.and.chats.module.model.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface IFriendService {
-    void sendFriendRequest();
+    FriendRequestDTO sendFriendRequest(UUID senderId, UUID receiveId);
 
-    void acceptFriendRequest();
+    FriendshipDTO acceptFriendRequest(UUID requestId, UUID receiverId);
 
-    void declineFriendRequest();
+    void declineFriendRequest(UUID requestId);
 
-    void cancelFriendRequest();
+    Friendship createFriendship(User user1, User user2);
 
-    void getPendingRequests();
+    void removeFriend(UUID userId, UUID friendId);
 
-    void removeFriend();
+    void unblockUser(UUID blockerId, UUID blockedId);
 
-    void getFriends();
+    BlockDTO blockUser(UUID blockerId, UUID blockedId);
 
-    void areFriends();
+    void unfollowUser(UUID followerId, UUID followedId);
 
-    void follow();
+    FollowDTO followUser(UUID followerId, UUID followedId);
 
-    void unfollow();
+    boolean isFriendshipExists(User user1, User user2);
 
-    void getFollowers();
+    boolean isBlockingExists(User user1, User user2);
 
-    void getFollowing();
+    Page<FollowDTO> getFollowing(UUID userId, int page, int size, String sortBy, String direction);
 
-    void block();
+    Page<FollowDTO> getFollowers(UUID userId, int page, int size, String sortBy, String direction);
 
-    void unblock();
+    Page<BlockDTO> getBlockedUsers(UUID userId, int page, int size, String sortBy, String direction);
 
-    void isBlocked();
+    Page<FriendshipDTO> getFriendships(UUID userId, int page, int size, String sortBy, String direction);
 
-    void getBlockedUsers();
+    int getFollowingCount(UUID userId);
 
+    int getFollowersCount(UUID userId);
+
+    int getBlockedUsersCount(UUID userId);
+
+    int getNumberOfFriends(UUID userId);
 }

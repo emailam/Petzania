@@ -2,7 +2,6 @@ package com.example.friends.and.chats.module.model.entity;
 
 
 
-import com.example.friends.and.chats.module.model.enumeration.FriendRequestStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,8 +19,6 @@ import java.util.UUID;
 @Table(name = "friend_requests", indexes = {
         // Composite index for sender + receiver
         @Index(name = "idx_friend_request_sender_receiver", columnList = "sender_id, receiver_id"),
-        // Composite index for receiver + status
-        @Index(name = "idx_friend_request_receiver_status", columnList = "receiver_id, status")
 })
 public class FriendRequest {
     @Id
@@ -35,9 +32,5 @@ public class FriendRequest {
     @ManyToOne
     @JoinColumn(name = "receiver_id", referencedColumnName = "user_id")
     private User receiver;
-
-    @Enumerated(EnumType.STRING)
-    private FriendRequestStatus status;
-
     private Timestamp createdAt;
 }

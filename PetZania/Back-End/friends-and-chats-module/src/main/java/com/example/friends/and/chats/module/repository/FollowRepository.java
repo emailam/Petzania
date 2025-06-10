@@ -2,9 +2,10 @@ package com.example.friends.and.chats.module.repository;
 
 import com.example.friends.and.chats.module.model.entity.Follow;
 import com.example.friends.and.chats.module.model.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -13,9 +14,11 @@ public interface FollowRepository extends JpaRepository<Follow, UUID> {
 
     Optional<Follow> findByFollowerAndFollowed(User follower, User followed);
 
-    List<Follow> findByFollower(User follower); // Who I follow
-
-    List<Follow> findByFollowed(User followed); // My followers
-
     void deleteByFollowerAndFollowed(User follower, User followed);
+
+    Page<Follow> findFollowsByFollower(User follower, Pageable pageable);
+
+    Page<Follow> findFollowsByFollowed(User followed, Pageable pageable);
+    int countByFollower(User follower);
+    int countByFollowed(User followed);
 }

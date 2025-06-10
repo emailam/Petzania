@@ -2,6 +2,7 @@ package com.example.friends.and.chats.module.exception.globalhandler;
 
 import com.example.friends.and.chats.module.exception.RateLimitExceeded;
 import com.example.friends.and.chats.module.exception.admin.AdminNotFound;
+import com.example.friends.and.chats.module.exception.user.*;
 import com.example.friends.and.chats.module.exception.chat.ChatNotFound;
 import com.example.friends.and.chats.module.exception.chat.UserChatNotFound;
 import com.example.friends.and.chats.module.exception.message.InvalidMessageStatusTransition;
@@ -85,7 +86,62 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleAuthenticatedUserNotFoundException(AuthenticatedUserNotFound ex) {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
     }
+  
+    @ExceptionHandler(InvalidOperation.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidOperationException(InvalidOperation ex) {
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
+    }
 
+    @ExceptionHandler(BlockingExist.class)
+    public ResponseEntity<Map<String, Object>> handleBlockingExistException(BlockingExist ex) {
+        return buildErrorResponse(ex, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(FriendRequestAlreadyExists.class)
+    public ResponseEntity<Map<String, Object>> handleFriendRequestAlreadyExistsException(FriendRequestAlreadyExists ex) {
+        return buildErrorResponse(ex, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(FollowingAlreadyExists.class)
+    public ResponseEntity<Map<String, Object>> handleFollowingAlreadyExistsException(FollowingAlreadyExists ex) {
+        return buildErrorResponse(ex, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(FollowingDoesNotExist.class)
+    public ResponseEntity<Map<String, Object>> handleFollowingDoesNotExistException(FollowingDoesNotExist ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(BlockingDoesNotExist.class)
+    public ResponseEntity<Map<String, Object>> handleBlockingDoesNotExistException(BlockingDoesNotExist ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(FriendshipDoesNotExist.class)
+    public ResponseEntity<Map<String, Object>> handleFriendshipDoesNotExistException(FriendshipDoesNotExist ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(FriendRequestNotFound.class)
+    public ResponseEntity<Map<String, Object>> handleFriendRequestNotFoundException(FriendRequestNotFound ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(ForbiddenOperation.class)
+    public ResponseEntity<Map<String, Object>> handleForbiddenOperationException(ForbiddenOperation ex) {
+        return buildErrorResponse(ex, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(BlockingAlreadyExist.class)
+    public ResponseEntity<Map<String, Object>> handleBlockingAlreadyExistException(BlockingAlreadyExist ex){
+        return buildErrorResponse(ex, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(FriendshipAlreadyExist.class)
+    public ResponseEntity<Map<String, Object>>handleFriendshipAlreadyExistException(FriendshipAlreadyExist ex){
+        return buildErrorResponse(ex, HttpStatus.CONFLICT);
+    }
+  
     @ExceptionHandler(UserAccessDenied.class)
     public ResponseEntity<Map<String, Object>> handleUserAccessDeniedException(UserAccessDenied ex) {
         return buildErrorResponse(ex, HttpStatus.FORBIDDEN);

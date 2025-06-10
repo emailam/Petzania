@@ -2,6 +2,8 @@ package com.example.friends.and.chats.module.repository;
 
 import com.example.friends.and.chats.module.model.entity.Block;
 import com.example.friends.and.chats.module.model.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -16,4 +18,6 @@ public interface BlockRepository extends JpaRepository<Block, UUID> {
     List<Block> findByBlocker(User blocker);
 
     void deleteByBlockerAndBlocked(User blocker, User blocked);
+    Page<Block> findBlocksByBlocker(User blocker, Pageable pageable);
+    int countByBlocker(User blocker);
 }
