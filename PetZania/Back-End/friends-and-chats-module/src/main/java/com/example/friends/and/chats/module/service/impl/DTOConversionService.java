@@ -3,6 +3,10 @@ package com.example.friends.and.chats.module.service.impl;
 
 import com.example.friends.and.chats.module.exception.user.UserNotFound;
 import com.example.friends.and.chats.module.model.dto.*;
+import com.example.friends.and.chats.module.model.dto.chat.ChatDTO;
+import com.example.friends.and.chats.module.model.dto.message.MessageDTO;
+import com.example.friends.and.chats.module.model.dto.chat.UserChatDTO;
+import com.example.friends.and.chats.module.model.dto.message.MessageReactionDTO;
 import com.example.friends.and.chats.module.model.entity.*;
 import com.example.friends.and.chats.module.repository.UserRepository;
 import com.example.friends.and.chats.module.service.IDTOConversionService;
@@ -61,6 +65,20 @@ public class DTOConversionService implements IDTOConversionService {
                 .sender(mapToUserDTO(friendRequest.getSender()))
                 .receiver(mapToUserDTO(friendRequest.getReceiver()))
                 .createdAt(friendRequest.getCreatedAt())
+    }
+    @Override
+    public UserChatDTO mapToUserChatDTO(UserChat userChat) {
+        if (userChat == null)
+            return null;
+
+        return UserChatDTO.builder()
+                .userChatId(userChat.getUserChatId())
+                .chatId(userChat.getChat().getChatId())
+                .userId(userChat.getUser().getUserId())
+                .pinned(userChat.isPinned())
+                .unread(userChat.isUnread())
+                .muted(userChat.isMuted())
+
                 .build();
     }
 
@@ -72,6 +90,23 @@ public class DTOConversionService implements IDTOConversionService {
                 .sender(getUser(friendRequestDTO.getSender().getUserId()))
                 .receiver(getUser(friendRequestDTO.getReceiver().getUserId()))
                 .createdAt(friendRequestDTO.getCreatedAt())
+    }
+
+    public MessageDTO mapToMessageDTO(Message message) {
+        if (message == null) return null;
+
+        return MessageDTO.builder()
+                .messageId(message.getMessageId())
+                .chatId(message.getChat().getChatId())
+                .senderId(message.getSender().getUserId())
+                .content(message.getContent())
+                .replyToMessageId(
+                        message.getReplyTo() != null ? message.getReplyTo().getMessageId() : null
+                )
+                .sentAt(message.getSentAt())
+                .status(message.getStatus())
+                .isFile(message.isFile())
+                .isEdited(message.isEdited())
                 .build();
     }
 
@@ -158,5 +193,16 @@ public class DTOConversionService implements IDTOConversionService {
     private User getUser(UUID userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFound("User not found with ID: " + userId));
+    }
+  
+    public MessageReactionDTO mapToMessageReactionDTO(MessageReaction messageReaction) {
+        if(messageReaction == null) return null;
+
+        return MessageReactionDTO.builder()
+                .messageReactionId(messageReaction.getMessageReactionId())
+                .messageId(messageReaction.getMessage().getMessageId())
+                .userId(messageReaction.getUser().getUserId())
+                .reactionType(messageReaction.getReactionType())
+                .build();
     }
 }

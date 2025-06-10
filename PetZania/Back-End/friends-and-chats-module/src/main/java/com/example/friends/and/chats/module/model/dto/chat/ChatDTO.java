@@ -1,4 +1,4 @@
-package com.example.friends.and.chats.module.model.dto;
+package com.example.friends.and.chats.module.model.dto.chat;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
