@@ -1,10 +1,10 @@
 package com.example.friends.and.chats.module.service.impl;
 
 import com.example.friends.and.chats.module.exception.user.*;
-import com.example.friends.and.chats.module.model.dto.BlockDTO;
-import com.example.friends.and.chats.module.model.dto.FollowDTO;
-import com.example.friends.and.chats.module.model.dto.FriendRequestDTO;
-import com.example.friends.and.chats.module.model.dto.FriendshipDTO;
+import com.example.friends.and.chats.module.model.dto.friend.BlockDTO;
+import com.example.friends.and.chats.module.model.dto.friend.FollowDTO;
+import com.example.friends.and.chats.module.model.dto.friend.FriendRequestDTO;
+import com.example.friends.and.chats.module.model.dto.friend.FriendshipDTO;
 import com.example.friends.and.chats.module.model.entity.*;
 import com.example.friends.and.chats.module.repository.*;
 import com.example.friends.and.chats.module.service.IDTOConversionService;

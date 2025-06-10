@@ -154,7 +154,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MessageNotUpdatable.class)
     public ResponseEntity<Map<String, Object>> handleMessageNotUpdatableException(MessageNotUpdatable ex) {
-        return buildErrorResponse(ex, HttpStatus.CONFLICT);
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(InvalidMessageStatusTransition.class)

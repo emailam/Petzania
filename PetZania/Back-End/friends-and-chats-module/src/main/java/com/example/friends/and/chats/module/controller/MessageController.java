@@ -4,7 +4,9 @@ import com.example.friends.and.chats.module.model.dto.message.*;
 import com.example.friends.and.chats.module.model.enumeration.EventType;
 import com.example.friends.and.chats.module.model.enumeration.MessageReact;
 import com.example.friends.and.chats.module.model.enumeration.MessageStatus;
+import com.example.friends.and.chats.module.model.principal.UserPrincipal;
 import com.example.friends.and.chats.module.service.IMessageService;
+import com.example.friends.and.chats.module.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +26,8 @@ public class MessageController {
 
     @PostMapping("/send")
     public ResponseEntity<MessageDTO> sendMessage(@RequestBody SendMessageDTO sendMessageDTO) {
-        //get user from authentication context
-        UUID userId = UUID.randomUUID();
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId = userPrincipal.getUserId();
         MessageDTO saved = messageService.sendMessage(sendMessageDTO, userId);
         messagingTemplate.convertAndSend(
                 "/topic/chats/" + sendMessageDTO.getChatId(),
@@ -40,24 +42,24 @@ public class MessageController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        //get user from authentication context
-        UUID userId = UUID.randomUUID();
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId = userPrincipal.getUserId();
         Page<MessageDTO> historyPage = messageService.getMessagesByChat(chatId, userId, page, size);
         return ResponseEntity.ok(historyPage);
     }
 
     @GetMapping("/{messageId}")
     public ResponseEntity<MessageDTO> getMessageById(@PathVariable UUID messageId) {
-        //get user from authentication context
-        UUID userId = UUID.randomUUID();
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId = userPrincipal.getUserId();
         return ResponseEntity.ok(messageService.getMessageById(messageId, userId));
     }
 
     @PatchMapping("/{messageId}/content")
     public ResponseEntity<MessageDTO> updateMessageContent(@PathVariable UUID messageId,
                                                            @RequestBody UpdateMessageContentDTO updateMessageContentDTO) {
-        //get user from authentication context
-        UUID userId = UUID.randomUUID();
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId = userPrincipal.getUserId();
 
         String content = updateMessageContentDTO.getContent();
 
@@ -73,8 +75,8 @@ public class MessageController {
     @PatchMapping("/{messageId}/status")
     public ResponseEntity<MessageDTO> updateMessageStatus(@PathVariable UUID messageId,
                                                           @RequestBody UpdateMessageStatusDTO updateMessageStatusDTO) {
-        //get user from authentication context
-        UUID userId = UUID.randomUUID();
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId = userPrincipal.getUserId();
 
         MessageStatus messageStatus = updateMessageStatusDTO.getMessageStatus();
 
@@ -90,8 +92,8 @@ public class MessageController {
     @PutMapping("/{messageId}/reaction")
     public ResponseEntity<MessageReactionDTO> reactToMessage(@PathVariable UUID messageId,
                                                              @RequestBody UpdateMessageReactDTO updateMessageReact) {
-        //get user from authentication context
-        UUID userId = UUID.randomUUID();
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId = userPrincipal.getUserId();
 
         MessageReact messageReact = updateMessageReact.getMessageReact();
 
@@ -107,8 +109,8 @@ public class MessageController {
     // remove react
     @DeleteMapping("/{messageId}/reaction")
     public ResponseEntity<Void> removeReactionFromMessage(@PathVariable UUID messageId) {
-        //get user from authentication context
-        UUID userId = UUID.randomUUID();
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId = userPrincipal.getUserId();
 
         MessageReactionDTO messageReactionDTO = messageService.removeReaction(messageId, userId);
         messagingTemplate.convertAndSend(
@@ -122,15 +124,15 @@ public class MessageController {
 
     @GetMapping("/{messageId}/reactions")
     public ResponseEntity<List<MessageReactionDTO>> getReactionsForMessage(@PathVariable UUID messageId) {
-        //get user from authentication context
-        UUID userId = UUID.randomUUID();
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId = userPrincipal.getUserId();
         return ResponseEntity.ok(messageService.getReactionsForMessage(messageId, userId));
     }
 
     @DeleteMapping("/{messageId}")
     public ResponseEntity<Void> deleteMessage(@PathVariable UUID messageId) {
-        //get user from authentication context
-        UUID userId = UUID.randomUUID();
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId = userPrincipal.getUserId();
         MessageDTO deletedMessage = messageService.deleteMessage(messageId, userId);
 
         messagingTemplate.convertAndSend(

@@ -1,9 +1,9 @@
 package com.example.friends.and.chats.module.controller;
 
-import com.example.friends.and.chats.module.model.dto.BlockDTO;
-import com.example.friends.and.chats.module.model.dto.FollowDTO;
-import com.example.friends.and.chats.module.model.dto.FriendRequestDTO;
-import com.example.friends.and.chats.module.model.dto.FriendshipDTO;
+import com.example.friends.and.chats.module.model.dto.friend.BlockDTO;
+import com.example.friends.and.chats.module.model.dto.friend.FollowDTO;
+import com.example.friends.and.chats.module.model.dto.friend.FriendRequestDTO;
+import com.example.friends.and.chats.module.model.dto.friend.FriendshipDTO;
 import com.example.friends.and.chats.module.model.principal.UserPrincipal;
 import com.example.friends.and.chats.module.service.IFriendService;
 import com.example.friends.and.chats.module.util.SecurityUtils;
@@ -155,7 +155,6 @@ public class FriendController {
         int count = friendService.getBlockedUsersCount(userPrincipal.getUserId());
         return ResponseEntity.ok(count);
     }
-
 
     @Tag(name = "get", description = "Get Number Of Friends")
     @GetMapping("/getNumberOfFriends")

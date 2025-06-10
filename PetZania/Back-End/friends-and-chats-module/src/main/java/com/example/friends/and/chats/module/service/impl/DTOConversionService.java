@@ -2,11 +2,15 @@ package com.example.friends.and.chats.module.service.impl;
 
 
 import com.example.friends.and.chats.module.exception.user.UserNotFound;
-import com.example.friends.and.chats.module.model.dto.*;
 import com.example.friends.and.chats.module.model.dto.chat.ChatDTO;
+import com.example.friends.and.chats.module.model.dto.friend.BlockDTO;
+import com.example.friends.and.chats.module.model.dto.friend.FollowDTO;
+import com.example.friends.and.chats.module.model.dto.friend.FriendRequestDTO;
+import com.example.friends.and.chats.module.model.dto.friend.FriendshipDTO;
 import com.example.friends.and.chats.module.model.dto.message.MessageDTO;
 import com.example.friends.and.chats.module.model.dto.chat.UserChatDTO;
 import com.example.friends.and.chats.module.model.dto.message.MessageReactionDTO;
+import com.example.friends.and.chats.module.model.dto.user.UserDTO;
 import com.example.friends.and.chats.module.model.entity.*;
 import com.example.friends.and.chats.module.repository.UserRepository;
 import com.example.friends.and.chats.module.service.IDTOConversionService;
@@ -64,7 +68,7 @@ public class DTOConversionService implements IDTOConversionService {
                 .requestId(friendRequest.getId())
                 .sender(mapToUserDTO(friendRequest.getSender()))
                 .receiver(mapToUserDTO(friendRequest.getReceiver()))
-                .createdAt(friendRequest.getCreatedAt())
+                .createdAt(friendRequest.getCreatedAt()).build();
     }
     @Override
     public UserChatDTO mapToUserChatDTO(UserChat userChat) {
@@ -89,7 +93,7 @@ public class DTOConversionService implements IDTOConversionService {
         return FriendRequest.builder()
                 .sender(getUser(friendRequestDTO.getSender().getUserId()))
                 .receiver(getUser(friendRequestDTO.getReceiver().getUserId()))
-                .createdAt(friendRequestDTO.getCreatedAt())
+                .createdAt(friendRequestDTO.getCreatedAt()).build();
     }
 
     public MessageDTO mapToMessageDTO(Message message) {

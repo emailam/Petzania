@@ -1,5 +1,6 @@
-package com.example.friends.and.chats.module.model.dto;
+package com.example.friends.and.chats.module.model.dto.friend;
 
+import com.example.friends.and.chats.module.model.dto.user.UserDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,9 +13,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class FollowDTO {
-    private UUID followId;
-    private UserDTO follower;
-    private UserDTO followed;
+public class BlockDTO {
+    private UUID blockId;
+    private UserDTO blocker;
+    private UserDTO blocked;
     private Timestamp createdAt;
 }

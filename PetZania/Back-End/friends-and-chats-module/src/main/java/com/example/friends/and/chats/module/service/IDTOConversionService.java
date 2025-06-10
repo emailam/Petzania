@@ -1,7 +1,11 @@
 package com.example.friends.and.chats.module.service;
 
 
-import com.example.friends.and.chats.module.model.dto.*;
+import com.example.friends.and.chats.module.model.dto.friend.BlockDTO;
+import com.example.friends.and.chats.module.model.dto.friend.FollowDTO;
+import com.example.friends.and.chats.module.model.dto.friend.FriendRequestDTO;
+import com.example.friends.and.chats.module.model.dto.friend.FriendshipDTO;
+import com.example.friends.and.chats.module.model.dto.user.UserDTO;
 import com.example.friends.and.chats.module.model.entity.*;
 import com.example.friends.and.chats.module.model.dto.chat.ChatDTO;
 import com.example.friends.and.chats.module.model.dto.message.MessageDTO;
