@@ -1,7 +1,14 @@
 package com.example.friends.and.chats.module.exception.globalhandler;
 
+import com.example.friends.and.chats.module.exception.RateLimitExceeded;
 import com.example.friends.and.chats.module.exception.admin.AdminNotFound;
+import com.example.friends.and.chats.module.exception.chat.ChatNotFound;
+import com.example.friends.and.chats.module.exception.chat.UserChatNotFound;
+import com.example.friends.and.chats.module.exception.message.InvalidMessageStatusTransition;
+import com.example.friends.and.chats.module.exception.message.MessageNotFound;
+import com.example.friends.and.chats.module.exception.message.MessageNotUpdatable;
 import com.example.friends.and.chats.module.exception.user.AuthenticatedUserNotFound;
+import com.example.friends.and.chats.module.exception.user.UserAccessDenied;
 import com.example.friends.and.chats.module.exception.user.UserNotFound;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -59,6 +66,16 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(UserChatNotFound.class)
+    public ResponseEntity<Map<String, Object>> handleUserChatNotFoundException(UserChatNotFound ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(ChatNotFound.class)
+    public ResponseEntity<Map<String, Object>> handleChatNotFoundException(ChatNotFound ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(AdminNotFound.class)
     public ResponseEntity<Map<String, Object>> handleAdminNotFoundException(AdminNotFound ex) {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
@@ -67,5 +84,29 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AuthenticatedUserNotFound.class)
     public ResponseEntity<Map<String, Object>> handleAuthenticatedUserNotFoundException(AuthenticatedUserNotFound ex) {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(UserAccessDenied.class)
+    public ResponseEntity<Map<String, Object>> handleUserAccessDeniedException(UserAccessDenied ex) {
+        return buildErrorResponse(ex, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(MessageNotFound.class)
+    public ResponseEntity<Map<String, Object>> handleMessageNotFoundException(MessageNotFound ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(MessageNotUpdatable.class)
+    public ResponseEntity<Map<String, Object>> handleMessageNotUpdatableException(MessageNotUpdatable ex) {
+        return buildErrorResponse(ex, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(InvalidMessageStatusTransition.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidMessageStatusTransitionException(InvalidMessageStatusTransition ex) {
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
+    }
+    @ExceptionHandler(RateLimitExceeded.class)
+    public ResponseEntity<Map<String, Object>> handleRateLimitExceededException(RateLimitExceeded ex) {
+        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
     }
 }
