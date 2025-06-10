@@ -578,7 +578,6 @@ public class FriendControllerIntegrationTest {
 
         Friendship newFriendship = createFriendship(userA, userC);
 
-        // When/Then
         mockMvc.perform(get("/api/friends/getFriends?sortBy=createdAt&direction=desc"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].friendshipId").value(newFriendship.getId().toString()))

@@ -4,7 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="aacd7b49-acd6-447f-8aa4-f4265b4b3699" name="Changes" comment="" />
+    <list default="true" id="aacd7b49-acd6-447f-8aa4-f4265b4b3699" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/controller/FriendController.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/controller/FriendController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/test/java/com/example/friends/and/chats/module/controller/FriendControllerIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/test/java/com/example/friends/and/chats/module/controller/FriendControllerIntegrationTest.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -35,6 +42,13 @@
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="useMavenConfig" value="true" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 3
 }</component>
@@ -59,7 +73,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "Spring Boot.RegistrationModuleApplication.executor": "Run",
     "WebServerToolWindowFactoryState": "false",
-    "last_opened_file_path": "C:/Users/PC/Documents/GitHub/Petzania/PetZania/Back-End/friends-and-chats-module/pom.xml",
+    "last_opened_file_path": "C:/Users/PC/Documents/GitHub/Petzania",
     "node.js.detected.package.eslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
@@ -83,7 +97,7 @@
   <component name="ReactorSettings">
     <option name="notificationShown" value="true" />
   </component>
-  <component name="RunManager" selected="JUnit.UserControllerIntegrationTests">
+  <component name="RunManager" selected="JUnit.FriendControllerIntegrationTest">
     <configuration name="AdminControllerIntegrationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="RegistrationModule" />
       <extension name="coverage">
@@ -94,6 +108,21 @@
       </extension>
       <option name="PACKAGE_NAME" value="com.example.registrationmodule.controller" />
       <option name="MAIN_CLASS_NAME" value="com.example.registrationmodule.controller.AdminControllerIntegrationTests" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="FriendControllerIntegrationTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="friends-and-chats-module" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.example.friends.and.chats.module.controller.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.example.friends.and.chats.module.controller" />
+      <option name="MAIN_CLASS_NAME" value="com.example.friends.and.chats.module.controller.FriendControllerIntegrationTest" />
       <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -129,22 +158,6 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="UserControllerIntegrationTests.testGetUsersByPrefixUsername_WithMatchingPrefix_ShouldReturnUsers" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="RegistrationModule" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.example.registrationmodule.controller.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.example.registrationmodule.controller" />
-      <option name="MAIN_CLASS_NAME" value="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
-      <option name="METHOD_NAME" value="testGetUsersByPrefixUsername_WithMatchingPrefix_ShouldReturnUsers" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="UserControllerIntegrationTests.testGetUsersByPrefixUsername_WithNoMatches_ShouldReturnNoContent" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="RegistrationModule" />
       <extension name="coverage">
@@ -161,6 +174,13 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="FriendsAndChatsModuleApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="friends-and-chats-module" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.example.friends.and.chats.module.FriendsAndChatsModuleApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="RegistrationModuleApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="RegistrationModule" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.example.registrationmodule.RegistrationModuleApplication" />
@@ -170,11 +190,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="JUnit.FriendControllerIntegrationTest" />
         <item itemvalue="JUnit.UserControllerIntegrationTests" />
         <item itemvalue="JUnit.PetControllerIntegrationTests" />
         <item itemvalue="JUnit.AdminControllerIntegrationTests" />
         <item itemvalue="JUnit.UserControllerIntegrationTests.testGetUsersByPrefixUsername_WithNoMatches_ShouldReturnNoContent" />
-        <item itemvalue="JUnit.UserControllerIntegrationTests.testGetUsersByPrefixUsername_WithMatchingPrefix_ShouldReturnUsers" />
       </list>
     </recent_temporary>
   </component>
@@ -214,6 +234,8 @@
       <workItem from="1746380477533" duration="7000" />
       <workItem from="1746380493675" duration="3193000" />
       <workItem from="1746901912332" duration="79000" />
+      <workItem from="1747952380816" duration="104000" />
+      <workItem from="1749565549440" duration="291000" />
     </task>
     <servers />
   </component>

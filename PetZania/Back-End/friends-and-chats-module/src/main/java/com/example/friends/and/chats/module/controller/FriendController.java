@@ -4,8 +4,6 @@ import com.example.friends.and.chats.module.model.dto.BlockDTO;
 import com.example.friends.and.chats.module.model.dto.FollowDTO;
 import com.example.friends.and.chats.module.model.dto.FriendRequestDTO;
 import com.example.friends.and.chats.module.model.dto.FriendshipDTO;
-import com.example.friends.and.chats.module.model.entity.Friendship;
-import com.example.friends.and.chats.module.model.entity.User;
 import com.example.friends.and.chats.module.model.principal.UserPrincipal;
 import com.example.friends.and.chats.module.service.IFriendService;
 import com.example.friends.and.chats.module.util.SecurityUtils;
