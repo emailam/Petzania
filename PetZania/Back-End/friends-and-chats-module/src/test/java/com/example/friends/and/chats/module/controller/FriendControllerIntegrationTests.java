@@ -5,6 +5,7 @@ import com.example.friends.and.chats.module.model.entity.*;
 import com.example.friends.and.chats.module.model.principal.UserPrincipal;
 import com.example.friends.and.chats.module.repository.*;
 import com.example.friends.and.chats.module.service.IFriendService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -78,6 +80,11 @@ public class FriendControllerIntegrationTests {
                         userPrincipal.getAuthorities()
                 )
         );
+    }
+    @AfterEach
+    void tearDown() {
+        // Clear the security context after each test
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -162,12 +169,12 @@ public class FriendControllerIntegrationTests {
     @Test
     void acceptRequest_NotReceiver_ShouldFail() throws Exception {
         // UserB sends request to UserA
-        changeSecurityContext(userB);
+        setupSecurityContext(userB);
         mockMvc.perform(post("/api/friends/send-request/{receiverId}", userA.getUserId()))
                 .andExpect(status().isCreated());
 
         // UserC tries to accept (not involved in request)
-        changeSecurityContext(userC);
+        setupSecurityContext(userC);
         UUID requestId = friendRequestRepository.findAll().get(0).getId();
 
         mockMvc.perform(post("/api/friends/accept-request/{requestId}", requestId))
@@ -603,14 +610,97 @@ public class FriendControllerIntegrationTests {
                 .andExpect(status().isNoContent());
     }
 
+    @Test
+    void getReceivedFriendRequests_ReturnsPendingRequests() throws Exception {
+        friendRequestRepository.saveAll(List.of(
+                FriendRequest.builder()
+                        .sender(userB)
+                        .receiver(userA)
+                        .build()
+        ));
 
-    private void changeSecurityContext(User user) {
-        UserPrincipal principal = new UserPrincipal(user);
+        mockMvc.perform(get("/api/friends/received-requests"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].sender.userId").value(userB.getUserId().toString()))
+                .andExpect(jsonPath("$.content[0].receiver.userId").value(userA.getUserId().toString()));
+    }
+
+    @Test
+    void getReceivedFriendRequests_EmptyWhenNoRequests() throws Exception {
+        mockMvc.perform(get("/api/friends/received-requests"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void getReceivedFriendRequests_SortingByCreatedAt() throws Exception {
+        // Create requests at different times
+        FriendRequest oldRequest = friendRequestRepository.save(FriendRequest.builder()
+                .sender(userB)
+                .receiver(userA)
+                .createdAt(Timestamp.from(Instant.now().minusSeconds(3600)))
+                .build());
+
+        FriendRequest newRequest = friendRequestRepository.save(FriendRequest.builder()
+                .sender(userC)
+                .receiver(userA)
+                .createdAt(Timestamp.from(Instant.now()))
+                .build());
+
+        setupSecurityContext(userA);
+
+        // Test ascending order
+        mockMvc.perform(get("/api/friends/received-requests?sortBy=createdAt&direction=asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].requestId").value(oldRequest.getId().toString()))
+                .andExpect(jsonPath("$.content[1].requestId").value(newRequest.getId().toString()));
+
+        // Test descending order
+        mockMvc.perform(get("/api/friends/received-requests?sortBy=createdAt&direction=desc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].requestId").value(newRequest.getId().toString()))
+                .andExpect(jsonPath("$.content[1].requestId").value(oldRequest.getId().toString()));
+    }
+
+    @Test
+    void getReceivedFriendRequests_OnlyReturnsPendingRequests() throws Exception {
+        friendRequestRepository.saveAll(List.of(
+                FriendRequest.builder()
+                        .sender(userB)
+                        .receiver(userA)
+                        .build(),
+                FriendRequest.builder()
+                        .sender(userC)
+                        .receiver(userA)
+                        .build(),
+                FriendRequest.builder()
+                        .sender(userD)
+                        .receiver(userA)
+                        .build()
+        ));
+
+        setupSecurityContext(userA);
+
+        mockMvc.perform(get("/api/friends/received-requests"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(3)))
+                .andExpect(jsonPath("$.content[0].sender.userId").value(userB.getUserId().toString()))
+                .andExpect(jsonPath("$.content[1].sender.userId").value(userC.getUserId().toString()))
+                .andExpect(jsonPath("$.content[2].sender.userId").value(userD.getUserId().toString()));
+
+
+    }
+
+
+
+
+    private void setupSecurityContext(User user) {
+        UserPrincipal userPrincipal = new UserPrincipal(user);
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(
-                        principal,
+                        userPrincipal,
                         null,
-                        principal.getAuthorities()
+                        userPrincipal.getAuthorities()
                 )
         );
     }

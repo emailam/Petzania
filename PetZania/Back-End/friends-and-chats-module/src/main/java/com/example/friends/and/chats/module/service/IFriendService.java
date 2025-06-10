@@ -40,6 +40,7 @@ public interface IFriendService {
     Page<BlockDTO> getBlockedUsers(UUID userId, int page, int size, String sortBy, String direction);
 
     Page<FriendshipDTO> getFriendships(UUID userId, int page, int size, String sortBy, String direction);
+    Page<FriendRequestDTO> getReceivedFriendRequests(UUID userId, int page, int size, String sortBy, String direction);
 
     int getFollowingCount(UUID userId);
 

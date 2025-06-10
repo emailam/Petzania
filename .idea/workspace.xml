@@ -5,26 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="aacd7b49-acd6-447f-8aa4-f4265b4b3699" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/test/java/com/example/friends/and/chats/module/controller/ChatControllerIntegrationTests.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/test/java/com/example/friends/and/chats/module/controller/MessageControllerIntegrationTests.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/controller/AdminController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/controller/ChatController.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/controller/ChatController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/controller/FriendController.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/controller/FriendController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/controller/MessageController.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/controller/MessageController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/exception/globalhandler/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/exception/globalhandler/GlobalExceptionHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/model/dto/BlockDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/model/dto/friend/BlockDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/model/dto/CountDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/model/dto/friend/CountDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/model/dto/FollowDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/model/dto/friend/FollowDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/model/dto/FriendRequestDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/model/dto/friend/FriendRequestDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/model/dto/FriendshipDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/model/dto/friend/FriendshipDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/model/dto/UserDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/model/dto/user/UserDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/service/IDTOConversionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/service/IDTOConversionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/repository/FriendRequestRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/repository/FriendRequestRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/service/IFriendService.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/service/IFriendService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/service/impl/DTOConversionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/service/impl/DTOConversionService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/service/impl/FriendService.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/service/impl/FriendService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/test/java/com/example/friends/and/chats/module/controller/FriendControllerIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/test/java/com/example/friends/and/chats/module/controller/FriendControllerIntegrationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/test/java/com/example/friends/and/chats/module/controller/FriendControllerIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/test/java/com/example/friends/and/chats/module/controller/FriendControllerIntegrationTests.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -74,40 +60,40 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
-    &quot;JUnit.AdminControllerIntegrationTests.executor&quot;: &quot;Run&quot;,
-    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
-    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
-    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
-    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;Spring Boot.RegistrationModuleApplication.executor&quot;: &quot;Run&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/PC/Documents/GitHub/Petzania&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.projectsettings.compiler.annotationProcessors&quot;,
-    &quot;spring.configuration.checksum&quot;: &quot;e750f113bb97157825a84bd97017a404&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "JUnit.AdminControllerIntegrationTests.executor": "Run",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "Spring Boot.RegistrationModuleApplication.executor": "Run",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "C:/Users/PC/Documents/GitHub/Petzania",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "run.code.analysis.last.selected.profile": "pProject Default",
+    "settings.editor.selected.configurable": "reference.projectsettings.compiler.annotationProcessors",
+    "spring.configuration.checksum": "89d9963c4a7e5c8bccd75ea17cc5847c",
+    "vue.rearranger.settings.migration": "true"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;DatabaseDriversLRU&quot;: [
-      &quot;redis&quot;,
-      &quot;h2&quot;,
-      &quot;postgresql&quot;
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "redis",
+      "h2",
+      "postgresql"
     ]
   }
-}</component>
+}]]></component>
   <component name="ReactorSettings">
     <option name="notificationShown" value="true" />
   </component>
@@ -127,6 +113,53 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="FriendControllerIntegrationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="friends-and-chats-module" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.example.friends.and.chats.module.controller.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.example.friends.and.chats.module.controller" />
+      <option name="MAIN_CLASS_NAME" value="com.example.friends.and.chats.module.controller.FriendControllerIntegrationTests" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="FriendControllerIntegrationTests.getReceivedFriendRequests_EmptyWhenNoRequests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="friends-and-chats-module" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.example.friends.and.chats.module.controller.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.example.friends.and.chats.module.controller" />
+      <option name="MAIN_CLASS_NAME" value="com.example.friends.and.chats.module.controller.FriendControllerIntegrationTests" />
+      <option name="METHOD_NAME" value="getReceivedFriendRequests_EmptyWhenNoRequests" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="FriendControllerIntegrationTests.getReceivedFriendRequests_ReturnsPendingRequests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="friends-and-chats-module" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.example.friends.and.chats.module.controller.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.example.friends.and.chats.module.controller" />
+      <option name="MAIN_CLASS_NAME" value="com.example.friends.and.chats.module.controller.FriendControllerIntegrationTests" />
+      <option name="METHOD_NAME" value="getReceivedFriendRequests_ReturnsPendingRequests" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="MessageControllerIntegrationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="friends-and-chats-module" />
       <extension name="coverage">
@@ -138,54 +171,6 @@
       <option name="PACKAGE_NAME" value="com.example.friends.and.chats.module.controller" />
       <option name="MAIN_CLASS_NAME" value="com.example.friends.and.chats.module.controller.MessageControllerIntegrationTests" />
       <option name="TEST_OBJECT" value="class" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="MessageControllerIntegrationTests.deleteMessage_Success" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="friends-and-chats-module" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.example.friends.and.chats.module.controller.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.example.friends.and.chats.module.controller" />
-      <option name="MAIN_CLASS_NAME" value="com.example.friends.and.chats.module.controller.MessageControllerIntegrationTests" />
-      <option name="METHOD_NAME" value="deleteMessage_Success" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="MessageControllerIntegrationTests.getAllReactionsForMessage_Success" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="friends-and-chats-module" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.example.friends.and.chats.module.controller.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.example.friends.and.chats.module.controller" />
-      <option name="MAIN_CLASS_NAME" value="com.example.friends.and.chats.module.controller.MessageControllerIntegrationTests" />
-      <option name="METHOD_NAME" value="getAllReactionsForMessage_Success" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="MessageControllerIntegrationTests.getUnreadMessagesCount_Success" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="friends-and-chats-module" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.example.friends.and.chats.module.controller.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.example.friends.and.chats.module.controller" />
-      <option name="MAIN_CLASS_NAME" value="com.example.friends.and.chats.module.controller.MessageControllerIntegrationTests" />
-      <option name="METHOD_NAME" value="getUnreadMessagesCount_Success" />
-      <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -207,10 +192,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="JUnit.MessageControllerIntegrationTests" />
-        <item itemvalue="JUnit.MessageControllerIntegrationTests.deleteMessage_Success" />
-        <item itemvalue="JUnit.MessageControllerIntegrationTests.getUnreadMessagesCount_Success" />
-        <item itemvalue="JUnit.MessageControllerIntegrationTests.getAllReactionsForMessage_Success" />
         <item itemvalue="JUnit.ChatControllerIntegrationTests" />
+        <item itemvalue="JUnit.FriendControllerIntegrationTests" />
+        <item itemvalue="JUnit.FriendControllerIntegrationTests.getReceivedFriendRequests_ReturnsPendingRequests" />
+        <item itemvalue="JUnit.FriendControllerIntegrationTests.getReceivedFriendRequests_EmptyWhenNoRequests" />
       </list>
     </recent_temporary>
   </component>
@@ -252,6 +237,7 @@
       <workItem from="1746901912332" duration="79000" />
       <workItem from="1747952380816" duration="104000" />
       <workItem from="1749565549440" duration="291000" />
+      <workItem from="1749592790563" duration="2594000" />
     </task>
     <servers />
   </component>

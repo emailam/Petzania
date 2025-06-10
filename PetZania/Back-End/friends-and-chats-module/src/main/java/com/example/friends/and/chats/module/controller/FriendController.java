@@ -22,6 +22,18 @@ import java.util.UUID;
 public class FriendController {
     private final IFriendService friendService;
 
+    @Tag(name = "get", description = "Get Received Friend Requests")
+    @GetMapping("/received-requests")
+    public ResponseEntity<Page<FriendRequestDTO>> getReceivedFriendRequests(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        Page<FriendRequestDTO> requests = friendService.getReceivedFriendRequests(userPrincipal.getUserId(), page, size, sortBy, direction);
+        return requests.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(requests);
+    }
+
     @Tag(name = "post", description = "Send Friend Request")
     @PostMapping("/send-request/{receiverId}")
     public ResponseEntity<FriendRequestDTO> sendFriendRequest(@PathVariable UUID receiverId) {

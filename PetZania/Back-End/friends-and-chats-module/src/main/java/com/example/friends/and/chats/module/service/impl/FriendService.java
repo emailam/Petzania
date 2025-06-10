@@ -199,6 +199,14 @@ public class FriendService implements IFriendService {
     }
 
     @Override
+    public Page<FriendRequestDTO> getReceivedFriendRequests(UUID userId, int page, int size, String sortBy, String direction){
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        User receiver = getUser(userId);
+        return friendRequestRepository.findFriendRequestsByReceiver(receiver, pageable).map(dtoConversionService::mapToFriendRequestDTO);
+    }
+
+    @Override
     public Page<FriendshipDTO> getFriendships(UUID userId, int page, int size, String sortBy, String direction) {
         Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
