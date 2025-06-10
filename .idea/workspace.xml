@@ -6,11 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="aacd7b49-acd6-447f-8aa4-f4265b4b3699" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/controller/ChatController.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/controller/ChatController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/controller/FriendController.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/controller/FriendController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/repository/FriendRequestRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/repository/FriendRequestRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/service/IFriendService.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/service/IFriendService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/service/impl/FriendService.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/service/impl/FriendService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/test/java/com/example/friends/and/chats/module/controller/FriendControllerIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/test/java/com/example/friends/and/chats/module/controller/FriendControllerIntegrationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/controller/MessageController.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/controller/MessageController.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -97,7 +95,7 @@
   <component name="ReactorSettings">
     <option name="notificationShown" value="true" />
   </component>
-  <component name="RunManager" selected="JUnit.MessageControllerIntegrationTests">
+  <component name="RunManager" selected="Spring Boot.FriendsAndChatsModuleApplication">
     <configuration name="ChatControllerIntegrationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="friends-and-chats-module" />
       <extension name="coverage">
@@ -237,7 +235,7 @@
       <workItem from="1746901912332" duration="79000" />
       <workItem from="1747952380816" duration="104000" />
       <workItem from="1749565549440" duration="291000" />
-      <workItem from="1749592790563" duration="2594000" />
+      <workItem from="1749592790563" duration="4456000" />
     </task>
     <servers />
   </component>

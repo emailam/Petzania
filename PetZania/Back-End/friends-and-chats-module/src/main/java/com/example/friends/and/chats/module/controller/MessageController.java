@@ -7,6 +7,8 @@ import com.example.friends.and.chats.module.model.enumeration.MessageStatus;
 import com.example.friends.and.chats.module.model.principal.UserPrincipal;
 import com.example.friends.and.chats.module.service.IMessageService;
 import com.example.friends.and.chats.module.util.SecurityUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -19,11 +21,13 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/messages")
 @RequiredArgsConstructor
+@Tag(name = "Message", description = "Endpoints for managing chat messages and reactions")
 public class MessageController {
 
     private final IMessageService messageService;
     private final SimpMessagingTemplate messagingTemplate;
 
+    @Operation(summary = "Send a new message in a chat")
     @PostMapping("/send")
     public ResponseEntity<MessageDTO> sendMessage(@RequestBody SendMessageDTO sendMessageDTO) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
@@ -36,6 +40,7 @@ public class MessageController {
         return ResponseEntity.ok(saved);
     }
 
+    @Operation(summary = "Get paginated messages for a specific chat")
     @GetMapping("/chat/{chatId}")
     public ResponseEntity<Page<MessageDTO>> getMessagesByChat(
             @PathVariable UUID chatId,
@@ -48,6 +53,7 @@ public class MessageController {
         return ResponseEntity.ok(historyPage);
     }
 
+    @Operation(summary = "Get a message by its ID")
     @GetMapping("/{messageId}")
     public ResponseEntity<MessageDTO> getMessageById(@PathVariable UUID messageId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
@@ -55,6 +61,7 @@ public class MessageController {
         return ResponseEntity.ok(messageService.getMessageById(messageId, userId));
     }
 
+    @Operation(summary = "Edit the content of a message")
     @PatchMapping("/{messageId}/content")
     public ResponseEntity<MessageDTO> updateMessageContent(@PathVariable UUID messageId,
                                                            @RequestBody UpdateMessageContentDTO updateMessageContentDTO) {
@@ -72,6 +79,7 @@ public class MessageController {
         return ResponseEntity.ok(updatedMessage);
     }
 
+    @Operation(summary = "Update the status of a message (e.g., read)")
     @PatchMapping("/{messageId}/status")
     public ResponseEntity<MessageDTO> updateMessageStatus(@PathVariable UUID messageId,
                                                           @RequestBody UpdateMessageStatusDTO updateMessageStatusDTO) {
@@ -89,6 +97,7 @@ public class MessageController {
         return ResponseEntity.ok(updatedMessage);
     }
 
+    @Operation(summary = "React to a message")
     @PutMapping("/{messageId}/reaction")
     public ResponseEntity<MessageReactionDTO> reactToMessage(@PathVariable UUID messageId,
                                                              @RequestBody UpdateMessageReactDTO updateMessageReact) {
@@ -107,6 +116,7 @@ public class MessageController {
     }
 
     // remove react
+    @Operation(summary = "Remove your reaction from a message")
     @DeleteMapping("/{messageId}/reaction")
     public ResponseEntity<Void> removeReactionFromMessage(@PathVariable UUID messageId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
@@ -122,6 +132,7 @@ public class MessageController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Get all reactions for a message")
     @GetMapping("/{messageId}/reactions")
     public ResponseEntity<List<MessageReactionDTO>> getReactionsForMessage(@PathVariable UUID messageId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
@@ -129,6 +140,7 @@ public class MessageController {
         return ResponseEntity.ok(messageService.getReactionsForMessage(messageId, userId));
     }
 
+    @Operation(summary = "Delete a message")
     @DeleteMapping("/{messageId}")
     public ResponseEntity<Void> deleteMessage(@PathVariable UUID messageId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
