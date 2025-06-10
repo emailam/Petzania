@@ -15,7 +15,7 @@ import { getAllPetsByUserId } from '@/services/petService'
 import { FlowContext } from '@/context/FlowContext'
 
 
-export default function AddPet6() {
+export default function AllPets() {
     const { pets, createNewPet, setPets } = useContext(PetContext);
     const { user } = useContext(UserContext);
     const { fromPage, setFromPage } = useContext(FlowContext);
@@ -63,9 +63,16 @@ export default function AddPet6() {
                     </TouchableOpacity>
                 )}
             />
-            <View style={styles.buttonContainer}>
-                <Button title="Next" borderRadius={10} fontSize={16} onPress={goToNextPage} />
-            </View>
+            {fromPage && (
+                <View style={styles.buttonContainer}>
+                    <Button
+                        title={fromPage === 'Register' ? 'Next' : fromPage === 'Home' ? 'Return to Home' : 'Continue'}
+                        borderRadius={10}
+                        fontSize={16}
+                        onPress={goToNextPage}
+                    />
+                </View>
+            )}
         </View>
     )
 }

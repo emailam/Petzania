@@ -4,7 +4,7 @@ import CustomDrawer from '@/components/CustomDrawer';
 
 export default function Layout() {
     return (
-        <GestureHandlerRootView style={{ flex: 1 }}>
+        <GestureHandlerRootView>
             <Drawer
                 screenOptions={{ headerShown: false }}
                 drawerContent={(props) => <CustomDrawer {...props} />}

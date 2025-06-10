@@ -1,6 +1,5 @@
 import {
-    StyleSheet, View, Text, TextInput, KeyboardAvoidingView,
-    ScrollView, Platform, Image, TouchableOpacity,
+    StyleSheet, View, Text, KeyboardAvoidingView, Platform, Image, TouchableOpacity,
     FlatList, ActivityIndicator
 } from 'react-native';
 import React, { useState, useContext } from 'react';
@@ -46,7 +45,7 @@ export default function AddPet5() {
 
             await addPetToUser(pet, user.userId);
             router.dismissAll();
-            router.push('/PetModule/AddPet6');
+            router.push('/PetModule/AllPets');
         } catch (err) {
             console.error('Error uploading vaccine files:', err);
         } finally {

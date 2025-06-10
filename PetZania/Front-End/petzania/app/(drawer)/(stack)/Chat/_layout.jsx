@@ -12,7 +12,7 @@ export default function ChatLayout() {
                 }}
             />
             <Stack.Screen
-                name="ChatDetails"
+                name="[chatid]"
                 options={{
                     title: 'Chat Details',
                     headerTitleAlign: 'center',

@@ -100,6 +100,10 @@ export default function RootLayout() {
                           headerStyle: { backgroundColor: "#FFF" },
                         }}
                       />
+                      <Stack.Screen
+                        name="UserModule"
+                        options={{headerShown: false}}
+                      />
                     </Stack>
                     <StatusBar style="auto" />
                   </ThemeProvider>

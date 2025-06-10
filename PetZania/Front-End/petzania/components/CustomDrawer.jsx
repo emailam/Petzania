@@ -14,38 +14,45 @@ import Toast from 'react-native-toast-message';
 
 export default function CustomDrawer(props) {
   const router = useRouter();
-  const { user, setUser } = useContext(UserContext);
-  const { pets, setPets } = useContext(PetContext);
-  const { fromPage, setFromPage } = useContext(FlowContext);
+  const { user } = useContext(UserContext);
+  const { pets } = useContext(PetContext);
+  const { setFromPage } = useContext(FlowContext);
 
   const pathname = usePathname();
   const isActive = (path) => pathname === path;
-
   const goToPetModule = () => {
     setFromPage('Home');
-    router.push('/PetModule/AddPet1')
-  }
+    router.push('/PetModule/AddPet1');
+  };
 
   const handleLogout = async () => {
     try {
       await logout(user?.email);
+
       Toast.show({
         type: 'success',
         text1: 'Logged out successfully',
         position: 'top',
         visibilityTime: 2000,
       });
-      if(router.canDismiss()) router.dismissAll();
+
+      if(router.canDismiss()) {
+        router.dismissAll();
+      }
       router.replace('/RegisterModule/LoginScreen');
-      setUser(null);
-      setPets(null);
+
     } catch (error) {
       console.error('Logout error:', error);
     }
   }
 
+  const closeAndNavigate = (path) => {
+    props.navigation.closeDrawer();
+    router.push(path);
+  };
+
   return (
-    <DrawerContentScrollView {...props} keyboardShouldPersistTaps="always" scrollToOverflowEnabled={true} contentContainerStyle={{ flexGrow: 1 }}>
+    <DrawerContentScrollView {...props} keyboardShouldPersistTaps="handled" scrollToOverflowEnabled={true} contentContainerStyle={{ flexGrow: 1 }}>
       <View style={{ flex: 1 }}>
         {/* Top Section: User Info, Pets, Drawer Items */}
         <View style={{ flexGrow: 1, paddingBottom: 16 }}>
@@ -53,7 +60,7 @@ export default function CustomDrawer(props) {
           <View style={styles.userInfo}>
             <View style={styles.imageContainer}>
               <Image
-                source={user?.profilePictureURL? { uri: user.profilePictureURL } : require('@/assets/images/AddPet/Pet Default Pic.png')}
+                source={(user && user.profilePictureURL) ? { uri: user.profilePictureURL } : require('@/assets/images/AddPet/Pet Default Pic.png')}
                 style={{
                   width: 70,
                   height: 70,
@@ -68,17 +75,16 @@ export default function CustomDrawer(props) {
               <Text style={styles.username}>@{user?.username || 'CreamOfSomeYoungGuy69'}</Text>
             </View>
           </View>
-
+          {/* Pets Section */}
           <View style={styles.divider} />
 
-          {/* Pets Section */}
           <View style={styles.petsSection}>
             <Text style={styles.sectionTitle}>Your Pets</Text>
             <View style={styles.petsCircleContainer}>
-              {pets.length > 0 ? (
-                pets.map((pet) => (
+              {(pets.length > 0) ? (
+                pets.slice(0, 7).map((pet) => (
                   <TouchableOpacity key={pet.petId} style={styles.petCircleItem} onPress={() => router.push(`/PetModule/${pet.petId}`)}>
-                    {pet.myPicturesURLs ? (
+                    {(pet.myPicturesURLs && pet.myPicturesURLs.length > 0) ? (
                       <Image source={{ uri: pet.myPicturesURLs[0] }} style={styles.petCircleImage} />
                     ) : (
                       <View style={styles.petCircleFallback}>
@@ -92,22 +98,42 @@ export default function CustomDrawer(props) {
                 <Text style={styles.noPetsText}>No pets added yet</Text>
               )}
               {/* Add Pet Button */}
-              <TouchableOpacity style={styles.petCircleItem} onPress={goToPetModule}>
+              <TouchableOpacity style={styles.addPetCircleItem} onPress={goToPetModule}>
                 <View style={styles.addPetCircle}>
                   <Feather name="plus" size={28} color="#9188E5" />
                 </View>
                 <Text style={styles.petCircleName}>Add pet</Text>
               </TouchableOpacity>
             </View>
+            {pets.length > 7 && (
+              <TouchableOpacity
+                style={styles.viewAllPetsButton}
+                onPress={() =>{setFromPage('Home'); router.push('/PetModule/AllPets');}}
+                activeOpacity={0.8}
+              >
+                <View style={styles.viewAllPetsContent}>
+                  <View style={styles.viewAllPetsIcon}>
+                    <MaterialIcons name="pets" size={20} color="#fff" />
+                  </View>
+                  <View style={styles.viewAllPetsTextContainer}>
+                    <Text style={styles.viewAllPetsTitle}>View All Pets</Text>
+                    <Text style={styles.viewAllPetsCount}>{pets.length} pets total</Text>
+                  </View>
+                </View>
+                <View style={styles.viewAllPetsArrow}>
+                  <MaterialIcons name="arrow-forward-ios" size={18} color="#9188E5" />
+                </View>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={styles.divider} />
 
           {/* Drawer Items */}
-          <View style={styles.drawerItems}>
+          <View>
             <DrawerItem
               label="Home"
-              onPress={() => router.push('/Home')}
+              onPress={() => closeAndNavigate('/Home')}
               icon={() => (
                 <FontAwesome
                   name="home"
@@ -124,7 +150,7 @@ export default function CustomDrawer(props) {
             />
             <DrawerItem
               label="Friends"
-              onPress={() => router.push('/Friends')}
+              onPress={() => closeAndNavigate('/Friends')}
               // pressColor="rgba(145, 136, 229, 0.4)"
               icon={() => (
                 <MaterialIcons
@@ -141,13 +167,13 @@ export default function CustomDrawer(props) {
               }}
             />
           </View>
-        </View>
+        </View>  
 
-        {/* Bottom Drawer Items */}
-        <View style={{ paddingBottom: 16 }}>
-          <View style={styles.divider} />
-          <DrawerItem label="Settings" icon={() => <Ionicons name="settings-outline" size={28} />} onPress = { () => { router.push('/Settings')} } />
-          <DrawerItem label="Help & Support" icon={() => <Ionicons name="help-circle-outline" size={28} />} onPress = { ()=>{ router.push('/Help')} } />
+        <View style={styles.divider} />
+
+        <View>
+          <DrawerItem label="Settings" icon={() => <Ionicons name="settings-outline" size={28} />} onPress = { () => { props.navigation.closeDrawer(); router.push('/Settings'); } } />
+          <DrawerItem label="Help & Support" icon={() => <Ionicons name="help-circle-outline" size={28} />} onPress = { () => { props.navigation.closeDrawer(); router.push('/Help') } } />
           <DrawerItem label="Log out" icon={() => <MaterialIcons name="logout" size={28} />} onPress = { handleLogout } />
         </View>
       </View>
@@ -159,7 +185,7 @@ const styles = StyleSheet.create({
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
   },
 
   imageContainer: {
@@ -171,7 +197,7 @@ const styles = StyleSheet.create({
   },
 
   name: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#333',
   },
@@ -182,13 +208,13 @@ const styles = StyleSheet.create({
   },
 
   petsSection: {
-    marginBottom: 20,
+    marginBottom: 5,
   },
 
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: 5,
     color: '#444',
   },
 
@@ -196,7 +222,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
     marginTop: 8,
   },
 
@@ -216,14 +242,14 @@ const styles = StyleSheet.create({
   },
 
   petCircleFallback: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: '#e0e0e0',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#9188E5',
   },
 
@@ -243,13 +269,18 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f0f0f0',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#9188E5',
     marginBottom: 4,
-    marginRight: 8,
+  },
+
+  addPetCircleItem: {
+    alignItems: 'center',
+    flexDirection: 'column',
+    justifyContent: 'center',
   },
 
   addPetText: {
@@ -265,8 +296,71 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
 
-  drawerItems: {
-    marginTop: 10,
+  viewAllPetsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginTop: 16,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e8e6f3',
+    shadowColor: '#9188E5',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+
+  viewAllPetsContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+
+  viewAllPetsIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#9188E5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+
+  viewAllPetsTextContainer: {
+    flex: 1,
+  },
+
+  viewAllPetsTitle: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+
+  viewAllPetsCount: {
+    fontSize: 13,
+    color: '#9188E5',
+    fontWeight: '500',
+  },
+
+  viewAllPetsArrow: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  viewAllPetsText: {
+    fontSize: 14,
+    color: '#9188E5',
+    fontWeight: '600',
   },
 
   divider: {

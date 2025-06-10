@@ -43,8 +43,6 @@ const PetDetails = () => {
         });
     }
 
-
-
     const router = useRouter();
 
     const petIndex = pets.findIndex((pet) => pet.petId === petId);

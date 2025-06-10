@@ -6,11 +6,23 @@ import { responsive } from "@/utilities/responsive";
 import ExternalSignIn from "@/components/ExternalSignIn";
 import LoginForm from "@/components/LoginForm";
 
+import { UserContext } from "@/context/UserContext";
+import { PetContext } from "@/context/PetContext";
+
 export default function LoginScreen() {
+  const { setUser, user } = useContext(UserContext);
+  const { setPets } = useContext(PetContext);
+
+  useEffect(() => {
+    setUser(null);
+    setPets([]);
+  }
+  ,[]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
 
-      <Text style={styles.title}>PetZania</Text>
+      <Text style={styles.title}>Petzania</Text>
 
       <ScrollView contentContainerStyle={styles.container}>
 
