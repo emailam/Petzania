@@ -5,10 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="aacd7b49-acd6-447f-8aa4-f4265b4b3699" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/Dockerfile" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/controller/ChatController.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/controller/ChatController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/controller/FriendController.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/controller/FriendController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/controller/MessageController.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/controller/MessageController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/test/java/com/example/friends/and/chats/module/controller/FriendControllerIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Back-End/friends-and-chats-module/src/test/java/com/example/friends/and/chats/module/controller/FriendControllerIntegrationTests.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -95,7 +95,7 @@
   <component name="ReactorSettings">
     <option name="notificationShown" value="true" />
   </component>
-  <component name="RunManager" selected="Spring Boot.FriendsAndChatsModuleApplication">
+  <component name="RunManager" selected="JUnit.FriendControllerIntegrationTests">
     <configuration name="ChatControllerIntegrationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="friends-and-chats-module" />
       <extension name="coverage">
@@ -189,9 +189,9 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="JUnit.MessageControllerIntegrationTests" />
-        <item itemvalue="JUnit.ChatControllerIntegrationTests" />
         <item itemvalue="JUnit.FriendControllerIntegrationTests" />
+        <item itemvalue="JUnit.ChatControllerIntegrationTests" />
+        <item itemvalue="JUnit.MessageControllerIntegrationTests" />
         <item itemvalue="JUnit.FriendControllerIntegrationTests.getReceivedFriendRequests_ReturnsPendingRequests" />
         <item itemvalue="JUnit.FriendControllerIntegrationTests.getReceivedFriendRequests_EmptyWhenNoRequests" />
       </list>
@@ -235,7 +235,9 @@
       <workItem from="1746901912332" duration="79000" />
       <workItem from="1747952380816" duration="104000" />
       <workItem from="1749565549440" duration="291000" />
-      <workItem from="1749592790563" duration="4456000" />
+      <workItem from="1749592790563" duration="5765000" />
+      <workItem from="1749615759632" duration="345000" />
+      <workItem from="1749616136072" duration="222000" />
     </task>
     <servers />
   </component>
