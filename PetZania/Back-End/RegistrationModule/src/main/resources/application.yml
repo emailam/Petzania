@@ -49,6 +49,13 @@ spring:
   email:
     sender:
       petzaniasystem@gmail.com
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
 paypal:
   client-id: AcWmUFleXWmsAqACRIjcrfCwEwSfrBy7v3kYe5ejrwqxceOsh8kwdmzm0fkLeRgWe6Md5h1Nfv36_YGU
   client-secret: ENw9DhaESNiPv6XmjDjtEPTw2_6Y5KxPOkOiSPI64sY8vZsKaI1lVJGNpePSg6YBB4d6-d9Wu8yrbdge
