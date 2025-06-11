@@ -4,7 +4,7 @@ FROM openjdk:21-slim
 # Working directory in container
 WORKDIR /app
 
-# the JAR file
+# The jar file
 COPY target/friends-and-chats-module-0.0.1-SNAPSHOT.jar app.jar
 
 # port 8081 (from properties file)
