@@ -51,6 +51,7 @@ public class SecurityConfig {
                                 "/api/user/auth/resetPassword",
                                 "/api/admin/login",
                                 "/api/admin/refresh-token",
+                                "/api/swagger-ui/**",
                                 "/api/admin")
                         .permitAll()
 

@@ -11,6 +11,8 @@ import com.example.registrationmodule.service.IPetService;
 import com.example.registrationmodule.service.IUserService;
 import com.example.registrationmodule.service.IDTOConversionService;
 import com.example.registrationmodule.util.SecurityUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,12 +24,14 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @RestController
 @RequestMapping("api")
+@Tag(name = "Pet", description = "Endpoints for pet management")
 public class PetController {
 
     private final IUserService userService;
     private final IPetService petService;
     private final IDTOConversionService dtoConversionService;
 
+    @Operation(summary = "Create a new pet for the current user")
     @PostMapping(path = "/pet")
     public ResponseEntity<PetDTO> createPet(@RequestBody PetDTO petDto){
 
@@ -47,6 +51,7 @@ public class PetController {
         );
     }
 
+    @Operation(summary = "Get pet details by pet ID")
     @GetMapping(path = "/pet/{petId}")
     public ResponseEntity<PetDTO> getPetById(@PathVariable(name = "petId") UUID petId) {
 
@@ -55,6 +60,7 @@ public class PetController {
         return new ResponseEntity<>(dtoConversionService.mapToPetDto(pet), HttpStatus.OK);
     }
 
+    @Operation(summary = "Get all pets by user ID")
     @GetMapping(path = "/user/{userId}/pets")
     public ResponseEntity<List<PetDTO>> getAllPetsByUserId(@PathVariable(name = "userId") UUID userId) {
         if (!userService.userExistsById(userId)) {
@@ -69,6 +75,7 @@ public class PetController {
                 HttpStatus.OK);
     }
 
+    @Operation(summary = "Update pet partially by ID (only for current user)")
     @PatchMapping(path = "/pet/{petId}")
     public ResponseEntity<PetDTO> updatePetById(@PathVariable("petId") UUID petId,
                                                 @RequestBody UpdatePetDTO updatePetDto) {
@@ -91,6 +98,7 @@ public class PetController {
         );
     }
 
+    @Operation(summary = "Delete pet by ID (only for current user)")
     @DeleteMapping("/pet/{petId}")
     public ResponseEntity<Void> deletePetById(@PathVariable(name = "petId") UUID petId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
