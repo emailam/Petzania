@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -42,6 +43,8 @@ public class UserService implements IUserService {
     private final IEmailService emailService;
     private final JWTService jwtService;
     private final AuthenticationManager authenticationManager;
+
+    private final UserRegistrationPublisher userRegistrationPublisher;
 
     @Value("${spring.email.sender}")
     private String emailSender;
@@ -98,6 +101,11 @@ public class UserService implements IUserService {
         return userRepository.findById(userId)
                 .map(converter::mapToUserProfileDto)
                 .orElseThrow(() -> new UserNotFound("User does not exist"));
+    }
+
+    @Scheduled(fixedRateString = "5000")
+    public void x() {
+        userRegistrationPublisher.sendUserRegisteredMessage("NEW USER");
     }
 
     @Override
