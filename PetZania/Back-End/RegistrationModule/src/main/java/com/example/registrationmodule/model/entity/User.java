@@ -120,13 +120,6 @@ public class User {
     @Column(name = "blocked_id")
     private List<UUID> blocked;
 
-    // private List<User> receivedFriendRequests;
-    // private List<UUID> sendFriendRequests;
-    // private List<UUID> notifications;
-    // private List<UUID> myChats;
-    // private List<UUID> archivedChats;
-    // private List<UUID> pinnedGroups;
-
     @Column(name = "store_profile_id")
     private UUID storeProfileId;
 

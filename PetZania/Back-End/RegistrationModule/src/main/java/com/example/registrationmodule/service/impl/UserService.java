@@ -6,6 +6,7 @@ import com.example.registrationmodule.exception.user.*;
 import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.dto.EmailRequestDTO;
 import com.example.registrationmodule.model.entity.User;
+import com.example.registrationmodule.model.event.UserEvent;
 import com.example.registrationmodule.repository.UserRepository;
 import com.example.registrationmodule.service.IDTOConversionService;
 import com.example.registrationmodule.service.IEmailService;
@@ -64,7 +65,13 @@ public class UserService implements IUserService {
         } else {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             user.setVerified(false);
-            userRepository.save(user);
+            User savedUser = userRepository.save(user);
+            UserEvent userEvent = new UserEvent();
+            userEvent.setUserId(savedUser.getUserId());
+            userEvent.setUsername(savedUser.getUsername());
+            userEvent.setEmail(savedUser.getEmail());
+            userRegistrationPublisher.sendUserRegisteredMessage(userEvent);
+
         }
 
         // send verification code.
@@ -105,7 +112,11 @@ public class UserService implements IUserService {
 
     @Scheduled(fixedRateString = "5000")
     public void x() {
-        userRegistrationPublisher.sendUserRegisteredMessage("NEW USER");
+        UserEvent userEvent = new UserEvent();
+        userEvent.setUserId(UUID.randomUUID());
+        userEvent.setUsername("username");
+        userEvent.setEmail("fake@gmail.com");
+        userRegistrationPublisher.sendUserRegisteredMessage(userEvent);
     }
 
     @Override
