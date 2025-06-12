@@ -20,7 +20,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -46,6 +45,8 @@ public class UserService implements IUserService {
     private final AuthenticationManager authenticationManager;
 
     private final UserRegistrationPublisher userRegistrationPublisher;
+
+    private static int cnt = 1;
 
     @Value("${spring.email.sender}")
     private String emailSender;
@@ -110,14 +111,15 @@ public class UserService implements IUserService {
                 .orElseThrow(() -> new UserNotFound("User does not exist"));
     }
 
-    @Scheduled(fixedRateString = "5000")
-    public void x() {
-        UserEvent userEvent = new UserEvent();
-        userEvent.setUserId(UUID.randomUUID());
-        userEvent.setUsername("username");
-        userEvent.setEmail("fake@gmail.com");
-        userRegistrationPublisher.sendUserRegisteredMessage(userEvent);
-    }
+//    @Scheduled(fixedRateString = "5000")
+//    public void x() {
+//        UserEvent userEvent = new UserEvent();
+//        userEvent.setUserId(UUID.randomUUID());
+//        userEvent.setUsername("username" + cnt);
+//        userEvent.setEmail("fake" + cnt + "@gmail.com");
+//        cnt++;
+//        userRegistrationPublisher.sendUserRegisteredMessage(userEvent);
+//    }
 
     @Override
     public UserProfileDTO getUserByUsername(String username) {

@@ -13,16 +13,16 @@ import org.springframework.stereotype.Service;
 @Transactional
 public class UserRegistrationListener {
     private final UserRepository userRepository;
-    private static int cnt = 1;
 
     @RabbitListener(queues = "userQueue")
     public void onMessage(UserEvent user) {
-        User newUser = new User();
-        newUser.setUserId(user.getUserId());
-        newUser.setUsername(user.getUsername() + cnt);
-        newUser.setEmail(user.getEmail() + cnt);
-        userRepository.save(newUser);
-        cnt++;
-        System.out.println("received a message: " + user);
+        if (!userRepository.existsById(user.getUserId()) && !userRepository.existsByUsername(user.getUsername()) && !userRepository.existsByEmail(user.getEmail())) {
+            User newUser = new User();
+            newUser.setUserId(user.getUserId());
+            newUser.setUsername(user.getUsername());
+            newUser.setEmail(user.getEmail());
+            userRepository.save(newUser);
+            System.out.println("received a message: " + user);
+        }
     }
 }
