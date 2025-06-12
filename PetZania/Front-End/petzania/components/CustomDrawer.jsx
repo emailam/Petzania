@@ -55,9 +55,12 @@ export default function CustomDrawer(props) {
     <DrawerContentScrollView {...props} keyboardShouldPersistTaps="handled" scrollToOverflowEnabled={true} contentContainerStyle={{ flexGrow: 1 }}>
       <View style={{ flex: 1 }}>
         {/* Top Section: User Info, Pets, Drawer Items */}
-        <View style={{ flexGrow: 1, paddingBottom: 16 }}>
-          {/* User Info */}
-          <View style={styles.userInfo}>
+        <View style={{ flexGrow: 1, paddingBottom: 16 }}>          {/* User Info */}
+          <TouchableOpacity 
+            style={styles.userInfo}
+            onPress={() => closeAndNavigate(`/UserModule/${user?.userId}`)}
+            activeOpacity={0.7}
+          >
             <View style={styles.imageContainer}>
               <Image
                 source={(user && user.profilePictureURL) ? { uri: user.profilePictureURL } : require('@/assets/images/AddPet/Pet Default Pic.png')}
@@ -74,14 +77,17 @@ export default function CustomDrawer(props) {
               <Text style={styles.name}>{user?.name || 'Guest'}</Text>
               <Text style={styles.username}>@{user?.username || 'CreamOfSomeYoungGuy69'}</Text>
             </View>
-          </View>
+            <View style={styles.profileArrow}>
+              <MaterialIcons name="arrow-forward-ios" size={16} color="#9188E5" />
+            </View>
+          </TouchableOpacity>
           {/* Pets Section */}
           <View style={styles.divider} />
 
           <View style={styles.petsSection}>
             <Text style={styles.sectionTitle}>Your Pets</Text>
             <View style={styles.petsCircleContainer}>
-              {(pets.length > 0) ? (
+              {(
                 pets.slice(0, 7).map((pet) => (
                   <TouchableOpacity key={pet.petId} style={styles.petCircleItem} onPress={() => router.push(`/PetModule/${pet.petId}`)}>
                     {(pet.myPicturesURLs && pet.myPicturesURLs.length > 0) ? (
@@ -94,8 +100,6 @@ export default function CustomDrawer(props) {
                     <Text style={styles.petCircleName} numberOfLines={1}>{pet.name}</Text>
                   </TouchableOpacity>
                 ))
-              ) : (
-                <Text style={styles.noPetsText}>No pets added yet</Text>
               )}
               {/* Add Pet Button */}
               <TouchableOpacity style={styles.addPetCircleItem} onPress={goToPetModule}>
@@ -181,8 +185,7 @@ export default function CustomDrawer(props) {
   );
 }
 
-const styles = StyleSheet.create({
-  userInfo: {
+const styles = StyleSheet.create({  userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
@@ -194,6 +197,12 @@ const styles = StyleSheet.create({
 
   userInfoText: {
     flexShrink: 1,
+    flex: 1,
+  },
+
+  profileArrow: {
+    marginLeft: 8,
+    padding: 4,
   },
 
   name: {

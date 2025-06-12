@@ -12,13 +12,15 @@ import * as DocumentPicker from 'expo-document-picker';
 import Button from '@/components/Button';
 import { PetContext } from '@/context/PetContext';
 import { UserContext } from '@/context/UserContext';
+import { FlowContext } from '@/context/FlowContext';
 
 import { addPetToUser } from '@/services/petService';
 import { uploadFiles } from '@/services/uploadService';
 
 export default function AddPet5() {
-    const { pet, setPet } = useContext(PetContext);
+    const { pet, setPet, pets, setPets } = useContext(PetContext);
     const [vaccineFiles, setVaccineFiles] = useState(pet.myVaccinesURLs || []);
+    const { fromPage, setFromPage } = useContext(FlowContext);
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
 
@@ -43,9 +45,15 @@ export default function AddPet5() {
                 }));
             }
 
-            await addPetToUser(pet, user.userId);
+            const newPet = await addPetToUser(pet, user.userId);
+            console.log('New Pet Added:', newPet);
+
+            setPets(prevPets => [...prevPets, newPet]);
+            setPet({});
             router.dismissAll();
-            router.push('/PetModule/AllPets');
+            setFromPage(null);
+
+            if(fromPage !== 'EditProfile') router.push('/PetModule/AllPets');
         } catch (err) {
             console.error('Error uploading vaccine files:', err);
         } finally {

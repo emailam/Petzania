@@ -9,13 +9,14 @@ export default function ChatLayout() {
                 options={{
                     title: 'Chat',
                     headerTitleAlign: 'center',
+                    headerTitleStyle: { color: '#000' },
+                    headerTintColor: '#9188E5',
                 }}
             />
             <Stack.Screen
                 name="[chatid]"
                 options={{
-                    title: 'Chat Details',
-                    headerTitleAlign: 'center',
+                    headerShown: false,
                 }}
             />
         </Stack>

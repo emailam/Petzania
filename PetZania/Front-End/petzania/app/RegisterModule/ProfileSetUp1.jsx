@@ -8,10 +8,6 @@ import {
     KeyboardAvoidingView,
     ScrollView,
     Platform,
-    ActionSheetIOS,
-    Modal,
-    TouchableWithoutFeedback,
-    Alert
 } from 'react-native';
 import React, { useState, useContext } from 'react';
 import * as ImagePicker from 'expo-image-picker';

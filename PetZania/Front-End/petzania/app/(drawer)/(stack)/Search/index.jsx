@@ -9,6 +9,9 @@ export default function SearchScreen() {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [hasMore, setHasMore] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -16,24 +19,52 @@ export default function SearchScreen() {
             if (query.trim() === '') {
                 setResults([])
                 setLoading(false)
+                setCurrentPage(0)
+                setHasMore(false)
                 return
             }
-            performSearch(query)
+            performSearch(query, 0, true)
         }, 500)
 
         return () => clearTimeout(timeoutId)
     }, [query])
 
-    const performSearch = async (searchQuery) => {
-        setLoading(true)
+    const performSearch = async (searchQuery, page = 0, resetResults = false) => {
+        if (resetResults) {
+            setLoading(true)
+        } else {
+            setLoadingMore(true)
+        }
+
         try {
-            const searchResults = await searchByUsername(searchQuery)
-            setResults(searchResults.content)
+            const searchResults = await searchByUsername(searchQuery, page, 10)
+            if (resetResults) {
+                setResults(searchResults.content)
+                setCurrentPage(0)
+            } else {
+                setResults(prev => [...prev, ...searchResults.content])
+                setCurrentPage(page)
+            }
+
+            setHasMore(searchResults.content.length === 10 && !searchResults.last)
         } catch (error) {
             console.error('Search error:', error)
-            setResults([])
+            if (resetResults) {
+                setResults([])
+            }
+            setHasMore(false)
         } finally {
-            setLoading(false)
+            if (resetResults) {
+                setLoading(false)
+            } else {
+                setLoadingMore(false)
+            }
+        }
+    }
+
+    const loadMoreResults = () => {
+        if (!loadingMore && hasMore && query.trim()) {
+            performSearch(query, currentPage + 1, false)
         }
     }
 
@@ -73,7 +104,8 @@ export default function SearchScreen() {
                 }}
                 renderItem={({ item }) => (
                     <TouchableOpacity
-                        style={styles.resultItem}                        onPress={() => {
+                        style={styles.resultItem}
+                        onPress={() => {
                             console.log('Selected user:', item)
                             router.push(`/UserModule/${item.userId}`)
                         }}
@@ -120,6 +152,21 @@ export default function SearchScreen() {
                             <Text style={styles.noResultsSubtext}>Start typing to find other pet owners</Text>
                         </View>
                     )
+                }
+                ListFooterComponent={
+                    hasMore && results.length >= 10 ? (
+                        <TouchableOpacity
+                            style={styles.showMoreButton}
+                            onPress={loadMoreResults}
+                            disabled={loadingMore}
+                        >
+                            {loadingMore ? (
+                                <ActivityIndicator size="small" color="#9188E5" />
+                            ) : (
+                                <Text style={styles.showMoreText}>Show more</Text>
+                            )}
+                        </TouchableOpacity>
+                    ) : null
                 }
             />
         </View>
@@ -224,11 +271,25 @@ const styles = StyleSheet.create({
         marginTop: 16,
         fontSize: 18,
         fontWeight: '600',
-    },
-    noResultsSubtext: {
+    },    noResultsSubtext: {
         textAlign: 'center',
         color: '#999',
         marginTop: 8,
         fontSize: 14,
+    },
+    showMoreButton: {
+        backgroundColor: '#9188E5',
+        marginHorizontal: 16,
+        marginVertical: 16,
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    showMoreText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
     },
 })

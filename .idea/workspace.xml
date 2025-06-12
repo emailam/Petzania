@@ -5,26 +5,25 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="aacd7b49-acd6-447f-8aa4-f4265b4b3699" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/PetModule/AllPets.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/UserModule/[userid].jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/UserModule/_layout.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/services/searchService.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/UserModule/EditProfile.jsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/AppProviders.jsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/ErrorBoundary.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app.json" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/(stack)/Chat/[chatid].jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/(stack)/Chat/[chatid].jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/(stack)/(tabs)/_layout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/(stack)/(tabs)/_layout.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/(stack)/Chat/_layout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/(stack)/Chat/_layout.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/(stack)/Help/index.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/(stack)/Help/index.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/(stack)/Friends/_layout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/(stack)/Friends/_layout.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/(stack)/Search/index.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/(stack)/Search/index.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/_layout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/(drawer)/_layout.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/PetModule/AddPet2.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/PetModule/AddPet2.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/PetModule/AddPet5.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/PetModule/AddPet5.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/PetModule/AddPet6.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/PetModule/[petid].jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/PetModule/[petid].jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/PetModule/_layout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/PetModule/_layout.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/LoginScreen.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/LoginScreen.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/PetModule/AllPets.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/PetModule/AllPets.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/ProfileSetUp1.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/ProfileSetUp1.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/ProfileSetUp3.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/RegisterModule/ProfileSetUp3.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/UserModule/[userid].jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/UserModule/[userid].jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/UserModule/_layout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/UserModule/_layout.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/_layout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/app/_layout.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/CustomDrawer.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/components/CustomDrawer.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PetZania/Front-End/petzania/services/searchService.js" beforeDir="false" afterPath="$PROJECT_DIR$/PetZania/Front-End/petzania/services/searchService.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -259,6 +258,10 @@
       <workItem from="1749486901866" duration="723000" />
       <workItem from="1749492032281" duration="611000" />
       <workItem from="1749496443821" duration="2688000" />
+      <workItem from="1749573815175" duration="3350000" />
+      <workItem from="1749738833137" duration="347000" />
+      <workItem from="1749741588124" duration="7383000" />
+      <workItem from="1749766932279" duration="1178000" />
     </task>
     <servers />
   </component>

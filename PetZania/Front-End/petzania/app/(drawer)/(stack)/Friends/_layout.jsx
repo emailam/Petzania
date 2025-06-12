@@ -18,6 +18,8 @@ const FriendsLayout = () => {
         options={{
           title: 'Friends',
           headerTitleAlign: 'center',
+          headerTitleStyle: { color: '#000' },
+          headerTintColor: '#9188E5',
         }}
       />
     </Stack>

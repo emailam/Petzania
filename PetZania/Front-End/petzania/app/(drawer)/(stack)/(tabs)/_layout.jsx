@@ -54,6 +54,7 @@ export default function TabLayout() {
         tabBarInactiveTintColor: '#9188E5',
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
+        tabBarPosition: 'bottom',
         tabBarItemStyle: {
           justifyContent: 'center',
           alignItems: 'center',

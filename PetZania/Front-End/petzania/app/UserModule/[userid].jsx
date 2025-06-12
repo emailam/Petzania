@@ -100,15 +100,25 @@ export default function UserProfile() {
               <Ionicons name="person" size={60} color="#9188E5" />
             </View>
           )}
-        </View>
-
-        <View style={styles.userInfoContainer}>
+        </View>        <View style={styles.userInfoContainer}>
           <Text style={styles.name}>{user.name || 'Unknown User'}</Text>
           <Text style={styles.username}>@{user.username}</Text>
           {user.email && (
             <Text style={styles.email}>{user.email}</Text>
           )}
         </View>
+
+        {isOwnProfile && (
+          <View style={styles.ownProfileButtonsContainer}>
+            <TouchableOpacity
+              style={styles.editProfileButton}
+              onPress={() => router.push('/UserModule/EditProfile')}
+            >
+              <Ionicons name="create-outline" size={20} color="#9188E5" />
+              <Text style={styles.editProfileButtonText}>Edit Profile</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {!isOwnProfile && (
           <View style={styles.actionButtonsContainer}>
@@ -331,8 +341,28 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#9188E5',
     gap: 8,
+  },  messageButtonText: {
+    color: '#9188E5',
+    fontSize: 16,
+    fontWeight: '600',
   },
-  messageButtonText: {
+  ownProfileButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  editProfileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    backgroundColor: '#f0f0f0',
+    borderWidth: 1,
+    borderColor: '#9188E5',
+    gap: 8,
+  },
+  editProfileButtonText: {
     color: '#9188E5',
     fontSize: 16,
     fontWeight: '600',

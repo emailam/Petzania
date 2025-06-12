@@ -13,6 +13,18 @@ export default function UserModuleLayout() {
             headerStyle: { backgroundColor: '#FFF' },
         }}
       />
+      <Stack.Screen
+        name="EditProfile"
+        options={{
+            headerShown: true,
+            headerTitle: 'Edit Profile',
+            headerTitleStyle: { color: '#000' },
+            headerTitleAlign: 'center',
+            headerBackTitleVisible: false,
+            headerTintColor: '#9188E5',
+            headerStyle: { backgroundColor: '#FFF' },
+        }}
+      />
     </Stack>
   );
 }

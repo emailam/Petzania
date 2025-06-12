@@ -12,8 +12,6 @@ export default function AddPet2() {
     const router = useRouter();
     const [error, setError] = useState('');
 
-    console.log(pet);
-
     const handleSelectPet = (value) => {
         setPet({ ...pet, species: value });
         setError('');

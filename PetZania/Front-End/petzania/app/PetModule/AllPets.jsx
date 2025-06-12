@@ -63,7 +63,7 @@ export default function AllPets() {
                     </TouchableOpacity>
                 )}
             />
-            {fromPage && (
+            {fromPage !== 'EditProfile' && (
                 <View style={styles.buttonContainer}>
                     <Button
                         title={fromPage === 'Register' ? 'Next' : fromPage === 'Home' ? 'Return to Home' : 'Continue'}

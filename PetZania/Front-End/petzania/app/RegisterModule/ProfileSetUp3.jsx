@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import Button from '@/components/Button';
 
 import { UserContext } from '@/context/UserContext';
+import { FlowContext } from '@/context/FlowContext';
 
 import { getAllPetsByUserId } from '@/services/petService';
 
@@ -36,7 +37,7 @@ export default function ProfileSetUp3() {
     }
     return (
         <View style={styles.container}>
-            <View style={styles.userContainer}>
+            <TouchableOpacity style={styles.userContainer} onPress={ () => router.push('/UserModule/EditProfile')}>
                 <Image
                     source={{uri: user?.profilePictureURL || defaultUserImage}}
                     style={styles.userImage}
@@ -45,7 +46,7 @@ export default function ProfileSetUp3() {
                     <Text style={styles.userName}>{user ? user.name : "Name"}</Text>
                     <Text style={styles.userHandle}>@{user ? user.username : "username"}</Text>
                 </View>
-            </View>
+            </TouchableOpacity>
 
             <View style={styles.petsContainer}>
                 <View style={styles.petHeaderContainer}>
