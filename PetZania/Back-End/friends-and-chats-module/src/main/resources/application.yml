@@ -2,6 +2,12 @@ spring:
   application:
     name: FriendsAndChatsModule
 
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
   datasource:
     password: admin
     url: jdbc:postgresql://localhost:8090/friends_chat
