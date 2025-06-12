@@ -51,6 +51,7 @@ public class SecurityConfig {
                                 "/api/user/auth/resetPassword",
                                 "/api/admin/login",
                                 "/api/admin/refresh-token",
+                                "/api/swagger-ui/**",
                                 "/api/admin")
                         .permitAll()
 
@@ -80,17 +81,6 @@ public class SecurityConfig {
 
         return http.build();
     }
-
-//    @Bean
-//    public UserDetailsService userDetailsService() {
-//        UserDetails user1 = User
-//                .withDefaultPasswordEncoder()
-//                .username("admin")
-//                .password("1234")
-//                .roles("USER").build();
-//
-//        return new InMemoryUserDetailsManager(user1);
-//    }
 
     @Bean
     public AuthenticationProvider authenticationProvider() {

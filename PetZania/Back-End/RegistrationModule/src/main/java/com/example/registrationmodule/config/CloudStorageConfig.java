@@ -30,6 +30,7 @@ public class CloudStorageConfig {
 
     @PostConstruct
     public void init() {
+        System.setProperty("aws.java.v1.disableDeprecationAnnouncement", "true");
         BasicAWSCredentials awsCreds = new BasicAWSCredentials(accessKey, secretAccessKey);
         amazonS3 = AmazonS3ClientBuilder.standard()
                 .withRegion(region)

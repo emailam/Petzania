@@ -20,6 +20,4 @@ public interface IPetService {
     Pet partialUpdatePet(UUID petId, UpdatePetDTO petDto);
 
     void deleteById(UUID petId);
-//
-//    Pet addPetPicture(UUID petId, String picUrl);
 }

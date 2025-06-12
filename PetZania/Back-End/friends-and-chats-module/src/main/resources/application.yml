@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: FriendsAndChatsModule
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+  datasource:
+    password: admin
+    url: jdbc:postgresql://localhost:8090/friends_chat
+    username: postgres
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+    # show-sql: true
+
+  security:
+    user:
+      name: admin
+      password: 1234
+
+  jwt:
+    secret-key:
+      4ioX3ogCr4GAZ9gB99txf1LyhqVOmTJ8RsL9hyJzZXQ=
+
+server:
+  error:
+    include-message: always
+    include-binding-errors: always
+  port: 8081
+
+logging:
+  level:
+    org.springframework.cache: DEBUG
+    org.springframework.data.redis.cache: DEBUG
+
+resilience4j.ratelimiter:
+  instances:
+    ### Chat Service Limiters
+    chatServiceRateLimiter:
+      limitForPeriod: 10       # e.g. allow 10 chat‐related calls
+      limitRefreshPeriod: 1s   # reset every second
+      timeoutDuration: 0       # immediate rejection when over limit
+    ### Message Service Limiters
+    messageServiceRateLimiter:
+      limitForPeriod: 10
+      limitRefreshPeriod: 1s
+      timeoutDuration: 0

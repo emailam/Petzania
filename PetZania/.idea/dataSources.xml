@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
+<<<<<<< HEAD
     <data-source source="LOCAL" name="postgres@localhost" uuid="38a01fad-0feb-4fbf-8434-fdbe2708b117">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
       <jdbc-url>jdbc:postgresql://localhost:8090/postgres</jdbc-url>
+=======
+    <data-source source="LOCAL" name="friends_chat@localhost" uuid="9f150b59-8250-4b07-90eb-ec03c6793bf3">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://localhost:8090/friends_chat</jdbc-url>
+>>>>>>> origin/Merging-Registration-with-Friends
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>

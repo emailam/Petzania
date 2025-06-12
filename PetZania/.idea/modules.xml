@@ -3,6 +3,11 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/PetZania.iml" filepath="$PROJECT_DIR$/.idea/PetZania.iml" />
+<<<<<<< HEAD
+=======
+      <module fileurl="file://$PROJECT_DIR$/Back-End/RegistrationModule/RegistrationModule.iml" filepath="$PROJECT_DIR$/Back-End/RegistrationModule/RegistrationModule.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Back-End/friends-and-chats-module/friends-and-chats-module.iml" filepath="$PROJECT_DIR$/Back-End/friends-and-chats-module/friends-and-chats-module.iml" />
+>>>>>>> origin/Merging-Registration-with-Friends
     </modules>
   </component>
 </project>

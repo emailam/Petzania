@@ -1,8 +1,6 @@
 package com.example.registrationmodule.model.dto;
 
-import com.example.registrationmodule.model.enumeration.UserRole;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.paypal.http.serializer.Json;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -37,23 +35,10 @@ public class UserProfileDTO {
     @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "Invalid phone number format.")
     private String phoneNumber;
 
-    private List<UserRole> userRoles;
 
     private List<PetDTO> myPets;
-
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY) // These counts should be calculated server-side
-    private int friendsCount;
-
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private int followersCount;
-
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private int followingCount;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private boolean active;
 
-    private UUID storeProfileId;
-
-    private UUID vetProfileId;
 }
