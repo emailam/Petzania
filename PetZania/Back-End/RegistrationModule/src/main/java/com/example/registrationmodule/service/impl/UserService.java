@@ -46,8 +46,6 @@ public class UserService implements IUserService {
 
     private final UserRegistrationPublisher userRegistrationPublisher;
 
-    private static int cnt = 1;
-
     @Value("${spring.email.sender}")
     private String emailSender;
 
@@ -110,16 +108,6 @@ public class UserService implements IUserService {
                 .map(converter::mapToUserProfileDto)
                 .orElseThrow(() -> new UserNotFound("User does not exist"));
     }
-
-//    @Scheduled(fixedRateString = "5000")
-//    public void x() {
-//        UserEvent userEvent = new UserEvent();
-//        userEvent.setUserId(UUID.randomUUID());
-//        userEvent.setUsername("username" + cnt);
-//        userEvent.setEmail("fake" + cnt + "@gmail.com");
-//        cnt++;
-//        userRegistrationPublisher.sendUserRegisteredMessage(userEvent);
-//    }
 
     @Override
     public UserProfileDTO getUserByUsername(String username) {
