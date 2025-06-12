@@ -1,0 +1,38 @@
+spring:
+    application:
+    name: FriendsAndChatsModule
+
+datasource:
+    password: admin
+    url: jdbc:postgresql://localhost:8090/friends_chat
+    username: postgres
+
+jpa:
+    hibernate:
+        ddl-auto: update
+    properties:
+        hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+# show-sql: true
+
+security:
+    user:
+    name: admin
+    password: 1234
+
+jwt:
+    secret-key:
+        4ioX3ogCr4GAZ9gB99txf1LyhqVOmTJ8RsL9hyJzZXQ=
+
+server:
+    error:
+    include-message: always
+    include-binding-errors: always
+    port: 8080
+
+logging:
+    level:
+        org.springframework.cache: DEBUG
+        org.springframework.data.redis.cache: DEBUG
