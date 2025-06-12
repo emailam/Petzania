@@ -21,6 +21,7 @@ public class Media {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID mediaId;
 
+    @Column(name = "media_key")
     private String key; // S3 key
 
     private String type; // Content type like image/jpeg, video/mp4
