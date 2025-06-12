@@ -13,8 +13,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     Optional<User> findByEmailIgnoreCase(String email);
 
-    void deleteUserByEmail(String email);
-
     Page<User> findAll(Pageable pageable);
 
     Page<User> findByUsernameStartingWithIgnoreCase(String prefix, Pageable pageable);

@@ -9,7 +9,6 @@ import java.util.UUID;
 
 public interface ICloudService {
 
-//    List<Media> uploadAndSaveMedia(List<MultipartFile> files, boolean validate) throws IOException;
     Media uploadAndSaveMedia(MultipartFile files, boolean validate) throws IOException;
 
     String getMediaUrl(UUID mediaId);

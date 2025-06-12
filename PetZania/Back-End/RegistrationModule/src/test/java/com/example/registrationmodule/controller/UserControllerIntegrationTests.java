@@ -742,15 +742,7 @@ public class UserControllerIntegrationTests {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.bio").value(testUserA.getBio()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.profilePictureURL").value(testUserA.getProfilePictureURL()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.phoneNumber").value(testUserA.getPhoneNumber()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.userRoles").isArray())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.myPets").isArray())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.friendsCount").value(testUserA.getFriends().size()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.followersCount").value(testUserA.getFollowers().size()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.followingCount").value(testUserA.getFollowing().size()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.storeProfileId").
-                        value(testUserA.getStoreProfileId() != null ? testUserA.getStoreProfileId().toString() : null))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.vetProfileId").
-                        value(testUserA.getVetProfileId() != null ? testUserA.getVetProfileId().toString() : null));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.myPets").isArray());
     }
 
 

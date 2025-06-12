@@ -44,16 +44,10 @@ public class DTOConversionService implements IDTOConversionService {
                 user.getBio(),
                 user.getProfilePictureURL(),
                 user.getPhoneNumber(),
-                user.getUserRoles() != null ? user.getUserRoles() : new ArrayList<>(),
                 user.getMyPets() != null ?
                         user.getMyPets().stream().map(this::mapToPetDto).collect(Collectors.toList())
                         : new ArrayList<>(),
-                user.getFriends() != null ? user.getFriends().size() : 0,
-                user.getFollowers() != null ? user.getFollowers().size() : 0,
-                user.getFollowing() != null ? user.getFollowing().size() : 0,
-                user.isBlocked(),
-                user.getStoreProfileId(),
-                user.getVetProfileId()
+                user.isBlocked()
         );
     }
 
