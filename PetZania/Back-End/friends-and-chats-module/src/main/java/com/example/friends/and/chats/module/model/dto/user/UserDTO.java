@@ -14,5 +14,5 @@ import java.util.UUID;
 public class UserDTO {
     private UUID userId;
     private String username;
-    private String profilePictureURL;
+    private String email;
 }

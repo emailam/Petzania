@@ -190,7 +190,7 @@ public class DTOConversionService implements IDTOConversionService {
         return UserDTO.builder()
                 .userId(user.getUserId())
                 .username(user.getUsername())
-                .profilePictureURL(user.getProfilePictureURL())
+                .email(user.getEmail())
                 .build();
     }
 
