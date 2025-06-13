@@ -21,7 +21,6 @@ import java.util.UUID;
 @Table(
         name = "pets",
         indexes = {
-                @Index(name = "idx_pet_user", columnList = "user_id"),
                 @Index(name = "idx_pet_species", columnList = "species"),
                 @Index(name = "idx_pet_breed", columnList = "breed"),
                 @Index(name = "idx_pet_gender", columnList = "gender")

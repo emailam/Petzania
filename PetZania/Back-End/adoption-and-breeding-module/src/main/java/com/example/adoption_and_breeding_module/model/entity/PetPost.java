@@ -5,8 +5,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -15,7 +13,11 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @Table(name = "pet_posts", indexes = {
-
+        @Index(name = "idx_post_owner", columnList = "owner_id"),
+        @Index(name = "idx_post_pet", columnList = "pet_id"),
+        @Index(name = "idx_post_status", columnList = "post_status"),
+        @Index(name = "idx_post_type", columnList = "post_type"),
+        @Index(name = "idx_post_created", columnList = "created_at")
 })
 public class PetPost {
     @Id
@@ -27,7 +29,7 @@ public class PetPost {
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false, cascade = CascadeType.ALL)
     @JoinColumn(name = "pet_id", nullable = false)
     private Pet pet;
 
@@ -35,13 +37,7 @@ public class PetPost {
     @Column(name = "post_status", nullable = false)
     PetPostStatus postStatus;
 
-    @ManyToMany
-    @JoinTable(
-            name = "post_reactions",
-            joinColumns = @JoinColumn(name = "post_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    private Set<User> reactions = new HashSet<>();
+    private int reactions;
 
     @Column(name = "description", length = 2000)
     private String description;
@@ -59,6 +55,8 @@ public class PetPost {
     @PrePersist
     public void onCreate() {
         createdAt = Instant.now();
+        postStatus = PetPostStatus.PENDING;
+        reactions = 0;
     }
 
     @PreUpdate
