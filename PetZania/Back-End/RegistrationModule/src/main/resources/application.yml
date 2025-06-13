@@ -1,0 +1,165 @@
+spring:
+  application:
+    name: RegistrationModule
+
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: guest
+    password: guest
+
+  datasource:
+    password: admin
+    url: jdbc:postgresql://postgres:5432/postgres
+    username: postgres
+
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+    # show-sql: true
+
+  data:
+    redis:
+      host: redis
+      port: 6379
+    cache:
+      type: redis
+
+  security:
+    user:
+      name: admin
+      password: 1234
+
+  jwt:
+    secret-key:
+      4ioX3ogCr4GAZ9gB99txf1LyhqVOmTJ8RsL9hyJzZXQ=
+
+  access:
+    token:
+      expiration:
+        900000
+
+  refresh:
+    token:
+      expiration:
+        86400000
+
+  sendgrid:
+    key: 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
+
+  email:
+    sender:
+      petzaniasystem@gmail.com
+
+  aws:
+    access-key:
+      AKIA4LWSL3LGHUPC3QWG
+    secret-access-key:
+      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
+    region: eu-north-1
+    bucket-name: petzania-media
+    cdn-url: "https://d1xkc8gz1va7ak.cloudfront.net"
+    max-size:
+      image: 10485760
+      video: 52428800
+      text: 5242880
+      application-pdf: 10485760
+    allowed-types:
+        - image/jpeg
+        - image/png
+        - video/mp4
+        - text/plain
+        - application/pdf
+
+server:
+  error:
+    include-message: always
+    include-binding-errors: always
+  port: 8080
+
+
+resilience4j.ratelimiter:
+  instances:
+    ### User Service Limiters
+    loginRateLimiter:
+      limitForPeriod: 10  # Up to 10 login attempts
+      limitRefreshPeriod: 5m  # Reset after 5 minutes
+      timeoutDuration: 0  # No wait time (Default is 5 sec)
+
+    sendOtpRateLimiter:
+      limitForPeriod: 5
+      limitRefreshPeriod: 2m
+
+    verifyOtpRateLimiter:
+      limitForPeriod: 10
+      limitRefreshPeriod: 2m
+
+    refreshTokenRateLimiter: # don't know how much should I put
+      limitForPeriod: 20
+      limitRefreshPeriod: 10m
+
+    logoutRateLimiter:
+      limitForPeriod: 10
+      limitRefreshPeriod: 10m
+
+    registerRateLimiter:
+      limitForPeriod: 10
+      limitRefreshPeriod: 5m
+
+    ### Pet Service Limiters
+    savePetRateLimiter:
+      limitForPeriod: 5
+      limitRefreshPeriod: 2m
+
+    updatePetRateLimiter:
+      limitForPeriod: 10
+      limitRefreshPeriod: 3m
+
+    deletePetRateLimiter:
+      limitForPeriod: 10
+      limitRefreshPeriod: 3m
+
+    addPetPictureRateLimiter:
+      limitForPeriod: 10
+      limitRefreshPeriod: 2m
+
+    ### Admin Service Limiters
+    updateAdminRateLimiter:
+      limitForPeriod: 5
+      limitRefreshPeriod: 1m
+      timeoutDuration: 0
+
+    saveAdminRateLimiter:
+      limitForPeriod: 3
+      limitRefreshPeriod: 2m
+      timeoutDuration: 0
+
+    deleteAdminRateLimiter:
+      limitForPeriod: 3
+      limitRefreshPeriod: 2m
+      timeoutDuration: 0
+
+    ### Cloud Service Limiters
+    mediaUploadLimiter:
+      limit-for-period: 5
+      limit-refresh-period: 10s
+      timeout-duration: 0
+
+    mediaUrlLimiter:
+      limit-for-period: 10
+      limit-refresh-period: 10s
+      timeout-duration: 0
+
+
+logging:
+  level:
+    org.springframework.cache: DEBUG
+    org.springframework.data.redis.cache: DEBUG
+    org.springframework.data.redis: DEBUG
+    io.lettuce.core: DEBUG
