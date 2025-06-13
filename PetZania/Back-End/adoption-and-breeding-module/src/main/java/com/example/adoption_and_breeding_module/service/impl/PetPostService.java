@@ -3,10 +3,7 @@ package com.example.adoption_and_breeding_module.service.impl;
 import com.example.adoption_and_breeding_module.exception.PetPostNotFound;
 import com.example.adoption_and_breeding_module.exception.UserAccessDenied;
 import com.example.adoption_and_breeding_module.exception.UserNotFound;
-import com.example.adoption_and_breeding_module.model.dto.CreatePetPostDTO;
-import com.example.adoption_and_breeding_module.model.dto.PetPostDTO;
-import com.example.adoption_and_breeding_module.model.dto.UpdatePetDTO;
-import com.example.adoption_and_breeding_module.model.dto.UpdatePetPostDTO;
+import com.example.adoption_and_breeding_module.model.dto.*;
 import com.example.adoption_and_breeding_module.model.entity.Pet;
 import com.example.adoption_and_breeding_module.model.entity.PetPost;
 import com.example.adoption_and_breeding_module.model.entity.User;
@@ -15,12 +12,14 @@ import com.example.adoption_and_breeding_module.repository.PetPostRepository;
 import com.example.adoption_and_breeding_module.repository.UserRepository;
 import com.example.adoption_and_breeding_module.service.IDTOConversionService;
 import com.example.adoption_and_breeding_module.service.IPetPostService;
+import com.example.adoption_and_breeding_module.util.PetPostSpecification;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -137,15 +136,30 @@ public class PetPostService implements IPetPostService {
                 .orElseThrow(() -> new UserNotFound("User not found with ID: " + userId));
 
         Set<User> reactedUsers = post.getReactedUsers();
+        int reacts = post.getReacts();
         if (reactedUsers.contains(user)) {
             reactedUsers.remove(user);
+            reacts --;
         }
         else {
             reactedUsers.add(user);
+            reacts ++;
         }
-
+        post.setReacts(reacts);
         post = petPostRepository.save(post);
         return dtoConversionService.mapToPetPostDTO(post);
     }
 
+    @Override
+    public Page<PetPostDTO> getFilteredPosts(PetPostFilterDTO filter, int page, int size) {
+        Specification<PetPost> spec = PetPostSpecification.withFilters(filter);
+
+        Sort sort = Sort.by(Sort.Direction.fromString(filter.getSortOrder()),
+                filter.getSortBy().equals("likes") ? "reacts" : "createdAt");
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return petPostRepository.findAll(spec, pageable)
+                .map(dtoConversionService::mapToPetPostDTO);
+    }
 }

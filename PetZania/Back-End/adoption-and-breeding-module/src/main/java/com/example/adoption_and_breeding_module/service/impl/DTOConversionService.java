@@ -47,7 +47,7 @@ public class DTOConversionService implements IDTOConversionService {
                 pet.getDescription(),
                 pet.getGender(),
                 pet.getDateOfBirth(),
-                getPetAge(pet.getDateOfBirth()), // Calculate age
+                pet.getFormattedAge(), // Calculate age
                 pet.getBreed(),
                 pet.getSpecies(),
                 pet.getMyVaccinesURLs() != null ? pet.getMyVaccinesURLs() : new ArrayList<>(),
@@ -75,17 +75,5 @@ public class DTOConversionService implements IDTOConversionService {
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .build();
-    }
-
-    public String getPetAge(LocalDate dateOfBirth) {
-        Period period = Period.between(dateOfBirth, LocalDate.now());
-        int years = period.getYears();
-        int months = period.getMonths();
-
-        if (years > 0) {
-            return years + " years" + (months > 0 ? " " + months + " months" : "");
-        } else {
-            return months + " months";
-        }
     }
 }

@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
-
+import java.time.Period;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -62,4 +62,23 @@ public class Pet {
     @Column(name = "picture_url")
     private List<String> myPicturesURLs;
 
+    // === Age calculation method ===
+    public int getAgeInMonths() {
+        if (dateOfBirth == null) return -1; // Or throw a custom exception
+        Period period = Period.between(dateOfBirth, LocalDate.now());
+        return period.getYears() * 12 + period.getMonths();
+    }
+
+    public String getFormattedAge() {
+        if (dateOfBirth == null) return "Unknown";
+        Period period = Period.between(dateOfBirth, LocalDate.now());
+        int years = period.getYears();
+        int months = period.getMonths();
+
+        if (years > 0) {
+            return years + " years" + (months > 0 ? " " + months + " months" : "");
+        } else {
+            return months + " months";
+        }
+    }
 }

@@ -2,6 +2,7 @@ package com.example.adoption_and_breeding_module.controller;
 
 import com.example.adoption_and_breeding_module.model.dto.CreatePetPostDTO;
 import com.example.adoption_and_breeding_module.model.dto.PetPostDTO;
+import com.example.adoption_and_breeding_module.model.dto.PetPostFilterDTO;
 import com.example.adoption_and_breeding_module.model.dto.UpdatePetPostDTO;
 import com.example.adoption_and_breeding_module.service.IPetPostService;
 import lombok.RequiredArgsConstructor;
@@ -69,5 +70,15 @@ public class PetPostController {
         UUID userId = UUID.randomUUID();
         PetPostDTO updatedPost = petPostService.toggleReact(petPostId, userId);
         return ResponseEntity.ok(updatedPost);
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<PetPostDTO>> getFilteredPosts(
+            @RequestBody PetPostFilterDTO filter,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<PetPostDTO> result = petPostService.getFilteredPosts(filter, page, size);
+        return ResponseEntity.ok(result);
     }
 }
