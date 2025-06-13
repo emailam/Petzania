@@ -1,14 +1,18 @@
-# Base image with Java 21
+# Stage 1: Build with Maven
+FROM maven:latest AS builder
+WORKDIR /build
+COPY pom.xml .
+RUN mvn dependency:go-offline
+COPY src ./src
+RUN mvn package -DskipTests
+
+# Stage 2: Runtime with JAR
 FROM openjdk:21-slim
-
-# Working directory in container
 WORKDIR /app
-
-# The jar file
-COPY target/RegistrationModule-0.0.1-SNAPSHOT.jar app.jar
-
-# port 8080 (from properties file)
+RUN apt-get update && \
+    apt-get install -y iputils-ping redis-tools && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=builder /build/target/RegistrationModule-*.jar app.jar
 EXPOSE 8080
-
-# command to run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
