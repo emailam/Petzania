@@ -7,7 +7,6 @@ import org.springframework.data.web.config.EnableSpringDataWebSupport;
 
 @SpringBootApplication
 @EnableAspectJAutoProxy
-@EnableSpringDataWebSupport(pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)
 public class FriendsAndChatsModuleApplication {
 
 	public static void main(String[] args) {
