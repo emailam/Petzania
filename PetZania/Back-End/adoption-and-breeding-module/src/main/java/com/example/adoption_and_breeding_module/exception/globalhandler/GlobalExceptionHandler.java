@@ -1,5 +1,8 @@
 package com.example.adoption_and_breeding_module.exception.globalhandler;
 
+import com.example.adoption_and_breeding_module.exception.PetPostNotFound;
+import com.example.adoption_and_breeding_module.exception.UserAccessDenied;
+import com.example.adoption_and_breeding_module.exception.UserNotFound;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -49,5 +52,20 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex) {
         return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(UserNotFound.class)
+    public ResponseEntity<Map<String, Object>> handleUserNotFoundException(UserNotFound ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(PetPostNotFound.class)
+    public ResponseEntity<Map<String, Object>> handlePetPostNotFoundException(PetPostNotFound ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(UserAccessDenied.class)
+    public ResponseEntity<Map<String, Object>> handleUserAccessDeniedException(UserAccessDenied ex) {
+        return buildErrorResponse(ex, HttpStatus.FORBIDDEN);
     }
 }

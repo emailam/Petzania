@@ -4,6 +4,7 @@ import com.example.adoption_and_breeding_module.model.dto.PetDTO;
 import com.example.adoption_and_breeding_module.model.dto.PetPostDTO;
 import com.example.adoption_and_breeding_module.model.entity.Pet;
 import com.example.adoption_and_breeding_module.model.entity.PetPost;
+import com.example.adoption_and_breeding_module.model.entity.User;
 import com.example.adoption_and_breeding_module.service.IDTOConversionService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.time.Period;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -63,7 +65,13 @@ public class DTOConversionService implements IDTOConversionService {
                 .description(post.getDescription())
                 .postType(post.getPostType())
                 .postStatus(post.getPostStatus())
-                .reactions(post.getReactions())
+                .reactedUsersIds(
+                        post.getReactedUsers()
+                                .stream()
+                                .map(User::getUserId)
+                                .collect(Collectors.toSet())
+                )
+                .reacts(post.getReacts())
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .build();

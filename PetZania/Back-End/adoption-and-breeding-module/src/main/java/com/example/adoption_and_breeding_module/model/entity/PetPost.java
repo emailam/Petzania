@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -35,9 +37,19 @@ public class PetPost {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "post_status", nullable = false)
-    PetPostStatus postStatus;
+    PetPostStatus postStatus = PetPostStatus.PENDING;;
 
-    private int reactions;
+    @ManyToMany
+    @JoinTable(
+            name = "pet_post_reactions",
+            joinColumns = @JoinColumn(name = "post_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id"),
+            uniqueConstraints = @UniqueConstraint(columnNames = {"post_id", "user_id"})
+    )
+    private Set<User> reactedUsers = new HashSet<>();
+
+    @Column(name = "reacts", nullable = false)
+    private int reacts = 0;
 
     @Column(name = "description", length = 2000)
     private String description;
@@ -55,8 +67,6 @@ public class PetPost {
     @PrePersist
     public void onCreate() {
         createdAt = Instant.now();
-        postStatus = PetPostStatus.PENDING;
-        reactions = 0;
     }
 
     @PreUpdate

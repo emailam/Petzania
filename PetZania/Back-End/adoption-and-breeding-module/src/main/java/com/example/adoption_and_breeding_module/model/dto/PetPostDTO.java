@@ -4,6 +4,7 @@ import com.example.adoption_and_breeding_module.model.enumeration.PetPostStatus;
 import com.example.adoption_and_breeding_module.model.enumeration.PetPostType;
 
 import java.time.Instant;
+import java.util.Set;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,7 +20,8 @@ public class PetPostDTO {
     private UUID ownerId;
     private PetDTO petDTO;
     PetPostStatus postStatus;
-    private int reactions;
+    private Set<UUID> reactedUsersIds;
+    private int reacts;
     private String description;
     private PetPostType postType;
     private Instant createdAt;
