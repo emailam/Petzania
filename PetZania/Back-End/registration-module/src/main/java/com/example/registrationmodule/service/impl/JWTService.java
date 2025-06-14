@@ -14,6 +14,7 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Service
@@ -40,6 +41,7 @@ public class JWTService {
     public String generateToken(String email, String role, long expiration) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", role);
+        claims.put("jti", UUID.randomUUID().toString());
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(email)
