@@ -42,6 +42,7 @@ public class DummyDataConfig {
                     .loginTimes(10)
                     .phoneNumber("01129588407")
                     .profilePictureURL("https://images.unsplash.com/photo-1633332755192-727a05c4013d?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dXNlcnxlbnwwfHwwfHx8MA%3D%3D")
+                    .online(false)
                     .build();
 
             User user2 = User.builder()
@@ -55,6 +56,7 @@ public class DummyDataConfig {
                     .loginTimes(7)
                     .phoneNumber("01124985463")
                     .profilePictureURL("https://images.unsplash.com/photo-1633332755192-727a05c4013d?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dXNlcnxlbnwwfHwwfHx8MA%3D%3D")
+                    .online(false)
                     .build();
 
             User user3 = User.builder()
@@ -68,6 +70,7 @@ public class DummyDataConfig {
                     .loginTimes(3)
                     .phoneNumber("01112233455")
                     .profilePictureURL("https://images.unsplash.com/photo-1633332755192-727a05c4013d?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dXNlcnxlbnwwfHwwfHx8MA%3D%3D")
+                    .online(false)
                     .build();
 
             User user4 = User.builder()
@@ -81,6 +84,7 @@ public class DummyDataConfig {
                     .loginTimes(5)
                     .phoneNumber("01111654322")
                     .profilePictureURL("https://images.unsplash.com/photo-1633332755192-727a05c4013d?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dXNlcnxlbnwwfHwwfHx8MA%3D%3D")
+                    .online(false)
                     .build();
 
             User user5 = User.builder()
@@ -94,6 +98,7 @@ public class DummyDataConfig {
                     .loginTimes(123)
                     .phoneNumber("01111654329")
                     .profilePictureURL("https://images.unsplash.com/photo-1633332755192-727a05c4013d?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dXNlcnxlbnwwfHwwfHx8MA%3D%3D")
+                    .online(false)
                     .build();
 
             List<User> users = new ArrayList<>(List.of(user1, user2, user3, user4, user5));

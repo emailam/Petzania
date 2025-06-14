@@ -284,7 +284,7 @@ public class FriendControllerIntegrationTests {
                 .receiver(userB)
                 .build());
 
-        mockMvc.perform(put("/api/friends/decline-request/{requestId}", request.getId())).andExpect(status().isNoContent());
+        mockMvc.perform(put("/api/friends/cancel-request/{requestId}", request.getId())).andExpect(status().isNoContent());
 
         assertFalse("", friendRequestRepository.existsById(request.getId()));
     }

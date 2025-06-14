@@ -742,7 +742,8 @@ public class UserControllerIntegrationTests {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.bio").value(testUserA.getBio()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.profilePictureURL").value(testUserA.getProfilePictureURL()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.phoneNumber").value(testUserA.getPhoneNumber()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.myPets").isArray());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.myPets").isArray())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.online").value(true));
     }
 
 

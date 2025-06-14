@@ -5,6 +5,7 @@ import com.example.registrationmodule.service.ICloudService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,7 +25,7 @@ public class CloudController {
     private ICloudService cloudService;
 
     @Operation(summary = "Upload a single file to cloud storage")
-    @PostMapping(path = "/cloud/file")
+    @PostMapping(path = "/cloud/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> uploadFile(@RequestPart(name = "file") MultipartFile file) throws IOException {
         if(!file.isEmpty()) {
             Media media = cloudService.uploadAndSaveMedia(file, true);
@@ -36,7 +37,7 @@ public class CloudController {
     }
 
     @Operation(summary = "Upload multiple files to cloud storage")
-    @PostMapping(path = "/cloud/files")
+    @PostMapping(path = "/cloud/files", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<List<String>> uploadFiles(@RequestPart(name = "files") List<MultipartFile> files) throws IOException {
         List<String> urls = new ArrayList<>();
         for(MultipartFile file : files) {
