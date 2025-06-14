@@ -174,6 +174,7 @@ public class UserService implements IUserService {
             int loginTimes = user.getLoginTimes();
             UUID userId = user.getUserId();
             user.setLoginTimes(loginTimes + 1);
+            user.setOnline(true);
             userRepository.save(user);
 
             return new ResponseLoginDTO(message, tokenDTO, loginTimes + 1, userId);
@@ -291,6 +292,10 @@ public class UserService implements IUserService {
 
         // save it in the database
         refreshTokenService.saveToken(logoutDTO.getRefreshToken());
+
+        // mark user as not online
+        user.setOnline(false);
+        userRepository.save(user);
     }
 
     public void logoutFallback(LogoutDTO logoutDTO, RequestNotPermitted t) {

@@ -39,6 +39,8 @@ public class UserProfileDTO {
     private List<PetDTO> myPets;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private boolean active;
+    private boolean blocked;
+
+    private boolean online;
 
 }

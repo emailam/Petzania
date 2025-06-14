@@ -7,7 +7,6 @@ import com.example.registrationmodule.model.dto.PetDTO;
 import com.example.registrationmodule.model.dto.RegisterUserDTO;
 import com.example.registrationmodule.model.dto.UpdateUserProfileDto;
 import com.example.registrationmodule.model.dto.UserProfileDTO;
-import com.example.registrationmodule.model.dto.UserProfileDTO;
 import com.example.registrationmodule.model.entity.Pet;
 import com.example.registrationmodule.model.entity.User;
 
@@ -47,7 +46,8 @@ public class DTOConversionService implements IDTOConversionService {
                 user.getMyPets() != null ?
                         user.getMyPets().stream().map(this::mapToPetDto).collect(Collectors.toList())
                         : new ArrayList<>(),
-                user.isBlocked()
+                user.isBlocked(),
+                user.isOnline()
         );
     }
 

@@ -67,6 +67,9 @@ public class User {
     @Column(name = "verified", nullable = false)
     private boolean verified;
 
+    @Column(name = "online", nullable = false)
+    private boolean online = false;
+
     @Column(name = "is_blocked", nullable = false)
     private boolean isBlocked;
 
