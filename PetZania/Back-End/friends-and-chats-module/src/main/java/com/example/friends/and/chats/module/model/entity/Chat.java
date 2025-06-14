@@ -3,6 +3,9 @@ package com.example.friends.and.chats.module.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -24,10 +27,12 @@ public class Chat {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "user1_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user1;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "user2_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user2;
 
     @Column(name = "created_at", nullable = false, updatable = false)

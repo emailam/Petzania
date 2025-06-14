@@ -1064,7 +1064,8 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
 
         // Chat behavior after user deletion depends on business rules
         int statusCode = chatHistoryResponse.statusCode();
-        Assertions.assertTrue(statusCode == 200 || statusCode == 404,
+        System.out.println(statusCode);
+        Assertions.assertTrue(statusCode == 403,
                 "Chat should either be accessible with history or deleted");
     }
 
