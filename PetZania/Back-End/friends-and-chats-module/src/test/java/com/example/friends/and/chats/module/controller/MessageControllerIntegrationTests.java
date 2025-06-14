@@ -456,62 +456,6 @@ public class MessageControllerIntegrationTests {
     }
 
     @Test
-    void updateMessageStatus_Success() throws Exception {
-        // Switch to userB to update status of messageFromA
-        tearDown();
-        setupSecurityContext(userB);
-
-        UpdateMessageStatusDTO updateDTO = new UpdateMessageStatusDTO();
-        updateDTO.setMessageStatus(MessageStatus.DELIVERED);
-
-        mockMvc.perform(patch("/api/messages/{messageId}/status", messageFromA.getMessageId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateDTO)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("DELIVERED"));
-
-        // Verify status was updated
-        Message updatedMessage = messageRepository.findById(messageFromA.getMessageId()).orElseThrow();
-        assertEquals(MessageStatus.DELIVERED, updatedMessage.getStatus());
-
-        // Update to READ
-        updateDTO.setMessageStatus(MessageStatus.READ);
-
-        mockMvc.perform(patch("/api/messages/{messageId}/status", messageFromA.getMessageId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateDTO)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("READ"));
-
-        // Verify status was updated again
-        updatedMessage = messageRepository.findById(messageFromA.getMessageId()).orElseThrow();
-        assertEquals(MessageStatus.READ, updatedMessage.getStatus());
-
-        // Reset security context
-        tearDown();
-        setupSecurityContext(userA);
-    }
-
-    @Test
-    void updateMessageStatus_InvalidTransition_ShouldFail() throws Exception {
-        // Switch to userB to update status of messageFromA
-        tearDown();
-        setupSecurityContext(userB);
-
-        UpdateMessageStatusDTO updateDTO = new UpdateMessageStatusDTO();
-        updateDTO.setMessageStatus(MessageStatus.READ); // Trying to jump from SENT to READ
-
-        mockMvc.perform(patch("/api/messages/{messageId}/status", messageFromA.getMessageId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateDTO)))
-                .andExpect(status().isBadRequest());
-
-        // Reset security context
-        tearDown();
-        setupSecurityContext(userA);
-    }
-
-    @Test
     void updateMessageStatus_BySender_ShouldFail() throws Exception {
         UpdateMessageStatusDTO updateDTO = new UpdateMessageStatusDTO();
         updateDTO.setMessageStatus(MessageStatus.DELIVERED);

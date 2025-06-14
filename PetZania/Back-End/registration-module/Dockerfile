@@ -13,6 +13,6 @@ RUN apt-get update && \
     apt-get install -y iputils-ping redis-tools && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=builder /build/target/RegistrationModule-*.jar app.jar
+COPY --from=builder /build/target/registration-module-*.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

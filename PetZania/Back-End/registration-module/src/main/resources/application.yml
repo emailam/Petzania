@@ -88,71 +88,71 @@ resilience4j.ratelimiter:
   instances:
     ### User Service Limiters
     loginRateLimiter:
-      limitForPeriod: 10  # Up to 10 login attempts
-      limitRefreshPeriod: 5m  # Reset after 5 minutes
+      limitForPeriod: 100  # Up to 10 login attempts
+      limitRefreshPeriod: 10s  # Reset after 5 minutes
       timeoutDuration: 0  # No wait time (Default is 5 sec)
 
     sendOtpRateLimiter:
-      limitForPeriod: 5
-      limitRefreshPeriod: 2m
+      limitForPeriod: 100
+      limitRefreshPeriod: 10s
 
     verifyOtpRateLimiter:
-      limitForPeriod: 10
-      limitRefreshPeriod: 2m
+      limitForPeriod: 100
+      limitRefreshPeriod: 10s
 
     refreshTokenRateLimiter: # don't know how much should I put
-      limitForPeriod: 20
-      limitRefreshPeriod: 10m
+      limitForPeriod: 100
+      limitRefreshPeriod: 10s
 
     logoutRateLimiter:
-      limitForPeriod: 10
-      limitRefreshPeriod: 10m
+      limitForPeriod: 100
+      limitRefreshPeriod: 10s
 
     registerRateLimiter:
-      limitForPeriod: 10
-      limitRefreshPeriod: 5m
+      limitForPeriod: 100
+      limitRefreshPeriod: 10s
 
     ### Pet Service Limiters
     savePetRateLimiter:
-      limitForPeriod: 5
-      limitRefreshPeriod: 2m
+      limitForPeriod: 100
+      limitRefreshPeriod: 10s
 
     updatePetRateLimiter:
-      limitForPeriod: 10
-      limitRefreshPeriod: 3m
+      limitForPeriod: 100
+      limitRefreshPeriod: 10s
 
     deletePetRateLimiter:
-      limitForPeriod: 10
-      limitRefreshPeriod: 3m
+      limitForPeriod: 100
+      limitRefreshPeriod: 10s
 
     addPetPictureRateLimiter:
-      limitForPeriod: 10
-      limitRefreshPeriod: 2m
+      limitForPeriod: 100
+      limitRefreshPeriod: 10s
 
     ### Admin Service Limiters
     updateAdminRateLimiter:
-      limitForPeriod: 5
-      limitRefreshPeriod: 1m
+      limitForPeriod: 100
+      limitRefreshPeriod: 10s
       timeoutDuration: 0
 
     saveAdminRateLimiter:
-      limitForPeriod: 3
-      limitRefreshPeriod: 2m
+      limitForPeriod: 100
+      limitRefreshPeriod: 10s
       timeoutDuration: 0
 
     deleteAdminRateLimiter:
-      limitForPeriod: 3
-      limitRefreshPeriod: 2m
+      limitForPeriod: 100
+      limitRefreshPeriod: 10s
       timeoutDuration: 0
 
     ### Cloud Service Limiters
     mediaUploadLimiter:
-      limit-for-period: 5
+      limit-for-period: 100
       limit-refresh-period: 10s
       timeout-duration: 0
 
     mediaUrlLimiter:
-      limit-for-period: 10
+      limit-for-period: 100
       limit-refresh-period: 10s
       timeout-duration: 0
 

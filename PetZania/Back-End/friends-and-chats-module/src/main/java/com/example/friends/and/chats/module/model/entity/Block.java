@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.sql.Timestamp;
 import java.util.UUID;
@@ -25,10 +27,12 @@ public class Block {
 
     @ManyToOne
     @JoinColumn(name = "blocker_id", referencedColumnName = "user_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User blocker;
 
     @ManyToOne
     @JoinColumn(name = "blocked_id", referencedColumnName = "user_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User blocked;
 
     private Timestamp createdAt;

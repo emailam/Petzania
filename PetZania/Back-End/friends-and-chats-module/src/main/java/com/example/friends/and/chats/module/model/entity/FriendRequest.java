@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.sql.Timestamp;
 import java.util.UUID;
@@ -27,10 +29,12 @@ public class FriendRequest {
 
     @ManyToOne
     @JoinColumn(name = "sender_id", referencedColumnName = "user_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User sender;
 
     @ManyToOne
     @JoinColumn(name = "receiver_id", referencedColumnName = "user_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User receiver;
     private Timestamp createdAt;
 }

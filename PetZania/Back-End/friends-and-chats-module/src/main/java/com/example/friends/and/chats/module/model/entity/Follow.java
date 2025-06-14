@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.sql.Timestamp;
 import java.util.UUID;
@@ -28,10 +30,12 @@ public class Follow {
 
     @ManyToOne
     @JoinColumn(name = "follower_id", referencedColumnName = "user_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User follower;
 
     @ManyToOne
     @JoinColumn(name = "followed_id", referencedColumnName = "user_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User followed;
 
     private Timestamp createdAt;

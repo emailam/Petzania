@@ -44,7 +44,7 @@ public class UserService implements IUserService {
     private final JWTService jwtService;
     private final AuthenticationManager authenticationManager;
 
-    private final UserRegistrationPublisher userRegistrationPublisher;
+    private final UserPublisher userPublisher;
 
     @Value("${spring.email.sender}")
     private String emailSender;
@@ -69,8 +69,7 @@ public class UserService implements IUserService {
             userEvent.setUserId(savedUser.getUserId());
             userEvent.setUsername(savedUser.getUsername());
             userEvent.setEmail(savedUser.getEmail());
-            userRegistrationPublisher.sendUserRegisteredMessage(userEvent);
-
+            userPublisher.sendUserRegisteredMessage(userEvent);
         }
 
         // send verification code.
@@ -125,6 +124,13 @@ public class UserService implements IUserService {
 
         // Delete the user
         userRepository.deleteByEmail(emailDTO.getEmail());
+
+        // Send to the queue
+        UserEvent userEvent = new UserEvent();
+        userEvent.setUserId(user.getUserId());
+        userEvent.setEmail(user.getEmail());
+        userEvent.setUsername(user.getUsername());
+        userPublisher.sendUserDeletedMessage(userEvent);
     }
 
     @Override
@@ -331,7 +337,15 @@ public class UserService implements IUserService {
 
     @Override
     public void deleteAll() {
+        List<User> users = userRepository.findAll();
         userRepository.deleteAll();
+        for (User user : users) {
+            UserEvent userEvent = new UserEvent();
+            userEvent.setUserId(user.getUserId());
+            userEvent.setUsername(user.getUsername());
+            userEvent.setEmail(user.getEmail());
+            userPublisher.sendUserDeletedMessage(userEvent);
+        }
     }
 
     @Override
