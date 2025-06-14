@@ -41,15 +41,33 @@ public class PetPostController {
         return ResponseEntity.ok(breedingPosts);
     }
 
+    @GetMapping(path = "/user/{userId}")
+    public ResponseEntity<Page<PetPostDTO>> getAllPetPostsByUserId(@PathVariable(name = "userId") UUID userId,
+                                                                   @RequestParam(defaultValue = "0") int page,
+                                                                   @RequestParam(defaultValue = "20") int size) {
+        Page<PetPostDTO> posts = petPostService.getAllPetPostsByUserId(userId, page, size);
+        return ResponseEntity.ok(posts);
+    }
+
     @GetMapping(path = "/{petPostId}")
     public ResponseEntity<PetPostDTO> getPetPostById(@PathVariable(name = "petPostId") UUID petPostId) {
         PetPostDTO petPostDTO = petPostService.getPetPostById(petPostId);
         return ResponseEntity.ok(petPostDTO);
     }
 
+    @GetMapping(path = "/filtered")
+    public ResponseEntity<Page<PetPostDTO>> getFilteredPosts(
+            @RequestBody PetPostFilterDTO filter,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<PetPostDTO> result = petPostService.getFilteredPosts(filter, page, size);
+        return ResponseEntity.ok(result);
+    }
+
     @PatchMapping(path = "/{petPostId}")
     public ResponseEntity<PetPostDTO> updatePetPostById(@PathVariable(name = "petPostId") UUID petPostId,
-                                                    @RequestBody UpdatePetPostDTO updatePetPostDTO) {
+                                                        @RequestBody UpdatePetPostDTO updatePetPostDTO) {
         // get user1Id from authentication context
         UUID userId = UUID.randomUUID();
         PetPostDTO petPostDTO = petPostService.updatePetPost(petPostId, updatePetPostDTO, userId);
@@ -70,15 +88,5 @@ public class PetPostController {
         UUID userId = UUID.randomUUID();
         PetPostDTO updatedPost = petPostService.toggleReact(petPostId, userId);
         return ResponseEntity.ok(updatedPost);
-    }
-
-    @GetMapping
-    public ResponseEntity<Page<PetPostDTO>> getFilteredPosts(
-            @RequestBody PetPostFilterDTO filter,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-
-        Page<PetPostDTO> result = petPostService.getFilteredPosts(filter, page, size);
-        return ResponseEntity.ok(result);
     }
 }

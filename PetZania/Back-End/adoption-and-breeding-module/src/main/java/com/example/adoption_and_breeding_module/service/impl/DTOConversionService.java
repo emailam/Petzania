@@ -63,6 +63,7 @@ public class DTOConversionService implements IDTOConversionService {
                 .ownerId(post.getOwner().getUserId())
                 .petDTO(mapToPetDTO(post.getPet()))
                 .description(post.getDescription())
+                .location(post.getLocation())
                 .postType(post.getPostType())
                 .postStatus(post.getPostStatus())
                 .reactedUsersIds(

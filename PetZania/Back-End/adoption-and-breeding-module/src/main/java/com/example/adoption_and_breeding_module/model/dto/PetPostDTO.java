@@ -23,6 +23,7 @@ public class PetPostDTO {
     private Set<UUID> reactedUsersIds;
     private int reacts;
     private String description;
+    private String location;
     private PetPostType postType;
     private Instant createdAt;
     private Instant updatedAt;

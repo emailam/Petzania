@@ -25,4 +25,6 @@ public interface IPetPostService {
     PetPostDTO toggleReact(UUID postId, UUID userId);
 
     Page<PetPostDTO> getFilteredPosts(PetPostFilterDTO filter, int page, int size);
+
+    Page<PetPostDTO> getAllPetPostsByUserId(UUID userId, int page, int size);
 }

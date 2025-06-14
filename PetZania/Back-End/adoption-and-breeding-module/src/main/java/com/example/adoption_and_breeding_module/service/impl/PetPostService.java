@@ -162,4 +162,13 @@ public class PetPostService implements IPetPostService {
         return petPostRepository.findAll(spec, pageable)
                 .map(dtoConversionService::mapToPetPostDTO);
     }
+
+    @Override
+    public Page<PetPostDTO> getAllPetPostsByUserId(UUID userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Specification<PetPost> specByUser = (root, query, cb) ->
+                cb.equal(root.get("owner").get("userId"), userId);
+        Page<PetPost> posts = petPostRepository.findAll(specByUser, pageable);
+        return posts.map(dtoConversionService::mapToPetPostDTO);
+    }
 }

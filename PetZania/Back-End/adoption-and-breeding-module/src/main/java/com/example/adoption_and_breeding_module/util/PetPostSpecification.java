@@ -17,8 +17,11 @@ public class PetPostSpecification {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            if (filter.getCategory() != null) {
-                predicates.add(cb.equal(root.get("pet").get("category"), filter.getCategory()));
+            if (filter.getPetPostType() != null) {
+                predicates.add(cb.equal(root.get("postType"), filter.getPetPostType()));
+            }
+            if (filter.getSpecies() != null) {
+                predicates.add(cb.equal(root.get("pet").get("species"), filter.getSpecies()));
             }
             if (filter.getBreed() != null && !filter.getBreed().isEmpty()) {
                 predicates.add(cb.like(cb.lower(root.get("pet").get("breed")),
