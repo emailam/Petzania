@@ -7,27 +7,30 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="petzania-system-tests" />
       </profile>
       <profile name="Annotation profile for friends-and-chats-module" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <processorPath>
+        <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
         </processorPath>
+        <module name="registration-module" />
         <module name="friends-and-chats-module" />
-        <module name="RegistrationModule" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="friends-and-chats-module" target="19" />
-      <module name="RegistrationModule" target="19" />
+      <module name="petzania-system-tests" target="19" />
+      <module name="registration-module" target="19" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="RegistrationModule" options="-parameters" />
       <module name="friends-and-chats-module" options="-parameters" />
+      <module name="petzania-system-tests" options="" />
+      <module name="registration-module" options="-parameters" />
     </option>
   </component>
 </project>

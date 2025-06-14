@@ -5,8 +5,9 @@
       <list>
         <option value="$PROJECT_DIR$/RegistrationModule/pom.xml" />
         <option value="$PROJECT_DIR$/friends-and-chats-module/pom.xml" />
+        <option value="$PROJECT_DIR$/petzania-system-tests/pom.xml" />
       </list>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="openjdk-21" project-jdk-type="JavaSDK" />
+  <component name="ProjectRootManager" version="2" default="true" project-jdk-name="openjdk-21" project-jdk-type="JavaSDK" />
 </project>
