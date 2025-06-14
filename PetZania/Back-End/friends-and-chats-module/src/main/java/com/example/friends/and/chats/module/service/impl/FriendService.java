@@ -124,9 +124,13 @@ public class FriendService implements IFriendService {
     }
 
     @Override
-    public void declineFriendRequest(UUID requestId) {
+    public void cancelFriendRequest(UUID requestId, UUID userId) {
         FriendRequest request = getFriendRequest(requestId);
-        friendRequestRepository.delete(request);
+        if (request.getSender().getUserId().equals(userId) || request.getReceiver().getUserId().equals(userId)) {
+            friendRequestRepository.delete(request);
+        } else {
+            throw new ForbiddenOperation("Forbidden operation, user tries to cancel a request he is not involved in");
+        }
     }
 
     @Override
