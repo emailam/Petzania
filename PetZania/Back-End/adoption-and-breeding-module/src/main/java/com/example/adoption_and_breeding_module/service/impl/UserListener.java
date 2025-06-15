@@ -23,7 +23,7 @@ public class UserListener {
             newUser.setUsername(user.getUsername());
             newUser.setEmail(user.getEmail());
             userRepository.save(newUser);
-            System.out.println("received registered user: " + user);
+            System.out.println("Received registered user: " + user);
         }
     }
 
@@ -31,7 +31,7 @@ public class UserListener {
     public void onUserDeleted(UserEvent user) {
         if (userRepository.existsById(user.getUserId())) {
             userRepository.deleteById(user.getUserId());
-            System.out.println("received deleted user: " + user);
+            System.out.println("Received deleted user: " + user);
         }
     }
 }

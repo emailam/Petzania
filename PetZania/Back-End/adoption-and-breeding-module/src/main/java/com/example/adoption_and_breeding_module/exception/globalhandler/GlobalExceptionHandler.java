@@ -68,4 +68,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleUserAccessDeniedException(UserAccessDenied ex) {
         return buildErrorResponse(ex, HttpStatus.FORBIDDEN);
     }
+
+    @ExceptionHandler(IllegalAccessException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalAccessExceptionException(IllegalAccessException ex) {
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
+    }
 }
