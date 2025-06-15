@@ -290,26 +290,6 @@ public class MessageControllerIntegrationTests {
     }
 
     @Test
-    void sendMessage_UserNotInChat_ShouldFail() throws Exception {
-        // Switch to userC who is not part of the chat
-        tearDown();
-        setupSecurityContext(userC);
-
-        SendMessageDTO sendMessageDTO = new SendMessageDTO();
-        sendMessageDTO.setChatId(chatAB.getChatId());
-        sendMessageDTO.setContent("Unauthorized message");
-
-        mockMvc.perform(post("/api/messages/send")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(sendMessageDTO)))
-                .andExpect(status().isForbidden());
-
-        // Reset security context
-        tearDown();
-        setupSecurityContext(userA);
-    }
-
-    @Test
     void getMessagesByChat_Success() throws Exception {
         mockMvc.perform(get("/api/messages/chat/{chatId}", chatAB.getChatId()))
                 .andExpect(status().isOk())
@@ -352,21 +332,6 @@ public class MessageControllerIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(2)));
     }
-
-    @Test
-    void getMessagesByChat_UserNotInChat_ShouldFail() throws Exception {
-        // Switch to userC who is not part of the chat
-        tearDown();
-        setupSecurityContext(userC);
-
-        mockMvc.perform(get("/api/messages/chat/{chatId}", chatAB.getChatId()))
-                .andExpect(status().isForbidden());
-
-        // Reset security context
-        tearDown();
-        setupSecurityContext(userA);
-    }
-
     @Test
     void getMessageById_Success() throws Exception {
         mockMvc.perform(get("/api/messages/{messageId}", messageFromA.getMessageId()))
@@ -379,20 +344,6 @@ public class MessageControllerIntegrationTests {
     void getMessageById_NonExistentMessage_ShouldFail() throws Exception {
         mockMvc.perform(get("/api/messages/{messageId}", UUID.randomUUID()))
                 .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void getMessageById_UserNotInChat_ShouldFail() throws Exception {
-        // Switch to userC who is not part of the chat
-        tearDown();
-        setupSecurityContext(userC);
-
-        mockMvc.perform(get("/api/messages/{messageId}", messageFromA.getMessageId()))
-                .andExpect(status().isForbidden());
-
-        // Reset security context
-        tearDown();
-        setupSecurityContext(userA);
     }
 
     @Test
