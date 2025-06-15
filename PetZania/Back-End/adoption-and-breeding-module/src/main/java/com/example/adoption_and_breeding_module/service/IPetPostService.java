@@ -12,10 +12,6 @@ public interface IPetPostService {
 
     PetPostDTO createPetPost(CreatePetPostDTO createPetPostDTO, UUID ownerId);
 
-    Page<PetPostDTO> getAllAdoptionPosts(int page, int size);
-
-    Page<PetPostDTO> getAllBreedingPosts(int page, int size);
-
     PetPostDTO getPetPostById(UUID petPostId);
 
     PetPostDTO updatePetPost(UUID petPostId, UpdatePetPostDTO updatePetPostDTO, UUID userId);
@@ -24,7 +20,8 @@ public interface IPetPostService {
 
     PetPostDTO toggleReact(UUID postId, UUID userId);
 
-    Page<PetPostDTO> getFilteredPosts(PetPostFilterDTO filter, int page, int size);
 
-    Page<PetPostDTO> getAllPetPostsByUserId(UUID userId, int page, int size);
+    Page<PetPostDTO> getFilteredPosts(UUID userId, PetPostFilterDTO filter, int page, int size);
+
+    Page<PetPostDTO> getAllPetPostsByUserId(UUID requesterUserId, UUID userId, int page, int size);
 }

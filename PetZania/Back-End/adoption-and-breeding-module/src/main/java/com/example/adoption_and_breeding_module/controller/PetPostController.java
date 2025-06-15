@@ -27,25 +27,13 @@ public class PetPostController {
         return ResponseEntity.status(HttpStatus.CREATED).body(petPostDTO);
     }
 
-    @GetMapping(path = "/adoption")
-    public ResponseEntity<Page<PetPostDTO>> getAllAdoptionPosts(@RequestParam(defaultValue = "0") int page,
-                                                                @RequestParam(defaultValue = "20") int size) {
-        Page<PetPostDTO> adoptionPosts = petPostService.getAllAdoptionPosts(page, size);
-        return ResponseEntity.ok(adoptionPosts);
-    }
-
-    @GetMapping(path = "/breeding")
-    public ResponseEntity<Page<PetPostDTO>> getAllBreedingPosts(@RequestParam(defaultValue = "0") int page,
-                                                                @RequestParam(defaultValue = "20") int size) {
-        Page<PetPostDTO> breedingPosts = petPostService.getAllBreedingPosts(page, size);
-        return ResponseEntity.ok(breedingPosts);
-    }
-
     @GetMapping(path = "/user/{userId}")
     public ResponseEntity<Page<PetPostDTO>> getAllPetPostsByUserId(@PathVariable(name = "userId") UUID userId,
                                                                    @RequestParam(defaultValue = "0") int page,
                                                                    @RequestParam(defaultValue = "20") int size) {
-        Page<PetPostDTO> posts = petPostService.getAllPetPostsByUserId(userId, page, size);
+        // get userId from authentication context
+        UUID requesterUserId = UUID.randomUUID();
+        Page<PetPostDTO> posts = petPostService.getAllPetPostsByUserId(requesterUserId, userId, page, size);
         return ResponseEntity.ok(posts);
     }
 
@@ -61,8 +49,10 @@ public class PetPostController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        Page<PetPostDTO> result = petPostService.getFilteredPosts(filter, page, size);
-        return ResponseEntity.ok(result);
+        // get userId from authentication context
+        UUID requesterUserId = UUID.randomUUID();
+        Page<PetPostDTO> posts = petPostService.getFilteredPosts(requesterUserId, filter, page, size);
+        return ResponseEntity.ok(posts);
     }
 
     @PatchMapping(path = "/{petPostId}")

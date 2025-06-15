@@ -1,13 +1,16 @@
 package com.example.adoption_and_breeding_module.service.impl;
 
+import com.example.adoption_and_breeding_module.exception.BlockingExist;
 import com.example.adoption_and_breeding_module.exception.PetPostNotFound;
 import com.example.adoption_and_breeding_module.exception.UserAccessDenied;
 import com.example.adoption_and_breeding_module.exception.UserNotFound;
 import com.example.adoption_and_breeding_module.model.dto.*;
+import com.example.adoption_and_breeding_module.model.entity.Block;
 import com.example.adoption_and_breeding_module.model.entity.Pet;
 import com.example.adoption_and_breeding_module.model.entity.PetPost;
 import com.example.adoption_and_breeding_module.model.entity.User;
 import com.example.adoption_and_breeding_module.model.enumeration.PetPostType;
+import com.example.adoption_and_breeding_module.repository.BlockRepository;
 import com.example.adoption_and_breeding_module.repository.PetPostRepository;
 import com.example.adoption_and_breeding_module.repository.UserRepository;
 import com.example.adoption_and_breeding_module.service.IDTOConversionService;
@@ -22,6 +25,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -32,6 +36,7 @@ public class PetPostService implements IPetPostService {
 
     private final UserRepository userRepository;
     private final PetPostRepository petPostRepository;
+    private final BlockRepository blockRepository;
     private final IDTOConversionService dtoConversionService;
 
     @Override
@@ -56,22 +61,6 @@ public class PetPostService implements IPetPostService {
 
         post = petPostRepository.save(post);
         return dtoConversionService.mapToPetPostDTO(post);
-    }
-
-    @Override
-    public Page<PetPostDTO> getAllAdoptionPosts(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<PetPost> posts = petPostRepository
-                .findAllByPostType(PetPostType.ADOPTION, pageable);
-        return posts.map(dtoConversionService::mapToPetPostDTO);
-    }
-
-    @Override
-    public Page<PetPostDTO> getAllBreedingPosts(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<PetPost> posts = petPostRepository
-                .findAllByPostType(PetPostType.BREEDING, pageable);
-        return posts.map(dtoConversionService::mapToPetPostDTO);
     }
 
     @Override
@@ -102,11 +91,11 @@ public class PetPostService implements IPetPostService {
         UpdatePetDTO updatePetDTO = dto.getUpdatePetDTO();
         if (updatePetDTO != null) {
             Pet pet = post.getPet();
-            if (updatePetDTO.getName() != null)           pet.setName(updatePetDTO.getName());
-            if (updatePetDTO.getDescription() != null)    pet.setDescription(updatePetDTO.getDescription());
-            if (updatePetDTO.getGender() != null)         pet.setGender(updatePetDTO.getGender());
-            if (updatePetDTO.getBreed() != null)          pet.setBreed(updatePetDTO.getBreed());
-            if (updatePetDTO.getSpecies() != null)        pet.setSpecies(updatePetDTO.getSpecies());
+            if (updatePetDTO.getName() != null) pet.setName(updatePetDTO.getName());
+            if (updatePetDTO.getDescription() != null) pet.setDescription(updatePetDTO.getDescription());
+            if (updatePetDTO.getGender() != null) pet.setGender(updatePetDTO.getGender());
+            if (updatePetDTO.getBreed() != null) pet.setBreed(updatePetDTO.getBreed());
+            if (updatePetDTO.getSpecies() != null) pet.setSpecies(updatePetDTO.getSpecies());
             if (updatePetDTO.getMyVaccinesURLs() != null) pet.setMyVaccinesURLs(updatePetDTO.getMyVaccinesURLs());
             if (updatePetDTO.getMyPicturesURLs() != null) pet.setMyPicturesURLs(updatePetDTO.getMyPicturesURLs());
         }
@@ -135,15 +124,21 @@ public class PetPostService implements IPetPostService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFound("User not found with ID: " + userId));
 
+        UUID ownerId = post.getOwner().getUserId();
+
+        if (blockRepository.existsByBlocker_UserIdAndBlocked_UserId(ownerId, userId) ||
+                blockRepository.existsByBlocker_UserIdAndBlocked_UserId(userId, ownerId)) {
+            throw new BlockingExist("Operation blocked due to existing block relationship");
+        }
+
         Set<User> reactedUsers = post.getReactedUsers();
         int reacts = post.getReacts();
         if (reactedUsers.contains(user)) {
             reactedUsers.remove(user);
-            reacts --;
-        }
-        else {
+            reacts--;
+        } else {
             reactedUsers.add(user);
-            reacts ++;
+            reacts++;
         }
         post.setReacts(reacts);
         post = petPostRepository.save(post);
@@ -151,20 +146,56 @@ public class PetPostService implements IPetPostService {
     }
 
     @Override
-    public Page<PetPostDTO> getFilteredPosts(PetPostFilterDTO filter, int page, int size) {
+    public Page<PetPostDTO> getFilteredPosts(
+            UUID userId,
+            PetPostFilterDTO filter,
+            int page,
+            int size
+    ) {
         Specification<PetPost> spec = PetPostSpecification.withFilters(filter);
 
-        Sort sort = Sort.by(Sort.Direction.fromString(filter.getSortOrder()),
-                filter.getSortBy().equals("likes") ? "reacts" : "createdAt");
+        List<UUID> usersBlockedByMe = blockRepository.findByBlockerUserId(userId)
+                .stream()
+                .map(b -> b.getBlocked().getUserId())
+                .toList();
+        List<UUID> usersBlockingMe = blockRepository.findByBlockedUserId(userId)
+                .stream()
+                .map(b -> b.getBlocker().getUserId())
+                .toList();
 
+        Specification<PetPost> blockSpec = (root, query, cb) -> cb.conjunction();
+
+        if (!usersBlockedByMe.isEmpty()) {
+            blockSpec = blockSpec.and((root, query, cb) ->
+                    cb.not(root.get("owner").get("userId").in(usersBlockedByMe))
+            );
+        }
+        if (!usersBlockingMe.isEmpty()) {
+            blockSpec = blockSpec.and((root, query, cb) ->
+                    cb.not(root.get("owner").get("userId").in(usersBlockingMe))
+            );
+        }
+
+        spec = spec.and(blockSpec);
+
+        Sort sort = Sort.by(
+                Sort.Direction.fromString(filter.getSortOrder()),
+                filter.getSortBy().equals("likes") ? "reacts" : "createdAt"
+        );
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        return petPostRepository.findAll(spec, pageable)
+        return petPostRepository
+                .findAll(spec, pageable)
                 .map(dtoConversionService::mapToPetPostDTO);
     }
 
+
     @Override
-    public Page<PetPostDTO> getAllPetPostsByUserId(UUID userId, int page, int size) {
+    public Page<PetPostDTO> getAllPetPostsByUserId(UUID requesterUserId, UUID userId, int page, int size) {
+        if (blockRepository.existsByBlocker_UserIdAndBlocked_UserId(requesterUserId, userId) ||
+                blockRepository.existsByBlocker_UserIdAndBlocked_UserId(userId, requesterUserId)) {
+            throw new BlockingExist("Operation blocked due to existing block relationship");
+        }
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Specification<PetPost> specByUser = (root, query, cb) ->
                 cb.equal(root.get("owner").get("userId"), userId);

@@ -12,11 +12,7 @@ import java.util.UUID;
 
 public interface BlockRepository extends JpaRepository<Block, UUID> {
     boolean existsByBlocker_UserIdAndBlocked_UserId(UUID blockerId, UUID blockedId);
-
-    Optional<Block> findByBlockerAndBlocked(User blocker, User blocked);
-    List<Block> findByBlocker(User blocker);
-    Page<Block> findBlocksByBlocker(User blocker, Pageable pageable);
-
     void deleteByBlocker_UserIdAndBlocked_UserId(UUID blockerId, UUID blockedId);
-    int countByBlocker(User blocker);
+    List<Block> findByBlockerUserId(UUID userId);
+    List<Block> findByBlockedUserId(UUID userId);
 }

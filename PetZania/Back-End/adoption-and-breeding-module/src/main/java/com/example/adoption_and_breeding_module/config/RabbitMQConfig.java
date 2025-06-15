@@ -21,6 +21,11 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public TopicExchange blockExchange() {
+        return new TopicExchange("blockExchange");
+    }
+
+    @Bean
     public Queue userRegisteredQueue() {
         return new Queue("userRegisteredQueue", true);
     }
@@ -31,6 +36,16 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Queue userBlockedQueue() {
+        return new Queue("userBlockedQueue", true);
+    }
+
+    @Bean
+    public Queue userUnBlockedQueue() {
+        return new Queue("userUnBlockedQueue", true);
+    }
+
+    @Bean
     public Binding userRegistrationBinding(Queue userRegisteredQueue, TopicExchange userExchange) {
         return BindingBuilder.bind(userRegisteredQueue).to(userExchange).with("user.registered");
     }
@@ -38,5 +53,15 @@ public class RabbitMQConfig {
     @Bean
     public Binding userDeletionBinding(Queue userDeletedQueue, TopicExchange userExchange) {
         return BindingBuilder.bind(userDeletedQueue).to(userExchange).with("user.deleted");
+    }
+
+    @Bean
+    public Binding userBlockingBinding(Queue userBlockedQueue, TopicExchange blockExchange) {
+        return BindingBuilder.bind(userBlockedQueue).to(blockExchange).with("block.add");
+    }
+
+    @Bean
+    public Binding userUnBlockingBinding(Queue userUnBlockedQueue, TopicExchange blockExchange) {
+        return BindingBuilder.bind(userUnBlockedQueue).to(blockExchange).with("block.delete");
     }
 }
