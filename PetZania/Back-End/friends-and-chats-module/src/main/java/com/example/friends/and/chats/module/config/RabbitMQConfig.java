@@ -10,23 +10,33 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfig {
-
     @Bean
     public Jackson2JsonMessageConverter jsonMessageConverter() {
         return new Jackson2JsonMessageConverter();
     }
+
     @Bean
     public TopicExchange userExchange() {
         return new TopicExchange("userExchange");
     }
 
     @Bean
-    public Queue userQueue() {
-        return new Queue("userQueue", true);
+    public Queue userRegisteredQueue() {
+        return new Queue("userRegisteredQueue", true);
     }
 
     @Bean
-    public Binding binding(Queue userQueue, TopicExchange userExchange) {
-        return BindingBuilder.bind(userQueue).to(userExchange).with("user.registered");
+    public Queue userDeletedQueue() {
+        return new Queue("userDeletedQueue", true);
+    }
+
+    @Bean
+    public Binding userRegistrationBinding(Queue userRegisteredQueue, TopicExchange userExchange) {
+        return BindingBuilder.bind(userRegisteredQueue).to(userExchange).with("user.registered");
+    }
+
+    @Bean
+    public Binding userDeletionBinding(Queue userDeletedQueue, TopicExchange userExchange) {
+        return BindingBuilder.bind(userDeletedQueue).to(userExchange).with("user.deleted");
     }
 }

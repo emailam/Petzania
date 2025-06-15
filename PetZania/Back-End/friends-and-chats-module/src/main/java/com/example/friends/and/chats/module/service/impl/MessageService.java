@@ -5,6 +5,7 @@ import com.example.friends.and.chats.module.exception.chat.ChatNotFound;
 import com.example.friends.and.chats.module.exception.message.InvalidMessageStatusTransition;
 import com.example.friends.and.chats.module.exception.message.MessageNotFound;
 import com.example.friends.and.chats.module.exception.message.MessageNotUpdatable;
+import com.example.friends.and.chats.module.exception.user.ForbiddenOperation;
 import com.example.friends.and.chats.module.exception.user.UserAccessDenied;
 import com.example.friends.and.chats.module.exception.user.UserNotFound;
 import com.example.friends.and.chats.module.model.dto.message.*;
@@ -34,6 +35,7 @@ public class MessageService implements IMessageService {
     private final ChatRepository chatRepository;
     private final UserChatRepository userChatRepository;
     private final MessageRepository messageRepository;
+    private final BlockRepository blockRepository;
     private final MessageReactionRepository messageReactionRepository;
     private final IDTOConversionService dtoConversionService;
 
@@ -45,6 +47,17 @@ public class MessageService implements IMessageService {
 
         User sender = userRepository.findById(senderId)
                 .orElseThrow(() -> new UserNotFound("Sender not found"));
+
+        User receiver;
+        if (chat.getUser1().getUserId().equals(senderId)) {
+            receiver = chat.getUser2();
+        } else {
+            receiver = chat.getUser1();
+        }
+
+        if (blockRepository.existsByBlockerAndBlocked(sender, receiver) || blockRepository.existsByBlockerAndBlocked(receiver, sender)) {
+            throw new ForbiddenOperation("Cannot Perform this Operation due to existing block relationship");
+        }
 
         Message replyTo = null;
         if (sendMessageDTO.getReplyToMessageId() != null) {
