@@ -26,15 +26,14 @@ spring:
         user:
             name: admin
             password: 1234
+    jwt:
+        secret-key: 4ioX3ogCr4GAZ9gB99txf1LyhqVOmTJ8RsL9hyJzZXQ=
 
 server:
     port: 8080
     error:
         include-message: always
         include-binding-errors: always
-
-jwt:
-    secret-key: 4ioX3ogCr4GAZ9gB99txf1LyhqVOmTJ8RsL9hyJzZXQ=
 
 logging:
     level:
