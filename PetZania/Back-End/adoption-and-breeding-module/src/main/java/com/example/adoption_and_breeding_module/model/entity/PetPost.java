@@ -3,6 +3,8 @@ import com.example.adoption_and_breeding_module.model.enumeration.PetPostStatus;
 import com.example.adoption_and_breeding_module.model.enumeration.PetPostType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 import java.util.HashSet;
@@ -29,10 +31,12 @@ public class PetPost {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User owner;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false, cascade = CascadeType.ALL)
     @JoinColumn(name = "pet_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Pet pet;
 
     @Enumerated(EnumType.STRING)
@@ -46,6 +50,7 @@ public class PetPost {
             inverseJoinColumns = @JoinColumn(name = "user_id"),
             uniqueConstraints = @UniqueConstraint(columnNames = {"post_id", "user_id"})
     )
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Set<User> reactedUsers = new HashSet<>();
 
     @Column(name = "reacts", nullable = false)
