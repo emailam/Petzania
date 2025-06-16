@@ -3,6 +3,7 @@ package com.example.friends.and.chats.module.service.impl;
 import com.example.friends.and.chats.module.exception.RateLimitExceeded;
 import com.example.friends.and.chats.module.exception.chat.ChatNotFound;
 import com.example.friends.and.chats.module.exception.chat.UserChatNotFound;
+import com.example.friends.and.chats.module.exception.user.ForbiddenOperation;
 import com.example.friends.and.chats.module.exception.user.UserAccessDenied;
 import com.example.friends.and.chats.module.exception.user.UserNotFound;
 import com.example.friends.and.chats.module.model.dto.chat.ChatDTO;
@@ -11,6 +12,7 @@ import com.example.friends.and.chats.module.model.dto.chat.UserChatDTO;
 import com.example.friends.and.chats.module.model.entity.Chat;
 import com.example.friends.and.chats.module.model.entity.User;
 import com.example.friends.and.chats.module.model.entity.UserChat;
+import com.example.friends.and.chats.module.repository.BlockRepository;
 import com.example.friends.and.chats.module.repository.ChatRepository;
 import com.example.friends.and.chats.module.repository.UserChatRepository;
 import com.example.friends.and.chats.module.repository.UserRepository;
@@ -36,6 +38,7 @@ public class ChatService implements IChatService {
 
     private final ChatRepository chatRepository;
     private final UserChatRepository userChatRepository;
+    private final BlockRepository blockRepository;
     private final UserRepository userRepository;
     private final IDTOConversionService dtoConversionService;
 
@@ -50,6 +53,10 @@ public class ChatService implements IChatService {
                 .orElseThrow(() -> new UserNotFound("User 1 not found"));
         User user2 = userRepository.findById(user2Id)
                 .orElseThrow(() -> new UserNotFound("User 2 not found"));
+
+        if(blockRepository.existsByBlockerAndBlocked(user1,user2) || blockRepository.existsByBlockerAndBlocked(user2,user1)){
+            throw new ForbiddenOperation("Operation Cannot be performed due to an existing block relationship");
+        }
 
         Chat chat = chatRepository.findByUsers(user1, user2)
                 .orElseGet(() -> chatRepository.save(

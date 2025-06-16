@@ -4,6 +4,8 @@ package com.example.friends.and.chats.module.model.entity;
 import com.example.friends.and.chats.module.model.enumeration.MessageReact;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.UUID;
 
@@ -24,10 +26,12 @@ public class MessageReaction {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @ManyToOne
     @JoinColumn(name = "message_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Message message;
 
     @Enumerated(EnumType.STRING)

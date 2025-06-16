@@ -24,6 +24,7 @@ import { updateUserData } from '@/services/userService';
 import { UserContext } from '@/context/UserContext';
 import { PetContext } from '@/context/PetContext';
 import { FlowContext } from '@/context/FlowContext';
+import Toast from 'react-native-toast-message';
 
 const EditProfile = () => {
     const defaultImage = require('@/assets/images/Defaults/default-user.png');
@@ -66,19 +67,31 @@ const EditProfile = () => {
 
     const deleteImage = () => {
         setImage(null);
-    };
-
-    const saveProfile = async () => {
+    };    const saveProfile = async () => {
         const isPhoneEmpty = phoneNumber.length === 0;
         const isValid = isPhoneEmpty || isValidPhoneNumber(phoneNumber);
 
         if (!name.trim()) {
             setError('Full name is required!');
+            Toast.show({
+                type: 'error',
+                text1: 'Validation Error',
+                text2: 'Full name is required!',
+                position: 'top',
+                visibilityTime: 3000,
+            });
             return;
         }
 
         if (!isValid) {
             setPhoneError('Please enter a valid phone number including country code (e.g. +1)');
+            Toast.show({
+                type: 'error',
+                text1: 'Validation Error',
+                text2: 'Please enter a valid phone number including country code (e.g. +1)',
+                position: 'top',
+                visibilityTime: 4000,
+            });
             return;
         }
 
@@ -94,6 +107,13 @@ const EditProfile = () => {
                 uploadedImageUrl = await uploadFile(file);
             } catch (err) {
                 console.error('Failed to upload profile picture:', err.message);
+                Toast.show({
+                    type: 'error',
+                    text1: 'Upload Failed',
+                    text2: 'Failed to upload profile picture. Please try again.',
+                    position: 'top',
+                    visibilityTime: 4000,
+                });
                 return;
             } finally {
                 setIsLoading(false);
@@ -113,9 +133,25 @@ const EditProfile = () => {
             setUser((prevUser) => ({ ...prevUser, ...updatedUser }));
             setError('');
             setPhoneError('');
+            
+            Toast.show({
+                type: 'success',
+                text1: 'Profile Updated!',
+                text2: 'Your profile has been successfully updated.',
+                position: 'top',
+                visibilityTime: 3000,
+            });
+            
             router.back();
         } catch (err) {
             console.error('Error updating user profile:', err.message);
+            Toast.show({
+                type: 'error',
+                text1: 'Update Failed',
+                text2: err.message || 'Failed to update profile. Please try again.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
         } finally {
             setIsLoading(false);
         }

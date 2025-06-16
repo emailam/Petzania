@@ -51,10 +51,10 @@ public class FriendController {
     }
 
     @Operation(summary = "Decline friend request", description = "Decline a pending friend request by request ID")
-    @PutMapping("/decline-request/{requestId}")
+    @PutMapping("/cancel-request/{requestId}")
     public ResponseEntity<String> declineFriendRequest(@PathVariable UUID requestId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
-        friendService.declineFriendRequest(requestId);
+        friendService.cancelFriendRequest(requestId, userPrincipal.getUserId());
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Request was removed successfully!");
     }
 

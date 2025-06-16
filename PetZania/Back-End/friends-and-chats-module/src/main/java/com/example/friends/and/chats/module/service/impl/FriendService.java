@@ -77,6 +77,10 @@ public class FriendService implements IFriendService {
         validateBlockRelationship(sender, receiver);
         validateExistingRequest(sender, receiver);
 
+        if (friendRequestRepository.existsBySenderAndReceiver(sender, receiver) || friendRequestRepository.existsBySenderAndReceiver(receiver, sender)) {
+            throw new ForbiddenOperation("There exists a request already from one to another");
+        }
+
         FriendRequest request = FriendRequest.builder()
                 .sender(sender)
                 .receiver(receiver)
@@ -120,9 +124,13 @@ public class FriendService implements IFriendService {
     }
 
     @Override
-    public void declineFriendRequest(UUID requestId) {
+    public void cancelFriendRequest(UUID requestId, UUID userId) {
         FriendRequest request = getFriendRequest(requestId);
-        friendRequestRepository.delete(request);
+        if (request.getSender().getUserId().equals(userId) || request.getReceiver().getUserId().equals(userId)) {
+            friendRequestRepository.delete(request);
+        } else {
+            throw new ForbiddenOperation("Forbidden operation, user tries to cancel a request he is not involved in");
+        }
     }
 
     @Override
@@ -199,7 +207,7 @@ public class FriendService implements IFriendService {
     }
 
     @Override
-    public Page<FriendRequestDTO> getReceivedFriendRequests(UUID userId, int page, int size, String sortBy, String direction){
+    public Page<FriendRequestDTO> getReceivedFriendRequests(UUID userId, int page, int size, String sortBy, String direction) {
         Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
         User receiver = getUser(userId);

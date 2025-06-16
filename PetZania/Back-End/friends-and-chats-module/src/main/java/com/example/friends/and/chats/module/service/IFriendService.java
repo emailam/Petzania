@@ -15,7 +15,7 @@ public interface IFriendService {
 
     FriendshipDTO acceptFriendRequest(UUID requestId, UUID receiverId);
 
-    void declineFriendRequest(UUID requestId);
+    void cancelFriendRequest(UUID requestId, UUID userId);
 
     Friendship createFriendship(User user1, User user2);
 

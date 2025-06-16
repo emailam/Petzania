@@ -31,7 +31,10 @@ public class SecurityConfig {
         http.cors(Customizer.withDefaults());
 
         // make every request needs an authorization
-        http.authorizeHttpRequests(request -> request.requestMatchers("/**").permitAll());
+        http.authorizeHttpRequests(request ->
+                request.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .anyRequest().authenticated()
+        );
 
         // this makes the session stateless so we no longer need the csrf token
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

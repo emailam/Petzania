@@ -4,6 +4,8 @@ import { PetProvider } from '@/context/PetContext';
 import { UserProvider } from '@/context/UserContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { FlowProvider } from '@/context/FlowContext';
+import { FriendsProvider } from '@/context/FriendsContext';
+import { ChatProvider } from '@/context/ChatContext';
 
 // Combined Providers Component to reduce nesting
 export default function AppProviders({ children }) {
@@ -11,11 +13,15 @@ export default function AppProviders({ children }) {
         <AuthProvider>
             <FlowProvider>
                 <UserProvider>
-                    <PetProvider>
-                        <ActionSheetProvider>
-                            {children}
-                        </ActionSheetProvider>
-                    </PetProvider>
+                    <FriendsProvider>
+                        <ChatProvider>
+                            <PetProvider>
+                                <ActionSheetProvider>
+                                    {children}
+                                </ActionSheetProvider>
+                            </PetProvider>
+                        </ChatProvider>
+                    </FriendsProvider>
                 </UserProvider>
             </FlowProvider>
         </AuthProvider>

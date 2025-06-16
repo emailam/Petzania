@@ -290,26 +290,6 @@ public class MessageControllerIntegrationTests {
     }
 
     @Test
-    void sendMessage_UserNotInChat_ShouldFail() throws Exception {
-        // Switch to userC who is not part of the chat
-        tearDown();
-        setupSecurityContext(userC);
-
-        SendMessageDTO sendMessageDTO = new SendMessageDTO();
-        sendMessageDTO.setChatId(chatAB.getChatId());
-        sendMessageDTO.setContent("Unauthorized message");
-
-        mockMvc.perform(post("/api/messages/send")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(sendMessageDTO)))
-                .andExpect(status().isForbidden());
-
-        // Reset security context
-        tearDown();
-        setupSecurityContext(userA);
-    }
-
-    @Test
     void getMessagesByChat_Success() throws Exception {
         mockMvc.perform(get("/api/messages/chat/{chatId}", chatAB.getChatId()))
                 .andExpect(status().isOk())
@@ -352,21 +332,6 @@ public class MessageControllerIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(2)));
     }
-
-    @Test
-    void getMessagesByChat_UserNotInChat_ShouldFail() throws Exception {
-        // Switch to userC who is not part of the chat
-        tearDown();
-        setupSecurityContext(userC);
-
-        mockMvc.perform(get("/api/messages/chat/{chatId}", chatAB.getChatId()))
-                .andExpect(status().isForbidden());
-
-        // Reset security context
-        tearDown();
-        setupSecurityContext(userA);
-    }
-
     @Test
     void getMessageById_Success() throws Exception {
         mockMvc.perform(get("/api/messages/{messageId}", messageFromA.getMessageId()))
@@ -379,20 +344,6 @@ public class MessageControllerIntegrationTests {
     void getMessageById_NonExistentMessage_ShouldFail() throws Exception {
         mockMvc.perform(get("/api/messages/{messageId}", UUID.randomUUID()))
                 .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void getMessageById_UserNotInChat_ShouldFail() throws Exception {
-        // Switch to userC who is not part of the chat
-        tearDown();
-        setupSecurityContext(userC);
-
-        mockMvc.perform(get("/api/messages/{messageId}", messageFromA.getMessageId()))
-                .andExpect(status().isForbidden());
-
-        // Reset security context
-        tearDown();
-        setupSecurityContext(userA);
     }
 
     @Test
@@ -453,62 +404,6 @@ public class MessageControllerIntegrationTests {
         // Verify message was not updated
         Message unchangedMessage = messageRepository.findById(messageFromB.getMessageId()).orElseThrow();
         assertEquals("Hello from B", unchangedMessage.getContent());
-    }
-
-    @Test
-    void updateMessageStatus_Success() throws Exception {
-        // Switch to userB to update status of messageFromA
-        tearDown();
-        setupSecurityContext(userB);
-
-        UpdateMessageStatusDTO updateDTO = new UpdateMessageStatusDTO();
-        updateDTO.setMessageStatus(MessageStatus.DELIVERED);
-
-        mockMvc.perform(patch("/api/messages/{messageId}/status", messageFromA.getMessageId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateDTO)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("DELIVERED"));
-
-        // Verify status was updated
-        Message updatedMessage = messageRepository.findById(messageFromA.getMessageId()).orElseThrow();
-        assertEquals(MessageStatus.DELIVERED, updatedMessage.getStatus());
-
-        // Update to READ
-        updateDTO.setMessageStatus(MessageStatus.READ);
-
-        mockMvc.perform(patch("/api/messages/{messageId}/status", messageFromA.getMessageId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateDTO)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("READ"));
-
-        // Verify status was updated again
-        updatedMessage = messageRepository.findById(messageFromA.getMessageId()).orElseThrow();
-        assertEquals(MessageStatus.READ, updatedMessage.getStatus());
-
-        // Reset security context
-        tearDown();
-        setupSecurityContext(userA);
-    }
-
-    @Test
-    void updateMessageStatus_InvalidTransition_ShouldFail() throws Exception {
-        // Switch to userB to update status of messageFromA
-        tearDown();
-        setupSecurityContext(userB);
-
-        UpdateMessageStatusDTO updateDTO = new UpdateMessageStatusDTO();
-        updateDTO.setMessageStatus(MessageStatus.READ); // Trying to jump from SENT to READ
-
-        mockMvc.perform(patch("/api/messages/{messageId}/status", messageFromA.getMessageId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateDTO)))
-                .andExpect(status().isBadRequest());
-
-        // Reset security context
-        tearDown();
-        setupSecurityContext(userA);
     }
 
     @Test

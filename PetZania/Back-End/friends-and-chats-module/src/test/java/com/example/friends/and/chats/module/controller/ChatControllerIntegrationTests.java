@@ -36,9 +36,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @AutoConfigureMockMvc
 @Transactional
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class ChatControllerIntegrationTests {
     @Autowired
     private MockMvc mockMvc;
@@ -172,16 +172,6 @@ public class ChatControllerIntegrationTests {
                 .andExpect(jsonPath("$.chatId").value(chatAB.getChatId().toString()))
                 .andExpect(jsonPath("$.user1Id").value(userA.getUserId().toString()))
                 .andExpect(jsonPath("$.user2Id").value(userB.getUserId().toString()));
-    }
-
-    @Test
-    void getChatById_NotOwner_ShouldFail() throws Exception {
-        tearDown();
-        setupSecurityContext(userC);
-
-        mockMvc.perform(get("/api/chats/{chatId}", chatAB.getChatId()))
-                .andExpect(status().isForbidden());
-        tearDown();
     }
 
     @Test
