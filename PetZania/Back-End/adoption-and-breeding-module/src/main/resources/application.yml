@@ -1,6 +1,12 @@
 spring:
     application:
-        name: FriendsAndChatsModule
+        name: AdoptionAndBreedingModule
+
+    rabbitmq:
+        host: localhost
+        port: 5672
+        username: guest
+        password: guest
 
     datasource:
         url: jdbc:postgresql://localhost:8090/adoption-breeding
