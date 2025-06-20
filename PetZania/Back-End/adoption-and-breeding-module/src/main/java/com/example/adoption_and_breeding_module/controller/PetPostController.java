@@ -5,6 +5,8 @@ import com.example.adoption_and_breeding_module.model.dto.PetPostDTO;
 import com.example.adoption_and_breeding_module.model.dto.PetPostFilterDTO;
 import com.example.adoption_and_breeding_module.model.dto.UpdatePetPostDTO;
 import com.example.adoption_and_breeding_module.service.IPetPostService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -16,9 +18,11 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/pet-posts")
 @RequiredArgsConstructor
+@Tag(name = "PetPost", description = "Endpoints for managing pet posts (adoption & breeding)")
 public class PetPostController {
     private final IPetPostService petPostService;
 
+    @Operation(summary = "Create a new pet post")
     @PostMapping
     public ResponseEntity<PetPostDTO> createPetPost(@RequestBody CreatePetPostDTO createPetPostDTO) {
         // get userId from authentication context
@@ -27,6 +31,7 @@ public class PetPostController {
         return ResponseEntity.status(HttpStatus.CREATED).body(petPostDTO);
     }
 
+    @Operation(summary = "Get all pet posts created by a specific user")
     @GetMapping(path = "/user/{userId}")
     public ResponseEntity<Page<PetPostDTO>> getAllPetPostsByUserId(@PathVariable(name = "userId") UUID userId,
                                                                    @RequestParam(defaultValue = "0") int page,
@@ -37,12 +42,15 @@ public class PetPostController {
         return ResponseEntity.ok(posts);
     }
 
+    @Operation(summary = "Get a pet post by its ID")
     @GetMapping(path = "/{petPostId}")
     public ResponseEntity<PetPostDTO> getPetPostById(@PathVariable(name = "petPostId") UUID petPostId) {
         PetPostDTO petPostDTO = petPostService.getPetPostById(petPostId);
         return ResponseEntity.ok(petPostDTO);
     }
 
+
+    @Operation(summary = "Get filtered pet posts based on search criteria")
     @GetMapping(path = "/filtered")
     public ResponseEntity<Page<PetPostDTO>> getFilteredPosts(
             @RequestBody PetPostFilterDTO filter,
@@ -55,6 +63,7 @@ public class PetPostController {
         return ResponseEntity.ok(posts);
     }
 
+    @Operation(summary = "Update an existing pet post by ID")
     @PatchMapping(path = "/{petPostId}")
     public ResponseEntity<PetPostDTO> updatePetPostById(@PathVariable(name = "petPostId") UUID petPostId,
                                                         @RequestBody UpdatePetPostDTO updatePetPostDTO) {
@@ -64,6 +73,7 @@ public class PetPostController {
         return ResponseEntity.ok(petPostDTO);
     }
 
+    @Operation(summary = "Delete a pet post by ID")
     @DeleteMapping(path = "/{petPostId}")
     public ResponseEntity<Void> deletePetPostById(@PathVariable(name = "petPostId") UUID petPostId) {
         // get user1Id from authentication context
@@ -72,6 +82,7 @@ public class PetPostController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Toggle react status for a pet post by the current user")
     @PutMapping("/{petPostId}/react")
     public ResponseEntity<PetPostDTO> toggleReact(@PathVariable(name = "petPostId") UUID petPostId) {
         // get user1Id from authentication context

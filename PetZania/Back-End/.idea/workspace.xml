@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="1508a5f7-5e9d-4eac-9034-ae023b92c9bd" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/config/SwaggerConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/controller/PetPostController.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/controller/PetPostController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/resources/application.yml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="useMavenConfig" value="true" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProjectId" id="2yOnkoQn177QN67sgpbCCFZdPCx" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "jdk.selected.JAVA_MODULE": "openjdk-21",
+    "last_opened_file_path": "C:/Users/PC/Documents/GitHub/Petzania/PetZania",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.0",
+    "settings.editor.selected.configurable": "reference.projectsettings.compiler.annotationProcessors",
+    "spring.configuration.checksum": "d01de6a6e66818deba5cd63282c64754",
+    "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "postgresql"
+    ],
+    "com.intellij.ide.scratch.LRUPopupBuilder$1/SQL Dialect": [
+      "PostgreSQL",
+      "SQLite"
+    ]
+  }
+}]]></component>
+  <component name="ReactorSettings">
+    <option name="notificationShown" value="true" />
+  </component>
+  <component name="RunManager" selected="Spring Boot.AdoptionAndBreedingModuleApplication">
+    <configuration name="AdminControllerIntegrationTests and 8 more" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <option name="TEST_OBJECT" value="pattern" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="wholeProject" />
+      </option>
+      <patterns>
+        <pattern testClass="com.example.registrationmodule.controller.AdminControllerIntegrationTests" />
+        <pattern testClass="com.example.registrationmodule.controller.PetControllerIntegrationTests" />
+        <pattern testClass="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
+        <pattern testClass="com.example.petzaniasystemtests.tests.CrossServiceSecurityTest" />
+        <pattern testClass="com.example.petzaniasystemtests.tests.InterServiceCommunicationTest" />
+        <pattern testClass="com.example.petzaniasystemtests.tests.RabbitMQEventIntegrationTest" />
+        <pattern testClass="com.example.friends.and.chats.module.controller.ChatControllerIntegrationTests" />
+        <pattern testClass="com.example.friends.and.chats.module.controller.FriendControllerIntegrationTests" />
+        <pattern testClass="com.example.friends.and.chats.module.controller.MessageControllerIntegrationTests" />
+      </patterns>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ChatControllerIntegrationTests and 3 more" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <option name="TEST_OBJECT" value="pattern" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="wholeProject" />
+      </option>
+      <patterns>
+        <pattern testClass="com.example.friends.and.chats.module.controller.ChatControllerIntegrationTests" />
+        <pattern testClass="com.example.friends.and.chats.module.controller.FriendControllerIntegrationTests" />
+        <pattern testClass="com.example.friends.and.chats.module.controller.MessageControllerIntegrationTests" />
+        <pattern testClass="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
+      </patterns>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ChatControllerIntegrationTests and 8 more" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <option name="TEST_OBJECT" value="pattern" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="wholeProject" />
+      </option>
+      <patterns>
+        <pattern testClass="com.example.friends.and.chats.module.controller.ChatControllerIntegrationTests" />
+        <pattern testClass="com.example.friends.and.chats.module.controller.FriendControllerIntegrationTests" />
+        <pattern testClass="com.example.friends.and.chats.module.controller.MessageControllerIntegrationTests" />
+        <pattern testClass="com.example.petzaniasystemtests.tests.CrossServiceSecurityTest" />
+        <pattern testClass="com.example.petzaniasystemtests.tests.InterServiceCommunicationTest" />
+        <pattern testClass="com.example.petzaniasystemtests.tests.RabbitMQEventIntegrationTest" />
+        <pattern testClass="com.example.registrationmodule.controller.AdminControllerIntegrationTests" />
+        <pattern testClass="com.example.registrationmodule.controller.PetControllerIntegrationTests" />
+        <pattern testClass="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
+      </patterns>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="CrossServiceSecurityTest and 5 more" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <option name="TEST_OBJECT" value="pattern" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="wholeProject" />
+      </option>
+      <patterns>
+        <pattern testClass="com.example.petzaniasystemtests.tests.CrossServiceSecurityTest" />
+        <pattern testClass="com.example.petzaniasystemtests.tests.InterServiceCommunicationTest" />
+        <pattern testClass="com.example.petzaniasystemtests.tests.RabbitMQEventIntegrationTest" />
+        <pattern testClass="com.example.registrationmodule.controller.AdminControllerIntegrationTests" />
+        <pattern testClass="com.example.registrationmodule.controller.PetControllerIntegrationTests" />
+        <pattern testClass="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
+      </patterns>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="FriendControllerIntegrationTests and 8 more" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <option name="TEST_OBJECT" value="pattern" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="wholeProject" />
+      </option>
+      <patterns>
+        <pattern testClass="com.example.friends.and.chats.module.controller.FriendControllerIntegrationTests" />
+        <pattern testClass="com.example.friends.and.chats.module.controller.MessageControllerIntegrationTests" />
+        <pattern testClass="com.example.friends.and.chats.module.controller.ChatControllerIntegrationTests" />
+        <pattern testClass="com.example.petzaniasystemtests.tests.CrossServiceSecurityTest" />
+        <pattern testClass="com.example.petzaniasystemtests.tests.InterServiceCommunicationTest" />
+        <pattern testClass="com.example.petzaniasystemtests.tests.RabbitMQEventIntegrationTest" />
+        <pattern testClass="com.example.registrationmodule.controller.AdminControllerIntegrationTests" />
+        <pattern testClass="com.example.registrationmodule.controller.PetControllerIntegrationTests" />
+        <pattern testClass="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
+      </patterns>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="AdoptionAndBreedingModuleApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.example.adoption_and_breeding_module.AdoptionAndBreedingModuleApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="FriendsAndChatsModuleApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="friends-and-chats-module" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.example.friends.and.chats.module.FriendsAndChatsModuleApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="PetzaniaSystemTestsApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="petzania-system-tests" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.example.petzaniasystemtests.PetzaniaSystemTestsApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="RegistrationModuleApplication (1)" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="RegistrationModule" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.example.registrationmodule.RegistrationModuleApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="RegistrationModuleApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="registration-module" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.example.registrationmodule.RegistrationModuleApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.CrossServiceSecurityTest and 5 more" />
+        <item itemvalue="JUnit.FriendControllerIntegrationTests and 8 more" />
+        <item itemvalue="JUnit.AdminControllerIntegrationTests and 8 more" />
+        <item itemvalue="JUnit.ChatControllerIntegrationTests and 8 more" />
+        <item itemvalue="JUnit.ChatControllerIntegrationTests and 3 more" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="1508a5f7-5e9d-4eac-9034-ae023b92c9bd" name="Changes" comment="" />
+      <created>1749714632132</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1749714632132</updated>
+      <workItem from="1749714633424" duration="38000" />
+      <workItem from="1749823295882" duration="10482000" />
+      <workItem from="1749843012080" duration="18568000" />
+      <workItem from="1749882062647" duration="7968000" />
+      <workItem from="1749891629324" duration="59000" />
+      <workItem from="1749894612711" duration="190000" />
+      <workItem from="1749914627628" duration="11192000" />
+      <workItem from="1749927497474" duration="636000" />
+      <workItem from="1749949307043" duration="2851000" />
+      <workItem from="1750421462238" duration="3598000" />
+      <workItem from="1750427014775" duration="92000" />
+      <workItem from="1750427383048" duration="19000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
