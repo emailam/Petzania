@@ -6,6 +6,7 @@ import com.example.friends.and.chats.module.model.dto.friend.FollowDTO;
 import com.example.friends.and.chats.module.model.dto.friend.FriendRequestDTO;
 import com.example.friends.and.chats.module.model.dto.friend.FriendshipDTO;
 import com.example.friends.and.chats.module.model.entity.*;
+import com.example.friends.and.chats.module.model.event.BlockEvent;
 import com.example.friends.and.chats.module.repository.*;
 import com.example.friends.and.chats.module.service.IDTOConversionService;
 import com.example.friends.and.chats.module.service.IFriendService;
@@ -30,6 +31,7 @@ public class FriendService implements IFriendService {
     private final BlockRepository blockRepository;
     private final FollowRepository followRepository;
     private final IDTOConversionService dtoConversionService;
+    private final BlockPublisher blockPublisher;
 
     public void validateSelfOperation(UUID senderId, UUID receiverId) {
         if (senderId.equals(receiverId)) {
@@ -272,7 +274,13 @@ public class FriendService implements IFriendService {
                 .blocked(blocked)
                 .createdAt(new Timestamp(System.currentTimeMillis()))
                 .build();
-
+        BlockEvent blockEvent = BlockEvent.builder()
+                .blockId(block.getId())
+                .blockedId(blockedId)
+                .blockerId(blockerId)
+                .createdAt(block.getCreatedAt())
+                .build();
+        blockPublisher.sendUserBlockedMessage(blockEvent);
         return dtoConversionService.mapToBlockDTO(blockRepository.save(block));
     }
 
@@ -282,6 +290,14 @@ public class FriendService implements IFriendService {
                         getUser(blockerId),
                         getUser(blockedId))
                 .orElseThrow(() -> new BlockingDoesNotExist("Block relationship not found"));
+
+        BlockEvent blockEvent = BlockEvent.builder()
+                .blockId(block.getId())
+                .blockedId(blockedId)
+                .blockerId(blockerId)
+                .createdAt(block.getCreatedAt())
+                .build();
+        blockPublisher.sendUserUnBlockedMessage(blockEvent);
         blockRepository.delete(block);
     }
 
@@ -307,6 +323,5 @@ public class FriendService implements IFriendService {
     public int getNumberOfFriends(UUID userId) {
         return friendshipRepository.countFriendsByUserId(userId);
     }
-
 
 }
