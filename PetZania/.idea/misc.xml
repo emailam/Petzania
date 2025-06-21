@@ -5,6 +5,8 @@
       <list>
         <option value="$PROJECT_DIR$/Back-End/friends-and-chats-module/pom.xml" />
         <option value="$PROJECT_DIR$/Back-End/RegistrationModule/pom.xml" />
+        <option value="$PROJECT_DIR$/Back-End/petzania-system-tests/pom.xml" />
+        <option value="$PROJECT_DIR$/Back-End/registration-module/pom.xml" />
       </list>
     </option>
   </component>
