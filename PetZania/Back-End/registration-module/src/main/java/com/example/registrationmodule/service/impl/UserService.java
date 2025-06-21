@@ -349,6 +349,14 @@ public class UserService implements IUserService {
     }
 
     @Override
+    public ProfilePictureDTO getProfilePictureURLByUserId(UUID userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFound("User does not exist"));
+        ProfilePictureDTO profilePictureDTO = new ProfilePictureDTO();
+        profilePictureDTO.setProfilePictureURL(user.getProfilePictureURL());
+        return profilePictureDTO;
+    }
+
+    @Override
     @RateLimiter(name = "verifyOtpRateLimiter", fallbackMethod = "otpFallback")
     public void verifyCode(OTPValidationDTO otpValidationDTO) {
         User user = userRepository.findByEmailIgnoreCase(otpValidationDTO.getEmail()).orElseThrow(() -> new UserNotFound("User does not exist"));

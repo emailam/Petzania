@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+
 import java.nio.file.AccessDeniedException;
 import java.util.UUID;
 
@@ -57,6 +58,7 @@ public class UserController {
         ResponseLoginDTO token = userService.login(loginUserDTO);
         return ResponseEntity.status(HttpStatus.OK).body(token);
     }
+
 
     @Operation(summary = "Refresh authentication token")
     @PostMapping("/refresh-token")
@@ -140,8 +142,8 @@ public class UserController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Object principal = authentication.getPrincipal();
 
-        if(principal instanceof UserPrincipal userPrincipal){
-            if(!userPrincipal.getEmail().equals(emailDTO.getEmail())){
+        if (principal instanceof UserPrincipal userPrincipal) {
+            if (!userPrincipal.getEmail().equals(emailDTO.getEmail())) {
                 throw new AccessDeniedException("You can delete your own account");
             }
         }
@@ -187,5 +189,12 @@ public class UserController {
     public ResponseEntity<UserProfileDTO> getUserById(@PathVariable("id") UUID userId) {
         UserProfileDTO user = userService.getUserById(userId);
         return ResponseEntity.ok(user);
+    }
+
+    @Operation(summary = "Get Profile Picture By UserID")
+    @GetMapping("/profilePictureURL/{id}")
+    public ResponseEntity<ProfilePictureDTO> getProfilePictureURLByUserId(@PathVariable("id") UUID userId) {
+        ProfilePictureDTO profilePictureDTO = userService.getProfilePictureURLByUserId(userId);
+        return ResponseEntity.ok(profilePictureDTO);
     }
 }
