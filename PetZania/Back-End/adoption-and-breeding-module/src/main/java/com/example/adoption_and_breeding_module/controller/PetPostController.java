@@ -4,7 +4,9 @@ import com.example.adoption_and_breeding_module.model.dto.CreatePetPostDTO;
 import com.example.adoption_and_breeding_module.model.dto.PetPostDTO;
 import com.example.adoption_and_breeding_module.model.dto.PetPostFilterDTO;
 import com.example.adoption_and_breeding_module.model.dto.UpdatePetPostDTO;
+import com.example.adoption_and_breeding_module.model.principal.UserPrincipal;
 import com.example.adoption_and_breeding_module.service.IPetPostService;
+import com.example.adoption_and_breeding_module.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +27,8 @@ public class PetPostController {
     @Operation(summary = "Create a new pet post")
     @PostMapping
     public ResponseEntity<PetPostDTO> createPetPost(@RequestBody CreatePetPostDTO createPetPostDTO) {
-        // get userId from authentication context
-        UUID ownerId = UUID.randomUUID();
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID ownerId = userPrincipal.getUserId();
         PetPostDTO petPostDTO = petPostService.createPetPost(createPetPostDTO, ownerId);
         return ResponseEntity.status(HttpStatus.CREATED).body(petPostDTO);
     }
@@ -36,8 +38,8 @@ public class PetPostController {
     public ResponseEntity<Page<PetPostDTO>> getAllPetPostsByUserId(@PathVariable(name = "userId") UUID userId,
                                                                    @RequestParam(defaultValue = "0") int page,
                                                                    @RequestParam(defaultValue = "20") int size) {
-        // get userId from authentication context
-        UUID requesterUserId = UUID.randomUUID();
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID requesterUserId = userPrincipal.getUserId();
         Page<PetPostDTO> posts = petPostService.getAllPetPostsByUserId(requesterUserId, userId, page, size);
         return ResponseEntity.ok(posts);
     }
@@ -57,8 +59,8 @@ public class PetPostController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        // get userId from authentication context
-        UUID requesterUserId = UUID.randomUUID();
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID requesterUserId = userPrincipal.getUserId();
         Page<PetPostDTO> posts = petPostService.getFilteredPosts(requesterUserId, filter, page, size);
         return ResponseEntity.ok(posts);
     }
@@ -67,8 +69,8 @@ public class PetPostController {
     @PatchMapping(path = "/{petPostId}")
     public ResponseEntity<PetPostDTO> updatePetPostById(@PathVariable(name = "petPostId") UUID petPostId,
                                                         @RequestBody UpdatePetPostDTO updatePetPostDTO) {
-        // get user1Id from authentication context
-        UUID userId = UUID.randomUUID();
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId = userPrincipal.getUserId();
         PetPostDTO petPostDTO = petPostService.updatePetPost(petPostId, updatePetPostDTO, userId);
         return ResponseEntity.ok(petPostDTO);
     }
@@ -76,8 +78,8 @@ public class PetPostController {
     @Operation(summary = "Delete a pet post by ID")
     @DeleteMapping(path = "/{petPostId}")
     public ResponseEntity<Void> deletePetPostById(@PathVariable(name = "petPostId") UUID petPostId) {
-        // get user1Id from authentication context
-        UUID userId = UUID.randomUUID();
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId = userPrincipal.getUserId();
         petPostService.deletePetPostById(petPostId, userId);
         return ResponseEntity.noContent().build();
     }
@@ -85,8 +87,8 @@ public class PetPostController {
     @Operation(summary = "Toggle react status for a pet post by the current user")
     @PutMapping("/{petPostId}/react")
     public ResponseEntity<PetPostDTO> toggleReact(@PathVariable(name = "petPostId") UUID petPostId) {
-        // get user1Id from authentication context
-        UUID userId = UUID.randomUUID();
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId = userPrincipal.getUserId();
         PetPostDTO updatedPost = petPostService.toggleReact(petPostId, userId);
         return ResponseEntity.ok(updatedPost);
     }
