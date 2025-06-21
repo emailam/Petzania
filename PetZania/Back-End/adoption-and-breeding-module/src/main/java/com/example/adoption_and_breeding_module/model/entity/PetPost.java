@@ -39,20 +39,24 @@ public class PetPost {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Pet pet;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "post_status", nullable = false)
-    PetPostStatus postStatus = PetPostStatus.PENDING;;
 
-    @ManyToMany
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    @Column(name = "post_status", nullable = false)
+    PetPostStatus postStatus = PetPostStatus.PENDING;
+
     @JoinTable(
             name = "pet_post_reactions",
             joinColumns = @JoinColumn(name = "post_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id"),
             uniqueConstraints = @UniqueConstraint(columnNames = {"post_id", "user_id"})
     )
+    @ManyToMany(fetch = FetchType.EAGER)
     @OnDelete(action = OnDeleteAction.CASCADE)
+    @Builder.Default
     private Set<User> reactedUsers = new HashSet<>();
 
+    @Builder.Default
     @Column(name = "reacts", nullable = false)
     private int reacts = 0;
 

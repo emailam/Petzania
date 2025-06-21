@@ -5,6 +5,7 @@ import com.example.adoption_and_breeding_module.model.principal.AdminPrincipal;
 import com.example.adoption_and_breeding_module.model.principal.UserPrincipal;
 import com.example.adoption_and_breeding_module.service.impl.JWTService;
 import com.example.adoption_and_breeding_module.service.impl.MyUserDetailsService;
+import com.example.adoption_and_breeding_module.util.SecurityUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,7 +35,8 @@ public class JWTFilter extends OncePerRequestFilter {
         String token = null;
         String email = null;
         String role = null;
-
+        System.out.println("=== JWT FILTER START ===");
+        System.out.println("Current SecurityContext: " + SecurityUtils.getCurrentUser().getEmail());
 
         if (authenticationHeader != null && authenticationHeader.startsWith("Bearer ")) {
             // System.out.println("I entered the JWT filter");
