@@ -80,6 +80,7 @@ public class FriendControllerIntegrationTests {
                 )
         );
     }
+
     @AfterEach
     void tearDown() {
         // Clear the security context after each test
@@ -117,6 +118,108 @@ public class FriendControllerIntegrationTests {
         mockMvc.perform(post("/api/friends/send-request/{receiverId}", userB.getUserId()))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.message").value("Operation blocked due to existing block relationship"));
+    }
+
+    @Test
+    void checkIsBlockingExists_ShouldSuccess() throws Exception {
+        blockRepository.save(Block.builder()
+                .blocker(userA)
+                .blocked(userB)
+                .build());
+
+        mockMvc.perform(get("/api/friends/isBlockingExists/{id}", userB.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("true"));
+
+        blockRepository.save(Block.builder()
+                .blocker(userB)
+                .blocked(userA)
+                .build());
+
+        mockMvc.perform(get("/api/friends/isBlockingExists/{id}", userB.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("true"));
+    }
+
+    @Test
+    void checkIsBlockingExists_ShouldFail() throws Exception {
+        mockMvc.perform(get("/api/friends/isBlockingExists/{id}", userB.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("false"));
+
+        mockMvc.perform(post("/api/friends/block/{userId}", userB.getUserId()))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(put("/api/friends/unblock/{userId}", userB.getUserId()))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/friends/isBlockingExists/{id}", userB.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("false"));
+    }
+
+    @Test
+    void checkIsFriendshipExists_ShouldSuccess() throws Exception {
+        User tmp1 = userA;
+        User tmp2 = userB;
+        if (userA.getUserId().compareTo(userB.getUserId()) > 0) {
+            User tmp = tmp1;
+            tmp1 = tmp2;
+            tmp2 = tmp;
+        }
+        friendshipRepository.save(Friendship.builder().user1(tmp1).user2(tmp2).build());
+
+        mockMvc.perform(get("/api/friends/isFriend/{id}", userB.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("true"));
+
+    }
+
+    @Test
+    void checkIsFriendShipExists_ShouldFail() throws Exception {
+        mockMvc.perform(get("/api/friends/isFriend/{id}", userB.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("false"));
+    }
+
+    @Test
+    void checkIsFollowingExists_ShouldSuccess() throws Exception {
+        mockMvc.perform(post("/api/friends/follow/{userId}", userB.getUserId()))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/friends/isFollowing/{id}", userB.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("true"));
+    }
+
+    @Test
+    void checkIsFollowingExists_ShouldFail() throws Exception {
+        mockMvc.perform(post("/api/friends/follow/{userId}", userB.getUserId()))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(put("/api/friends/unfollow/{userId}", userB.getUserId()))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/friends/isFollowing/{id}", userB.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("false"));
+    }
+
+    @Test
+    void checkIsFriendRequestExists_ShouldSuccess() throws Exception {
+        mockMvc.perform(post("/api/friends/send-request/{receiverId}", userB.getUserId()))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/friends/isFriendRequestExists/{id}", userB.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("true"));
+    }
+
+    @Test
+    void checkIsFriendRequestExists_ShouldFail() throws Exception {
+        mockMvc.perform(get("/api/friends/isFriendRequestExists/{id}", userB.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("false"));
     }
 
     @Test
@@ -689,8 +792,6 @@ public class FriendControllerIntegrationTests {
 
 
     }
-
-
 
 
     private void setupSecurityContext(User user) {

@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -23,18 +24,6 @@ import java.util.UUID;
 @Tag(name = "Friend", description = "Operations related to friend requests, friendships, follows, and blocks")
 public class FriendController {
     private final IFriendService friendService;
-
-    @Operation(summary = "Get all received friend requests", description = "Returns a list of received friend requests for the current user")
-    @GetMapping("/received-requests")
-    public ResponseEntity<Page<FriendRequestDTO>> getReceivedFriendRequests(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String direction) {
-        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
-        Page<FriendRequestDTO> requests = friendService.getReceivedFriendRequests(userPrincipal.getUserId(), page, size, sortBy, direction);
-        return requests.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(requests);
-    }
 
     @Operation(summary = "Send friend request", description = "Send a friend request to another user by their ID")
     @PostMapping("/send-request/{receiverId}")
@@ -90,7 +79,7 @@ public class FriendController {
 
     @Operation(summary = "Unblock user", description = "Unblock a previously blocked user by their ID")
     @PutMapping("/unblock/{userId}")
-    public ResponseEntity<?> unblockUser(@PathVariable UUID userId) {
+    public ResponseEntity<String> unblockUser(@PathVariable UUID userId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         friendService.unblockUser(userPrincipal.getUserId(), userId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Block was removed successfully!");
@@ -131,6 +120,18 @@ public class FriendController {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         Page<FollowDTO> followDTOS = friendService.getFollowers(userPrincipal.getUserId(), page, size, sortBy, direction);
         return followDTOS.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(followDTOS);
+    }
+
+    @Operation(summary = "Get all received friend requests", description = "Returns a list of received friend requests for the current user")
+    @GetMapping("/received-requests")
+    public ResponseEntity<Page<FriendRequestDTO>> getReceivedFriendRequests(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        Page<FriendRequestDTO> requests = friendService.getReceivedFriendRequests(userPrincipal.getUserId(), page, size, sortBy, direction);
+        return requests.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(requests);
     }
 
 
@@ -175,6 +176,43 @@ public class FriendController {
     public ResponseEntity<Integer> getNumberOfFriends() {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         return ResponseEntity.ok(friendService.getNumberOfFriends(userPrincipal.getUserId()));
+    }
+
+    @Operation(summary = "Check Whether The Two Users Are Friends")
+    @GetMapping("/isFriend/{id}")
+    public ResponseEntity<Boolean> isFriend(@PathVariable("id") UUID userId2) {
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId1 = userPrincipal.getUserId();
+        boolean result = friendService.isFriendshipExistsByUsersId(userId1, userId2);
+        return ResponseEntity.ok().body(result);
+    }
+
+    @Operation(summary = "Check Whether There is Exists Blocking Between The Two Users")
+    @GetMapping("/isBlockingExists/{id}")
+    public ResponseEntity<Boolean> isBlockingExists(@PathVariable("id") UUID userId2) {
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId1 = userPrincipal.getUserId();
+        boolean result = friendService.isBlockingExists(userId1, userId2);
+        return ResponseEntity.ok().body(result);
+    }
+
+    @Operation(summary = "Check Whether The First User is Following This User")
+    @GetMapping("/isFollowing/{id}")
+    public ResponseEntity<Boolean> isFollowingExists(@PathVariable("id") UUID followed) {
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID follower = userPrincipal.getUserId();
+        boolean result = friendService.isFollowingExists(follower, followed);
+        return ResponseEntity.ok().body(result);
+    }
+
+
+    @Operation(summary = "Check Whether There exists a Friend Request")
+    @GetMapping("/isFriendRequestExists/{id}")
+    public ResponseEntity<Boolean> isFriendRequestExists(@PathVariable("id") UUID receiver) {
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID sender = userPrincipal.getUserId();
+        boolean result = friendService.isFriendRequestExists(sender, receiver);
+        return ResponseEntity.ok().body(result);
     }
 
 

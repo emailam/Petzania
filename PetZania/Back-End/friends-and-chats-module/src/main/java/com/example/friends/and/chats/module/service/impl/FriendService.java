@@ -152,6 +152,21 @@ public class FriendService implements IFriendService {
         }
     }
 
+    @Override
+    public boolean isFollowingExists(UUID follower, UUID followed) {
+        User userFollower = getUser(follower);
+        User userFollowed = getUser(followed);
+
+        return followRepository.existsByFollowerAndFollowed(userFollower, userFollowed);
+    }
+
+    @Override
+    public boolean isFriendRequestExists(UUID sender, UUID receiver) {
+        User userSender = getUser(sender);
+        User userReceiver = getUser(receiver);
+
+        return friendRequestRepository.existsBySenderAndReceiver(userSender, userReceiver);
+    }
 
     private void validateExistingFollow(User follower, User followed) {
         if (followRepository.existsByFollowerAndFollowed(follower, followed)) {
@@ -179,7 +194,9 @@ public class FriendService implements IFriendService {
     }
 
     @Override
-    public boolean isBlockingExists(User user1, User user2) {
+    public boolean isBlockingExists(UUID userId1, UUID userId2) {
+        User user1 = getUser(userId1);
+        User user2 = getUser(userId2);
         return blockRepository.existsByBlockerAndBlocked(user1, user2) ||
                 blockRepository.existsByBlockerAndBlocked(user2, user1);
     }
@@ -231,6 +248,13 @@ public class FriendService implements IFriendService {
             user2 = temp;
         }
         return friendshipRepository.existsByUser1AndUser2(user1, user2);
+    }
+
+    @Override
+    public boolean isFriendshipExistsByUsersId(UUID userId1, UUID userId2) {
+        User user1 = getUser(userId1);
+        User user2 = getUser(userId2);
+        return isFriendshipExists(user1, user2);
     }
 
     @Override

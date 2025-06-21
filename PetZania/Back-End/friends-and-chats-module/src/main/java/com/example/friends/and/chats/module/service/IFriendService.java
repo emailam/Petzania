@@ -31,7 +31,13 @@ public interface IFriendService {
 
     boolean isFriendshipExists(User user1, User user2);
 
-    boolean isBlockingExists(User user1, User user2);
+    boolean isFriendshipExistsByUsersId(UUID userId1, UUID userId2);
+
+    boolean isBlockingExists(UUID userId1, UUID userId2);
+
+    boolean isFollowingExists(UUID follower, UUID followed);
+
+    boolean isFriendRequestExists(UUID sender, UUID receiver);
 
     Page<FollowDTO> getFollowing(UUID userId, int page, int size, String sortBy, String direction);
 
@@ -40,6 +46,7 @@ public interface IFriendService {
     Page<BlockDTO> getBlockedUsers(UUID userId, int page, int size, String sortBy, String direction);
 
     Page<FriendshipDTO> getFriendships(UUID userId, int page, int size, String sortBy, String direction);
+
     Page<FriendRequestDTO> getReceivedFriendRequests(UUID userId, int page, int size, String sortBy, String direction);
 
     int getFollowingCount(UUID userId);
