@@ -85,40 +85,42 @@ public class FriendController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Block was removed successfully!");
     }
 
-    @Operation(summary = "Get friends list", description = "Retrieve all friends for the current user")
-    @GetMapping("/getFriends")
+    @Operation(summary = "Get friends list", description = "Retrieve all friends for a user")
+    @GetMapping("/getFriends/{userId}")
     public ResponseEntity<Page<FriendshipDTO>> getFriends(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction) {
+            @RequestParam(defaultValue = "asc") String direction,
+            @PathVariable("userId") UUID userId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
-        Page<FriendshipDTO> friendshipDTOS = friendService.getFriendships(userPrincipal.getUserId(), page, size, sortBy, direction);
+        Page<FriendshipDTO> friendshipDTOS = friendService.getFriendships(userId, page, size, sortBy, direction);
         return friendshipDTOS.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(friendshipDTOS);
-
     }
 
-    @Operation(summary = "Get following users", description = "Retrieve a paginated list of users the current user is following")
-    @GetMapping("/getFollowing")
+    @Operation(summary = "Get following users", description = "Retrieve a paginated list of users a user is following")
+    @GetMapping("/getFollowing/{userId}")
     public ResponseEntity<Page<FollowDTO>> getFollowing(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction) {
+            @RequestParam(defaultValue = "asc") String direction,
+            @PathVariable("userId") UUID userId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
-        Page<FollowDTO> followDTOS = friendService.getFollowing(userPrincipal.getUserId(), page, size, sortBy, direction);
+        Page<FollowDTO> followDTOS = friendService.getFollowing(userId, page, size, sortBy, direction);
         return followDTOS.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(followDTOS);
     }
 
-    @Operation(summary = "Get followers", description = "Retrieve a paginated list of users following the current user")
-    @GetMapping("/getFollowers")
+    @Operation(summary = "Get followers", description = "Retrieve a paginated list of users following a user")
+    @GetMapping("/getFollowers/{userId}")
     public ResponseEntity<Page<FollowDTO>> getFollowers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction) {
+            @RequestParam(defaultValue = "asc") String direction,
+            @PathVariable("userId") UUID userId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
-        Page<FollowDTO> followDTOS = friendService.getFollowers(userPrincipal.getUserId(), page, size, sortBy, direction);
+        Page<FollowDTO> followDTOS = friendService.getFollowers(userId, page, size, sortBy, direction);
         return followDTOS.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(followDTOS);
     }
 
@@ -147,19 +149,19 @@ public class FriendController {
         return blockDTOS.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(blockDTOS);
     }
 
-    @Operation(summary = "Get number of following users", description = "Returns the total number of users the current user is following")
-    @GetMapping("/getNumberOfFollowing")
-    public ResponseEntity<Integer> getNumberOfFollowing() {
+    @Operation(summary = "Get number of following users", description = "Returns the total number of users a specific user is following")
+    @GetMapping("/getNumberOfFollowing/{userId}")
+    public ResponseEntity<Integer> getNumberOfFollowing(@PathVariable("userId") UUID userId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
-        int count = friendService.getFollowingCount(userPrincipal.getUserId());
+        int count = friendService.getFollowingCount(userId);
         return ResponseEntity.ok(count);
     }
 
-    @Operation(summary = "Get number of followers", description = "Returns the total number of users following the current user")
-    @GetMapping("/getNumberOfFollowers")
-    public ResponseEntity<Integer> getNumberOfFollowers() {
+    @Operation(summary = "Get number of followers", description = "Returns the total number of users following a specific user")
+    @GetMapping("/getNumberOfFollowers/{userId}")
+    public ResponseEntity<Integer> getNumberOfFollowers(@PathVariable("userId") UUID userId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
-        int count = friendService.getFollowersCount(userPrincipal.getUserId());
+        int count = friendService.getFollowersCount(userId);
         return ResponseEntity.ok(count);
     }
 
@@ -171,11 +173,11 @@ public class FriendController {
         return ResponseEntity.ok(count);
     }
 
-    @Operation(summary = "Get number of friends", description = "Returns the total number of friends the current user has")
-    @GetMapping("/getNumberOfFriends")
-    public ResponseEntity<Integer> getNumberOfFriends() {
+    @Operation(summary = "Get number of friends", description = "Returns the total number of friends a user has")
+    @GetMapping("/getNumberOfFriends/{userId}")
+    public ResponseEntity<Integer> getNumberOfFriends(@PathVariable("userId") UUID userId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
-        return ResponseEntity.ok(friendService.getNumberOfFriends(userPrincipal.getUserId()));
+        return ResponseEntity.ok(friendService.getNumberOfFriends(userId));
     }
 
     @Operation(summary = "Check Whether The Two Users Are Friends")
