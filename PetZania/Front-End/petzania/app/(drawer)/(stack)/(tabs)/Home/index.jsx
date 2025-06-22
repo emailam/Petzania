@@ -1,9 +1,11 @@
 import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import React, {useContext} from 'react'
 import { useFriendsData } from '@/hooks/useFriendsData'
+import { UserContext } from '@/context/UserContext'
 
 export default function index() {
-  useFriendsData();
+  const { user } = useContext(UserContext);
+  useFriendsData(user?.userId);
 
   return (
     <View style={styles.container}>

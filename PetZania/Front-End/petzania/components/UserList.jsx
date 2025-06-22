@@ -29,7 +29,8 @@ export default function UserList({
     };
 
     const defaultKeyExtractor = (item, index) => {
-        return item.userId?.toString() || item.friendshipId?.toString() || index.toString();
+      console.log(item);
+        return item.follower?.userId?.toString() || item.blockId?.toString() || item.followed?.userId?.toString();
     };
 
     const renderUser = ({ item }) => (

@@ -12,6 +12,7 @@ import { useFriendsData } from '@/hooks/useFriendsData'
 import { getUserById } from '@/services/userService';
 import {
     sendFriendRequest,
+    acceptFriendRequest,
     cancelFriendRequest,
     removeFriend,
     blockUser,
@@ -21,7 +22,8 @@ import {
     isFriend,
     isFriendRequestExists,
     isBlockingExists,
-    isFollowing
+    isFollowing,
+    getReceivedFriendRequests
 } from '@/services/friendsService';
 
 import Toast from 'react-native-toast-message';
@@ -30,9 +32,8 @@ import Toast from 'react-native-toast-message';
 export default function UserProfile() {
     const { userid } = useLocalSearchParams();
     const router = useRouter();
-    const { user: currentUser } = useContext(UserContext);
+    const { user: currentUser, } = useContext(UserContext);
     const { showActionSheetWithOptions } = useActionSheet();
-    
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [friendshipStatus, setFriendshipStatus] = useState('none');
@@ -40,58 +41,36 @@ export default function UserProfile() {
     const [isFollowingUser, setIsFollowingUser] = useState(false);
     const [activeTab, setActiveTab] = useState('posts');
     const [friendRequestId, setFriendRequestId] = useState(null);
-    const [friendRequestExists, setFriendRequestExists] = useState(false);
+    const [incomingRequestId, setIncomingRequestId] = useState(null); // For received requests
     const [actionLoading, setActionLoading] = useState(false);
     const [showImageViewer, setShowImageViewer] = useState(false);
 
-    // Loading states for different API calls
-    const [loadingStates, setLoadingStates] = useState({
-        profile: true,
-        friendship: true,
-        following: true,
-        counts: true
-    });
-
     const { friendsCount, followersCount, followingCount } = useFriends();
-    const { loadAllCounts } = useFriendsData();
-
+    const { loadAllCounts } = useFriendsData(userid);
     const isOwnProfile = currentUser?.userId === userid;
 
-    const isAllLoaded = !Object.values(loadingStates).some(state => state === true);
+    useEffect(() => {
+        if (isOwnProfile && currentUser) {
+            setUser(currentUser);
+        }
+    }, [currentUser, isOwnProfile]);
+
     useEffect(() => {
         const initializeProfile = async () => {
-            // Reset loading states
-            setLoadingStates({
-                profile: true,
-                friendship: !isOwnProfile,
-                following: !isOwnProfile,
-                counts: true
-            });
+            // Only show initial loading screen on first load
+            setLoading(true);
 
             // Load all data concurrently
             const promises = [
                 fetchUserProfile(),
-                loadAllCounts().then(() => {
-                    setLoadingStates(prev => ({ ...prev, counts: false }));
-                })
+                loadAllCounts()
             ];
 
             if (!isOwnProfile) {
                 promises.push(
-                    fetchFriendshipStatus().then(() => {
-                        setLoadingStates(prev => ({ ...prev, friendship: false }));
-                    }),
-                    fetchFollowingStatus().then(() => {
-                        setLoadingStates(prev => ({ ...prev, following: false }));
-                    })
+                    fetchFriendshipStatus(),
+                    fetchFollowingStatus()
                 );
-            } else {
-                // For own profile, mark these as loaded immediately
-                setLoadingStates(prev => ({ 
-                    ...prev, 
-                    friendship: false, 
-                    following: false 
-                }));
             }
 
             try {
@@ -107,14 +86,18 @@ export default function UserProfile() {
     }, [userid]);
     const fetchUserProfile = async () => {
         try {
-            const userData = await getUserById(userid);
-            setUser(userData);
-            setLoadingStates(prev => ({ ...prev, profile: false }));
+            // If it's the user's own profile, use currentUser from context first
+            if (isOwnProfile && currentUser) {
+                setUser(currentUser);
+            } else {
+                // For other users, fetch from API
+                const userData = await getUserById(userid);
+                setUser(userData);
+            }
         }
         catch (error) {
             console.error('Error fetching user profile:', error);
             Alert.alert('Error', 'Failed to load user profile');
-            setLoadingStates(prev => ({ ...prev, profile: false }));
         }
     };
 
@@ -134,12 +117,30 @@ export default function UserProfile() {
                 setFriendshipStatus('friends');
                 return;
             }
-            const friendRequestExists = await isFriendRequestExists(userid);
 
-            if (friendRequestExists) {
+            // Check if there's a pending friend request sent by current user
+            const outgoingRequestId = await isFriendRequestExists(userid);
+
+            if (outgoingRequestId) {
                 setFriendshipStatus('pending');
-                setFriendRequestExists(true);
+                setFriendRequestId(outgoingRequestId);
                 return;
+            }
+
+            // Check if there's an incoming friend request from the viewed user
+            try {
+                const receivedRequests = await getReceivedFriendRequests(0, 50); // Get more requests to ensure we find it
+                const incomingRequest = receivedRequests.content?.find(
+                    request => request.sender.userId === userid
+                );
+
+                if (incomingRequest) {
+                    setFriendshipStatus('incoming');
+                    setIncomingRequestId(incomingRequest.requestId);
+                    return;
+                }
+            } catch (receivedRequestsError) {
+                console.error('Error checking received requests:', receivedRequestsError);
             }
 
             setFriendshipStatus('none');
@@ -177,35 +178,30 @@ export default function UserProfile() {
                     text1: 'Friend Request Sent',
                     text2: `Friend request sent to ${user?.name || 'user'}`,
                     position: 'top',
-                    visibilityTime: 3000,
-                });
+                    visibilityTime: 3000,                });
             } else if (friendshipStatus === 'friends') {
                 // Remove friend
                 Alert.alert(
                     'Remove Friend',
                     `Are you sure you want to remove ${user?.name || 'this user'} from your friends?`,
                     [
-                        { text: 'Cancel', style: 'cancel' },                        {
+                        { text: 'Cancel', style: 'cancel' },
+                        {
                             text: 'Remove',
                             style: 'destructive',
                             onPress: async () => {
-                                try {
+                              try {
                                     setActionLoading(true);
                                     await removeFriend(userid);
                                     
                                     // Update local state immediately
                                     setFriendshipStatus('none');
                                     
-                                    // Refresh all friendship-related data
-                                    setLoadingStates(prev => ({ ...prev, friendship: true, counts: true }));
-                                    
-                                    // Refresh friendship status and counts in parallel
+                                    // Refresh friendship status and counts in background
                                     await Promise.all([
                                         fetchFriendshipStatus(),
                                         loadAllCounts()
                                     ]);
-                                    
-                                    setLoadingStates(prev => ({ ...prev, friendship: false, counts: false }));
 
                                     Toast.show({
                                         type: 'info',
@@ -230,12 +226,12 @@ export default function UserProfile() {
                         },
                     ]
                 );
-              }else if (friendshipStatus === 'pending') {
+              }
+              else if (friendshipStatus === 'pending') {
                 try {
                     await cancelFriendRequest(friendRequestId);
 
                     setFriendshipStatus('none');
-                    setFriendRequestExists(false);
                     setFriendRequestId(null);
 
                     Toast.show({
@@ -254,15 +250,13 @@ export default function UserProfile() {
                         position: 'top',
                         visibilityTime: 3000,
                     });
-                }
-            }
+                }            }
+            // Refresh data in background without showing loading states
             if (!isOwnProfile) {
-                setLoadingStates(prev => ({ ...prev, friendship: true, counts: true }));
                 await Promise.all([
                     fetchFriendshipStatus(),
                     loadAllCounts()
                 ]);
-                setLoadingStates(prev => ({ ...prev, friendship: false, counts: false }));
             }
         }
         catch (error) {
@@ -276,6 +270,115 @@ export default function UserProfile() {
             });
         }
         finally {
+            setActionLoading(false);
+        }
+      };
+
+    const handleRespondToRequest = () => {
+        const options = ['Accept', 'Decline', 'Cancel'];
+        const cancelButtonIndex = 2;
+        const destructiveButtonIndex = 1;
+
+        showActionSheetWithOptions(
+            {
+                options,
+                cancelButtonIndex,
+                destructiveButtonIndex,
+                title: `Respond to ${user?.name || 'User'}'s friend request`,
+                message: 'What would you like to do?',
+            },
+            async (buttonIndex) => {
+                switch (buttonIndex) {
+                    case 0:
+                        // Accept
+                        await handleAcceptRequest();
+                        break;
+                    case 1:
+                        // Decline
+                        await handleDeclineRequest();
+                        break;
+                }
+            }
+        );
+    };
+
+    const handleAcceptRequest = async () => {
+        if (actionLoading) return;
+
+        try {
+            setActionLoading(true);
+
+            await acceptFriendRequest(incomingRequestId);
+            setFriendshipStatus('friends');
+            setIncomingRequestId(null);
+
+            Toast.show({
+                type: 'success',
+                text1: 'Friend Request Accepted',
+                text2: `You are now friends with ${user?.name || 'user'}`,
+                position: 'top',
+                visibilityTime: 3000,
+            });
+
+            // Refresh data in background
+            if (!isOwnProfile) {
+                await Promise.all([
+                    fetchFriendshipStatus(),
+                    loadAllCounts()
+                ]);
+            }
+        } catch (error) {
+            console.error('Error accepting friend request:', error);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Failed to accept friend request',
+                position: 'top',
+                visibilityTime: 3000,
+            });
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleDeclineRequest = async () => {
+        if (actionLoading) return;
+        
+        try {
+            setActionLoading(true);
+            
+            // Use cancelFriendRequest with the incoming request ID
+            await cancelFriendRequest(incomingRequestId);
+            
+            // Update local state
+            setFriendshipStatus('none');
+            setIncomingRequestId(null);
+            
+            Toast.show({
+                type: 'info',
+                text1: 'Friend Request Declined',
+                text2: 'Friend request has been declined',
+                position: 'top',
+                visibilityTime: 3000,
+            });
+            
+            // Refresh data in background
+            if (!isOwnProfile) {
+                await Promise.all([
+                    fetchFriendshipStatus(),
+                    loadAllCounts()
+                ]);
+            }
+        } catch (error) {
+            console.error('Error declining friend request:', error);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Failed to decline friend request',
+                position: 'top',
+                visibilityTime: 3000,
+            });
+        } finally {
             setActionLoading(false);
         }
     };
@@ -293,6 +396,7 @@ export default function UserProfile() {
         }
         router.push(`/(drawer)/(stack)/Chat/${userid}`);
     };
+
     const handleMoreOptions = () => {
         const options = [
             isFollowingUser ? 'Unfollow User' : 'Follow User',
@@ -320,11 +424,8 @@ export default function UserProfile() {
                 }
             }
         );
-    };
-    const handleFollowUser = async () => {
+    };    const handleFollowUser = async () => {
         try {
-            setLoadingStates(prev => ({ ...prev, following: true, counts: true }));
-            
             if (isFollowingUser) {
                 await unfollowUser(userid);
                 setIsFollowingUser(false);
@@ -347,13 +448,11 @@ export default function UserProfile() {
                 });
             }
             
-            // Refresh following status and counts
+            // Refresh following status and counts in background
             await Promise.all([
                 fetchFollowingStatus(),
                 loadAllCounts()
             ]);
-            
-            setLoadingStates(prev => ({ ...prev, following: false, counts: false }));
         } catch (error) {
             console.error('Error updating follow status:', error);
             // Revert the optimistic update on error
@@ -365,7 +464,6 @@ export default function UserProfile() {
                 position: 'top',
                 visibilityTime: 3000,
             });
-            setLoadingStates(prev => ({ ...prev, following: false, counts: false }));
         }
     };
     const handleBlockUser = () => {
@@ -378,18 +476,16 @@ export default function UserProfile() {
                     text: 'Block',
                     style: 'destructive',
                     onPress: async () => {
-                        try {
+                      try {
                             await blockUser(userid);
                             setIsBlocked(true);
                             setFriendshipStatus('blocked');
                             
-                            // Refresh friendship status and counts
-                            setLoadingStates(prev => ({ ...prev, friendship: true, counts: true }));
+                            // Refresh friendship status and counts in background
                             await Promise.all([
                                 fetchFriendshipStatus(),
                                 loadAllCounts()
                             ]);
-                            setLoadingStates(prev => ({ ...prev, friendship: false, counts: false }));
                             
                             Toast.show({
                                 type: 'success',
@@ -416,9 +512,7 @@ export default function UserProfile() {
     const handleImagePress = () => {
         if (!user?.profilePictureURL) return;
         setShowImageViewer(true);
-    };
-
-    const getFriendButtonConfig = () => {
+    };    const getFriendButtonConfig = () => {
         switch (friendshipStatus) {
             case 'none':
                 return {
@@ -433,6 +527,13 @@ export default function UserProfile() {
                     text: 'Pending',
                     style: styles.pendingButton,
                     textStyle: styles.pendingButtonText,
+                };
+            case 'incoming':
+                return {
+                    icon: 'person-add',
+                    text: 'Accept',
+                    style: styles.acceptButton,
+                    textStyle: styles.acceptButtonText,
                 };
             case 'friends':
                 return {
@@ -456,8 +557,7 @@ export default function UserProfile() {
                     textStyle: styles.addFriendButtonText,
                 };
         }
-    };
-    if (loading || !isAllLoaded) {
+    };if (loading) {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#9188E5" />
@@ -527,32 +627,49 @@ export default function UserProfile() {
               <Text style={styles.settingsButtonText}>Settings</Text>
             </TouchableOpacity>
           </View>
-        )}
-
-        {!isOwnProfile && (
+        )}        {!isOwnProfile && (
           <View style={styles.actionButtonsContainer}>
-            <TouchableOpacity
-              style={[
-                styles.actionButton,
-                getFriendButtonConfig().style,
-                (actionLoading || friendshipStatus === 'blocked') && styles.disabledButton
-              ]}
-              onPress={handleFriendRequest}
-              disabled={actionLoading || friendshipStatus === 'blocked'}
-            >
-              {actionLoading ? (
-                <ActivityIndicator size="small" color={getFriendButtonConfig().textStyle.color} />
-              ) : (
-                <Ionicons
-                  name={getFriendButtonConfig().icon}
-                  size={20}
-                  color={getFriendButtonConfig().textStyle.color}
-                />
-              )}
-              <Text style={[styles.actionButtonText, getFriendButtonConfig().textStyle]}>
-                {actionLoading ? 'Loading...' : getFriendButtonConfig().text}
-              </Text>
-            </TouchableOpacity>
+            {friendshipStatus === 'incoming' ? (
+              // Show Respond button for incoming requests
+              <TouchableOpacity
+                style={[styles.actionButton, styles.respondButton, actionLoading && styles.disabledButton]}
+                onPress={handleRespondToRequest}
+                disabled={actionLoading}
+              >
+                {actionLoading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
+                )}
+                <Text style={[styles.actionButtonText, styles.respondButtonText]}>
+                  {actionLoading ? 'Loading...' : 'Respond'}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              // Show single friend button for other states
+              <TouchableOpacity
+                style={[
+                  styles.actionButton,
+                  getFriendButtonConfig().style,
+                  (actionLoading || friendshipStatus === 'blocked') && styles.disabledButton
+                ]}
+                onPress={handleFriendRequest}
+                disabled={actionLoading || friendshipStatus === 'blocked'}
+              >
+                {actionLoading ? (
+                  <ActivityIndicator size="small" color={getFriendButtonConfig().textStyle.color} />
+                ) : (
+                  <Ionicons
+                    name={getFriendButtonConfig().icon}
+                    size={20}
+                    color={getFriendButtonConfig().textStyle.color}
+                  />
+                )}
+                <Text style={[styles.actionButtonText, getFriendButtonConfig().textStyle]}>
+                  {actionLoading ? 'Loading...' : getFriendButtonConfig().text}
+                </Text>
+              </TouchableOpacity>
+            )}
 
             {/* Message Button */}
             <TouchableOpacity
@@ -863,6 +980,39 @@ const styles = StyleSheet.create({
     borderColor: '#f44336',
   },
   blockedButtonText: {
+    color: '#f44336',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  // Respond Button
+  respondButton: {
+    backgroundColor: '#9188E5',
+    borderWidth: 1,
+    borderColor: '#9188E5',
+  },
+  respondButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  // Accept Button
+  acceptButton: {
+    backgroundColor: '#4CAF50',
+    borderWidth: 1,
+    borderColor: '#4CAF50',
+  },
+  acceptButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  // Decline Button
+  declineButton: {
+    backgroundColor: '#f0f0f0',
+    borderWidth: 1,
+    borderColor: '#f44336',
+  },
+  declineButtonText: {
     color: '#f44336',
     fontSize: 15,
     fontWeight: '600',

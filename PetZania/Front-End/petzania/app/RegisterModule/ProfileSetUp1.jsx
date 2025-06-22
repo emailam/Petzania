@@ -55,6 +55,8 @@ const ProfileSetUp1 = () => {
 
     const deleteImage = () => {
         setImage(null);
+        user.profilePictureURL = null;
+        setUser((prevUser) => ({ ...prevUser, profilePictureURL: null }));
     };
 
     const goToNextStep = async () => {

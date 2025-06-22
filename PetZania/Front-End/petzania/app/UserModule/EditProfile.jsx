@@ -47,11 +47,6 @@ const EditProfile = () => {
 
     const { showActionSheetWithOptions } = useActionSheet();
 
-    const goToPetModule = () => {
-        setFromPage('Home');
-        router.push('/PetModule/AddPet1');
-    };
-
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
@@ -67,7 +62,10 @@ const EditProfile = () => {
 
     const deleteImage = () => {
         setImage(null);
+        user.profilePictureURL = null;
+        setUser((prevUser) => ({ ...prevUser, profilePictureURL: null }));
     };
+
     const saveProfile = async () => {
         const isPhoneEmpty = phoneNumber.length === 0;
         const isValid = isPhoneEmpty || isValidPhoneNumber(phoneNumber);

@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { UserContext } from '@/context/UserContext';
 import UserList from '@/components/UserList';
 import { getFollowersByUserId, getNumberOfFollowersByUserId } from '@/services/friendsService';
-import { getUserById } from '@/services/userService';
+import { getUserById, getUserProfilePicture } from '@/services/userService';
 import Toast from 'react-native-toast-message';
 
 export default function Followers() {
@@ -41,14 +41,38 @@ export default function Followers() {
       // Load profile user info and followers in parallel
       const [userResponse, followersResponse, countResponse] = await Promise.all([
         getUserById(userid),
-        getFollowersByUserId(userid, 0, 20),
+        getFollowersByUserId(0, 20, 'createdAt', 'desc', userid),
         getNumberOfFollowersByUserId(userid)
       ]);
 
       setProfileUser(userResponse);
-      setFollowers(followersResponse.content || []);
+      
+      // Transform followers data and fetch profile pictures
+      const followersData = await Promise.all(
+        (followersResponse.content || []).map(async (followItem) => {
+          try {
+            const response = await getUserProfilePicture(followItem.follower.userId);
+            
+            return {
+              ...followItem.follower,
+              profilePictureURL: response.profilePictureURL,
+              followId: followItem.followId,
+              createdAt: followItem.createdAt
+            };
+          } catch (profileError) {
+            console.warn('Failed to fetch profile picture for follower:', followItem.follower.userId);
+            return {
+              ...followItem.follower,
+              followId: followItem.followId,
+              createdAt: followItem.createdAt
+            };
+          }
+        })
+      );
+      
+      setFollowers(followersData);
       setFollowersCount(countResponse);
-      setHasMore((followersResponse.content || []).length >= 20);
+      setHasMore(followersData.length >= 20 && !followersResponse.last);
       setPage(0);
     } catch (error) {
       console.error('Error loading followers:', error);
@@ -61,19 +85,39 @@ export default function Followers() {
       setLoading(false);
     }
   };
-
   const loadMoreFollowers = async () => {
     if (loadingMore || !hasMore) return;
 
     try {
       setLoadingMore(true);
       const nextPage = page + 1;
-      const response = await getFollowersByUserId(userid, nextPage, 20);
-      const newFollowers = response.content || [];
+      const response = await getFollowersByUserId(nextPage, 20, 'createdAt', 'desc', userid);
       
-      setFollowers(prev => [...prev, ...newFollowers]);
+      // Transform new followers data and fetch profile pictures
+      const newFollowersData = await Promise.all(
+        (response.content || []).map(async (followItem) => {
+          try {
+            const response = await getUserProfilePicture(followItem.follower.userId);
+            return {
+              ...followItem.follower,
+              profilePictureURL: response.profilePictureURL,
+              followId: followItem.followId,
+              createdAt: followItem.createdAt
+            };
+          } catch (profileError) {
+            console.warn('Failed to fetch profile picture for follower:', followItem.follower.userId);
+            return {
+              ...followItem.follower,
+              followId: followItem.followId,
+              createdAt: followItem.createdAt
+            };
+          }
+        })
+      );
+      
+      setFollowers(prev => [...prev, ...newFollowersData]);
       setPage(nextPage);
-      setHasMore(newFollowers.length >= 20);
+      setHasMore(newFollowersData.length >= 20 && !response.last);
     } catch (error) {
       console.error('Error loading more followers:', error);
       Toast.show({
@@ -125,8 +169,11 @@ export default function Followers() {
       <UserList
         users={followers}
         onUserPress={handleUserPress}
+        keyExtractor={(item) => item.followId || item.userId}
         onEndReached={loadMoreFollowers}
+        contentContainerStyle={{ padding: 16 }}
         onEndReachedThreshold={0.1}
+        
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

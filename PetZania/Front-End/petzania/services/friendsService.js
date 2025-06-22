@@ -33,8 +33,15 @@ export async function isFriendRequestExists(receiverId) {
         if (response.status < 200 || response.status >= 300) {
             throw new Error('Failed to check if friend request exists. Please try again later.');
         }
+        // Returns the friend request UUID if exists
         return response.data;
     } catch (error) {
+        // Handle 404 as "no friend request exists" - this is expected behavior
+        if (error.response && error.response.status === 404) {
+            return null; // Return null to indicate no friend request exists
+        }
+        
+        console.error('isFriendRequestExists error:', error);
         throw error;
     }
 }
@@ -172,6 +179,20 @@ export async function getNumberOfFollowersByUserId(userId) {
         const response = await api.get(`/friends/getNumberOfFollowers/${userId}`);
         if (response.status < 200 || response.status >= 300) {
             throw new Error('Failed to retrieve followers count for user. Please try again later.');
+        }
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function getFollowingByUserId(page = 0, size = 10, sortBy = 'createdAt', direction = 'asc', userId) {
+    try {
+        const response = await api.get(`/friends/getFollowing/${userId}`, {
+            params: { page, size, sortBy, direction }
+        });
+        if (response.status < 200 || response.status >= 300) {
+            throw new Error('Failed to retrieve following list. Please try again later.');
         }
         return response.data;
     } catch (error) {

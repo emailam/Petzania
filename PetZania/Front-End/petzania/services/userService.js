@@ -52,6 +52,20 @@ export async function updateUserData(userId, userData) {
     }
 }
 
+export async function getUserProfilePicture(userId){
+    try {
+        const response = await api.get(`/user/auth/profilePictureURL/${userId}`);
+
+        if (response.status !== 200) {
+            throw new Error('Failed to fetch profile picture. Please try again later.');
+        }
+
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function registerUser(data) {
     try {
         const response = await api.post('/user/auth/signup', data);

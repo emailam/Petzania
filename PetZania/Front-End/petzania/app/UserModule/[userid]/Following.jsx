@@ -1,191 +1,194 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
-  FlatList,
   TouchableOpacity,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { UserContext } from '@/context/UserContext';
 import UserList from '@/components/UserList';
-import { getFollowingByUserId } from '@/services/friendsService';
+import { getFollowingByUserId, getNumberOfFollowingByUserId } from '@/services/friendsService';
+import { getUserById, getUserProfilePicture } from '@/services/userService';
 import Toast from 'react-native-toast-message';
 
 export default function Following() {
   const { userid } = useLocalSearchParams();
   const router = useRouter();
-  
+
+  const { user: currentUser } = useContext(UserContext);
+
   const [following, setFollowing] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
-  const [error, setError] = useState(null);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [profileUser, setProfileUser] = useState(null);
 
-  const pageSize = 20;
+  const isOwnProfile = currentUser?.userId === userid;
+  useEffect(() => {
+    loadInitialData();
+  }, [userid]);
 
-  const fetchFollowing = useCallback(async (pageNum = 0, isRefresh = false) => {
+  const loadInitialData = async () => {
     try {
-      if (pageNum === 0) {
-        setLoading(true);
-        setError(null);
-      } else {
-        setLoadingMore(true);
-      }
+      setLoading(true);
+      // Load profile user info and following in parallel
+      const [userResponse, followingResponse, countResponse] = await Promise.all([
+        getUserById(userid),
+        getFollowingByUserId(0, 20, 'createdAt', 'desc', userid),
+        getNumberOfFollowingByUserId(userid)
+      ]);
 
-      const response = await getFollowingByUserId(userid, pageNum, pageSize);
-      
-      if (response && response.content) {
-        const newFollowing = response.content;
-        
-        if (isRefresh || pageNum === 0) {
-          setFollowing(newFollowing);
-        } else {
-          setFollowing(prev => [...prev, ...newFollowing]);
-        }
-        
-        setHasMore(!response.last && newFollowing.length === pageSize);
-        setPage(pageNum);
-      } else {
-        setFollowing([]);
-        setHasMore(false);
-      }
+      setProfileUser(userResponse);
+        // Transform following data and fetch profile pictures
+      const followingData = await Promise.all(
+        (followingResponse.content || []).map(async (followItem) => {
+          try {
+            console.log(followItem);
+            const response = await getUserProfilePicture(followItem.followed.userId);
+            return {
+              ...followItem.followed,
+              profilePictureURL: response.profilePictureURL,
+              followId: followItem.followId,
+              createdAt: followItem.createdAt
+            };
+          } catch (profileError) {
+            console.warn('Failed to fetch profile picture for followed user:', followItem.followed.userId);
+            return {
+              ...followItem.followed,
+              followId: followItem.followId,
+              createdAt: followItem.createdAt
+            };
+          }
+        })
+      );
+
+      setFollowing(followingData);
+      setFollowingCount(countResponse);
+      setHasMore(followingData.length >= 20 && !followingResponse.last);
+      setPage(0);
     } catch (error) {
-      console.error('Error fetching following:', error);
-      setError('Failed to load following list');
-      
-      if (pageNum === 0) {
-        setFollowing([]);
-      }
-      
+      console.error('Error loading following:', error);
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: 'Failed to load following list',
-        position: 'top',
-        visibilityTime: 3000,
+        text2: 'Failed to load following',
       });
     } finally {
       setLoading(false);
-      setRefreshing(false);
-      setLoadingMore(false);
     }
-  }, [userid, pageSize]);
-
-  useEffect(() => {
-    fetchFollowing(0, false);
-  }, [fetchFollowing]);
-
-  const handleRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchFollowing(0, true);
-  }, [fetchFollowing]);
-
-  const handleLoadMore = useCallback(() => {
-    if (!loadingMore && hasMore && following.length > 0) {
-      fetchFollowing(page + 1, false);
-    }
-  }, [fetchFollowing, loadingMore, hasMore, following.length, page]);
-
-  const handleUserPress = useCallback((user) => {
-    router.push(`/UserModule/${user.userId}`);
-  }, [router]);
-
-  const renderLoadingFooter = () => {
-    if (!loadingMore) return null;
-    
-    return (
-      <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#9188E5" />
-        <Text style={styles.footerLoaderText}>Loading more...</Text>
-      </View>
-    );
   };
 
+  const loadMoreFollowing = async () => {
+    if (loadingMore || !hasMore) return;
+
+    try {
+      setLoadingMore(true);
+      const nextPage = page + 1;
+      const response = await getFollowingByUserId(nextPage, 20, 'createdAt', 'desc', userid);
+        // Transform new following data and fetch profile pictures
+      const newFollowingData = await Promise.all(
+        (response.content || []).map(async (followItem) => {
+          try {
+            const response = await getUserProfilePicture(followItem.followed.userId);
+            return {
+              ...followItem.followed,
+              profilePictureURL: response.profilePictureURL,
+              followId: followItem.followId,
+              createdAt: followItem.createdAt
+            };
+          } catch (profileError) {
+            console.warn('Failed to fetch profile picture for followed user:', followItem.followed.userId);
+            return {
+              ...followItem.followed,
+              followId: followItem.followId,
+              createdAt: followItem.createdAt
+            };
+          }
+        })
+      );
+      
+      setFollowing(prev => [...prev, ...newFollowingData]);
+      setPage(nextPage);
+      setHasMore(newFollowingData.length >= 20 && !response.last);
+    } catch (error) {
+      console.error('Error loading more following:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to load more following',
+      });
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadInitialData();
+    setRefreshing(false);
+  };
+
+  const handleUserPress = (user) => {
+    router.push(`/UserModule/${user.userId}`);
+  };
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <Ionicons name="people-outline" size={64} color="#ccc" />
+      <Ionicons name="people-outline" size={60} color="#ccc" />
       <Text style={styles.emptyTitle}>No Following</Text>
       <Text style={styles.emptySubtitle}>
-        This user isn't following anyone yet.
+        {isOwnProfile 
+          ? "When you follow people, they'll appear here"
+          : `${profileUser?.name || 'This user'} isn't following anyone yet`
+        }
       </Text>
     </View>
   );
 
-  const renderErrorState = () => (
-    <View style={styles.errorContainer}>
-      <Ionicons name="alert-circle-outline" size={64} color="#ff6b6b" />
-      <Text style={styles.errorTitle}>Something went wrong</Text>
-      <Text style={styles.errorSubtitle}>{error}</Text>
-      <TouchableOpacity
-        style={styles.retryButton}
-        onPress={() => fetchFollowing(0, false)}
-      >
-        <Text style={styles.retryButtonText}>Try Again</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
-  if (loading && following.length === 0) {
+  if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#9188E5" />
-        <Text style={styles.loadingText}>Loading following...</Text>
+      <View style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#9188E5" />
+          <Text style={styles.loadingText}>Loading following...</Text>
+        </View>
       </View>
     );
   }
 
-  if (error && following.length === 0) {
-    return renderErrorState();
-  }
-
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Following</Text>
-        <View style={styles.headerRight} />
-      </View>
-
-      {/* Following List */}
-      {following.length === 0 && !loading ? (
-        renderEmptyState()
-      ) : (
-        <FlatList
-          data={following}
-          keyExtractor={(item) => item.userId.toString()}
-          renderItem={({ item }) => (
-            <UserList
-              user={item}
-              onPress={() => handleUserPress(item)}
-              showFollowButton={false}
-            />
-          )}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              colors={['#9188E5']}
-              tintColor="#9188E5"
-            />
-          }
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.1}
-          ListFooterComponent={renderLoadingFooter}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={following.length === 0 ? styles.emptyListContainer : null}
-        />
-      )}
+      <UserList
+        users={following}
+        onUserPress={handleUserPress}
+        keyExtractor={(item) => item.followId || item.userId}
+        onEndReached={loadMoreFollowing}
+        onEndReachedThreshold={0.1}
+        contentContainerStyle={{ padding: 16 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#9188E5']}
+            tintColor="#9188E5"
+          />
+        }
+        ListEmptyComponent={renderEmptyState}
+        ListFooterComponent={
+          loadingMore ? (
+            <View style={styles.footerLoading}>
+              <ActivityIndicator size="small" color="#9188E5" />
+              <Text style={styles.footerLoadingText}>Loading more...</Text>
+            </View>
+          ) : null
+        }
+      />
     </View>
   );
 }
@@ -195,36 +198,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    backgroundColor: '#fff',
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-  },
-  headerRight: {
-    width: 40,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
   },
   loadingText: {
-    marginTop: 16,
+    marginTop: 12,
     fontSize: 16,
     color: '#9188E5',
   },
@@ -235,61 +215,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: '#999',
     marginTop: 16,
-    marginBottom: 8,
+    textAlign: 'center',
   },
   emptySubtitle: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: 14,
+    color: '#999',
+    marginTop: 8,
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 20,
   },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  errorTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  errorSubtitle: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 24,
-  },
-  retryButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    backgroundColor: '#9188E5',
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  footerLoader: {
+  footerLoading: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 20,
     gap: 8,
   },
-  footerLoaderText: {
+  footerLoadingText: {
     fontSize: 14,
     color: '#666',
-  },
-  emptyListContainer: {
-    flex: 1,
   },
 });
