@@ -27,31 +27,17 @@ export async function getReceivedFriendRequests(page = 0, size = 10, sortBy = 'c
     }
 }
 
-// export async function getSentFriendRequests(page = 0, size = 10, sortBy = 'createdAt', direction = 'desc') {
-//     try {
-//         const response = await api.get('/friends/sent-requests', {
-//             params: { page, size, sortBy, direction }
-//         });
-//         if (response.status < 200 || response.status >= 300) {
-//             throw new Error('Failed to retrieve sent friend requests. Please try again later.');
-//         }
-//         return response.data;
-//     } catch (error) {
-//         throw error;
-//     }
-// }
-
-// export async function getFriendshipStatus(userId) {
-//     try {
-//         const response = await api.get(`/friends/status/${userId}`);
-//         if (response.status < 200 || response.status >= 300) {
-//             throw new Error('Failed to retrieve friendship status. Please try again later.');
-//         }
-//         return response.data;
-//     } catch (error) {
-//         throw error;
-//     }
-// }
+export async function isFriendRequestExists(receiverId) {
+    try {
+        const response = await api.get(`/friends/isFriendRequestExists/${receiverId}`);
+        if (response.status < 200 || response.status >= 300) {
+            throw new Error('Failed to check if friend request exists. Please try again later.');
+        }
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
 
 export async function acceptFriendRequest(requestId) {
     try {
@@ -78,9 +64,9 @@ export async function cancelFriendRequest(requestId) {
 }
 
 // Friends Functions
-export async function getFriends(page = 0, size = 15, sortBy = 'createdAt', direction = 'asc') {
+export async function getFriendsByUserId(page = 0, size = 15, sortBy = 'createdAt', direction = 'asc', userId) {
     try {
-        const response = await api.get('/friends/getFriends', {
+        const response = await api.get(`/friends/getFriends/${userId}`, {
             params: { page, size, sortBy, direction }
         });
         if (response.status < 200 || response.status >= 300) {
@@ -92,11 +78,11 @@ export async function getFriends(page = 0, size = 15, sortBy = 'createdAt', dire
     }
 }
 
-export async function getNumberOfFriends() {
+export async function getNumberOfFriendsByUserId(userId) {
     try {
-        const response = await api.get('/friends/getNumberOfFriends');
+        const response = await api.get(`/friends/getNumberOfFriends/${userId}`);
         if (response.status < 200 || response.status >= 300) {
-            throw new Error('Failed to retrieve number of friends. Please try again later.');
+            throw new Error('Failed to retrieve friends count for user. Please try again later.');
         }
         return response.data;
     } catch (error) {
@@ -109,6 +95,31 @@ export async function removeFriend(friendId) {
         const response = await api.delete(`/friends/remove/${friendId}`);
         if (response.status < 200 || response.status >= 300) {
             throw new Error('Failed to remove friend. Please try again later.');
+        }
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function isFriend(userId) {
+    try {
+        const response = await api.get(`/friends/isFriend/${userId}`);
+        if (response.status < 200 || response.status >= 300) {
+            throw new Error('Failed to check friendship status. Please try again later.');
+        }
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+// Add missing function to check if user is blocked
+export async function isBlockingExists(userId) {
+    try {
+        const response = await api.get(`/friends/isBlockingExists/${userId}`);
+        if (response.status < 200 || response.status >= 300) {
+            throw new Error('Failed to check blocking status. Please try again later.');
         }
         return response.data;
     } catch (error) {
@@ -142,23 +153,9 @@ export async function unfollowUser(userId) {
     }
 }
 
-export async function getFollowing(page = 0, size = 10, sortBy = 'createdAt', direction = 'asc') {
+export async function getFollowersByUserId(page = 0, size = 10, sortBy = 'createdAt', direction = 'asc', userId) {
     try {
-        const response = await api.get('/friends/getFollowing', {
-            params: { page, size, sortBy, direction }
-        });
-        if (response.status < 200 || response.status >= 300) {
-            throw new Error('Failed to retrieve following list. Please try again later.');
-        }
-        return response.data;
-    } catch (error) {
-        throw error;
-    }
-}
-
-export async function getFollowers(page = 0, size = 10, sortBy = 'createdAt', direction = 'asc') {
-    try {
-        const response = await api.get('/friends/getFollowers', {
+        const response = await api.get(`/friends/getFollowers/${userId}`, {
             params: { page, size, sortBy, direction }
         });
         if (response.status < 200 || response.status >= 300) {
@@ -170,11 +167,11 @@ export async function getFollowers(page = 0, size = 10, sortBy = 'createdAt', di
     }
 }
 
-export async function getNumberOfFollowing() {
+export async function getNumberOfFollowersByUserId(userId) {
     try {
-        const response = await api.get('/friends/getNumberOfFollowing');
+        const response = await api.get(`/friends/getNumberOfFollowers/${userId}`);
         if (response.status < 200 || response.status >= 300) {
-            throw new Error('Failed to retrieve following count. Please try again later.');
+            throw new Error('Failed to retrieve followers count for user. Please try again later.');
         }
         return response.data;
     } catch (error) {
@@ -182,11 +179,23 @@ export async function getNumberOfFollowing() {
     }
 }
 
-export async function getNumberOfFollowers() {
+export async function getNumberOfFollowingByUserId(userId) {
     try {
-        const response = await api.get('/friends/getNumberOfFollowers');
+        const response = await api.get(`/friends/getNumberOfFollowing/${userId}`);
         if (response.status < 200 || response.status >= 300) {
-            throw new Error('Failed to retrieve followers count. Please try again later.');
+            throw new Error('Failed to retrieve following count for user. Please try again later.');
+        }
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function isFollowing(userId) {
+    try {
+        const response = await api.get(`/friends/isFollowing/${userId}`);
+        if (response.status < 200 || response.status >= 300) {
+            throw new Error('Failed to check following status. Please try again later.');
         }
         return response.data;
     } catch (error) {
@@ -219,6 +228,18 @@ export async function unblockUser(userId) {
     }
 }
 
+export async function getNumberOfBlockedUsers() {
+    try {
+        const response = await api.get('/friends/getNumberOfBlockedUsers');
+        if (response.status < 200 || response.status >= 300) {
+            throw new Error('Failed to retrieve blocked users count. Please try again later.');
+        }
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function getBlockedUsers(page = 0, size = 10, sortBy = 'createdAt', direction = 'asc') {
     try {
         const response = await api.get('/friends/getBlockedUsers', {
@@ -232,51 +253,3 @@ export async function getBlockedUsers(page = 0, size = 10, sortBy = 'createdAt',
         throw error;
     }
 }
-
-export async function getNumberOfBlockedUsers() {
-    try {
-        const response = await api.get('/friends/getNumberOfBlockedUsers');
-        if (response.status < 200 || response.status >= 300) {
-            throw new Error('Failed to retrieve blocked users count. Please try again later.');
-        }
-        return response.data;
-    } catch (error) {
-        throw error;
-    }
-}
-
-// export async function getNumberOfFollowersByUserId(userId) {
-//     try {
-//         const response = await api.get(`/friends/getNumberOfFollowers/${userId}`);
-//         if (response.status < 200 || response.status >= 300) {
-//             throw new Error('Failed to retrieve followers count for user. Please try again later.');
-//         }
-//         return response.data;
-//     } catch (error) {
-//         throw error;
-//     }
-// }
-
-// export async function getNumberOfFollowingByUserId(userId) {
-//     try {
-//         const response = await api.get(`/friends/getNumberOfFollowing/${userId}`);
-//         if (response.status < 200 || response.status >= 300) {
-//             throw new Error('Failed to retrieve following count for user. Please try again later.');
-//         }
-//         return response.data;
-//     } catch (error) {
-//         throw error;
-//     }
-// }
-
-// export async function getNumberOfFriendsByUserId(userId) {
-//     try {
-//         const response = await api.get(`/friends/getNumberOfFriends/${userId}`);
-//         if (response.status < 200 || response.status >= 300) {
-//             throw new Error('Failed to retrieve friends count for user. Please try again later.');
-//         }
-//         return response.data;
-//     } catch (error) {
-//         throw error;
-//     }
-// }

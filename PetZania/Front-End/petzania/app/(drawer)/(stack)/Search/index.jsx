@@ -74,7 +74,10 @@ export default function SearchScreen() {
 
     const handleUserPress = (user) => {
         console.log('Selected user:', user);
-        router.push(`/UserModule/${user.userId}`);
+        router.push({
+            pathname: `/UserModule/${user.userId}`,
+            params: { username: user.username }
+        });
     };
 
     const EmptyComponent = () => {

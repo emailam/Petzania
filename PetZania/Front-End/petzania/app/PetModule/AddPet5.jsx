@@ -46,13 +46,16 @@ export default function AddPet5() {
             }
 
             const newPet = await addPetToUser(pet, user.userId);
-            console.log('New Pet Added:', newPet);
 
             setPets(prevPets => [...prevPets, newPet]);
             setPet({});
             router.dismissAll();
             setFromPage(null);
 
+            if (fromPage === 'Home') {
+                router.push('/PetModule/AllPets');
+                return;
+            }
             if(fromPage !== 'EditProfile') {setFromPage("Register"); router.push('/PetModule/AllPets');}
         } catch (err) {
             console.error('Error uploading vaccine files:', err);

@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useContext } from 'react';
 import { useFriends } from '../context/FriendsContext';
+import { UserContext } from '../context/UserContext';
 import * as friendsService from '../services/friendsService';
 
 // Custom hook to load initial friends data
@@ -11,11 +12,19 @@ export const useFriendsData = () => {
         setBlockedCount,
     } = useFriends();
 
-    useEffect(() => {
-        loadAllCounts();
-    }, []);
+    const { user: currentUser } = useContext(UserContext);
 
+    useEffect(() => {
+        if (currentUser?.userId) {
+            loadAllCounts();
+        }
+    }, [currentUser?.userId]);
     const loadAllCounts = async () => {
+        if (!currentUser?.userId) {
+            console.log('No current user, skipping count loading');
+            return;
+        }
+
         try {
             const [
                 friendsCountData,
@@ -23,9 +32,9 @@ export const useFriendsData = () => {
                 followingCountData,
                 blockedCountData
             ] = await Promise.all([
-                friendsService.getNumberOfFriends().catch(() => 0),
-                friendsService.getNumberOfFollowers().catch(() => 0),
-                friendsService.getNumberOfFollowing().catch(() => 0),
+                friendsService.getNumberOfFriendsByUserId(currentUser.userId).catch(() => 0),
+                friendsService.getNumberOfFollowersByUserId(currentUser.userId).catch(() => 0),
+                friendsService.getNumberOfFollowingByUserId(currentUser.userId).catch(() => 0),
                 friendsService.getNumberOfBlockedUsers().catch(() => 0)
             ]);
 

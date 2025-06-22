@@ -67,7 +67,8 @@ const EditProfile = () => {
 
     const deleteImage = () => {
         setImage(null);
-    };    const saveProfile = async () => {
+    };
+    const saveProfile = async () => {
         const isPhoneEmpty = phoneNumber.length === 0;
         const isValid = isPhoneEmpty || isValidPhoneNumber(phoneNumber);
 
@@ -126,14 +127,21 @@ const EditProfile = () => {
             bio,
             profilePictureURL: uploadedImageUrl || "",
         };
-
         try {
             setIsLoading(true);
             const updatedUser = await updateUserData(user.userId, userData);
-            setUser((prevUser) => ({ ...prevUser, ...updatedUser }));
+
+            const completeUpdatedUser = {
+                ...user,
+                ...userData,
+                ...(updatedUser || {}),
+            };
+
+            setUser(completeUpdatedUser);
+
             setError('');
             setPhoneError('');
-            
+
             Toast.show({
                 type: 'success',
                 text1: 'Profile Updated!',
@@ -141,7 +149,7 @@ const EditProfile = () => {
                 position: 'top',
                 visibilityTime: 3000,
             });
-            
+
             router.back();
         } catch (err) {
             console.error('Error updating user profile:', err.message);

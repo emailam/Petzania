@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View, ActivityIndicator } from 'react-native'
 import React, { useEffect, useState, useContext } from 'react'
-import { getFriends } from '@/services/friendsService';
+import { getFriendsByUserId } from '@/services/friendsService';
 import { UserContext } from '@/context/UserContext';
 import UserList from '@/components/UserList';
 
@@ -21,7 +21,7 @@ export default function FriendsScreen() {
           return;
         }
 
-        const response = await getFriends(0, 50);
+        const response = await getFriendsByUserId(0, 20, 'createdAt', 'desc', currentUser.userId);
         // Transform friendship data to user data for the UserList component
         const friendsData = (response.content || []).map(friendship => {
           // Determine which user is the friend (not the current user)

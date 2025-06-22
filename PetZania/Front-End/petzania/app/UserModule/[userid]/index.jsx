@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, use } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter, useNavigation } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
@@ -12,86 +12,158 @@ import { useFriendsData } from '@/hooks/useFriendsData'
 import { getUserById } from '@/services/userService';
 import {
     sendFriendRequest,
-    // getFriendshipStatus,
-    // getSentFriendRequests,
     cancelFriendRequest,
     removeFriend,
     blockUser,
     followUser,
     unfollowUser,
-    unblockUser
+    unblockUser,
+    isFriend,
+    isFriendRequestExists,
+    isBlockingExists,
+    isFollowing
 } from '@/services/friendsService';
 
 import Toast from 'react-native-toast-message';
+
 
 export default function UserProfile() {
     const { userid } = useLocalSearchParams();
     const router = useRouter();
     const { user: currentUser } = useContext(UserContext);
-    const { showActionSheetWithOptions } = useActionSheet();    const [user, setUser] = useState(null);
+    const { showActionSheetWithOptions } = useActionSheet();
+    
+    const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [friendshipStatus, setFriendshipStatus] = useState('none');
     const [isBlocked, setIsBlocked] = useState(false);
-    const [isFollowing, setIsFollowing] = useState(false);
+    const [isFollowingUser, setIsFollowingUser] = useState(false);
     const [activeTab, setActiveTab] = useState('posts');
     const [friendRequestId, setFriendRequestId] = useState(null);
+    const [friendRequestExists, setFriendRequestExists] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
     const [showImageViewer, setShowImageViewer] = useState(false);
-    const { friendsCount, followersCount, followingCount } = useFriends();
 
+    // Loading states for different API calls
+    const [loadingStates, setLoadingStates] = useState({
+        profile: true,
+        friendship: true,
+        following: true,
+        counts: true
+    });
+
+    const { friendsCount, followersCount, followingCount } = useFriends();
     const { loadAllCounts } = useFriendsData();
 
     const isOwnProfile = currentUser?.userId === userid;
 
+    const isAllLoaded = !Object.values(loadingStates).some(state => state === true);
     useEffect(() => {
-        fetchUserProfile();
-        loadAllCounts();
-        // if (!isOwnProfile) {
-        //     fetchFriendshipStatus();
-        // }
+        const initializeProfile = async () => {
+            // Reset loading states
+            setLoadingStates({
+                profile: true,
+                friendship: !isOwnProfile,
+                following: !isOwnProfile,
+                counts: true
+            });
+
+            // Load all data concurrently
+            const promises = [
+                fetchUserProfile(),
+                loadAllCounts().then(() => {
+                    setLoadingStates(prev => ({ ...prev, counts: false }));
+                })
+            ];
+
+            if (!isOwnProfile) {
+                promises.push(
+                    fetchFriendshipStatus().then(() => {
+                        setLoadingStates(prev => ({ ...prev, friendship: false }));
+                    }),
+                    fetchFollowingStatus().then(() => {
+                        setLoadingStates(prev => ({ ...prev, following: false }));
+                    })
+                );
+            } else {
+                // For own profile, mark these as loaded immediately
+                setLoadingStates(prev => ({ 
+                    ...prev, 
+                    friendship: false, 
+                    following: false 
+                }));
+            }
+
+            try {
+                await Promise.all(promises);
+            } catch (error) {
+                console.error('Error initializing profile:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        initializeProfile();
     }, [userid]);
-
-
     const fetchUserProfile = async () => {
         try {
-            setLoading(true);
             const userData = await getUserById(userid);
             setUser(userData);
+            setLoadingStates(prev => ({ ...prev, profile: false }));
         }
         catch (error) {
             console.error('Error fetching user profile:', error);
             Alert.alert('Error', 'Failed to load user profile');
-        }
-        finally {
-            setLoading(false);
+            setLoadingStates(prev => ({ ...prev, profile: false }));
         }
     };
 
-    // const fetchFriendshipStatus = async () => {
-    //     try {
-    //         const statusData = await getFriendshipStatus(userid);
-    //         setFriendshipStatus(statusData.status || 'none');
-    //         setIsBlocked(statusData.status === 'blocked');
+    const fetchFriendshipStatus = async () => {
+        try {
+            const blockingStatus = await isBlockingExists(userid);
+            if (blockingStatus) {
+                setFriendshipStatus('blocked');
+                setIsBlocked(true);
+                return;
+            }
 
-    //         // If there's a pending request sent by current user, get the request ID
-    //         if (statusData.status === 'pending' && statusData.requestSentByCurrentUser) {
-    //             const sentRequests = await getSentFriendRequests(0, 50);
-    //             const request = sentRequests.content?.find(req => req.receiver.userId === userid);
-    //             if (request) {
-    //                 setFriendRequestId(request.id);
-    //             }
-    //         }
-    //     } catch (error) {
-    //         console.error('Error fetching friendship status:', error);
-    //     }
-    // };
+            // Check if they are friends
+            const friendStatus = await isFriend(userid);
 
+            if (friendStatus) {
+                setFriendshipStatus('friends');
+                return;
+            }
+            const friendRequestExists = await isFriendRequestExists(userid);
+
+            if (friendRequestExists) {
+                setFriendshipStatus('pending');
+                setFriendRequestExists(true);
+                return;
+            }
+
+            setFriendshipStatus('none');
+        } catch (error) {
+            console.error('Error fetching friendship status:', error);
+            // Default to 'none' if there's an error
+            setFriendshipStatus('none');
+        }
+    };
+
+    const fetchFollowingStatus = async () => {
+        try {
+            const followingStatus = await isFollowing(userid);
+            setIsFollowingUser(followingStatus);
+        } catch (error) {
+            console.error('Error fetching following status:', error);
+            setIsFollowingUser(false);
+        }
+    };
     const handleFriendRequest = async () => {
         if (actionLoading) return;
-
+        console.log(friendshipStatus);
         try {
             setActionLoading(true);
-
             if (friendshipStatus === 'none') {
                 // Send friend request
                 console.log("Sending friend request to user:", userid);
@@ -99,7 +171,6 @@ export default function UserProfile() {
                 const response = await sendFriendRequest(userid);
                 setFriendshipStatus('pending');
                 setFriendRequestId(response.id);
-                 // Refresh friends data in context
 
                 Toast.show({
                     type: 'success',
@@ -114,15 +185,27 @@ export default function UserProfile() {
                     'Remove Friend',
                     `Are you sure you want to remove ${user?.name || 'this user'} from your friends?`,
                     [
-                        { text: 'Cancel', style: 'cancel' },
-                        {
+                        { text: 'Cancel', style: 'cancel' },                        {
                             text: 'Remove',
                             style: 'destructive',
                             onPress: async () => {
                                 try {
+                                    setActionLoading(true);
                                     await removeFriend(userid);
+                                    
+                                    // Update local state immediately
                                     setFriendshipStatus('none');
-                                     // Refresh friends data in context
+                                    
+                                    // Refresh all friendship-related data
+                                    setLoadingStates(prev => ({ ...prev, friendship: true, counts: true }));
+                                    
+                                    // Refresh friendship status and counts in parallel
+                                    await Promise.all([
+                                        fetchFriendshipStatus(),
+                                        loadAllCounts()
+                                    ]);
+                                    
+                                    setLoadingStates(prev => ({ ...prev, friendship: false, counts: false }));
 
                                     Toast.show({
                                         type: 'info',
@@ -140,24 +223,46 @@ export default function UserProfile() {
                                         position: 'top',
                                         visibilityTime: 3000,
                                     });
+                                } finally {
+                                    setActionLoading(false);
                                 }
                             },
                         },
                     ]
                 );
-            } else if (friendshipStatus === 'pending' && friendRequestId) {
-                // Cancel friend request
-                await cancelFriendRequest(friendRequestId);
-                setFriendshipStatus('none');
-                setFriendRequestId(null);
+              }else if (friendshipStatus === 'pending') {
+                try {
+                    await cancelFriendRequest(friendRequestId);
 
-                Toast.show({
-                    type: 'info',
-                    text1: 'Friend Request Cancelled',
-                    text2: 'Friend request has been cancelled',
-                    position: 'top',
-                    visibilityTime: 3000,
-                });
+                    setFriendshipStatus('none');
+                    setFriendRequestExists(false);
+                    setFriendRequestId(null);
+
+                    Toast.show({
+                        type: 'info',
+                        text1: 'Friend Request Cancelled',
+                        text2: 'Friend request has been cancelled',
+                        position: 'top',
+                        visibilityTime: 3000,
+                    });
+                } catch (error) {
+                    console.error('Error cancelling friend request:', error);
+                    Toast.show({
+                        type: 'error',
+                        text1: 'Error',
+                        text2: 'Failed to cancel friend request',
+                        position: 'top',
+                        visibilityTime: 3000,
+                    });
+                }
+            }
+            if (!isOwnProfile) {
+                setLoadingStates(prev => ({ ...prev, friendship: true, counts: true }));
+                await Promise.all([
+                    fetchFriendshipStatus(),
+                    loadAllCounts()
+                ]);
+                setLoadingStates(prev => ({ ...prev, friendship: false, counts: false }));
             }
         }
         catch (error) {
@@ -190,7 +295,7 @@ export default function UserProfile() {
     };
     const handleMoreOptions = () => {
         const options = [
-            isFollowing ? 'Unfollow User' : 'Follow User',
+            isFollowingUser ? 'Unfollow User' : 'Follow User',
             'Block User',
             'Cancel',
         ];
@@ -218,9 +323,11 @@ export default function UserProfile() {
     };
     const handleFollowUser = async () => {
         try {
-            if (isFollowing) {
-                setIsFollowing(false);
+            setLoadingStates(prev => ({ ...prev, following: true, counts: true }));
+            
+            if (isFollowingUser) {
                 await unfollowUser(userid);
+                setIsFollowingUser(false);
                 Toast.show({
                     type: 'info',
                     text1: 'Unfollowed',
@@ -229,8 +336,8 @@ export default function UserProfile() {
                     visibilityTime: 3000,
                 });
             } else {
-                setIsFollowing(true);
                 await followUser(userid);
+                setIsFollowingUser(true);
                 Toast.show({
                     type: 'success',
                     text1: 'Following',
@@ -239,7 +346,18 @@ export default function UserProfile() {
                     visibilityTime: 3000,
                 });
             }
+            
+            // Refresh following status and counts
+            await Promise.all([
+                fetchFollowingStatus(),
+                loadAllCounts()
+            ]);
+            
+            setLoadingStates(prev => ({ ...prev, following: false, counts: false }));
         } catch (error) {
+            console.error('Error updating follow status:', error);
+            // Revert the optimistic update on error
+            setIsFollowingUser(!isFollowingUser);
             Toast.show({
                 type: 'error',
                 text1: 'Error',
@@ -247,9 +365,9 @@ export default function UserProfile() {
                 position: 'top',
                 visibilityTime: 3000,
             });
+            setLoadingStates(prev => ({ ...prev, following: false, counts: false }));
         }
     };
-
     const handleBlockUser = () => {
         Alert.alert(
             'Block User',
@@ -264,7 +382,15 @@ export default function UserProfile() {
                             await blockUser(userid);
                             setIsBlocked(true);
                             setFriendshipStatus('blocked');
-                            // Refresh friends data in context
+                            
+                            // Refresh friendship status and counts
+                            setLoadingStates(prev => ({ ...prev, friendship: true, counts: true }));
+                            await Promise.all([
+                                fetchFriendshipStatus(),
+                                loadAllCounts()
+                            ]);
+                            setLoadingStates(prev => ({ ...prev, friendship: false, counts: false }));
+                            
                             Toast.show({
                                 type: 'success',
                                 text1: 'User Blocked',
@@ -331,12 +457,14 @@ export default function UserProfile() {
                 };
         }
     };
-
-    if (loading) {
+    if (loading || !isAllLoaded) {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#9188E5" />
                 <Text style={styles.loadingText}>Loading profile...</Text>
+                <Text style={styles.loadingSubText}>
+                    Getting user information and status
+                </Text>
             </View>
         );
     }
@@ -358,8 +486,9 @@ export default function UserProfile() {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.headerContainer}>        <View style={{ flexDirection: 'row', alignItems: 'center'}}>
-          <TouchableOpacity 
+      <View style={styles.headerContainer}>
+        <View style={{ flexDirection: 'row', alignItems: 'center'}}>
+          <TouchableOpacity
             style={styles.profileImageContainer}
             onPress={handleImagePress}
             activeOpacity={user?.profilePictureURL ? 0.7 : 1}
@@ -461,10 +590,16 @@ export default function UserProfile() {
 
       {/* User Stats */}
         <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{user?.myPets?.length || 0}</Text>
-            <Text style={styles.statLabel}>Pets</Text>
-          </View>
+          <TouchableOpacity
+            style={styles.statItem}
+            onPress={() => router.push({
+                pathname: `/UserModule/${userid}/Friends`,
+                params: { username: user.username }
+            })}
+          >
+            <Text style={styles.statNumber}>{friendsCount || 0}</Text>
+            <Text style={styles.statLabel}>Friends</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.statItem}
             onPress={() => router.push({
@@ -486,16 +621,7 @@ export default function UserProfile() {
             <Text style={styles.statNumber}>{followingCount || 0}</Text>
             <Text style={styles.statLabel}>Following</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.statItem}
-            onPress={() => router.push({
-                pathname: `/UserModule/${userid}/Friends`,
-                params: { username: user.username }
-            })}
-          >
-            <Text style={styles.statNumber}>{friendsCount || 0}</Text>
-            <Text style={styles.statLabel}>Friends</Text>
-          </TouchableOpacity>
+          
         </View>
         {/* Bio Section */}
         <View style={styles.bioContainer}>
@@ -612,17 +738,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  loadingContainer: {
+  },  loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#fff',
+    paddingHorizontal: 20,
   },
   loadingText: {
     marginTop: 16,
-    fontSize: 16,
+    fontSize: 18,
     color: '#9188E5',
+    fontWeight: '600',
+  },
+  loadingSubText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
   },
   errorContainer: {
     flex: 1,
