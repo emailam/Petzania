@@ -83,6 +83,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         Response response = registerAndLoginUser("logoutuser", "logoutuser@test.com");
         String token = response.jsonPath().getString("tokenDTO.accessToken");
         String refreshToken = response.jsonPath().getString("tokenDTO.refreshToken");
+        String userId = response.jsonPath().getString("userId");
 
         // Verify token works in both services
         given()
@@ -95,7 +96,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + token)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
                 .then()
                 .statusCode(200);
 
@@ -398,7 +399,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + oldToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
                 .then()
                 .statusCode(200);
 
@@ -433,7 +434,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + newToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
                 .then()
                 .statusCode(200);
 
@@ -493,7 +494,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + user2Token)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + user2Id)
                 .then()
                 .statusCode(200);
     }
@@ -543,6 +544,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
     void testRateLimitingEnforcement() throws Exception {
         Response response = registerAndLoginUser("ratelimit", "ratelimit@test.com");
         String token = response.jsonPath().getString("tokenDTO.accessToken");
+        String userId = response.jsonPath().get("userId");
 
         // Make multiple rapid requests to trigger rate limit
         int requestCount = 15;
@@ -553,7 +555,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
             Response resp = given()
                     .header("Authorization", "Bearer " + token)
                     .when()
-                    .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                    .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
                     .then()
                     .extract().response();
 
@@ -585,7 +587,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Origin", "http://malicious-site.com")
                 .when()
-                .options(friendsBaseUrl + "/api/friends/getFriends")
+                .options(friendsBaseUrl + "/api/friends/getFriends/" + UUID.randomUUID())
                 .then()
                 .statusCode(anyOf(is(200), is(403)))
                 .header("Access-Control-Allow-Origin", not("*"));
@@ -638,7 +640,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
     void testJWTExpirationHandling() throws Exception {
         Response response = registerAndLoginUser("expiretest", "expiretest@test.com");
         String token = response.jsonPath().getString("tokenDTO.accessToken");
-
+        String userId = response.jsonPath().getString("userId");
         // Token should work initially
         given()
                 .header("Authorization", "Bearer " + token)
@@ -650,7 +652,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + token)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
                 .then()
                 .statusCode(200);
 
@@ -846,6 +848,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         Response response1 = registerAndLoginUser("sessiontest", "sessiontest@test.com");
         String token1 = response1.jsonPath().getString("tokenDTO.accessToken");
         String refreshToken1 = response1.jsonPath().getString("tokenDTO.refreshToken");
+        String userId1 = response1.jsonPath().getString("userId");
 
         // Login again (new session)
         Response response2 = given()
@@ -859,6 +862,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
 
         String token2 = response2.jsonPath().getString("tokenDTO.accessToken");
         String refreshToken2 = response2.jsonPath().getString("tokenDTO.refreshToken");
+        String userId2 = response2.jsonPath().getString("userId");
 
         // Tokens should be different
         System.out.println("token1: " + token1);
@@ -873,14 +877,14 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + token1)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId2)
                 .then()
                 .statusCode(200);
 
         given()
                 .header("Authorization", "Bearer " + token2)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId1)
                 .then()
                 .statusCode(200);
     }
@@ -891,6 +895,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
     void testAuthorizationHeaderManipulation() throws Exception {
         Response response = registerAndLoginUser("headertest", "headertest@test.com");
         String validToken = response.jsonPath().getString("tokenDTO.accessToken");
+        String userId = response.jsonPath().getString("userId");
 
         // Test various malformed authorization headers
 
@@ -898,7 +903,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", validToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
                 .then()
                 .statusCode(anyOf(is(401), is(403)));
 
@@ -906,7 +911,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Basic " + validToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
                 .then()
                 .statusCode(anyOf(is(401), is(403)));
 
@@ -914,7 +919,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer  " + validToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
                 .then()
                 .statusCode(anyOf(is(200), is(401))); // Some implementations might handle this
 
@@ -922,7 +927,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "bearer " + validToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
                 .then()
                 .statusCode(anyOf(is(200), is(403)));
 
@@ -930,7 +935,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer ")
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
                 .then()
                 .statusCode(anyOf(is(401), is(403)));
     }
