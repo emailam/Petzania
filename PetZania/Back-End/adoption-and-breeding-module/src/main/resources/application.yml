@@ -30,7 +30,7 @@ spring:
         secret-key: 4ioX3ogCr4GAZ9gB99txf1LyhqVOmTJ8RsL9hyJzZXQ=
 
 server:
-    port: 8080
+    port: 8082
     error:
         include-message: always
         include-binding-errors: always

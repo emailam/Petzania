@@ -2,6 +2,7 @@ package com.example.adoption_and_breeding_module.model.dto;
 
 import com.example.adoption_and_breeding_module.model.enumeration.PetPostType;
 import com.example.adoption_and_breeding_module.validator.ValidEnum;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,6 +18,9 @@ public class CreatePetPostDTO {
     private PetDTO petDTO;
 
     private String description;
+
+    @NotBlank(message = "Pet DTO is required.")
+    private String location;
 
     @NotNull(message = "Post type is required.")
     @ValidEnum(enumClass = PetPostType.class, message = "Invalid post type.")

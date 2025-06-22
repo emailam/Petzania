@@ -25,6 +25,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -43,20 +44,13 @@ public class PetPostService implements IPetPostService {
     public PetPostDTO createPetPost(CreatePetPostDTO dto, UUID ownerId) {
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new UserNotFound("User not found with id: " + ownerId));
-        // dummy
-//        User owner = User.builder()
-//                .userId(UUID.randomUUID())
-//                .username("dummy_user")
-//                .email("dummy@example.com")
-//                .profilePictureURL("https://example.com/default-avatar.png")
-//                .build();
-//        owner = userRepository.save(owner);
 
         PetPost post = PetPost.builder()
                 .pet(dtoConversionService.mapToPet(dto.getPetDTO()))
                 .owner(owner)
                 .description(dto.getDescription())
                 .postType(dto.getPostType())
+                .location(dto.getLocation())
                 .build();
 
         post = petPostRepository.save(post);
@@ -99,8 +93,10 @@ public class PetPostService implements IPetPostService {
             if (updatePetDTO.getMyVaccinesURLs() != null) pet.setMyVaccinesURLs(updatePetDTO.getMyVaccinesURLs());
             if (updatePetDTO.getMyPicturesURLs() != null) pet.setMyPicturesURLs(updatePetDTO.getMyPicturesURLs());
         }
-
+        post.setUpdatedAt(Instant.now());
+        System.out.println("I am here");
         post = petPostRepository.save(post);
+        System.out.println("I am not here");
         return dtoConversionService.mapToPetPostDTO(post);
     }
 
@@ -141,6 +137,7 @@ public class PetPostService implements IPetPostService {
             reacts++;
         }
         post.setReacts(reacts);
+        System.out.println(post);
         post = petPostRepository.save(post);
         return dtoConversionService.mapToPetPostDTO(post);
     }
