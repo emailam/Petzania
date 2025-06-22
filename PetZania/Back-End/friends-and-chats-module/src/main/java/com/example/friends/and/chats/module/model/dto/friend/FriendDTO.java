@@ -13,9 +13,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class FriendshipDTO {
+public class FriendDTO {
     private UUID friendshipId;
-    private UserDTO user1;
-    private UserDTO user2;
+    private UserDTO friend;
     private Timestamp createdAt;
 }

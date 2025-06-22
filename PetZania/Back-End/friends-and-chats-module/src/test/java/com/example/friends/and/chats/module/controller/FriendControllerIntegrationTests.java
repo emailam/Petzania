@@ -256,8 +256,7 @@ public class FriendControllerIntegrationTests {
         // UserA tries to accept this friend request
         mockMvc.perform(post("/api/friends/accept-request/{requestId}", requestId))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.user1.userId").value(userA.getUserId().toString()))
-                .andExpect(jsonPath("$.user2.userId").value(userB.getUserId().toString()));
+                .andExpect(jsonPath("$.friend.userId").value(userB.getUserId().toString()));
 
     }
 

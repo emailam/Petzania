@@ -3,8 +3,8 @@ package com.example.friends.and.chats.module.service.impl;
 import com.example.friends.and.chats.module.exception.user.*;
 import com.example.friends.and.chats.module.model.dto.friend.BlockDTO;
 import com.example.friends.and.chats.module.model.dto.friend.FollowDTO;
+import com.example.friends.and.chats.module.model.dto.friend.FriendDTO;
 import com.example.friends.and.chats.module.model.dto.friend.FriendRequestDTO;
-import com.example.friends.and.chats.module.model.dto.friend.FriendshipDTO;
 import com.example.friends.and.chats.module.model.entity.*;
 import com.example.friends.and.chats.module.model.event.BlockEvent;
 import com.example.friends.and.chats.module.repository.*;
@@ -114,7 +114,7 @@ public class FriendService implements IFriendService {
     }
 
     @Override
-    public FriendshipDTO acceptFriendRequest(UUID requestId, UUID receiverId) {
+    public FriendDTO acceptFriendRequest(UUID requestId, UUID receiverId) {
         FriendRequest request = getFriendRequest(requestId);
         if (!request.getReceiver().getUserId().equals(receiverId)) {
             throw new ForbiddenOperation("User with ID: " + receiverId + " is trying to accept a request which does not belong to him");
@@ -122,7 +122,7 @@ public class FriendService implements IFriendService {
         Friendship friendship = createFriendship(request.getSender(), request.getReceiver());
         friendRequestRepository.deleteById(requestId);
 
-        return dtoConversionService.mapToFriendshipDTO(friendship);
+        return dtoConversionService.mapToFriendDTO(friendship, getUser(receiverId));
     }
 
     @Override
@@ -234,10 +234,20 @@ public class FriendService implements IFriendService {
     }
 
     @Override
-    public Page<FriendshipDTO> getFriendships(UUID userId, int page, int size, String sortBy, String direction) {
+    public Page<FriendDTO> getFriendships(UUID userId, int page, int size, String sortBy, String direction) {
         Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
-        return friendshipRepository.findFriendsByUserId(userId, pageable).map(dtoConversionService::mapToFriendshipDTO);
+        Page<Friendship> curPage = friendshipRepository.findFriendsByUserId(userId, pageable);
+
+        return curPage.map(friendship -> {
+           User friendUser;
+           if(friendship.getUser1().getUserId().equals(userId)){
+               friendUser = friendship.getUser2();
+           } else {
+               friendUser = friendship.getUser1();
+           }
+           return dtoConversionService.mapToFriendDTO(friendship, friendUser);
+        });
     }
 
     @Override

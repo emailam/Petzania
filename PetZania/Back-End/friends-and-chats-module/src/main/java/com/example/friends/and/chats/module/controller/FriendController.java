@@ -2,8 +2,8 @@ package com.example.friends.and.chats.module.controller;
 
 import com.example.friends.and.chats.module.model.dto.friend.BlockDTO;
 import com.example.friends.and.chats.module.model.dto.friend.FollowDTO;
+import com.example.friends.and.chats.module.model.dto.friend.FriendDTO;
 import com.example.friends.and.chats.module.model.dto.friend.FriendRequestDTO;
-import com.example.friends.and.chats.module.model.dto.friend.FriendshipDTO;
 import com.example.friends.and.chats.module.model.principal.UserPrincipal;
 import com.example.friends.and.chats.module.service.IFriendService;
 import com.example.friends.and.chats.module.util.SecurityUtils;
@@ -34,7 +34,7 @@ public class FriendController {
 
     @Operation(summary = "Accept friend request", description = "Accept a pending friend request by request ID")
     @PostMapping("/accept-request/{requestId}")
-    public ResponseEntity<FriendshipDTO> acceptFriendRequest(@PathVariable UUID requestId) {
+    public ResponseEntity<FriendDTO> acceptFriendRequest(@PathVariable UUID requestId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         return ResponseEntity.status(HttpStatus.CREATED).body(friendService.acceptFriendRequest(requestId, userPrincipal.getUserId()));
     }
@@ -87,15 +87,15 @@ public class FriendController {
 
     @Operation(summary = "Get friends list", description = "Retrieve all friends for a user")
     @GetMapping("/getFriends/{userId}")
-    public ResponseEntity<Page<FriendshipDTO>> getFriends(
+    public ResponseEntity<Page<FriendDTO>> getFriends(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "asc") String direction,
             @PathVariable("userId") UUID userId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
-        Page<FriendshipDTO> friendshipDTOS = friendService.getFriendships(userId, page, size, sortBy, direction);
-        return friendshipDTOS.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(friendshipDTOS);
+        Page<FriendDTO> friendDTOS = friendService.getFriendships(userId, page, size, sortBy, direction);
+        return friendDTOS.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(friendDTOS);
     }
 
     @Operation(summary = "Get following users", description = "Retrieve a paginated list of users a user is following")
