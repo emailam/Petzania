@@ -211,15 +211,13 @@ public class FriendControllerIntegrationTests {
                 .andExpect(status().isCreated());
 
         mockMvc.perform(get("/api/friends/isFriendRequestExists/{id}", userB.getUserId()))
-                .andExpect(status().isOk())
-                .andExpect(content().string("true"));
+                .andExpect(status().isOk());
     }
 
     @Test
     void checkIsFriendRequestExists_ShouldFail() throws Exception {
         mockMvc.perform(get("/api/friends/isFriendRequestExists/{id}", userB.getUserId()))
-                .andExpect(status().isOk())
-                .andExpect(content().string("false"));
+                .andExpect(status().isNotFound());
     }
 
     @Test

@@ -37,7 +37,7 @@ public interface IFriendService {
 
     boolean isFollowingExists(UUID follower, UUID followed);
 
-    boolean isFriendRequestExists(UUID sender, UUID receiver);
+    UUID isFriendRequestExists(UUID sender, UUID receiver);
 
     Page<FollowDTO> getFollowing(UUID userId, int page, int size, String sortBy, String direction);
 

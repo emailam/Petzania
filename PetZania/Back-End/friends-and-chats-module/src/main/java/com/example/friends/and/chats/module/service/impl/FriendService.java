@@ -162,11 +162,11 @@ public class FriendService implements IFriendService {
     }
 
     @Override
-    public boolean isFriendRequestExists(UUID sender, UUID receiver) {
+    public UUID isFriendRequestExists(UUID sender, UUID receiver) {
         User userSender = getUser(sender);
         User userReceiver = getUser(receiver);
-
-        return friendRequestRepository.existsBySenderAndReceiver(userSender, userReceiver);
+        FriendRequest friendRequest = friendRequestRepository.findBySenderAndReceiver(userSender, userReceiver).orElseThrow(() -> new FriendRequestNotFound("Friend request not found"));
+        return friendRequest.getId();
     }
 
     private void validateExistingFollow(User follower, User followed) {
