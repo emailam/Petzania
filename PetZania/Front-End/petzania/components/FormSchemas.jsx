@@ -36,10 +36,10 @@ export const schemas =
         email : emailSchema
         }
     ),
-    resetPassword:yup.object(
+    resetPassword: yup.object(
         {
         password: passwordSchema,
         confirmPassword: yup.string().oneOf([yup.ref('password'), null], 'Passwords must match').required('Confirm Password is required')
         }
-    )
+    ),
 };

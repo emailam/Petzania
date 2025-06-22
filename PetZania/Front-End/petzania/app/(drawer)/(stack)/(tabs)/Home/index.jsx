@@ -2,15 +2,14 @@ import { StyleSheet, Text, View } from 'react-native'
 import React, {useContext} from 'react'
 import { useFriendsData } from '@/hooks/useFriendsData'
 import { UserContext } from '@/context/UserContext'
+import UserPosts from '@/components/AdoptionBreedingModule/UserPosts';
 
 export default function index() {
   const { user } = useContext(UserContext);
   useFriendsData(user?.userId);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>HOME</Text>
-    </View>
+    <UserPosts/>
   )
 }
 

@@ -95,6 +95,7 @@ export default function AddPet5() {
         setVaccineFiles(updated);
     };
 
+    if(fromPage !== 'EditProfile') {setFromPage("Register"); router.push('/PetModule/AllPets');}
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

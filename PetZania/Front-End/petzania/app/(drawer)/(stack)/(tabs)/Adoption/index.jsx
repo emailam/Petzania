@@ -1,12 +1,9 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
-
-export default function index() {
-    return (
-        <View>
-            <Text>Adoption</Text>
-        </View>
-    )
+import AdoptionScreen from "./AdoptionScreen";
+import AdoptionBreedingForm from "@/components/AdoptionBreedingModule/AdoptionBreedingPost";
+import ServicePostsScreen from "@/components/AdoptionBreedingModule/ServicePostsScreen";
+export default function index(){
+  return (
+    <AdoptionScreen/>
+    
+  );
 }
-
-const styles = StyleSheet.create({})
