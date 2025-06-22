@@ -202,6 +202,7 @@ public class PetPostControllerIntegrationTests {
         CreatePetPostDTO createDTO = new CreatePetPostDTO();
         createDTO.setPetDTO(petDTO);
         createDTO.setPostType(PetPostType.ADOPTION);
+        createDTO.setLocation("China");
 
         mockMvc.perform(post("/api/pet-posts")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -445,7 +446,6 @@ public class PetPostControllerIntegrationTests {
     void toggleReact_RemoveReaction_Success() throws Exception {
         // UserA already reacted to breedingPost in setup
         setupSecurityContext(userA);
-
         mockMvc.perform(put("/api/pet-posts/{petPostId}/react", breedingPost.getPostId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.reacts").value(0))
@@ -609,6 +609,7 @@ public class PetPostControllerIntegrationTests {
         createDTO.setPetDTO(petDTO);
         createDTO.setDescription("Test with émojis 🐕 and special chars: <script>alert('test')</script>");
         createDTO.setPostType(PetPostType.ADOPTION);
+        createDTO.setLocation("China");
 
         mockMvc.perform(post("/api/pet-posts")
                         .contentType(MediaType.APPLICATION_JSON)

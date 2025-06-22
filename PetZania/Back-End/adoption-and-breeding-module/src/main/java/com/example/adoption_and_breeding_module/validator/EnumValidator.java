@@ -5,7 +5,7 @@ import jakarta.validation.ConstraintValidatorContext;
 
 import java.util.Arrays;
 
-public class EnumValidator implements ConstraintValidator<ValidEnum, String> {
+public class EnumValidator implements ConstraintValidator<ValidEnum, Object> {
 
     private Class<? extends Enum<?>> enumClass;
 
@@ -15,23 +15,24 @@ public class EnumValidator implements ConstraintValidator<ValidEnum, String> {
     }
 
     @Override
-    public boolean isValid(String value, ConstraintValidatorContext context) {
-        if (value == null || value.isBlank()) {
-            return true;
+    public boolean isValid(Object value, ConstraintValidatorContext context) {
+        if (value == null) {
+            return true;   // usual Bean Validation null‐is‐ok semantics
         }
 
+        String name = value.toString();  // for enums this is the enum name
         boolean isValid = Arrays.stream(enumClass.getEnumConstants())
                 .map(Enum::name)
-                .anyMatch(enumValue -> enumValue.equalsIgnoreCase(value.replaceAll("\\s+", "_")));
-        if (!isValid) {
-            String acceptedValues = Arrays.toString(enumClass.getEnumConstants());
+                .anyMatch(enumValue -> enumValue.equalsIgnoreCase(name));
 
+        if (!isValid) {
+            String accepted = Arrays.toString(enumClass.getEnumConstants());
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate(
-                    "Invalid Value. Accepted Values are: " + acceptedValues
+                    "Invalid Value. Accepted Values are: " + accepted
             ).addConstraintViolation();
         }
-
         return isValid;
     }
 }
+

@@ -5,6 +5,7 @@ import com.example.adoption_and_breeding_module.model.entity.PetPost;
 import jakarta.persistence.criteria.Expression;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import jakarta.persistence.criteria.Predicate;
 
@@ -31,23 +32,18 @@ public class PetPostSpecification {
                 predicates.add(cb.equal(root.get("pet").get("gender"), filter.getGender()));
             }
 
-            Expression<Integer> ageInMonths = cb.sum(
-                    cb.prod(
-                            cb.function("date_part", Integer.class, cb.literal("year"),
-                                    cb.function("age", Date.class, cb.currentDate(), root.get("pet").get("dateOfBirth"))
-                            ), 12
-                    ),
-                    cb.function("date_part", Integer.class, cb.literal("month"),
-                            cb.function("age", Date.class, cb.currentDate(), root.get("pet").get("dateOfBirth"))
-                    )
-            );
-
+            LocalDate today = LocalDate.now();
             if (filter.getMinAge() != null) {
-                predicates.add(cb.greaterThanOrEqualTo(ageInMonths, filter.getMinAge()));
+                LocalDate dobBefore = today.minusMonths(filter.getMinAge());
+                predicates.add(cb.lessThanOrEqualTo(
+                        root.get("pet").get("dateOfBirth"), dobBefore));
             }
             if (filter.getMaxAge() != null) {
-                predicates.add(cb.lessThanOrEqualTo(ageInMonths, filter.getMaxAge()));
+                LocalDate dobAfter = today.minusMonths(filter.getMaxAge());
+                predicates.add(cb.greaterThanOrEqualTo(
+                        root.get("pet").get("dateOfBirth"), dobAfter));
             }
+
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };

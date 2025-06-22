@@ -9,6 +9,7 @@ import com.example.adoption_and_breeding_module.service.IPetPostService;
 import com.example.adoption_and_breeding_module.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -26,7 +27,7 @@ public class PetPostController {
 
     @Operation(summary = "Create a new pet post")
     @PostMapping
-    public ResponseEntity<PetPostDTO> createPetPost(@RequestBody CreatePetPostDTO createPetPostDTO) {
+    public ResponseEntity<PetPostDTO> createPetPost(@Valid @RequestBody CreatePetPostDTO createPetPostDTO) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID ownerId = userPrincipal.getUserId();
         PetPostDTO petPostDTO = petPostService.createPetPost(createPetPostDTO, ownerId);
@@ -55,7 +56,7 @@ public class PetPostController {
     @Operation(summary = "Get filtered pet posts based on search criteria")
     @GetMapping(path = "/filtered")
     public ResponseEntity<Page<PetPostDTO>> getFilteredPosts(
-            @RequestBody PetPostFilterDTO filter,
+            @Valid @RequestBody PetPostFilterDTO filter,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
@@ -68,7 +69,7 @@ public class PetPostController {
     @Operation(summary = "Update an existing pet post by ID")
     @PatchMapping(path = "/{petPostId}")
     public ResponseEntity<PetPostDTO> updatePetPostById(@PathVariable(name = "petPostId") UUID petPostId,
-                                                        @RequestBody UpdatePetPostDTO updatePetPostDTO) {
+                                                        @Valid @RequestBody UpdatePetPostDTO updatePetPostDTO) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();
         PetPostDTO petPostDTO = petPostService.updatePetPost(petPostId, updatePetPostDTO, userId);

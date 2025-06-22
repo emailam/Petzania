@@ -94,9 +94,7 @@ public class PetPostService implements IPetPostService {
             if (updatePetDTO.getMyPicturesURLs() != null) pet.setMyPicturesURLs(updatePetDTO.getMyPicturesURLs());
         }
         post.setUpdatedAt(Instant.now());
-        System.out.println("I am here");
-        post = petPostRepository.save(post);
-        System.out.println("I am not here");
+//        post = petPostRepository.save(post);
         return dtoConversionService.mapToPetPostDTO(post);
     }
 
@@ -137,8 +135,8 @@ public class PetPostService implements IPetPostService {
             reacts++;
         }
         post.setReacts(reacts);
-        System.out.println(post);
-        post = petPostRepository.save(post);
+//        System.out.println(post);
+//        petPostRepository.save(post);
         return dtoConversionService.mapToPetPostDTO(post);
     }
 
