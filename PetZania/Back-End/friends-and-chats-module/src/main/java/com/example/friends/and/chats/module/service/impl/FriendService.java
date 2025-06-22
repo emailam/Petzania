@@ -3,9 +3,10 @@ package com.example.friends.and.chats.module.service.impl;
 import com.example.friends.and.chats.module.exception.user.*;
 import com.example.friends.and.chats.module.model.dto.friend.BlockDTO;
 import com.example.friends.and.chats.module.model.dto.friend.FollowDTO;
+import com.example.friends.and.chats.module.model.dto.friend.FriendDTO;
 import com.example.friends.and.chats.module.model.dto.friend.FriendRequestDTO;
-import com.example.friends.and.chats.module.model.dto.friend.FriendshipDTO;
 import com.example.friends.and.chats.module.model.entity.*;
+import com.example.friends.and.chats.module.model.event.BlockEvent;
 import com.example.friends.and.chats.module.repository.*;
 import com.example.friends.and.chats.module.service.IDTOConversionService;
 import com.example.friends.and.chats.module.service.IFriendService;
@@ -30,6 +31,7 @@ public class FriendService implements IFriendService {
     private final BlockRepository blockRepository;
     private final FollowRepository followRepository;
     private final IDTOConversionService dtoConversionService;
+    private final BlockPublisher blockPublisher;
 
     public void validateSelfOperation(UUID senderId, UUID receiverId) {
         if (senderId.equals(receiverId)) {
@@ -112,15 +114,16 @@ public class FriendService implements IFriendService {
     }
 
     @Override
-    public FriendshipDTO acceptFriendRequest(UUID requestId, UUID receiverId) {
+    public FriendDTO acceptFriendRequest(UUID requestId, UUID receiverId) {
         FriendRequest request = getFriendRequest(requestId);
         if (!request.getReceiver().getUserId().equals(receiverId)) {
             throw new ForbiddenOperation("User with ID: " + receiverId + " is trying to accept a request which does not belong to him");
         }
+        UUID senderId = request.getSender().getUserId();
         Friendship friendship = createFriendship(request.getSender(), request.getReceiver());
         friendRequestRepository.deleteById(requestId);
 
-        return dtoConversionService.mapToFriendshipDTO(friendship);
+        return dtoConversionService.mapToFriendDTO(friendship, getUser(senderId));
     }
 
     @Override
@@ -150,6 +153,21 @@ public class FriendService implements IFriendService {
         }
     }
 
+    @Override
+    public boolean isFollowingExists(UUID follower, UUID followed) {
+        User userFollower = getUser(follower);
+        User userFollowed = getUser(followed);
+
+        return followRepository.existsByFollowerAndFollowed(userFollower, userFollowed);
+    }
+
+    @Override
+    public boolean isFriendRequestExists(UUID sender, UUID receiver) {
+        User userSender = getUser(sender);
+        User userReceiver = getUser(receiver);
+
+        return friendRequestRepository.existsBySenderAndReceiver(userSender, userReceiver);
+    }
 
     private void validateExistingFollow(User follower, User followed) {
         if (followRepository.existsByFollowerAndFollowed(follower, followed)) {
@@ -177,7 +195,9 @@ public class FriendService implements IFriendService {
     }
 
     @Override
-    public boolean isBlockingExists(User user1, User user2) {
+    public boolean isBlockingExists(UUID userId1, UUID userId2) {
+        User user1 = getUser(userId1);
+        User user2 = getUser(userId2);
         return blockRepository.existsByBlockerAndBlocked(user1, user2) ||
                 blockRepository.existsByBlockerAndBlocked(user2, user1);
     }
@@ -215,10 +235,20 @@ public class FriendService implements IFriendService {
     }
 
     @Override
-    public Page<FriendshipDTO> getFriendships(UUID userId, int page, int size, String sortBy, String direction) {
+    public Page<FriendDTO> getFriendships(UUID userId, int page, int size, String sortBy, String direction) {
         Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
-        return friendshipRepository.findFriendsByUserId(userId, pageable).map(dtoConversionService::mapToFriendshipDTO);
+        Page<Friendship> curPage = friendshipRepository.findFriendsByUserId(userId, pageable);
+
+        return curPage.map(friendship -> {
+            User friendUser;
+            if (friendship.getUser1().getUserId().equals(userId)) {
+                friendUser = friendship.getUser2();
+            } else {
+                friendUser = friendship.getUser1();
+            }
+            return dtoConversionService.mapToFriendDTO(friendship, friendUser);
+        });
     }
 
     @Override
@@ -229,6 +259,13 @@ public class FriendService implements IFriendService {
             user2 = temp;
         }
         return friendshipRepository.existsByUser1AndUser2(user1, user2);
+    }
+
+    @Override
+    public boolean isFriendshipExistsByUsersId(UUID userId1, UUID userId2) {
+        User user1 = getUser(userId1);
+        User user2 = getUser(userId2);
+        return isFriendshipExists(user1, user2);
     }
 
     @Override
@@ -272,7 +309,13 @@ public class FriendService implements IFriendService {
                 .blocked(blocked)
                 .createdAt(new Timestamp(System.currentTimeMillis()))
                 .build();
-
+        BlockEvent blockEvent = BlockEvent.builder()
+                .blockId(block.getId())
+                .blockedId(blockedId)
+                .blockerId(blockerId)
+                .createdAt(block.getCreatedAt())
+                .build();
+        blockPublisher.sendUserBlockedMessage(blockEvent);
         return dtoConversionService.mapToBlockDTO(blockRepository.save(block));
     }
 
@@ -282,6 +325,14 @@ public class FriendService implements IFriendService {
                         getUser(blockerId),
                         getUser(blockedId))
                 .orElseThrow(() -> new BlockingDoesNotExist("Block relationship not found"));
+
+        BlockEvent blockEvent = BlockEvent.builder()
+                .blockId(block.getId())
+                .blockedId(blockedId)
+                .blockerId(blockerId)
+                .createdAt(block.getCreatedAt())
+                .build();
+        blockPublisher.sendUserUnBlockedMessage(blockEvent);
         blockRepository.delete(block);
     }
 
@@ -307,6 +358,5 @@ public class FriendService implements IFriendService {
     public int getNumberOfFriends(UUID userId) {
         return friendshipRepository.countFriendsByUserId(userId);
     }
-
 
 }

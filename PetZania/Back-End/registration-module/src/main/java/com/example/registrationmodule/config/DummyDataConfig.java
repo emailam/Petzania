@@ -12,6 +12,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Configuration
 public class DummyDataConfig {
@@ -32,9 +33,9 @@ public class DummyDataConfig {
 
             // Users
             User user1 = User.builder()
-                    .username("johndoe")
+                    .username("user1")
                     .password(passwordEncoder.encode("password"))
-                    .email("john@example.com")
+                    .email("user1@gmail.com")
                     .name("John Doe")
                     .bio("Just a test user.")
                     .verified(true)
@@ -46,9 +47,9 @@ public class DummyDataConfig {
                     .build();
 
             User user2 = User.builder()
-                    .username("janedoe")
+                    .username("user2")
                     .password(passwordEncoder.encode("password"))
-                    .email("jane@example.com")
+                    .email("user2@gmail.com")
                     .name("Jane Doe")
                     .bio("Pet lover and volunteer.")
                     .verified(true)
@@ -60,9 +61,9 @@ public class DummyDataConfig {
                     .build();
 
             User user3 = User.builder()
-                    .username("petmaster")
+                    .username("user3")
                     .password(passwordEncoder.encode("password"))
-                    .email("petmaster@example.com")
+                    .email("user3@gmail.com")
                     .name("Pet Master")
                     .bio("Managing multiple pet profiles.")
                     .verified(false)
@@ -74,9 +75,9 @@ public class DummyDataConfig {
                     .build();
 
             User user4 = User.builder()
-                    .username("vetfriend")
+                    .username("user4")
                     .password(passwordEncoder.encode("password"))
-                    .email("vet@example.com")
+                    .email("user4@gmail.com")
                     .name("Dr. Vet")
                     .bio("Experienced veterinarian.")
                     .verified(true)
@@ -88,9 +89,9 @@ public class DummyDataConfig {
                     .build();
 
             User user5 = User.builder()
-                    .username("shopkeeper123")
+                    .username("user5")
                     .password(passwordEncoder.encode("password"))
-                    .email("shop@example.com")
+                    .email("user5@gmail.com")
                     .name("Shop Keeper")
                     .bio("Owner of the local pet shop.")
                     .verified(true)

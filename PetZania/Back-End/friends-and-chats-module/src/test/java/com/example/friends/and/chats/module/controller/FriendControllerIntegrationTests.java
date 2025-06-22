@@ -80,6 +80,7 @@ public class FriendControllerIntegrationTests {
                 )
         );
     }
+
     @AfterEach
     void tearDown() {
         // Clear the security context after each test
@@ -120,6 +121,108 @@ public class FriendControllerIntegrationTests {
     }
 
     @Test
+    void checkIsBlockingExists_ShouldSuccess() throws Exception {
+        blockRepository.save(Block.builder()
+                .blocker(userA)
+                .blocked(userB)
+                .build());
+
+        mockMvc.perform(get("/api/friends/isBlockingExists/{id}", userB.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("true"));
+
+        blockRepository.save(Block.builder()
+                .blocker(userB)
+                .blocked(userA)
+                .build());
+
+        mockMvc.perform(get("/api/friends/isBlockingExists/{id}", userB.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("true"));
+    }
+
+    @Test
+    void checkIsBlockingExists_ShouldFail() throws Exception {
+        mockMvc.perform(get("/api/friends/isBlockingExists/{id}", userB.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("false"));
+
+        mockMvc.perform(post("/api/friends/block/{userId}", userB.getUserId()))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(put("/api/friends/unblock/{userId}", userB.getUserId()))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/friends/isBlockingExists/{id}", userB.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("false"));
+    }
+
+    @Test
+    void checkIsFriendshipExists_ShouldSuccess() throws Exception {
+        User tmp1 = userA;
+        User tmp2 = userB;
+        if (userA.getUserId().compareTo(userB.getUserId()) > 0) {
+            User tmp = tmp1;
+            tmp1 = tmp2;
+            tmp2 = tmp;
+        }
+        friendshipRepository.save(Friendship.builder().user1(tmp1).user2(tmp2).build());
+
+        mockMvc.perform(get("/api/friends/isFriend/{id}", userB.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("true"));
+
+    }
+
+    @Test
+    void checkIsFriendShipExists_ShouldFail() throws Exception {
+        mockMvc.perform(get("/api/friends/isFriend/{id}", userB.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("false"));
+    }
+
+    @Test
+    void checkIsFollowingExists_ShouldSuccess() throws Exception {
+        mockMvc.perform(post("/api/friends/follow/{userId}", userB.getUserId()))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/friends/isFollowing/{id}", userB.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("true"));
+    }
+
+    @Test
+    void checkIsFollowingExists_ShouldFail() throws Exception {
+        mockMvc.perform(post("/api/friends/follow/{userId}", userB.getUserId()))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(put("/api/friends/unfollow/{userId}", userB.getUserId()))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/friends/isFollowing/{id}", userB.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("false"));
+    }
+
+    @Test
+    void checkIsFriendRequestExists_ShouldSuccess() throws Exception {
+        mockMvc.perform(post("/api/friends/send-request/{receiverId}", userB.getUserId()))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/friends/isFriendRequestExists/{id}", userB.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("true"));
+    }
+
+    @Test
+    void checkIsFriendRequestExists_ShouldFail() throws Exception {
+        mockMvc.perform(get("/api/friends/isFriendRequestExists/{id}", userB.getUserId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("false"));
+    }
+
+    @Test
     void sendDuplicateFriendRequest_ShouldFail() throws Exception {
         // First request succeeds
         mockMvc.perform(post("/api/friends/send-request/{receiverId}", userB.getUserId()))
@@ -143,7 +246,7 @@ public class FriendControllerIntegrationTests {
         friendService.sendFriendRequest(userB.getUserId(), userA.getUserId());
 
         UUID requestId = friendRequestRepository.findAll().get(0).getId();
-
+        UUID sender = userB.getUserId();
         if (userA.getUserId().compareTo(userB.getUserId()) > 0) {
             User temp = userA;
             userA = userB;
@@ -153,8 +256,7 @@ public class FriendControllerIntegrationTests {
         // UserA tries to accept this friend request
         mockMvc.perform(post("/api/friends/accept-request/{requestId}", requestId))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.user1.userId").value(userA.getUserId().toString()))
-                .andExpect(jsonPath("$.user2.userId").value(userB.getUserId().toString()));
+                .andExpect(jsonPath("$.friend.userId").value(sender.toString()));
 
     }
 
@@ -310,7 +412,7 @@ public class FriendControllerIntegrationTests {
         Friendship friendship1 = friendService.createFriendship(userA, userB);
         Friendship friendship2 = friendService.createFriendship(userA, userC);
 
-        mockMvc.perform(get("/api/friends/getFriends"))
+        mockMvc.perform(get("/api/friends/getFriends/{userId}", userA.getUserId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(2)))
                 .andExpect(jsonPath("$.content[0].friendshipId").value(friendship1.getId().toString()))
@@ -323,7 +425,7 @@ public class FriendControllerIntegrationTests {
         friendService.createFriendship(userA, userC);
         friendService.createFriendship(userA, userD);
 
-        mockMvc.perform(get("/api/friends/getFriends?page=0&size=2"))
+        mockMvc.perform(get("/api/friends/getFriends/{userId}?page=0&size=2", userA.getUserId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(2)))
                 .andExpect(jsonPath("$.totalPages").value(2));
@@ -335,7 +437,7 @@ public class FriendControllerIntegrationTests {
         friendService.createFriendship(userC, userA);
         friendService.createFriendship(userA, userC);
 
-        mockMvc.perform(get("/api/friends/getNumberOfFriends"))
+        mockMvc.perform(get("/api/friends/getNumberOfFriends/{userId}", userA.getUserId()))
                 .andExpect(status().isOk())
                 .andExpect(content().string("3"));
     }
@@ -344,7 +446,7 @@ public class FriendControllerIntegrationTests {
     void getFollowing_ReturnsPaginatedResults() throws Exception {
         createFollows(userA, userB, userC, userD);
 
-        mockMvc.perform(get("/api/friends/getFollowing"))
+        mockMvc.perform(get("/api/friends/getFollowing/{userId}", userA.getUserId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].follower.userId").value(userA.getUserId().toString()))
                 .andExpect(jsonPath("$.content[0].followed.userId").value(userB.getUserId().toString()))
@@ -362,7 +464,7 @@ public class FriendControllerIntegrationTests {
         createFollows(userC, userA);
         createFollows(userD, userA);
 
-        mockMvc.perform(get("/api/friends/getFollowers"))
+        mockMvc.perform(get("/api/friends/getFollowers/{userId}", userA.getUserId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].follower.userId").value(userB.getUserId().toString()))
                 .andExpect(jsonPath("$.content[0].followed.userId").value(userA.getUserId().toString()))
@@ -378,7 +480,7 @@ public class FriendControllerIntegrationTests {
     void getFollowing_WithCustomPagination() throws Exception {
         createFollows(userA, userB, userC, userD);
 
-        mockMvc.perform(get("/api/friends/getFollowing?page=1&size=2"))
+        mockMvc.perform(get("/api/friends/getFollowing/{userId}?page=1&size=2", userA.getUserId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(1)))
                 .andExpect(jsonPath("$.totalPages").value(2))
@@ -391,7 +493,7 @@ public class FriendControllerIntegrationTests {
         createFollows(userC, userA);
         createFollows(userD, userA);
 
-        mockMvc.perform(get("/api/friends/getFollowers?page=1&size=2"))
+        mockMvc.perform(get("/api/friends/getFollowers/{userId}?page=1&size=2", userA.getUserId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(1)))
                 .andExpect(jsonPath("$.totalPages").value(2))
@@ -414,7 +516,7 @@ public class FriendControllerIntegrationTests {
         createFollows(userA, userB, userC);
 
         // Test sort by createdAt desc
-        mockMvc.perform(get("/api/friends/getFollowing?sortBy=createdAt&direction=desc"))
+        mockMvc.perform(get("/api/friends/getFollowing/{userId}?sortBy=createdAt&direction=desc", userA.getUserId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].follower.userId").value(userA.getUserId().toString()))
                 .andExpect(jsonPath("$.content[0].followed.userId").value(userC.getUserId().toString()))
@@ -422,7 +524,7 @@ public class FriendControllerIntegrationTests {
                 .andExpect(jsonPath("$.content[1].followed.userId").value(userB.getUserId().toString()));
 
         // Test sort by createdAt asc
-        mockMvc.perform(get("/api/friends/getFollowing?sortBy=createdAt&direction=asc"))
+        mockMvc.perform(get("/api/friends/getFollowing/{userId}?sortBy=createdAt&direction=asc", userA.getUserId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].follower.userId").value(userA.getUserId().toString()))
                 .andExpect(jsonPath("$.content[0].followed.userId").value(userB.getUserId().toString()))
@@ -436,7 +538,7 @@ public class FriendControllerIntegrationTests {
         createFollows(userC, userA);
 
         // Test sort by createdAt desc
-        mockMvc.perform(get("/api/friends/getFollowers?sortBy=createdAt&direction=desc"))
+        mockMvc.perform(get("/api/friends/getFollowers/{userId}?sortBy=createdAt&direction=desc", userA.getUserId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].follower.userId").value(userC.getUserId().toString()))
                 .andExpect(jsonPath("$.content[0].followed.userId").value(userA.getUserId().toString()))
@@ -444,7 +546,7 @@ public class FriendControllerIntegrationTests {
                 .andExpect(jsonPath("$.content[1].followed.userId").value(userA.getUserId().toString()));
 
         // Test sort by createdAt asc
-        mockMvc.perform(get("/api/friends/getFollowers?sortBy=createdAt&direction=asc"))
+        mockMvc.perform(get("/api/friends/getFollowers/{userId}?sortBy=createdAt&direction=asc", userA.getUserId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].follower.userId").value(userB.getUserId().toString()))
                 .andExpect(jsonPath("$.content[0].followed.userId").value(userA.getUserId().toString()))
@@ -481,7 +583,7 @@ public class FriendControllerIntegrationTests {
     void getFollowing_InvalidSortField() throws Exception {
         createFollows(userA, userB);
 
-        mockMvc.perform(get("/api/friends/getFollowing?sortBy=invalidField"))
+        mockMvc.perform(get("/api/friends/getFollowing/{userId}?sortBy=invalidField", userA.getUserId()))
                 .andExpect(status().isBadRequest());
     }
 
@@ -497,14 +599,14 @@ public class FriendControllerIntegrationTests {
     void getNumberOfFollowing_Success() throws Exception {
         createFollows(userA, userB, userC);
 
-        mockMvc.perform(get("/api/friends/getNumberOfFollowing"))
+        mockMvc.perform(get("/api/friends/getNumberOfFollowing/{userId}", userA.getUserId()))
                 .andExpect(status().isOk())
                 .andExpect(content().string("2"));
     }
 
     @Test
     void getNumberOfFollowing_Zero() throws Exception {
-        mockMvc.perform(get("/api/friends/getNumberOfFollowing"))
+        mockMvc.perform(get("/api/friends/getNumberOfFollowing/{userId}", userA.getUserId()))
                 .andExpect(status().isOk())
                 .andExpect(content().string("0"));
     }
@@ -515,7 +617,7 @@ public class FriendControllerIntegrationTests {
         createFollows(userC, userA);
         createFollows(userD, userA);
 
-        mockMvc.perform(get("/api/friends/getNumberOfFollowers"))
+        mockMvc.perform(get("/api/friends/getNumberOfFollowers/{userId}", userA.getUserId()))
                 .andExpect(status().isOk())
                 .andExpect(content().string("3"));
     }
@@ -544,7 +646,7 @@ public class FriendControllerIntegrationTests {
         Friendship friendship2 = friendService.createFriendship(userA, userC);
         Friendship friendship3 = createFriendship(userB, userC);
 
-        mockMvc.perform(get("/api/friends/getFriends"))
+        mockMvc.perform(get("/api/friends/getFriends/{userId}", userA.getUserId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(2)))
                 .andExpect(jsonPath("$.content[0].friendshipId").value(friendship1.getId().toString()))
@@ -561,14 +663,14 @@ public class FriendControllerIntegrationTests {
         createFriendship(userA, userD);
 
         // When/Then - Page 1
-        mockMvc.perform(get("/api/friends/getFriends?page=0&size=2"))
+        mockMvc.perform(get("/api/friends/getFriends/{userId}?page=0&size=2", userA.getUserId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(2)))
                 .andExpect(jsonPath("$.totalPages").value(2))
                 .andExpect(jsonPath("$.totalElements").value(3));
 
         // Page 2
-        mockMvc.perform(get("/api/friends/getFriends?page=1&size=2"))
+        mockMvc.perform(get("/api/friends/getFriends/{userId}?page=1&size=2", userA.getUserId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(1)));
     }
@@ -581,7 +683,7 @@ public class FriendControllerIntegrationTests {
 
         Friendship newFriendship = createFriendship(userA, userC);
 
-        mockMvc.perform(get("/api/friends/getFriends?sortBy=createdAt&direction=desc"))
+        mockMvc.perform(get("/api/friends/getFriends/{userId}?sortBy=createdAt&direction=desc", userA.getUserId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].friendshipId").value(newFriendship.getId().toString()))
                 .andExpect(jsonPath("$.content[1].friendshipId").value(oldFriendship.getId().toString()));
@@ -597,7 +699,7 @@ public class FriendControllerIntegrationTests {
         Friendship newFriendship = createFriendship(userA, userC);
 
         // When/Then
-        mockMvc.perform(get("/api/friends/getFriends?sortBy=createdAt&direction=asc"))
+        mockMvc.perform(get("/api/friends/getFriends/{userId}?sortBy=createdAt&direction=asc", userA.getUserId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].friendshipId").value(oldFriendship.getId().toString()))
                 .andExpect(jsonPath("$.content[1].friendshipId").value(newFriendship.getId().toString()));
@@ -605,7 +707,7 @@ public class FriendControllerIntegrationTests {
 
     @Test
     void getFriendships_ReturnsEmptyWhenNoFriendships() throws Exception {
-        mockMvc.perform(get("/api/friends/getFriends"))
+        mockMvc.perform(get("/api/friends/getFriends/{userId}", userA.getUserId()))
                 .andExpect(status().isNoContent());
     }
 
@@ -689,8 +791,6 @@ public class FriendControllerIntegrationTests {
 
 
     }
-
-
 
 
     private void setupSecurityContext(User user) {

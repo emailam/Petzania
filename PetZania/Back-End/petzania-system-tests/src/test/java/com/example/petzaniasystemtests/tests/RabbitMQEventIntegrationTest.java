@@ -83,7 +83,7 @@ public class RabbitMQEventIntegrationTest extends BaseSystemTest {
                         given()
                                 .header("Authorization", "Bearer " + userTokens[i])
                                 .when()
-                                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userIds[i])
                                 .then()
                                 .statusCode(200);
                     }
@@ -170,7 +170,7 @@ public class RabbitMQEventIntegrationTest extends BaseSystemTest {
                         given()
                                 .header("Authorization", "Bearer " + token)
                                 .when()
-                                .get(friendsBaseUrl + "/api/friends/getNumberOfFollowers")
+                                .get(friendsBaseUrl + "/api/friends/getNumberOfFollowers/" + userIds.get(0))
                                 .then()
                                 .statusCode(200);
                     }
@@ -259,7 +259,7 @@ public class RabbitMQEventIntegrationTest extends BaseSystemTest {
                     given()
                             .header("Authorization", "Bearer " + user1Token)
                             .when()
-                            .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                            .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + user1Id)
                             .then()
                             .statusCode(200);
                 });
@@ -297,7 +297,7 @@ public class RabbitMQEventIntegrationTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + user1Token)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + user1Id)
                 .then()
                 .statusCode(200)
                 .body(equalTo("1"));
@@ -341,7 +341,7 @@ public class RabbitMQEventIntegrationTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + mainUserToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFollowing")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFollowing/" + mainUserId)
                 .then()
                 .statusCode(200)
                 .body(equalTo(String.valueOf(bulkCount)));
@@ -360,7 +360,7 @@ public class RabbitMQEventIntegrationTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + mainUserToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFollowers")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFollowers/" + mainUserId)
                 .then()
                 .statusCode(200)
                 .body(equalTo(String.valueOf(bulkCount)));
@@ -663,7 +663,7 @@ public class RabbitMQEventIntegrationTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + userToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFollowing")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFollowing/" + userId)
                 .then()
                 .statusCode(200);
 
@@ -685,6 +685,7 @@ public class RabbitMQEventIntegrationTest extends BaseSystemTest {
         String userEmail = "ratelimited@test.com";
         Response userResponse = registerAndLoginUser("ratelimited", userEmail);
         String userToken = userResponse.jsonPath().getString("tokenDTO.accessToken");
+        String userId = userResponse.jsonPath().getString("userId");
 
         // Create multiple users to follow rapidly
         List<UUID> targetUserIds = new ArrayList<>();
@@ -724,7 +725,7 @@ public class RabbitMQEventIntegrationTest extends BaseSystemTest {
         Response countResponse = given()
                 .header("Authorization", "Bearer " + userToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFollowing")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFollowing/" + userId)
                 .then()
                 .statusCode(200)
                 .extract().response();
@@ -741,11 +742,13 @@ public class RabbitMQEventIntegrationTest extends BaseSystemTest {
         String[] usernames = {"searchuser1", "searchuser2", "searchuser3", "differentuser"};
         String[] emails = new String[usernames.length];
         String[] tokens = new String[usernames.length];
+        String[] userIds = new String[usernames.length];
 
         for (int i = 0; i < usernames.length; i++) {
             emails[i] = usernames[i] + "@test.com";
             Response response = registerAndLoginUser(usernames[i], emails[i]);
             tokens[i] = response.jsonPath().getString("tokenDTO.accessToken");
+            userIds[i] = response.jsonPath().getString("userId");
         }
 
         // Wait for all users to sync
@@ -767,7 +770,7 @@ public class RabbitMQEventIntegrationTest extends BaseSystemTest {
             given()
                     .header("Authorization", "Bearer " + tokens[i])
                     .when()
-                    .get(friendsBaseUrl + "/api/friends/getNumberOfFollowers")
+                    .get(friendsBaseUrl + "/api/friends/getNumberOfFollowers/" + userIds[i])
                     .then()
                     .statusCode(200);
         }
@@ -853,7 +856,7 @@ public class RabbitMQEventIntegrationTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + tokens[0])
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userIds[0])
                 .then()
                 .statusCode(200)
                 .body(equalTo("2")); // Friends with User2 and User3
@@ -861,7 +864,7 @@ public class RabbitMQEventIntegrationTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + tokens[2])
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userIds[2])
                 .then()
                 .statusCode(200)
                 .body(equalTo("1")); // Only friends with User1
@@ -1186,7 +1189,7 @@ public class RabbitMQEventIntegrationTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + tokens[0])
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userIds[0])
                 .then()
                 .statusCode(200)
                 .body(equalTo("2"));
@@ -1203,7 +1206,7 @@ public class RabbitMQEventIntegrationTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + tokens[0])
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userIds[0])
                 .then()
                 .statusCode(200)
                 .body(equalTo("1"));
@@ -1211,7 +1214,7 @@ public class RabbitMQEventIntegrationTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + tokens[1])
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userIds[1])
                 .then()
                 .statusCode(200)
                 .body(equalTo("1"));
@@ -1253,7 +1256,7 @@ public class RabbitMQEventIntegrationTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + influencerToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFollowers")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFollowers/" + influencerId)
                 .then()
                 .statusCode(200)
                 .body(equalTo(String.valueOf(followerCount)));
@@ -1264,7 +1267,7 @@ public class RabbitMQEventIntegrationTest extends BaseSystemTest {
                 .queryParam("page", 0)
                 .queryParam("size", 20)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getFollowers")
+                .get(friendsBaseUrl + "/api/friends/getFollowers/" + influencerId)
                 .then()
                 .statusCode(200)
                 .body("content", hasSize(followerCount));
@@ -1283,7 +1286,7 @@ public class RabbitMQEventIntegrationTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + influencerToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFollowers")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFollowers/" + influencerId)
                 .then()
                 .statusCode(200)
                 .body(equalTo(String.valueOf(followerCount - 3)));
@@ -1354,7 +1357,7 @@ public class RabbitMQEventIntegrationTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + userToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
                 .then()
                 .statusCode(200);
     }
