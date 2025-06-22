@@ -1,9 +1,9 @@
-import LandingScreen from "./LandingScreen";
-import AdoptionBreedingForm from "@/components/AdoptionBreedingPost";
-import ServicePostsScreen from "@/components/ServicePostsScreen";
+import AdoptionScreen from "./AdoptionScreen";
+import AdoptionBreedingForm from "@/components/AdoptionBreedingModule/AdoptionBreedingPost";
+import ServicePostsScreen from "@/components/AdoptionBreedingModule/ServicePostsScreen";
 export default function index(){
   return (
-    //<ServicePostsScreen/>
-    <LandingScreen></LandingScreen>
+    <AdoptionScreen/>
+    
   );
 }

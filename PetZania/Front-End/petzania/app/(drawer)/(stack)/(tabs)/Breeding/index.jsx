@@ -1,11 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
-
+import BreedingScreen from './BreedingScreen'
 export default function index() {
     return (
-        <View>
-            <Text>Breeding</Text>
-        </View>
+        <BreedingScreen />
     )
 }
 

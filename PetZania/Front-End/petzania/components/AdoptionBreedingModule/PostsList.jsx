@@ -8,10 +8,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import PostCard from './PostCard'; // adjust path
-import usePostsData from './usePostsData'; // adjust path
 import PostFiltering from './PostFiltering'; // existing component
 import PostDetailsModal from './PostDetailsModal'; // existing component
 import ReactsModal from './ReactsModal'; // new component
+import usePostsHook from './usePostsHook'; // custom hook for fetching posts
 import {
   initializeLikesState,
   togglePostLike,
@@ -19,9 +19,10 @@ import {
   getDefaultFilters,
   getLikesCount,
   isPostLiked
-} from '../services/postService'; // new service
+} from '../../services/postService'; // updated service
 
-const PostsSection = () => {
+// Renamed from usePosts to PostsList (proper component name)
+export default function PostsList({ showHeader = true, postType = "" }) {
   // Filter states
   const [filters, setFilters] = useState(getDefaultFilters());
   const [likesState, setLikesState] = useState({});
@@ -42,7 +43,7 @@ const PostsSection = () => {
   const [tempFilters, setTempFilters] = useState(filters);
 
   // Use the custom hook to get filtered data
-  const { posts, isLoading, error, filteredCount, totalCount } = usePostsData(filters);
+  const { posts, isLoading, error, filteredCount, totalCount } = usePostsHook(filters, postType);
 
   // Initialize likes state when posts change
   useEffect(() => {
@@ -52,9 +53,22 @@ const PostsSection = () => {
     }
   }, [posts]);
 
-  // Handle like toggle
-  const handleLike = (postKey) => {
-    setLikesState(prev => togglePostLike(prev, postKey));
+  // Universal handle like function with API integration option
+  const handleLike = (postKey, enableApiCall = false) => {
+    const apiOptions = enableApiCall ? {
+      apiCall: true,
+      onApiSuccess: (result) => {
+        console.log('Like API success:', result);
+        // Optionally sync with server response
+      },
+      onApiError: (error) => {
+        console.error('Like API error:', error);
+        // Optionally revert the like state on API failure
+        setLikesState(prev => togglePostLike(prev, postKey));
+      }
+    } : {};
+
+    setLikesState(prev => togglePostLike(prev, postKey, apiOptions));
   };
 
   // Handle card press to open post details
@@ -67,7 +81,7 @@ const PostsSection = () => {
   // Handle like from PostDetailsModal
   const handleLikeFromModal = () => {
     if (selectedPostId) {
-      handleLike(selectedPostId);
+      handleLike(selectedPostId, true); // Enable API call for modal interactions
     }
   };
 
@@ -107,35 +121,38 @@ const PostsSection = () => {
   // Render functions
   const renderPost = ({ item, index }) => {
     const postKey = getPostKey(item, index);
-    
+
     return (
-      <PostCard 
+      <PostCard
         {...item}
+        index={index} // Pass index for consistent key generation
         isLiked={isPostLiked(likesState, postKey)}
         likes={getLikesCount(likesState, postKey, item)}
-        onLike={() => handleLike(postKey)}
+        onLike={(key) => handleLike(key, false)} // Disable API call for card interactions (faster UX)
         onPress={handleCardPress}
         onReactsPress={handleReactsPress}
-      />
+     />
     );
   };
 
-  const renderHeader = () => (
-    <View style={styles.headerRow}>
-      <View>
-        <Text style={styles.title}>Posts</Text>
-        <Text style={styles.subtitle}>
-          Showing {filteredCount} of {totalCount} pets
-        </Text>
+  const renderInlineHeader = () => (
+    <View style={styles.inlineHeader}>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={styles.title}>Posts</Text>
+          <Text style={styles.subtitle}>
+            Showing {filteredCount} of {totalCount} pets
+          </Text>
+        </View>
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={openFilter}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="filter-outline" size={20} color="#9188E5" />
+          <Text style={styles.filterText}>Filter by</Text>
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity
-        style={styles.filterButton}
-        onPress={openFilter}
-        activeOpacity={0.7}
-      >
-        <Ionicons name="filter-outline" size={20} color="#9188E5" />
-        <Text style={styles.filterText}>Filter by</Text>
-      </TouchableOpacity>
     </View>
   );
 
@@ -145,14 +162,18 @@ const PostsSection = () => {
 
   return (
     <View style={styles.container}>
-      {renderHeader()}
+      {/* Conditional Inline Header */}
+      {showHeader && renderInlineHeader()}
 
+      {/* Posts List */}
       <FlatList
         data={posts}
         keyExtractor={(item, idx) => getPostKey(item, idx).toString()}
         renderItem={renderPost}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
+        scrollEnabled={false} // Disable internal scroll since parent handles it
+        nestedScrollEnabled={true} // Enable nested scrolling
       />
 
       {/* Filter Modal */}
@@ -162,16 +183,14 @@ const PostsSection = () => {
         tempFilters={tempFilters}
         setTempFilters={setTempFilters}
         onApplyFilters={applyFilters}
-        onResetFilters={resetFilters}
-      />
+        onResetFilters={resetFilters} />
 
       {/* Reacts Modal */}
       <ReactsModal
         visible={reactsModalVisible}
         onClose={closeReactsModal}
         postId={selectedPostReacts.postId}
-        reactedUsersIds={selectedPostReacts.reactedUsersIds}
-      />
+        reactedUsersIds={selectedPostReacts.reactedUsersIds} />
 
       {/* Post Details Modal */}
       <PostDetailsModal
@@ -179,16 +198,14 @@ const PostsSection = () => {
         onClose={closePostDetailsModal}
         postId={selectedPostId}
         isLiked={selectedPostId ? isPostLiked(likesState, selectedPostId) : false}
-        onLike={handleLikeFromModal}
-      />
+        onLike={handleLikeFromModal} />
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    padding: 16, 
     backgroundColor: '#f9f9f9' 
   },
   center: { 
@@ -196,13 +213,20 @@ const styles = StyleSheet.create({
     textAlign: 'center', 
     marginTop: 40,
     fontSize: 16,
-    color: '#666'
+    color: '#666',
+    backgroundColor: '#f9f9f9',
+  },
+  inlineHeader: {
+    backgroundColor: '#f9f9f9',
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   headerRow: { 
     flexDirection: 'row', 
     justifyContent: 'space-between', 
-    alignItems: 'center', 
-    marginBottom: 16 
+    alignItems: 'center',
+    paddingHorizontal: 16,
   },
   title: { 
     fontSize: 24, 
@@ -222,7 +246,15 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#ddd'
+    borderColor: '#ddd',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   filterText: { 
     marginLeft: 4, 
@@ -230,9 +262,9 @@ const styles = StyleSheet.create({
     color: '#555'
   },
   listContainer: {
-    paddingBottom: 16,
-    gap: 24
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 40,
+    gap: 16,
   },
 });
-
-export default PostsSection;

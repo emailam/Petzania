@@ -11,55 +11,14 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { 
+  fetchPostDetails, 
+  fetchOwnerDetails, 
+  updatePostStatus,
+  sendMessageToOwner 
+} from  '../../services/postService';
 
 const { width, height } = Dimensions.get('window');
-
-// Mock function to fetch post details - replace with your actual API call
-const fetchPostDetails = async (postId) => {
-  // Replace this with your actual API call
-  return {
-    "postId": postId,
-    "ownerId": "8e2a7ad4-4a2f-4b3d-b5f1-1a2c3e4d5f6a",
-    "petDTO": {
-      "petId": "1c2d3e4f-5a6b-7c8d-9e0f-1234567890ab",
-      "name": "Bella",
-      "description": "A friendly Maltipoo looking for a loving home.",
-      "gender": "FEMALE",
-      "dateOfBirth": "2023-03-15",
-      "age": "1 year",
-      "breed": "Maltipoo",
-      "species": "DOG",
-      "myVaccinesURLs": [],
-      "myPicturesURLs": [
-        "https://hips.hearstapps.com/hmg-prod/images/small-fluffy-dog-breeds-maltipoo-66300ad363389.jpg?crop=0.668xw:1.00xh;0.151xw,0&resize=640:*",
-        "https://example.com/image2.jpg",
-        "https://example.com/image3.jpg"
-      ]
-    },
-    "postStatus": "PENDING",
-    "reactedUsersIds": [
-      "11111111-2222-3333-4444-555555555555",
-      "66666666-7777-8888-9999-000000000000"
-    ]
-  };
-};
-
-// Mock function to fetch owner details - replace with your actual API call
-const fetchOwnerDetails = async (ownerId) => {
-  // Replace this with your actual API call
-  return {
-    "name": "Shawky Ibrahim",
-    "profilePictureURL":"https://hips.hearstapps.com/hmg-prod/images/small-fluffy-dog-breeds-maltipoo-66300ad363389.jpg?crop=0.668xw:1.00xh;0.151xw,0&resize=640:*",
-
-  };
-};
-
-// Mock function to update post status - replace with your actual API call
-const updatePostStatus = async (postId, status) => {
-  // Replace this with your actual API call
-  console.log(`Updating post ${postId} to status: ${status}`);
-  return { success: true };
-};
 
 const PostDetailsModal = ({ 
   visible, 
@@ -118,9 +77,20 @@ const PostDetailsModal = ({
     );
   };
 
-  const handleChatPress = () => {
-    // Empty functionality as requested - will be implemented later
-    console.log('Chat button pressed');
+  const handleChatPress = async () => {
+    if (!ownerDetails || !postDetails) return;
+    
+    try {
+      // You can implement a more sophisticated messaging system here
+      const welcomeMessage = `Hi! I'm interested in adopting ${postDetails.petDTO.name}. Could we chat about it?`;
+      await sendMessageToOwner(postDetails.ownerId, welcomeMessage);
+      
+      Alert.alert('Message Sent', 'Your message has been sent to the pet owner!');
+      // Navigate to chat screen or show chat modal
+      console.log('Navigate to chat with owner:', postDetails.ownerId);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to send message');
+    }
   };
 
   const renderImagePagination = () => {

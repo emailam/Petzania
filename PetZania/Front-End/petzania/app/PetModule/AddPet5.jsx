@@ -91,7 +91,7 @@ export default function AddPet5() {
         const updated = vaccineFiles.filter(file => file.uri !== uriToDelete);
         setVaccineFiles(updated);
     };
-
+    if(fromPage !== 'EditProfile') {setFromPage("Register"); router.push('/PetModule/AllPets');}
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
