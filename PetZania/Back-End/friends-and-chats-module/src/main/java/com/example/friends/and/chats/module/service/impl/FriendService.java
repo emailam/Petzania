@@ -119,10 +119,11 @@ public class FriendService implements IFriendService {
         if (!request.getReceiver().getUserId().equals(receiverId)) {
             throw new ForbiddenOperation("User with ID: " + receiverId + " is trying to accept a request which does not belong to him");
         }
+        UUID senderId = request.getSender().getUserId();
         Friendship friendship = createFriendship(request.getSender(), request.getReceiver());
         friendRequestRepository.deleteById(requestId);
 
-        return dtoConversionService.mapToFriendDTO(friendship, getUser(receiverId));
+        return dtoConversionService.mapToFriendDTO(friendship, getUser(senderId));
     }
 
     @Override
@@ -240,13 +241,13 @@ public class FriendService implements IFriendService {
         Page<Friendship> curPage = friendshipRepository.findFriendsByUserId(userId, pageable);
 
         return curPage.map(friendship -> {
-           User friendUser;
-           if(friendship.getUser1().getUserId().equals(userId)){
-               friendUser = friendship.getUser2();
-           } else {
-               friendUser = friendship.getUser1();
-           }
-           return dtoConversionService.mapToFriendDTO(friendship, friendUser);
+            User friendUser;
+            if (friendship.getUser1().getUserId().equals(userId)) {
+                friendUser = friendship.getUser2();
+            } else {
+                friendUser = friendship.getUser1();
+            }
+            return dtoConversionService.mapToFriendDTO(friendship, friendUser);
         });
     }
 

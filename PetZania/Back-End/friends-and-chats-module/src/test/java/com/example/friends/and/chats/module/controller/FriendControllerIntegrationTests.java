@@ -246,7 +246,7 @@ public class FriendControllerIntegrationTests {
         friendService.sendFriendRequest(userB.getUserId(), userA.getUserId());
 
         UUID requestId = friendRequestRepository.findAll().get(0).getId();
-
+        UUID sender = userB.getUserId();
         if (userA.getUserId().compareTo(userB.getUserId()) > 0) {
             User temp = userA;
             userA = userB;
@@ -256,7 +256,7 @@ public class FriendControllerIntegrationTests {
         // UserA tries to accept this friend request
         mockMvc.perform(post("/api/friends/accept-request/{requestId}", requestId))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.friend.userId").value(userB.getUserId().toString()));
+                .andExpect(jsonPath("$.friend.userId").value(sender.toString()));
 
     }
 

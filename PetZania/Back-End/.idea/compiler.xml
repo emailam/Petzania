@@ -9,7 +9,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="petzania-system-tests" />
       </profile>
-      <profile name="Annotation profile for RegistrationModule" enabled="true">
+      <profile name="Annotation profile for friends-and-chats-module" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -17,14 +17,6 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
         </processorPath>
         <module name="registration-module" />
-      </profile>
-      <profile name="Annotation profile for friends-and-chats-module" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
-        </processorPath>
         <module name="friends-and-chats-module" />
       </profile>
     </annotationProcessing>
