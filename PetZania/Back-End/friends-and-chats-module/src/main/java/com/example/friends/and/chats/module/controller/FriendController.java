@@ -210,10 +210,10 @@ public class FriendController {
 
     @Operation(summary = "Check Whether There exists a Friend Request")
     @GetMapping("/isFriendRequestExists/{id}")
-    public ResponseEntity<Boolean> isFriendRequestExists(@PathVariable("id") UUID receiver) {
+    public ResponseEntity<UUID> isFriendRequestExists(@PathVariable("id") UUID receiver) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID sender = userPrincipal.getUserId();
-        boolean result = friendService.isFriendRequestExists(sender, receiver);
+        UUID result = friendService.isFriendRequestExists(sender, receiver);
         return ResponseEntity.ok().body(result);
     }
 
