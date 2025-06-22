@@ -53,7 +53,7 @@ export default function AddPet5() {
             router.dismissAll();
             setFromPage(null);
 
-            if(fromPage !== 'EditProfile') router.push('/PetModule/AllPets');
+            if(fromPage !== 'EditProfile') {setFromPage("Register"); router.push('/PetModule/AllPets');}
         } catch (err) {
             console.error('Error uploading vaccine files:', err);
         } finally {

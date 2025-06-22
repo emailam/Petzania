@@ -14,13 +14,11 @@ export default function AppProviders({ children }) {
             <FlowProvider>
                 <UserProvider>
                     <FriendsProvider>
-                        <ChatProvider>
-                            <PetProvider>
-                                <ActionSheetProvider>
-                                    {children}
-                                </ActionSheetProvider>
-                            </PetProvider>
-                        </ChatProvider>
+                        <PetProvider>
+                            <ActionSheetProvider>
+                                {children}
+                            </ActionSheetProvider>
+                        </PetProvider>
                     </FriendsProvider>
                 </UserProvider>
             </FlowProvider>

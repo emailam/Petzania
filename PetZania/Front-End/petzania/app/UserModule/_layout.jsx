@@ -6,11 +6,7 @@ export default function UserModuleLayout() {
       <Stack.Screen
         name="[userid]"
         options={{
-            headerShown: true,
-            headerTitle: '',
-            headerBackTitleVisible: false,
-            headerTintColor: '#9188E5',
-            headerStyle: { backgroundColor: '#FFF' },
+          headerShown: false,
         }}
       />
       <Stack.Screen

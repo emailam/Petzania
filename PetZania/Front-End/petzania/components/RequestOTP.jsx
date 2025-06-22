@@ -8,6 +8,7 @@ import Toast from 'react-native-toast-message';
 export default function RequestOTP({ RESEND_COOLDOWN, email, isRegister }) {
   const [resendActive, setResendActive] = useState(false);
   const [remainingTime, setRemainingTime] = useState(RESEND_COOLDOWN);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     let timer;
@@ -34,27 +35,24 @@ export default function RequestOTP({ RESEND_COOLDOWN, email, isRegister }) {
       topOffset: 30,
     });
   };
-
   const handleRequestNewCode = async () => {
-    if (!resendActive) return;
-
+    if (!resendActive || isLoading) return;
+    setIsLoading(true);
     try {
       let response;
-
       if (isRegister === "true") {
         response = await resendOTP(email);
       } else {
         response = await sendResetPasswordOTP(email);
       }
 
-      if (response && response.status === 200) {
-        showToast('success', response.data.message || 'OTP sent successfully');
-      } else {
-        showToast('error', 'Failed to send OTP. Please try again.');
-      }
+      showToast('success', response);
     } catch (error) {
+      console.error("Error sending OTP:", error);
       const errorMsg = error.response?.data?.message || error.message;
-      showToast('error', errorMsg || 'Error sending OTP.');
+      showToast('error', errorMsg || 'Failed to send OTP. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
 
     setResendActive(false);
@@ -65,11 +63,15 @@ export default function RequestOTP({ RESEND_COOLDOWN, email, isRegister }) {
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
-
   return (
-    <Pressable onPress={handleRequestNewCode} disabled={!resendActive}>
-      <Text style={[styles.footerLink, !resendActive && styles.disabledLink]}>
-        {resendActive ? 'Request new code' : `Request new code in ${formatTime(remainingTime)}`}
+    <Pressable onPress={handleRequestNewCode} disabled={!resendActive || isLoading}>
+      <Text style={[styles.footerLink, (!resendActive || isLoading) && styles.disabledLink]}>
+        {isLoading 
+          ? 'Sending...' 
+          : resendActive 
+            ? 'Request new code' 
+            : `Request new code in ${formatTime(remainingTime)}`
+        }
       </Text>
     </Pressable>
   );
