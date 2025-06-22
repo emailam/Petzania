@@ -35,7 +35,7 @@ services:
 
   registration-module:
     build:
-      context: ./RegistrationModule
+      context: ./registration-module
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
