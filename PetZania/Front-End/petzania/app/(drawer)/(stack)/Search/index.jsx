@@ -1,9 +1,10 @@
-import { StyleSheet, Text, View, TextInput, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native'
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native'
 import React, { useState, useEffect } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 
 import { searchByUsername } from '@/services/searchService'
+import UserList from '@/components/UserList'
 
 export default function SearchScreen() {
     const [query, setQuery] = useState('');
@@ -52,8 +53,7 @@ export default function SearchScreen() {
             if (resetResults) {
                 setResults([])
             }
-            setHasMore(false)
-        } finally {
+            setHasMore(false)        } finally {
             if (resetResults) {
                 setLoading(false)
             } else {
@@ -71,6 +71,62 @@ export default function SearchScreen() {
     const handleSearch = (text) => {
         setQuery(text)
     }
+
+    const handleUserPress = (user) => {
+        console.log('Selected user:', user);
+        router.push({
+            pathname: `/UserModule/${user.userId}`,
+            params: { username: user.username }
+        });
+    };
+
+    const EmptyComponent = () => {
+        if (loading) {
+            return (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#9188E5" />
+                    <Text style={styles.loadingText}>Searching users...</Text>
+                </View>
+            );
+        }
+        
+        if (query.trim()) {
+            return (
+                <View style={styles.emptyContainer}>
+                    <Ionicons name="search" size={60} color="#ddd" />
+                    <Text style={styles.noResults}>No users found</Text>
+                    <Text style={styles.noResultsSubtext}>Try searching with a different username</Text>
+                </View>
+            );
+        }
+        
+        return (
+            <View style={styles.emptyContainer}>
+                <Ionicons name="people" size={60} color="#ddd" />
+                <Text style={styles.noResults}>Search for users</Text>
+                <Text style={styles.noResultsSubtext}>Start typing to find other pet owners</Text>
+            </View>
+        );
+    };
+
+    const FooterComponent = () => {
+        if (hasMore && results.length >= 10) {
+            return (
+                <TouchableOpacity
+                    style={styles.showMoreButton}
+                    onPress={loadMoreResults}
+                    disabled={loadingMore}
+                >
+                    {loadingMore ? (
+                        <ActivityIndicator size="small" color="#9188E5" />
+                    ) : (
+                        <Text style={styles.showMoreText}>Show more</Text>
+                    )}
+                </TouchableOpacity>
+            );
+        }
+        return null;
+    };
 
     return (
         <View style={styles.container}>
@@ -97,77 +153,13 @@ export default function SearchScreen() {
                     )}
                 </View>
             </View>
-            <FlatList
-                data={results}
-                keyExtractor={(item) => {
-                    return item.userId.toString()
-                }}
-                renderItem={({ item }) => (
-                    <TouchableOpacity
-                        style={styles.resultItem}
-                        onPress={() => {
-                            console.log('Selected user:', item)
-                            router.push(`/UserModule/${item.userId}`)
-                        }}
-                        activeOpacity={0.7}
-                    >
-                        <View style={styles.profileImageContainer}>
-                            {item.profilePictureURL ? (
-                                <Image
-                                    source={{ uri: item.profilePictureURL }}
-                                    style={styles.profileImage}
-                                />
-                            ) : (
-                                <View style={styles.profileImage}>
-                                    <Ionicons name="person" size={24} color="#9188E5" />
-                                </View>
-                            )}
-                        </View>
-
-                        <View style={styles.userInfoContainer}>
-                            <Text style={styles.resultText}>
-                                {item.username || item.name || 'Unknown User'}
-                            </Text>
-                        </View>
-
-                        <Ionicons name="chevron-forward" size={20} color="#ccc" />
-                    </TouchableOpacity>
-                )}
-                ListEmptyComponent={
-                    loading ? (
-                        <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="large" color="#9188E5" />
-                            <Text style={styles.loadingText}>Searching users...</Text>
-                        </View>
-                    ) : query.trim() ? (
-                        <View style={styles.emptyContainer}>
-                            <Ionicons name="search" size={60} color="#ddd" />
-                            <Text style={styles.noResults}>No users found</Text>
-                            <Text style={styles.noResultsSubtext}>Try searching with a different username</Text>
-                        </View>
-                    ) : (
-                        <View style={styles.emptyContainer}>
-                            <Ionicons name="people" size={60} color="#ddd" />
-                            <Text style={styles.noResults}>Search for users</Text>
-                            <Text style={styles.noResultsSubtext}>Start typing to find other pet owners</Text>
-                        </View>
-                    )
-                }
-                ListFooterComponent={
-                    hasMore && results.length >= 10 ? (
-                        <TouchableOpacity
-                            style={styles.showMoreButton}
-                            onPress={loadMoreResults}
-                            disabled={loadingMore}
-                        >
-                            {loadingMore ? (
-                                <ActivityIndicator size="small" color="#9188E5" />
-                            ) : (
-                                <Text style={styles.showMoreText}>Show more</Text>
-                            )}
-                        </TouchableOpacity>
-                    ) : null
-                }
+            <UserList
+                users={results}
+                onUserPress={handleUserPress}
+                keyExtractor={(item) => item.userId.toString()}
+                EmptyComponent={<EmptyComponent />}
+                FooterComponent={<FooterComponent />}
+                showChevron={true}
             />
         </View>
     )
@@ -210,47 +202,6 @@ const styles = StyleSheet.create({
         marginLeft: 8,
         padding: 2,
     },
-    resultItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
-        backgroundColor: '#fff',
-    },
-    profileImageContainer: {
-        marginRight: 12,
-    },
-    profileImage: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        borderWidth: 1,
-        borderColor: '#9188E5',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    userInfoContainer: {
-        flex: 1,
-        marginRight: 8,
-    },
-    resultText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#333',
-        marginBottom: 2,
-
-    },
-    resultSubText: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 1,
-    },
-    mailText: {
-        fontSize: 12,
-        color: '#9188E5',
-        fontStyle: 'italic',
-    },
     loadingContainer: {
         alignItems: 'center',
         marginTop: 60,
@@ -271,7 +222,8 @@ const styles = StyleSheet.create({
         marginTop: 16,
         fontSize: 18,
         fontWeight: '600',
-    },    noResultsSubtext: {
+    },
+    noResultsSubtext: {
         textAlign: 'center',
         color: '#999',
         marginTop: 8,

@@ -9,7 +9,7 @@ import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 
-import { Ionicons, Feather } from '@expo/vector-icons'; // or any icon pack you prefer
+import { Ionicons, Feather, AntDesign } from '@expo/vector-icons'; // or any icon pack you prefer
 
 import { UserContext } from '@/context/UserContext';
 
@@ -43,6 +43,9 @@ export default function TabLayout() {
       <Text style={{ fontSize: 22, color: '#808B9A' }}> | </Text>
       <TouchableOpacity onPress={() => { router.push('Chat') }}>
         <Ionicons name="chatbubble-ellipses-outline" size={24} color="#9188E5" />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => { router.push('Notifications') }}>
+        <Ionicons name="notifications" size={24} color="#9188E5" />
       </TouchableOpacity>
     </View>
   );
@@ -90,20 +93,27 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="Temp/index"
+        options={{
+          title: '',
+          tabBarIcon: ({ color, focused }) => (
+            <View style={[
+              styles.addButtonContainer,
+              {
+                backgroundColor: focused ? '#5348BD' : '#9188E5',
+              }
+            ]}>
+              <AntDesign name="plus" size={30} color="#fff" />
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="Breeding"
         options={{
           title: 'Breeding',
           tabBarIcon: ({ color }) => (
             <IconSymbol name="heart.circle.fill" size={28} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="Notifications"
-        options={{
-          title: 'Notifications',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol name="bell.fill" size={28} color={color} />
           ),
         }}
       />
@@ -141,5 +151,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: 16,
+  },
+  addButtonContainer: {
+    backgroundColor: '#9188E5',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

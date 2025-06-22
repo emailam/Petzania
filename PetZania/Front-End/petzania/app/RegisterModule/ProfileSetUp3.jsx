@@ -39,7 +39,7 @@ export default function ProfileSetUp3() {
         <View style={styles.container}>
             <TouchableOpacity style={styles.userContainer} onPress={ () => router.push('/UserModule/EditProfile')}>
                 <Image
-                    source={{uri: user?.profilePictureURL || defaultUserImage}}
+                    source={user?.profilePictureURL ? {uri: user.profilePictureURL} : defaultUserImage}
                     style={styles.userImage}
                 />
                 <View style={styles.userInfo}>

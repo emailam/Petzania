@@ -48,15 +48,19 @@ export default function CustomDrawer(props) {
 
   const closeAndNavigate = (path) => {
     props.navigation.closeDrawer();
-    router.push(path);
+    router.push({
+      pathname: path,
+      params: { username: user.username }
+    });
   };
 
   return (
     <DrawerContentScrollView {...props} keyboardShouldPersistTaps="handled" scrollToOverflowEnabled={true} contentContainerStyle={{ flexGrow: 1 }}>
       <View style={{ flex: 1 }}>
         {/* Top Section: User Info, Pets, Drawer Items */}
-        <View style={{ flexGrow: 1, paddingBottom: 16 }}>          {/* User Info */}
-          <TouchableOpacity 
+        <View style={{ flexGrow: 1, paddingBottom: 16 }}>
+          {/* User Info */}
+          <TouchableOpacity
             style={styles.userInfo}
             onPress={() => closeAndNavigate(`/UserModule/${user?.userId}`)}
             activeOpacity={0.7}

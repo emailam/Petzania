@@ -3,6 +3,7 @@ import { View , StyleSheet } from 'react-native';
 import { Link } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import Toast from 'react-native-toast-message';
 
 import Button from "@/components/Button";
 import FormInput from "@/components/FormInput";
@@ -33,6 +34,7 @@ export default function LoginForm(){
 
         try {
             const response = await loginUser(data);
+            console.log("Login response:", response);
 
             if (response) {
                 const userData = await getUserById(response.userId);
@@ -46,7 +48,9 @@ export default function LoginForm(){
             }
         } catch (error) {
             const status = error.response?.status;
-            const errorMsg = error.response?.data?.message || error.message;
+            console.log("Error status code:", status);
+            console.log("Error response data:", error.response?.data);
+            const errorMsg = error.response?.data?.error || error.message;
 
             console.log("Login error:", errorMsg);
             console.log("Status code:", status);
@@ -54,31 +58,34 @@ export default function LoginForm(){
             const showBothFieldsError = (message) => {
                 setError("email", { type: "manual", message });
                 setError("password", { type: "manual", message });
-            };
-
-            if (status === 400 || errorMsg === "Email is incorrect") {
+            };            if (status === 400 || errorMsg === "Email is incorrect") {
                 showBothFieldsError("Invalid email or password.");
             }
-            else if (status === 401 && errorMsg === "User is not verified") {
-                try {
-                    await resendOTP(data.email);
+            else if (status === 401) {
+                // Check if it's a verification issue vs authentication issue
+                if (errorMsg === "Unauthorized" && error.response?.data?.message === "There is no refresh token sent") {
+                    try {
+                        await resendOTP(data.email);
 
-                    Toast.show({
-                        type: "success",
-                        text1: "OTP sent",
-                        text2: `A verification code has been sent to ${data.email}`,
-                    });
+                        Toast.show({
+                            type: "success",
+                            text1: "OTP sent",
+                            text2: `A verification code has been sent to ${data.email}`,
+                        });
 
-                    router.push({
-                        pathname: "/RegisterModule/OTPVerificationScreen",
-                        params: { isRegister: true, email: data.email },
-                    });
-                } catch (otpError) {
-
-                    setError("email", {
-                        type: "manual",
-                        message: otpError.response?.data?.message || "Failed to send OTP. Please try again later.",
-                    });
+                        router.push({
+                            pathname: "/RegisterModule/OTPVerificationScreen",
+                            params: { isRegister: true, email: data.email },
+                        });
+                    } catch (otpError) {
+                        setError("email", {
+                            type: "manual",
+                            message: otpError.response?.data?.message || "Failed to send OTP. Please try again later.",
+                        });
+                    }
+                } else {
+                    // General unauthorized error
+                    showBothFieldsError("Invalid email or password.");
                 }
             } else if (status === 429) {
                 showBothFieldsError("Too many login attempts. Please try again later.");

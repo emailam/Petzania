@@ -5,6 +5,7 @@ import com.example.petzaniasystemtests.config.BaseSystemTest;
 import io.restassured.response.Response;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.*;
+
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,7 +72,7 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
                     given()
                             .header("Authorization", "Bearer " + userToken)
                             .when()
-                            .get(friendsBaseUrl + "/api/friends/getFriends")
+                            .get(friendsBaseUrl + "/api/friends/getFriends/" + userId)
                             .then()
                             .statusCode(204); // No content but request should be authorized
                 });
@@ -85,7 +86,7 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + userToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
                 .then()
                 .statusCode(200)
                 .body(equalTo("0"));
@@ -94,7 +95,7 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + userToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getFollowers")
+                .get(friendsBaseUrl + "/api/friends/getFollowers/" + userId)
                 .then()
                 .statusCode(204); // No followers yet
 
@@ -151,7 +152,7 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
                     given()
                             .header("Authorization", "Bearer " + user2Token)
                             .when()
-                            .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                            .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + user2Id)
                             .then()
                             .statusCode(200);
                 });
@@ -198,7 +199,7 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
                     given()
                             .header("Authorization", "Bearer " + user3Token)
                             .when()
-                            .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                            .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + user3Id)
                             .then()
                             .statusCode(200);
                 });
@@ -223,14 +224,13 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
                 .post(friendsBaseUrl + "/api/friends/accept-request/" + requestId)
                 .then()
                 .statusCode(201)
-                .body("user1.userId", notNullValue())
-                .body("user2.userId", notNullValue());
+                .body("friend.userId", notNullValue());
 
         // Verify both users can see each other as friends
         given()
                 .header("Authorization", "Bearer " + user3Token)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getFriends")
+                .get(friendsBaseUrl + "/api/friends/getFriends/" + user3Id)
                 .then()
                 .statusCode(200)
                 .body("content", hasSize(1));
@@ -238,7 +238,7 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + user4Token)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getFriends")
+                .get(friendsBaseUrl + "/api/friends/getFriends/" + user4Id)
                 .then()
                 .statusCode(200)
                 .body("content", hasSize(1));
@@ -272,7 +272,7 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
                     given()
                             .header("Authorization", "Bearer " + user5Token)
                             .when()
-                            .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                            .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + user5Id)
                             .then()
                             .statusCode(200);
                 });
@@ -329,12 +329,13 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
         Response response = registerAndLoginUser("tokentest", testEmail);
         String accessToken = response.jsonPath().getString("tokenDTO.accessToken");
         String refreshToken = response.jsonPath().getString("tokenDTO.refreshToken");
+        String userId = response.jsonPath().getString("userId");
 
         // Use the token in Friends service
         given()
                 .header("Authorization", "Bearer " + accessToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
                 .then()
                 .statusCode(200);
 
@@ -354,7 +355,7 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + newAccessToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
                 .then()
                 .statusCode(200);
     }
@@ -385,10 +386,11 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
                 .untilAsserted(() -> {
                     for (Response resp : responses) {
                         String token = resp.jsonPath().getString("tokenDTO.accessToken");
+                        String userId = resp.jsonPath().getString("userId");
                         given()
                                 .header("Authorization", "Bearer " + token)
                                 .when()
-                                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
                                 .then()
                                 .statusCode(200);
                     }
@@ -504,7 +506,7 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + keepUserToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + keepUserId)
                 .then()
                 .statusCode(200)
                 .body(equalTo("0")); // Friend should be removed
@@ -594,7 +596,7 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + tokens.get(0))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userIds.get(0))
                 .then()
                 .statusCode(200)
                 .body(equalTo("2"));
@@ -679,12 +681,13 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
         String pwdChangeEmail = "pwdchange@test.com";
         Response userResponse = registerAndLoginUser("pwdchange", pwdChangeEmail);
         String oldToken = userResponse.jsonPath().getString("tokenDTO.accessToken");
+        String userId = userResponse.jsonPath().getString("userId");
 
         // Use old token in Friends service
         given()
                 .header("Authorization", "Bearer " + oldToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
                 .then()
                 .statusCode(200);
 
@@ -693,11 +696,11 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
                 .header("Authorization", "Bearer " + oldToken)
                 .contentType("application/json")
                 .body("""
-                {
-                    "email": "%s",
-                    "newPassword": "NewPassword123!"
-                }
-                """.formatted(pwdChangeEmail))
+                        {
+                            "email": "%s",
+                            "newPassword": "NewPassword123!"
+                        }
+                        """.formatted(pwdChangeEmail))
                 .when()
                 .put(registrationBaseUrl + "/api/user/auth/changePassword")
                 .then()
@@ -720,7 +723,7 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + newToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
                 .then()
                 .statusCode(200);
     }
@@ -774,11 +777,12 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + tokens.get(0))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFollowing")
+                .get(friendsBaseUrl + "/api/friends/getNumberOfFollowing/" + userIds.get(0))
                 .then()
                 .statusCode(200)
                 .body(equalTo("2"));
     }
+
     @Test
     @Order(14)
     @DisplayName("Should handle message operations after user profile updates")
@@ -856,6 +860,7 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
                 .statusCode(200)
                 .body("content", hasSize(2));
     }
+
     @Test
     @Order(15)
     @DisplayName("Should handle chat access after user verification status changes")
@@ -1087,7 +1092,6 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
                 .then()
                 .statusCode(201);
     }
-
 
 
 }

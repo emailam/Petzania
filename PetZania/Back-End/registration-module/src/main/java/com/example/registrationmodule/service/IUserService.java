@@ -17,7 +17,7 @@ public interface IUserService {
 
     public void sendDeactivationMessage(String email);
 
-
+    public ProfilePictureDTO getProfilePictureURLByUserId(UUID userId);
     Page<UserProfileDTO> getUsers(int page, int size, String sortBy, String direction);
 
     Page<UserProfileDTO> getUsersByPrefixUsername(int page, int size, String sortBy, String direction, String prefix);

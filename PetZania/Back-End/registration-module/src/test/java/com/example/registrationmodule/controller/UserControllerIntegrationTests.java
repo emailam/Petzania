@@ -165,6 +165,42 @@ public class UserControllerIntegrationTests {
                         .header("Authorization", tokenA))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
+
+    @Test
+    public void testGetUserProfilePictureURL_ShouldReturnSuccess() throws Exception {
+        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
+        String profilePictureURL = testUserA.getProfilePictureURL();
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/profilePictureURL/{id}", testUserA.getUserId())
+                .header("Authorization", token))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.profilePictureURL").value(profilePictureURL));
+    }
+
+    @Test
+    public void testGetAnotherUserProfilePictureURL_ShouldSuccess() throws Exception {
+        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserB = userService.saveUser(TestDataUtil.createTestUserB());
+        String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
+        String profilePictureURL = testUserB.getProfilePictureURL();
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/profilePictureURL/{id}", testUserB.getUserId())
+                .header("Authorization", token))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.profilePictureURL").value(profilePictureURL));
+    }
+
+    @Test
+    public void testGetNonExistentUserProfilePictureURL_ShouldFail() throws Exception {
+        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
+        String profilePictureURL = "random.com";
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/profilePictureURL/{id}", UUID.randomUUID())
+                .header("Authorization", token))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
     @Test
     public void testUserDeleteAnotherUser_ShouldReturnBadRequest() throws Exception {
         User testUserA = userService.saveUser(TestDataUtil.createTestUserA());

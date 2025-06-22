@@ -3,8 +3,8 @@ package com.example.friends.and.chats.module.service;
 
 import com.example.friends.and.chats.module.model.dto.friend.BlockDTO;
 import com.example.friends.and.chats.module.model.dto.friend.FollowDTO;
+import com.example.friends.and.chats.module.model.dto.friend.FriendDTO;
 import com.example.friends.and.chats.module.model.dto.friend.FriendRequestDTO;
-import com.example.friends.and.chats.module.model.dto.friend.FriendshipDTO;
 import com.example.friends.and.chats.module.model.dto.user.UserDTO;
 import com.example.friends.and.chats.module.model.entity.*;
 import com.example.friends.and.chats.module.model.dto.chat.ChatDTO;
@@ -33,9 +33,7 @@ public interface IDTOConversionService {
 
     FriendRequest mapToFriendRequest(FriendRequestDTO friendRequestDTO);
 
-    FriendshipDTO mapToFriendshipDTO(Friendship friendship);
-
-    Friendship mapToFriendship(FriendshipDTO friendshipDTO);
+    FriendDTO mapToFriendDTO(Friendship friendship, User user);
 
     UserDTO mapToUserDTO(User user);
   

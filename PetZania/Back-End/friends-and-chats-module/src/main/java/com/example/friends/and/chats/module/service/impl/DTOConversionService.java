@@ -5,8 +5,8 @@ import com.example.friends.and.chats.module.exception.user.UserNotFound;
 import com.example.friends.and.chats.module.model.dto.chat.ChatDTO;
 import com.example.friends.and.chats.module.model.dto.friend.BlockDTO;
 import com.example.friends.and.chats.module.model.dto.friend.FollowDTO;
+import com.example.friends.and.chats.module.model.dto.friend.FriendDTO;
 import com.example.friends.and.chats.module.model.dto.friend.FriendRequestDTO;
-import com.example.friends.and.chats.module.model.dto.friend.FriendshipDTO;
 import com.example.friends.and.chats.module.model.dto.message.MessageDTO;
 import com.example.friends.and.chats.module.model.dto.chat.UserChatDTO;
 import com.example.friends.and.chats.module.model.dto.message.MessageReactionDTO;
@@ -115,25 +115,13 @@ public class DTOConversionService implements IDTOConversionService {
     }
 
     @Override
-    public FriendshipDTO mapToFriendshipDTO(Friendship friendship) {
+    public FriendDTO mapToFriendDTO(Friendship friendship, User user) {
         if (friendship == null) return null;
 
-        return FriendshipDTO.builder()
+        return FriendDTO.builder()
                 .friendshipId(friendship.getId())
-                .user1(mapToUserDTO(friendship.getUser1()))
-                .user2(mapToUserDTO(friendship.getUser2()))
+                .friend(mapToUserDTO(user))
                 .createdAt(friendship.getCreatedAt())
-                .build();
-    }
-
-    @Override
-    public Friendship mapToFriendship(FriendshipDTO friendshipDTO) {
-        if (friendshipDTO == null) return null;
-
-        return Friendship.builder()
-                .user1(getUser(friendshipDTO.getUser1().getUserId()))
-                .user2(getUser(friendshipDTO.getUser2().getUserId()))
-                .createdAt(friendshipDTO.getCreatedAt())
                 .build();
     }
 
