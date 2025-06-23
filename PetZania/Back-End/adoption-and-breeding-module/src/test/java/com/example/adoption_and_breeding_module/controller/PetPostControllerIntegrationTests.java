@@ -631,4 +631,21 @@ public class PetPostControllerIntegrationTests {
         );
     }
 
+    @Test
+    void createPetPost_Toxic() throws Exception {
+        PetDTO petDTO = TestDataUtil.createPetDTO("Max", PetSpecies.DOG, Gender.MALE);
+
+        setupSecurityContext(userA);
+        System.out.println(SecurityUtils.getCurrentUser().getUser());
+        CreatePetPostDTO createDTO = new CreatePetPostDTO();
+        createDTO.setPetDTO(petDTO);
+        createDTO.setDescription("Friendly dog needs home");
+        createDTO.setPostType(PetPostType.ADOPTION);
+        createDTO.setLocation("Brazil");
+
+        mockMvc.perform(post("/api/pet-posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createDTO)))
+                .andExpect(status().isCreated());
+    }
 }

@@ -27,7 +27,7 @@ public class PetPostController {
 
     @Operation(summary = "Create a new pet post")
     @PostMapping
-    public ResponseEntity<PetPostDTO> createPetPost(@Valid @RequestBody CreatePetPostDTO createPetPostDTO) {
+    public ResponseEntity<PetPostDTO> createPetPost(@Valid @RequestBody CreatePetPostDTO createPetPostDTO) throws Exception {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID ownerId = userPrincipal.getUserId();
         PetPostDTO petPostDTO = petPostService.createPetPost(createPetPostDTO, ownerId);

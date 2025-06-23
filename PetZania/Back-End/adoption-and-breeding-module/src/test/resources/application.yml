@@ -41,6 +41,10 @@ spring:
       expiration:
         86400000
 
+openai:
+  api:
+    secret-key: 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
+
 server:
   error:
     include-message: always
