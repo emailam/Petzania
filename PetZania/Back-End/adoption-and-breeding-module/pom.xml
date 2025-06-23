@@ -133,6 +133,12 @@
 			<artifactId>model-zoo</artifactId>
 			<version>0.33.0</version>
 		</dependency>
+
+		<dependency>
+			<groupId>ai.djl.huggingface</groupId>
+			<artifactId>tokenizers</artifactId>
+			<version>0.33.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>
