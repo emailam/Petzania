@@ -1,0 +1,37 @@
+package com.example.adoption_and_breeding_module.service.impl;
+
+import com.example.adoption_and_breeding_module.model.event.UserEvent;
+import com.example.adoption_and_breeding_module.model.entity.User;
+import com.example.adoption_and_breeding_module.repository.UserRepository;
+import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.stereotype.Service;
+
+@Service
+@AllArgsConstructor
+@Transactional
+public class UserListener {
+    private final UserRepository userRepository;
+
+    @RabbitListener(queues = "userRegisteredQueue")
+    public void onUserRegistered(UserEvent user) {
+        if (!userRepository.existsById(user.getUserId()) && !userRepository.existsByUsername(user.getUsername())
+                && !userRepository.existsByEmail(user.getEmail())) {
+            User newUser = new User();
+            newUser.setUserId(user.getUserId());
+            newUser.setUsername(user.getUsername());
+            newUser.setEmail(user.getEmail());
+            userRepository.save(newUser);
+            System.out.println("Received registered user: " + user);
+        }
+    }
+
+    @RabbitListener(queues = "userDeletedQueue")
+    public void onUserDeleted(UserEvent user) {
+        if (userRepository.existsById(user.getUserId())) {
+            userRepository.deleteById(user.getUserId());
+            System.out.println("Received deleted user: " + user);
+        }
+    }
+}
