@@ -2,6 +2,7 @@ package com.example.adoption_and_breeding_module.model.dto;
 
 import com.example.adoption_and_breeding_module.model.enumeration.Gender;
 import com.example.adoption_and_breeding_module.model.enumeration.PetSpecies;
+import com.example.adoption_and_breeding_module.validator.NotToxicText;
 import com.example.adoption_and_breeding_module.validator.ValidEnum;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
@@ -24,8 +25,10 @@ public class PetDTO {
     private UUID petId;
 
     @NotBlank(message = "Name is required.")
+    @NotToxicText
     private String name;
 
+    @NotToxicText
     private String description;
 
     @NotNull(message = "Gender is required.")
@@ -36,10 +39,10 @@ public class PetDTO {
     private LocalDate dateOfBirth;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY) // Exclude from requests
-    @NotNull(message = "Age is required.")
     private String age;
 
     @NotBlank(message = "Breed is required.")
+    @NotToxicText
     private String breed;
 
     @NotNull(message = "Species is required.")

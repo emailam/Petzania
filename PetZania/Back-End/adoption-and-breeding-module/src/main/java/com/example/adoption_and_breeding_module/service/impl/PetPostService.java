@@ -42,10 +42,9 @@ public class PetPostService implements IPetPostService {
     private final PetPostRepository petPostRepository;
     private final BlockRepository blockRepository;
     private final IDTOConversionService dtoConversionService;
-    private final ToxicityChecker toxicityChecker;
 
     @Override
-    public PetPostDTO createPetPost(CreatePetPostDTO dto, UUID ownerId) throws Exception {
+    public PetPostDTO createPetPost(CreatePetPostDTO dto, UUID ownerId){
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new UserNotFound("User not found with id: " + ownerId));
 
@@ -58,16 +57,6 @@ public class PetPostService implements IPetPostService {
                 .build();
 
         post = petPostRepository.save(post);
-
-        {
-            if (toxicityChecker.isToxic(dto.getDescription())) {
-                System.out.println("toxic");
-            }
-            else {
-                System.out.println("not toxic");
-            }
-        }
-
 
         return dtoConversionService.mapToPetPostDTO(post);
     }

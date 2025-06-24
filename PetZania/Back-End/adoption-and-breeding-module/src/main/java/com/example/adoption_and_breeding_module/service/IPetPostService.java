@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public interface IPetPostService {
 
-    PetPostDTO createPetPost(CreatePetPostDTO createPetPostDTO, UUID ownerId) throws Exception;
+    PetPostDTO createPetPost(CreatePetPostDTO createPetPostDTO, UUID ownerId);
 
     PetPostDTO getPetPostById(UUID petPostId);
 
