@@ -69,6 +69,25 @@ services:
     networks:
       - app-network
 
+  adoption-and-breeding-module:
+    build:
+      context: ./adoption-and-breeding-module
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/adoption_breeding
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+    depends_on:
+      - postgres
+      - rabbitmq
+      - redis
+    restart: on-failure
+    networks:
+      - app-network
+
 networks:
   app-network:
     driver: bridge
