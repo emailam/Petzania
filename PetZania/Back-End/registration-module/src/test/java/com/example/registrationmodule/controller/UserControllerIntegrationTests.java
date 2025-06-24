@@ -3,7 +3,9 @@ package com.example.registrationmodule.controller;
 import com.example.registrationmodule.TestDataUtil;
 import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.entity.Admin;
+import com.example.registrationmodule.model.entity.Block;
 import com.example.registrationmodule.model.entity.User;
+import com.example.registrationmodule.repository.BlockRepository;
 import com.example.registrationmodule.service.IAdminService;
 import com.example.registrationmodule.service.IUserService;
 import com.example.registrationmodule.service.impl.AdminService;
@@ -41,6 +43,9 @@ public class UserControllerIntegrationTests {
     private final String DEFAULT_PASSWORD = "Password123#";
     private String adminToken;
     private String superAdminToken;
+
+    @Autowired
+    private BlockRepository blockRepository;
 
     @BeforeEach
     public void setupAdminTokens() throws Exception {
@@ -879,6 +884,485 @@ public class UserControllerIntegrationTests {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(testUserA.getName()));
     }
 
+    @Test
+    public void testGetUsers_WhenUserABlocksUserB_ShouldNotReturnUserB() throws Exception {
+        // Arrange
+        User userA = userService.saveUser(TestDataUtil.createTestUserA());
+        User userB = userService.saveUser(TestDataUtil.createTestUserB());
+
+        // Get initial count (includes dummy users)
+        String tokenA = obtainAccessToken(userA.getEmail(), DEFAULT_PASSWORD);
+        MvcResult initialResult = mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/users")
+                        .header("Authorization", tokenA)
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        JsonNode initialResponse = objectMapper.readTree(initialResult.getResponse().getContentAsString());
+        int initialCount = initialResponse.get("content").size();
+
+        // Create block relationship: userA blocks userB
+        Block block = Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userA)
+                .blocked(userB)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        blockRepository.save(block);
+
+        // Act & Assert - Should have one less user (userB should be excluded)
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/users")
+                        .header("Authorization", tokenA)
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(initialCount - 1))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[?(@.userId == '" + userB.getUserId() + "')]").doesNotExist());
+    }
+
+    @Test
+    public void testGetUsers_WhenUserBBlocksUserA_ShouldNotReturnUserB() throws Exception {
+        // Arrange
+        User userA = userService.saveUser(TestDataUtil.createTestUserA());
+        User userB = userService.saveUser(TestDataUtil.createTestUserB());
+
+        // Create block relationship: userB blocks userA
+        Block block = Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userB)
+                .blocked(userA)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        blockRepository.save(block);
+
+        String tokenA = obtainAccessToken(userA.getEmail(), DEFAULT_PASSWORD);
+
+        // Act & Assert - UserA should not see UserB in the list (bidirectional blocking)
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/users")
+                        .header("Authorization", tokenA)
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[?(@.userId == '" + userB.getUserId() + "')]").doesNotExist());
+    }
+
+    @Test
+    public void testGetUsers_WithMutualBlocking_ShouldExcludeBothUsers() throws Exception {
+        // Arrange
+        User userA = userService.saveUser(TestDataUtil.createTestUserA());
+        User userB = userService.saveUser(TestDataUtil.createTestUserB());
+
+        // Create mutual block relationships
+        Block blockAB = Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userA)
+                .blocked(userB)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        blockRepository.save(blockAB);
+
+        Block blockBA = Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userB)
+                .blocked(userA)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        blockRepository.save(blockBA);
+
+        String tokenA = obtainAccessToken(userA.getEmail(), DEFAULT_PASSWORD);
+
+        // Act & Assert - UserA should not see UserB
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/users")
+                        .header("Authorization", tokenA)
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[?(@.userId == '" + userB.getUserId() + "')]").doesNotExist());
+    }
+
+    @Test
+    public void testGetUsers_AsAdmin_ShouldReturnAllUsersRegardlessOfBlocking() throws Exception {
+        // Arrange
+        User userA = userService.saveUser(TestDataUtil.createTestUserA());
+        User userB = userService.saveUser(TestDataUtil.createTestUserB());
+
+        // Get initial count with admin token
+        MvcResult initialResult = mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/users")
+                        .header("Authorization", adminToken)
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        JsonNode initialResponse = objectMapper.readTree(initialResult.getResponse().getContentAsString());
+        int initialCount = initialResponse.get("content").size();
+
+        // Create block relationship
+        Block block = Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userA)
+                .blocked(userB)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        blockRepository.save(block);
+
+        // Act & Assert - Admin should still see the same count (blocking doesn't affect admin)
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/users")
+                        .header("Authorization", adminToken)
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(initialCount))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[?(@.userId == '" + userA.getUserId() + "')]").exists())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[?(@.userId == '" + userB.getUserId() + "')]").exists());
+    }
+
+    @Test
+    public void testGetUsers_WithMultipleBlockedUsers_ShouldExcludeAllBlockedUsers() throws Exception {
+        // Arrange
+        User userA = userService.saveUser(TestDataUtil.createTestUserA());
+        User userB = userService.saveUser(TestDataUtil.createTestUserB());
+        User userC = userService.saveUser(TestDataUtil.createTestUserC());
+
+        // UserA blocks UserB and UserC
+        Block blockAB = Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userA)
+                .blocked(userB)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        blockRepository.save(blockAB);
+
+        Block blockAC = Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userA)
+                .blocked(userC)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        blockRepository.save(blockAC);
+
+        String tokenA = obtainAccessToken(userA.getEmail(), DEFAULT_PASSWORD);
+
+        // Act & Assert - Should not return UserB or UserC
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/users")
+                        .header("Authorization", tokenA)
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[?(@.userId == '" + userB.getUserId() + "')]").doesNotExist())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[?(@.userId == '" + userC.getUserId() + "')]").doesNotExist());
+    }
+
+    @Test
+    public void testGetUsersByPrefixUsername_WhenUserABlocksUserB_ShouldNotReturnUserB() throws Exception {
+        // Arrange
+        User userA = userService.saveUser(TestDataUtil.createTestUserA()); // username: testUserA
+        User userB = userService.saveUser(TestDataUtil.createTestUserB()); // username: testUserB
+        User userC = userService.saveUser(TestDataUtil.createTestUserC()); // username: testUserC
+
+        // Create block relationship: userA blocks userB
+        Block block = Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userA)
+                .blocked(userB)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        blockRepository.save(block);
+
+        String tokenA = obtainAccessToken(userA.getEmail(), DEFAULT_PASSWORD);
+
+        // Act & Assert - Should not return userB when searching for "test" prefix
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/users/test")
+                        .header("Authorization", tokenA)
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[?(@.userId == '" + userB.getUserId() + "')]").doesNotExist());
+    }
+
+    @Test
+    public void testGetUsersByPrefixUsername_WhenUserBBlocksUserA_ShouldNotReturnUserB() throws Exception {
+        // Arrange
+        User userA = userService.saveUser(TestDataUtil.createTestUserA());
+        User userB = userService.saveUser(TestDataUtil.createTestUserB());
+        User userC = userService.saveUser(TestDataUtil.createTestUserC());
+
+        // Create block relationship: userB blocks userA
+        Block block = Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userB)
+                .blocked(userA)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        blockRepository.save(block);
+
+        String tokenA = obtainAccessToken(userA.getEmail(), DEFAULT_PASSWORD);
+
+        // Act & Assert - Should not return userB
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/users/test")
+                        .header("Authorization", tokenA)
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[?(@.userId == '" + userB.getUserId() + "')]").doesNotExist());
+    }
+
+    @Test
+    public void testGetUsersByPrefixUsername_WithBlockingAndMultipleMatches_ShouldReturnOnlyUnblockedUsers() throws Exception {
+        // Arrange
+        User userA = userService.saveUser(TestDataUtil.createTestUserA()); // testUser
+        User userB = userService.saveUser(TestDataUtil.createTestUserB()); // testUserB
+        User userC = userService.saveUser(TestDataUtil.createTestUserC()); // testUserC
+
+        // UserA blocks UserB
+        Block block = Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userA)
+                .blocked(userB)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        blockRepository.save(block);
+
+        String tokenA = obtainAccessToken(userA.getEmail(), DEFAULT_PASSWORD);
+
+        // Act & Assert - Should return userC but not userB
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/users/test")
+                        .header("Authorization", tokenA)
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[?(@.userId == '" + userB.getUserId() + "')]").doesNotExist())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[?(@.userId == '" + userC.getUserId() + "')]").exists())
+                .andReturn();
+    }
+
+    @Test
+    public void testGetUsersByPrefixUsername_AsAdmin_ShouldReturnAllMatchingUsersRegardlessOfBlocking() throws Exception {
+        // Arrange
+        User userA = userService.saveUser(TestDataUtil.createTestUserA());
+        User userB = userService.saveUser(TestDataUtil.createTestUserB());
+
+        // Create block relationship
+        Block block = Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userA)
+                .blocked(userB)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        blockRepository.save(block);
+
+        // Act & Assert - Admin should see both users
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/users/test")
+                        .header("Authorization", adminToken)
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[?(@.userId == '" + userA.getUserId() + "')]").exists())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[?(@.userId == '" + userB.getUserId() + "')]").exists());
+    }
+
+    @Test
+    public void testGetUserById_WhenUserABlocksUserB_ShouldReturnForbidden() throws Exception {
+        // Arrange
+        User userA = userService.saveUser(TestDataUtil.createTestUserA());
+        User userB = userService.saveUser(TestDataUtil.createTestUserB());
+
+        // Create block relationship: userA blocks userB
+        Block block = Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userA)
+                .blocked(userB)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        blockRepository.save(block);
+
+        String tokenA = obtainAccessToken(userA.getEmail(), DEFAULT_PASSWORD);
+
+        // Act & Assert
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/{id}", userB.getUserId())
+                        .header("Authorization", tokenA))
+                .andExpect(MockMvcResultMatchers.status().isForbidden())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Cannot Perform This Operation Due To Existence Of Blocking"));
+    }
+
+    @Test
+    public void testGetUserById_WhenUserBBlocksUserA_ShouldReturnForbidden() throws Exception {
+        // Arrange
+        User userA = userService.saveUser(TestDataUtil.createTestUserA());
+        User userB = userService.saveUser(TestDataUtil.createTestUserB());
+
+        // Create block relationship: userB blocks userA
+        Block block = Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userB)
+                .blocked(userA)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        blockRepository.save(block);
+
+        String tokenA = obtainAccessToken(userA.getEmail(), DEFAULT_PASSWORD);
+
+        // Act & Assert
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/{id}", userB.getUserId())
+                        .header("Authorization", tokenA))
+                .andExpect(MockMvcResultMatchers.status().isForbidden())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Cannot Perform This Operation Due To Existence Of Blocking"));
+    }
+
+    @Test
+    public void testGetUsers_WithChainedBlocking_ShouldHandleComplexBlockingChains() throws Exception {
+        // Arrange - Create a chain: A blocks B, B blocks C, C blocks D
+        User userA = userService.saveUser(TestDataUtil.createTestUserA());
+        User userB = userService.saveUser(TestDataUtil.createTestUserB());
+        User userC = userService.saveUser(TestDataUtil.createTestUserC());
+        User userD = userService.saveUser(TestDataUtil.createTestUserD());
+        User userE = userService.saveUser(TestDataUtil.createTestUserE());
+
+        // Create blocking chain
+        Block blockAB = Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userA)
+                .blocked(userB)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        blockRepository.save(blockAB);
+
+        Block blockBC = Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userB)
+                .blocked(userC)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        blockRepository.save(blockBC);
+
+        Block blockCD = Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userC)
+                .blocked(userD)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        blockRepository.save(blockCD);
+
+        String tokenA = obtainAccessToken(userA.getEmail(), DEFAULT_PASSWORD);
+        String tokenC = obtainAccessToken(userC.getEmail(), DEFAULT_PASSWORD);
+
+        // Act & Assert - UserA should not see UserB, UserC should not see UserB or UserD
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/users")
+                        .header("Authorization", tokenA)
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[?(@.userId == '" + userB.getUserId() + "')]").doesNotExist())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[?(@.userId == '" + userC.getUserId() + "')]").exists())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[?(@.userId == '" + userD.getUserId() + "')]").exists());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/users")
+                        .header("Authorization", tokenC)
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[?(@.userId == '" + userB.getUserId() + "')]").doesNotExist())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[?(@.userId == '" + userD.getUserId() + "')]").doesNotExist());
+    }
+
+    @Test
+    public void testGetUsers_WithCircularBlocking_ShouldHandleCircularReferences() throws Exception {
+        // Arrange - Create circular blocking: A blocks B, B blocks C, C blocks A
+        User userA = userService.saveUser(TestDataUtil.createTestUserA());
+        User userB = userService.saveUser(TestDataUtil.createTestUserB());
+        User userC = userService.saveUser(TestDataUtil.createTestUserC());
+        User userD = userService.saveUser(TestDataUtil.createTestUserD());
+
+        // Create circular blocking
+        Block blockAB = Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userA)
+                .blocked(userB)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        blockRepository.save(blockAB);
+
+        Block blockBC = Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userB)
+                .blocked(userC)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        blockRepository.save(blockBC);
+
+        Block blockCA = Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userC)
+                .blocked(userA)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        blockRepository.save(blockCA);
+
+        String tokenA = obtainAccessToken(userA.getEmail(), DEFAULT_PASSWORD);
+        String tokenB = obtainAccessToken(userB.getEmail(), DEFAULT_PASSWORD);
+        String tokenC = obtainAccessToken(userC.getEmail(), DEFAULT_PASSWORD);
+
+        // Act & Assert - Each user should only see userD
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/users")
+                        .header("Authorization", tokenA)
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[?(@.userId == '" + userB.getUserId() + "')]").doesNotExist())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[?(@.userId == '" + userC.getUserId() + "')]").doesNotExist())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[?(@.userId == '" + userD.getUserId() + "')]").exists());
+    }
+
+    @Test
+    public void testGetUserById_WithSelfReference_ShouldReturnOwnProfile() throws Exception {
+        // Arrange
+        User userA = userService.saveUser(TestDataUtil.createTestUserA());
+        String tokenA = obtainAccessToken(userA.getEmail(), DEFAULT_PASSWORD);
+
+        // Act & Assert - User should be able to see their own profile
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/{id}", userA.getUserId())
+                        .header("Authorization", tokenA))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.userId").value(userA.getUserId().toString()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.username").value(userA.getUsername()));
+    }
+
+    @Test
+    public void testGetUserById_WithBlockingAndUnblocking_ShouldReflectCurrentBlockStatus() throws Exception {
+        // Arrange
+        User userA = userService.saveUser(TestDataUtil.createTestUserA());
+        User userB = userService.saveUser(TestDataUtil.createTestUserB());
+        String tokenA = obtainAccessToken(userA.getEmail(), DEFAULT_PASSWORD);
+
+        // Initially no blocking - should work
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/{id}", userB.getUserId())
+                        .header("Authorization", tokenA))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        // Create block
+        Block block = Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userA)
+                .blocked(userB)
+                .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                .build();
+        blockRepository.save(block);
+
+        // Now should be blocked
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/{id}", userB.getUserId())
+                        .header("Authorization", tokenA))
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
+
+        // Remove block
+        blockRepository.delete(block);
+
+        // Should work again
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/{id}", userB.getUserId())
+                        .header("Authorization", tokenA))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
     private String obtainAccessToken(String email, String password) throws Exception {
         String loginPayload = objectMapper.writeValueAsString(Map.of(
                 "email", email,
@@ -917,4 +1401,5 @@ public class UserControllerIntegrationTests {
 
         return "Bearer " + jsonNode.get("tokenDTO").get("accessToken").asText();
     }
+
 }

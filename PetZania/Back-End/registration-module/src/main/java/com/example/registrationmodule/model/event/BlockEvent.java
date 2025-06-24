@@ -1,4 +1,4 @@
-package com.example.friends.and.chats.module.model.event;
+package com.example.registrationmodule.model.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,5 +22,6 @@ public class BlockEvent {
     @org.hibernate.validator.constraints.UUID
     private UUID blockedId;
 
+    @org.hibernate.validator.constraints.UUID
     private Timestamp createdAt;
 }

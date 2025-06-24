@@ -1,6 +1,7 @@
 package com.example.registrationmodule.controller;
 
 import com.example.registrationmodule.model.dto.*;
+import com.example.registrationmodule.model.entity.AdminPrincipal;
 import com.example.registrationmodule.model.entity.UserPrincipal;
 import com.example.registrationmodule.service.IUserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -167,7 +168,13 @@ public class UserController {
             @RequestParam(defaultValue = "userId") String sortBy,
             @RequestParam(defaultValue = "asc") String direction
     ) {
-        Page<UserProfileDTO> users = userService.getUsers(page, size, sortBy, direction);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
+        UUID requesterId = UUID.randomUUID();
+        if (principal instanceof UserPrincipal userPrincipal) {
+            requesterId = userPrincipal.getUserId();
+        }
+        Page<UserProfileDTO> users = userService.getUsers(requesterId, page, size, sortBy, direction);
         return users.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(users);
     }
 
@@ -180,21 +187,39 @@ public class UserController {
             @RequestParam(defaultValue = "asc") String direction,
             @PathVariable("prefix") String prefix
     ) {
-        Page<UserProfileDTO> users = userService.getUsersByPrefixUsername(page, size, sortBy, direction, prefix);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
+        UUID requesterId = UUID.randomUUID();
+        if (principal instanceof UserPrincipal userPrincipal) {
+            requesterId = userPrincipal.getUserId();
+        }
+        Page<UserProfileDTO> users = userService.getUsersByPrefixUsername(requesterId, page, size, sortBy, direction, prefix);
         return users.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(users);
     }
 
     @Operation(summary = "Get user by ID")
     @GetMapping("/{id}")
     public ResponseEntity<UserProfileDTO> getUserById(@PathVariable("id") UUID userId) {
-        UserProfileDTO user = userService.getUserById(userId);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
+        UUID requesterId = UUID.randomUUID();
+        if (principal instanceof UserPrincipal userPrincipal) {
+            requesterId = userPrincipal.getUserId();
+        }
+        UserProfileDTO user = userService.getUserById(requesterId, userId);
         return ResponseEntity.ok(user);
     }
 
     @Operation(summary = "Get Profile Picture By UserID")
     @GetMapping("/profilePictureURL/{id}")
     public ResponseEntity<ProfilePictureDTO> getProfilePictureURLByUserId(@PathVariable("id") UUID userId) {
-        ProfilePictureDTO profilePictureDTO = userService.getProfilePictureURLByUserId(userId);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
+        UUID requesterId = UUID.randomUUID();
+        if (principal instanceof UserPrincipal userPrincipal) {
+            requesterId = userPrincipal.getUserId();
+        }
+        ProfilePictureDTO profilePictureDTO = userService.getProfilePictureURLByUserId(requesterId, userId);
         return ResponseEntity.ok(profilePictureDTO);
     }
 }
