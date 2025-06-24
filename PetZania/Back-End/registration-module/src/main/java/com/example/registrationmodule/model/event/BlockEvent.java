@@ -22,6 +22,5 @@ public class BlockEvent {
     @org.hibernate.validator.constraints.UUID
     private UUID blockedId;
 
-    @org.hibernate.validator.constraints.UUID
     private Timestamp createdAt;
 }

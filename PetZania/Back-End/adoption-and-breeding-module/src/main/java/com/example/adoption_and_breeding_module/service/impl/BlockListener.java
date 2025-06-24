@@ -11,7 +11,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 
-import java.sql.Timestamp;
 import java.util.UUID;
 
 @Service
