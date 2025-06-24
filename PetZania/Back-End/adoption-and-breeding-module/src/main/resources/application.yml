@@ -3,13 +3,13 @@ spring:
         name: AdoptionAndBreedingModule
 
     rabbitmq:
-        host: localhost
+        host: rabbitmq
         port: 5672
         username: guest
         password: guest
 
     datasource:
-        url: jdbc:postgresql://localhost:8090/adoption-breeding
+        url: jdbc:postgresql://postgres:5432/adoption_breeding
         username: postgres
         password: admin
 
