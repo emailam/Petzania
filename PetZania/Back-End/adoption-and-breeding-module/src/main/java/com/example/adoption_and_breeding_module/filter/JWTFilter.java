@@ -35,8 +35,6 @@ public class JWTFilter extends OncePerRequestFilter {
         String token = null;
         String email = null;
         String role = null;
-        System.out.println("=== JWT FILTER START ===");
-        System.out.println("Current SecurityContext: " + SecurityUtils.getCurrentUser().getEmail());
 
         if (authenticationHeader != null && authenticationHeader.startsWith("Bearer ")) {
             // System.out.println("I entered the JWT filter");
