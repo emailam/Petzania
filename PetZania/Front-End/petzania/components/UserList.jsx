@@ -29,7 +29,7 @@ export default function UserList({
     };
 
     const defaultKeyExtractor = (item, index) => {
-      console.log(item);
+      console.log("THE ITEM IS:", item);
         return item.follower?.userId?.toString() || item.blockId?.toString() || item.followed?.userId?.toString();
     };
 

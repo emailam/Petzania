@@ -73,7 +73,6 @@ export default function SearchScreen() {
     }
 
     const handleUserPress = (user) => {
-        console.log('Selected user:', user);
         router.push({
             pathname: `/UserModule/${user.userId}`,
             params: { username: user.username }
@@ -156,7 +155,7 @@ export default function SearchScreen() {
             <UserList
                 users={results}
                 onUserPress={handleUserPress}
-                keyExtractor={(item) => item.userId.toString()}
+                keyExtractor={(item) => item.userId}
                 EmptyComponent={<EmptyComponent />}
                 FooterComponent={<FooterComponent />}
                 showChevron={true}

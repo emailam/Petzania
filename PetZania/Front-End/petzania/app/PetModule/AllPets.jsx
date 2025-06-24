@@ -40,13 +40,17 @@ export default function AllPets() {
     const goToNextPage = () => {
         console.log('From Page:', fromPage);
         if(fromPage === 'Home'){
-            router.dismiss();
             setFromPage(null);
+            router.dismiss();
             router.push('/Home');
         }
         else if(fromPage === 'Register'){
             setFromPage(null);
             router.push('/RegisterModule/ProfileSetUp3');
+        }
+        else {
+            router.dismiss();
+            router.push('/Home');
         }
     }
 
@@ -64,9 +68,8 @@ export default function AllPets() {
                 )}
             />
             {fromPage !== 'EditProfile' && (
-                <View style={styles.buttonContainer}>
-                    <Button
-                        title={fromPage === 'Register' ? 'Next' : fromPage === 'Home' ? 'Return to Home' : 'Continue'}
+                <View style={styles.buttonContainer}>                    <Button
+                        title={fromPage === 'Register' ? 'Next' : 'Return to Home'}
                         borderRadius={10}
                         fontSize={16}
                         onPress={goToNextPage}

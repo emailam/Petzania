@@ -167,7 +167,7 @@ export default function Following() {
       <UserList
         users={following}
         onUserPress={handleUserPress}
-        keyExtractor={(item) => item.followId || item.userId}
+        keyExtractor={(item) => item.userId}
         onEndReached={loadMoreFollowing}
         onEndReachedThreshold={0.1}
         contentContainerStyle={{ padding: 16 }}

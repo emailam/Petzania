@@ -138,7 +138,6 @@ export async function isBlockingExists(userId) {
 export async function followUser(userId) {
     try {
         const response = await api.post(`/friends/follow/${userId}`);
-        console.log('Follow response:', response);
         if (response.status < 200 || response.status >= 300) {
             throw new Error('Failed to follow user. Please try again later.');
         }

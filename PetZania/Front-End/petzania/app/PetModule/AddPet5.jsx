@@ -2,6 +2,7 @@ import {
     StyleSheet, View, Text, KeyboardAvoidingView, Platform, Image, TouchableOpacity,
     FlatList, ActivityIndicator
 } from 'react-native';
+
 import React, { useState, useContext } from 'react';
 import { useRouter } from 'expo-router';
 
@@ -43,20 +44,26 @@ export default function AddPet5() {
                     ...prev,
                     myVaccinesURLs: uploadedUrls,
                 }));
-            }
-
-            const newPet = await addPetToUser(pet, user.userId);
+            }            const newPet = await addPetToUser(pet, user.userId);
 
             setPets(prevPets => [...prevPets, newPet]);
             setPet({});
             router.dismissAll();
-            setFromPage(null);
+            
+            // Store fromPage value before resetting it
+            const currentFromPage = fromPage;
 
-            if (fromPage === 'Home') {
+            if (currentFromPage === 'Home') {
+                // Keep fromPage as 'Home' so AllPets knows we came from Home
                 router.push('/PetModule/AllPets');
                 return;
             }
-            if(fromPage !== 'EditProfile') {setFromPage("Register"); router.push('/PetModule/AllPets');}
+            if(currentFromPage !== 'EditProfile') {
+                setFromPage("Register"); 
+                router.push('/PetModule/AllPets');
+            } else {
+                setFromPage(null);
+            }
         } catch (err) {
             console.error('Error uploading vaccine files:', err);
         } finally {
@@ -95,7 +102,6 @@ export default function AddPet5() {
         setVaccineFiles(updated);
     };
 
-    if(fromPage !== 'EditProfile') {setFromPage("Register"); router.push('/PetModule/AllPets');}
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

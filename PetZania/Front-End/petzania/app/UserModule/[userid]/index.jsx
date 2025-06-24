@@ -1,11 +1,16 @@
-import React, { useState, useEffect, useContext, use } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams, useRouter, useNavigation } from 'expo-router';
+import React, { useState, useEffect, useContext } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import ImageViewing from 'react-native-image-viewing';
+
 import { UserContext } from '@/context/UserContext';
+
 import { useFriends } from '@/context/FriendsContext';
+
+import { createChat } from '@/services/chatService';
 
 import { useFriendsData } from '@/hooks/useFriendsData'
 
@@ -84,6 +89,7 @@ export default function UserProfile() {
 
         initializeProfile();
     }, [userid]);
+
     const fetchUserProfile = async () => {
         try {
             // If it's the user's own profile, use currentUser from context first
@@ -160,15 +166,13 @@ export default function UserProfile() {
             setIsFollowingUser(false);
         }
     };
+
     const handleFriendRequest = async () => {
         if (actionLoading) return;
-        console.log(friendshipStatus);
         try {
             setActionLoading(true);
             if (friendshipStatus === 'none') {
                 // Send friend request
-                console.log("Sending friend request to user:", userid);
-                console.log("User details:", user);
                 const response = await sendFriendRequest(userid);
                 setFriendshipStatus('pending');
                 setFriendRequestId(response.id);
@@ -383,7 +387,7 @@ export default function UserProfile() {
         }
     };
 
-    const handleSendMessage = () => {
+    const handleSendMessage = async () => {
         if (isBlocked) {
             Toast.show({
                 type: 'error',
@@ -394,7 +398,20 @@ export default function UserProfile() {
             });
             return;
         }
-        router.push(`/(drawer)/(stack)/Chat/${userid}`);
+
+        try {
+            const chat = await createChat(userid);
+            router.push(`/Chat/${chat.chatId}`);
+        } catch (error) {
+            console.error('Error creating chat:', error);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Failed to start conversation',
+                position: 'top',
+                visibilityTime: 3000,
+            });
+        }
     };
 
     const handleMoreOptions = () => {
@@ -797,13 +814,13 @@ export default function UserProfile() {
         <View style={styles.tabContent}>
           {/* Pets Section */}
           <View style={styles.petsSection}>
-            {user?.myPets && user.myPets.length > 0 ? (
+            {user?.myPets && user?.myPets.length > 0 ? (
               <View style={styles.petsGrid}>
-                {user.myPets.map((pet) => (
+                {user?.myPets.map((pet) => (
                   <TouchableOpacity
                     key={pet.petId}
                     style={styles.petGridCard}
-                    onPress={() => router.push(`/PetModule/${pet.petId}`)}
+                    onPress={() => { router.push(`/PetModule/${pet.petId}`)}}
                   >
                     {pet.myPicturesURLs && pet.myPicturesURLs.length > 0 ? (
                       <Image
@@ -834,7 +851,8 @@ export default function UserProfile() {
                   {isOwnProfile ? "Add your first pet!" : `${user?.name || 'User'} hasn't added any pets yet`}
                 </Text>
               </View>
-            )}          </View>
+            )}
+            </View>
         </View>
       )}
 

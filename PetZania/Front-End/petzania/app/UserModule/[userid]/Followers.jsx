@@ -169,11 +169,10 @@ export default function Followers() {
       <UserList
         users={followers}
         onUserPress={handleUserPress}
-        keyExtractor={(item) => item.followId || item.userId}
+        keyExtractor={(item) => {item.userId}}
         onEndReached={loadMoreFollowers}
         contentContainerStyle={{ padding: 16 }}
         onEndReachedThreshold={0.1}
-        
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

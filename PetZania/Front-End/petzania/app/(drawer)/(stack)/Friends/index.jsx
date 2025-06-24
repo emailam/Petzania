@@ -4,7 +4,6 @@ import { getFriendsByUserId } from '@/services/friendsService';
 import { getUserProfilePicture } from '@/services/userService';
 import { UserContext } from '@/context/UserContext';
 import UserList from '@/components/UserList';
-import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
 
 export default function FriendsScreen() {
   const [friends, setFriends] = useState([]);
@@ -73,7 +72,8 @@ export default function FriendsScreen() {
 
     try {
       setLoadingMore(true);
-      const nextPage = currentPage + 1;      const response = await getFriendsByUserId(nextPage, 20, 'createdAt', 'desc', user.userId);
+      const nextPage = currentPage + 1;
+      const response = await getFriendsByUserId(nextPage, 20, 'createdAt', 'desc', user.userId);
 
       const newFriendsData = await Promise.all(
         (response.content || []).map(async (friendship) => {
