@@ -28,11 +28,10 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable);
 
         // enabling cross-origin resource sharing
-        http.cors(Customizer.withDefaults());
-
-        // make every request needs an authorization
+        http.cors(Customizer.withDefaults());        // make every request needs an authorization
         http.authorizeHttpRequests(request ->
                 request.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/ws/**").permitAll() // Allow WebSocket connections
                         .anyRequest().authenticated()
         );
 
@@ -44,7 +43,6 @@ public class SecurityConfig {
 
         return http.build();
     }
-
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -54,7 +52,7 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true); // allow cookies/auth headers
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", configuration); // Fixed: use configuration instead of source
         return source;
     }
 }
