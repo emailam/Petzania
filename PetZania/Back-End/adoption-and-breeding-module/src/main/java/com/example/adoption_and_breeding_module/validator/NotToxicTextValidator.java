@@ -4,16 +4,16 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import com.example.adoption_and_breeding_module.service.impl.ToxicityChecker;
+import com.example.adoption_and_breeding_module.service.impl.TextToxicityChecker;
 
 @Component
 public class NotToxicTextValidator implements ConstraintValidator<NotToxicText, String> {
 
-    private final ToxicityChecker toxicityChecker;
+    private final TextToxicityChecker textToxicityChecker;
 
     @Autowired
-    public NotToxicTextValidator(ToxicityChecker toxicityChecker) {
-        this.toxicityChecker = toxicityChecker;
+    public NotToxicTextValidator(TextToxicityChecker textToxicityChecker) {
+        this.textToxicityChecker = textToxicityChecker;
     }
 
     @Override
@@ -22,7 +22,7 @@ public class NotToxicTextValidator implements ConstraintValidator<NotToxicText, 
             return true; // Let @NotBlank/@NotNull handle this
         }
         try {
-            return !toxicityChecker.isToxic(value);
+            return !textToxicityChecker.isToxic(value);
         }
         catch (Exception e) {
             e.printStackTrace();

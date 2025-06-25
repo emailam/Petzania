@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 
 @Service
-public class ToxicityChecker {
+public class TextToxicityChecker {
 
     private ZooModel<String, Classifications> model;
     private Predictor<String, Classifications> predictor;
