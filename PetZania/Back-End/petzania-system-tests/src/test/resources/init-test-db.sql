@@ -1,3 +1,3 @@
 CREATE DATABASE friends_chat;
+CREATE DATABASE adoption_breeding;
 
-GRANT ALL PRIVILEGES ON DATABASE friends_chat TO postgres;
