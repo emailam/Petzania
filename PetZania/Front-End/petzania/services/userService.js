@@ -168,3 +168,21 @@ export async function logout(email) {
     }
 }
 
+export async function deleteUser(email) {
+    try {
+        const response = await api.delete(`/user/auth/delete`,
+            {
+                email: email
+            }
+        );
+
+        if (response.status !== 200) {
+            throw new Error('Failed to delete user. Please try again later.');
+        }
+
+        await clearAllTokens();
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}

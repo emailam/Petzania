@@ -3,8 +3,6 @@ import { responsive } from "@/utilities/responsive";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ForgotPasswordForm from "@/components/ForgotPasswordForm";
 export default function ForgotPasswordScreen(){
-    
-   
     return(
       <SafeAreaView style={styles.safeArea}>
         <Text style={styles.title}>Forgot Password?</Text>

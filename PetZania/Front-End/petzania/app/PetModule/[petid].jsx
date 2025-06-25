@@ -1,6 +1,7 @@
 import {
     View, Text, StyleSheet, ScrollView, TouchableOpacity,
-    Alert, TextInput, Platform, ActivityIndicator
+    Alert, TextInput, Platform, ActivityIndicator,
+    Dimensions
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
@@ -763,7 +764,8 @@ const PetDetails = () => {
             </View>
 
             {/* Tab Content */}
-            {renderTabContent()}            {/* Action Buttons - Only show for pet owner */}
+            {renderTabContent()}
+            {/* Action Buttons - Only show for pet owner */}
             {isOwner && (
                 <View style={styles.buttonContainer}>
                     <TouchableOpacity 
@@ -976,6 +978,7 @@ const styles = StyleSheet.create({
     // Form Styles
     inputsContainer: {
         paddingHorizontal: 20,
+        minHeight: Dimensions.get('window').height - 600,
         width: '100%',
     },
     inputContainer: {

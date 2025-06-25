@@ -64,6 +64,15 @@ export default function UserLayout() {
                     headerLeft: () => <CustomBackButton />,
                 })}
             />
+            <Stack.Screen
+                name="Blocked"
+                options={() => ({
+                    headerShown: true,
+                    headerTitle: 'Blocked Users',
+                    headerTitleStyle: { color: '#000', fontWeight: '600' },
+                    headerLeft: () => <CustomBackButton />,
+                })}
+            />
         </Stack>
     );
 }

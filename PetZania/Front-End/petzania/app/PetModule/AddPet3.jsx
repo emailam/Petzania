@@ -1,17 +1,16 @@
-import { StyleSheet, Text, View, FlatList, Image, TouchableOpacity, TextInput } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TextInput } from 'react-native';
 import React, { useContext, useState } from 'react';
-import { Card } from 'react-native-paper';
 import { PetContext } from '@/context/PetContext';
 import { PET_BREEDS } from '@/constants/PETBREEDS';
 
 import Button from '@/components/Button';
+import PetSelectionCard from '@/components/PetSelectionCard';
 import { useRouter } from 'expo-router';
 
 export default function AddPet3() {
     const { pet, setPet } = useContext(PetContext);
     const router = useRouter();
 
-    const fallbackImage = require('@/assets/images/Pets/Dog.png');
     const [error, setError] = useState(''); // <-- Add error state
 
     const handleSelectPet = (name) => {
@@ -27,22 +26,11 @@ export default function AddPet3() {
     const allBreeds = PET_BREEDS[pet.species] || [];
 
     const renderItem = ({ item }) => (
-        <TouchableOpacity
-            onPress={() => handleSelectPet(item.name)}
-            activeOpacity={1}
-            style={styles.cardWrapper}
-        >
-            <Card style={[styles.card, pet.breed === item.name && styles.selectedCard]}>
-                <Image
-                    source={item.image || fallbackImage}
-                    style={styles.image}
-                    resizeMode="contain"
-                />
-                <Text style={[styles.text, pet.breed === item.name && styles.selectedText]}>
-                    {item.name}
-                </Text>
-            </Card>
-        </TouchableOpacity>
+        <PetSelectionCard
+            item={item}
+            isSelected={pet.breed === item.name}
+            onPress={handleSelectPet}
+        />
     );
 
     const goToNextStep = () => {
@@ -86,35 +74,6 @@ const styles = StyleSheet.create({
     row: {
         justifyContent: 'space-between',
         padding: 10,
-    },
-    cardWrapper: {
-        flex: 1,
-        marginHorizontal: 5,
-    },
-    card: {
-        borderRadius: 16,
-        alignItems: 'center',
-        paddingVertical: 10,
-        elevation: 2,
-        backgroundColor: '#fff',
-    },
-    selectedCard: {
-        borderWidth: 2,
-        borderColor: '#9188E5',
-    },
-    image: {
-        width: 140,
-        height: 140,
-        marginBottom: 10,
-    },
-    text: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#333',
-        textAlign: 'center',
-    },
-    selectedText: {
-        color: '#9188E5',
     },
     orText: {
         textAlign: 'center',

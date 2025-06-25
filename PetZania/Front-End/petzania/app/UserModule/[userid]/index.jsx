@@ -8,8 +8,6 @@ import ImageViewing from 'react-native-image-viewing';
 
 import { UserContext } from '@/context/UserContext';
 
-import { useFriends } from '@/context/FriendsContext';
-
 import { createChat } from '@/services/chatService';
 
 import { useFriendsData } from '@/hooks/useFriendsData'
@@ -50,7 +48,13 @@ export default function UserProfile() {
     const [actionLoading, setActionLoading] = useState(false);
     const [showImageViewer, setShowImageViewer] = useState(false);
 
-    const { friendsCount, followersCount, followingCount } = useFriends();
+    // Local state for counts specific to this user profile
+    const [profileCounts, setProfileCounts] = useState({
+        friendsCount: 0,
+        followersCount: 0,
+        followingCount: 0
+    });
+
     const { loadAllCounts } = useFriendsData(userid);
     const isOwnProfile = currentUser?.userId === userid;
 
@@ -68,7 +72,7 @@ export default function UserProfile() {
             // Load all data concurrently
             const promises = [
                 fetchUserProfile(),
-                loadAllCounts()
+                loadUserCounts()
             ];
 
             if (!isOwnProfile) {
@@ -89,6 +93,27 @@ export default function UserProfile() {
 
         initializeProfile();
     }, [userid]);
+
+    const loadUserCounts = async () => {
+        try {
+            const counts = await loadAllCounts();
+            if (counts) {
+                setProfileCounts({
+                    friendsCount: counts.friendsCount || 0,
+                    followersCount: counts.followersCount || 0,
+                    followingCount: counts.followingCount || 0
+                });
+            }
+        } catch (error) {
+            console.error('Error loading user counts:', error);
+            // Set default values on error
+            setProfileCounts({
+                friendsCount: 0,
+                followersCount: 0,
+                followingCount: 0
+            });
+        }
+    };
 
     const fetchUserProfile = async () => {
         try {
@@ -204,7 +229,7 @@ export default function UserProfile() {
                                     // Refresh friendship status and counts in background
                                     await Promise.all([
                                         fetchFriendshipStatus(),
-                                        loadAllCounts()
+                                        loadUserCounts()
                                     ]);
 
                                     Toast.show({
@@ -259,7 +284,7 @@ export default function UserProfile() {
             if (!isOwnProfile) {
                 await Promise.all([
                     fetchFriendshipStatus(),
-                    loadAllCounts()
+                    loadUserCounts()
                 ]);
             }
         }
@@ -328,7 +353,7 @@ export default function UserProfile() {
             if (!isOwnProfile) {
                 await Promise.all([
                     fetchFriendshipStatus(),
-                    loadAllCounts()
+                    loadUserCounts()
                 ]);
             }
         } catch (error) {
@@ -370,7 +395,7 @@ export default function UserProfile() {
             if (!isOwnProfile) {
                 await Promise.all([
                     fetchFriendshipStatus(),
-                    loadAllCounts()
+                    loadUserCounts()
                 ]);
             }
         } catch (error) {
@@ -415,13 +440,20 @@ export default function UserProfile() {
     };
 
     const handleMoreOptions = () => {
-        const options = [
-            isFollowingUser ? 'Unfollow User' : 'Follow User',
-            'Block User',
-            'Cancel',
-        ];
-        const cancelButtonIndex = 2;
-        const destructiveButtonIndex = 1;
+        // Build options array based on block status
+        const options = [];
+
+        // Only show follow/unfollow if user is not blocked
+        if (!isBlocked) {
+            options.push(isFollowingUser ? 'Unfollow User' : 'Follow User');
+        }
+
+        // Show Block/Unblock based on current status
+        options.push(isBlocked ? 'Unblock User' : 'Block User');
+        options.push('Cancel');
+
+        const cancelButtonIndex = options.length - 1;
+        const destructiveButtonIndex = options.length - 2;
 
         showActionSheetWithOptions(
             {
@@ -431,17 +463,29 @@ export default function UserProfile() {
               title: 'More Options',
             },
             (buttonIndex) => {
-                switch (buttonIndex) {
-                    case 0:
-                        handleFollowUser();
-                        break;
-                    case 1:
-                        handleBlockUser();
-                        break;
+                if (isBlocked) {
+                    // When user is blocked, only block/unblock option is available
+                    switch (buttonIndex) {
+                        case 0:
+                            handleUnblockUser();
+                            break;
+                    }
+                } else {
+                    // When user is not blocked, both follow and block options are available
+                    switch (buttonIndex) {
+                        case 0:
+                            handleFollowUser();
+                            break;
+                        case 1:
+                            handleBlockUser();
+                            break;
+                    }
                 }
             }
         );
-    };    const handleFollowUser = async () => {
+    };
+
+    const handleFollowUser = async () => {
         try {
             if (isFollowingUser) {
                 await unfollowUser(userid);
@@ -464,11 +508,11 @@ export default function UserProfile() {
                     visibilityTime: 3000,
                 });
             }
-            
+
             // Refresh following status and counts in background
             await Promise.all([
                 fetchFollowingStatus(),
-                loadAllCounts()
+                loadUserCounts()
             ]);
         } catch (error) {
             console.error('Error updating follow status:', error);
@@ -501,7 +545,7 @@ export default function UserProfile() {
                             // Refresh friendship status and counts in background
                             await Promise.all([
                                 fetchFriendshipStatus(),
-                                loadAllCounts()
+                                loadUserCounts()
                             ]);
                             
                             Toast.show({
@@ -525,11 +569,56 @@ export default function UserProfile() {
                 },
       ]);
     };
+    const handleUnblockUser = () => {
+        Alert.alert(
+            'Unblock User',
+            `Are you sure you want to unblock ${user?.name || 'this user'}? They will be able to message you and see your posts again.`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Unblock',
+                    style: 'default',
+                    onPress: async () => {
+                        try {
+                            await unblockUser(userid);
+                            setIsBlocked(false);
+                            setFriendshipStatus('none');
+                            
+                            // Refresh friendship status and counts in background
+                            await Promise.all([
+                                fetchFriendshipStatus(),
+                                loadUserCounts()
+                            ]);
+                            
+                            Toast.show({
+                                type: 'success',
+                                text1: 'User Unblocked',
+                                text2: `${user?.name || 'User'} has been unblocked`,
+                                position: 'top',
+                                visibilityTime: 3000,
+                            });
+                        } catch (error) {
+                            console.error('Error unblocking user:', error);
+                            Toast.show({
+                                type: 'error',
+                                text1: 'Error',
+                                text2: 'Failed to unblock user',
+                                position: 'top',
+                                visibilityTime: 3000,
+                            });
+                        }
+                    },
+                },
+            ]
+        );
+    };
 
     const handleImagePress = () => {
         if (!user?.profilePictureURL) return;
         setShowImageViewer(true);
-    };    const getFriendButtonConfig = () => {
+    };
+
+    const getFriendButtonConfig = () => {
         switch (friendshipStatus) {
             case 'none':
                 return {
@@ -574,7 +663,9 @@ export default function UserProfile() {
                     textStyle: styles.addFriendButtonText,
                 };
         }
-    };if (loading) {
+    };
+
+    if (loading) {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#9188E5" />
@@ -644,7 +735,9 @@ export default function UserProfile() {
               <Text style={styles.settingsButtonText}>Settings</Text>
             </TouchableOpacity>
           </View>
-        )}        {!isOwnProfile && (
+        )}
+
+        {!isOwnProfile && (
           <View style={styles.actionButtonsContainer}>
             {friendshipStatus === 'incoming' ? (
               // Show Respond button for incoming requests
@@ -731,7 +824,7 @@ export default function UserProfile() {
                 params: { username: user.username }
             })}
           >
-            <Text style={styles.statNumber}>{friendsCount || 0}</Text>
+            <Text style={styles.statNumber}>{profileCounts.friendsCount || 0}</Text>
             <Text style={styles.statLabel}>Friends</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -741,7 +834,7 @@ export default function UserProfile() {
                 params: { username: user.username }
             })}
           >
-            <Text style={styles.statNumber}>{followersCount || 0}</Text>
+            <Text style={styles.statNumber}>{profileCounts.followersCount || 0}</Text>
             <Text style={styles.statLabel}>Followers</Text>
           </TouchableOpacity>
 
@@ -752,7 +845,7 @@ export default function UserProfile() {
                 params: { username: user.username }
             })}
           >
-            <Text style={styles.statNumber}>{followingCount || 0}</Text>
+            <Text style={styles.statNumber}>{profileCounts.followingCount || 0}</Text>
             <Text style={styles.statLabel}>Following</Text>
           </TouchableOpacity>
           

@@ -1,7 +1,6 @@
 import {
     StyleSheet,
     View,
-    Image,
     TouchableOpacity,
     Text,
     TextInput,
@@ -11,7 +10,8 @@ import {
     FlatList,
     Platform,
 } from 'react-native';
-import React, { useState, useContext, useRef } from 'react';
+import { Image } from 'expo-image';
+import React, { useState, useContext, useRef, useEffect } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { AntDesign } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -34,6 +34,10 @@ const AddPet1 = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [error, setError] = useState('');
     const router = useRouter();
+
+    useEffect(() => {
+        setPet({});
+    }, []);
 
     const pickImage = async () => {
         setLoading(true);
