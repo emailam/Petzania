@@ -718,7 +718,7 @@ public class PetPostControllerIntegrationTests {
     }
 
     @Test
-    void updatePetPost_ToxicBreedAndPetDescription_ShouldFail() throws Exception {
+    void updatePetPost_NotToxicEdgeCasePostDescription_ShouldPass() throws Exception {
         UpdatePetDTO petDTO = UpdatePetDTO.builder()
                 .breed("Trash dog")        // toxic
                 .description("Stupid pet") // toxic
@@ -737,4 +737,28 @@ public class PetPostControllerIntegrationTests {
                 .andExpect(jsonPath("$.message[?(@.field=='updatePetDTO.description')].message").value(hasItem("Toxic content is not allowed.")));
     }
 
+    @Test
+    void createPetPost_NotToxicEdgeCaseDescription_ShouldPass() throws Exception {
+        PetDTO petDTO = PetDTO.builder()
+                .name("Max")
+                .description("Great dog") // toxic
+                .gender(Gender.MALE)
+                .dateOfBirth(LocalDate.of(2020, 5, 15))
+                .age("4 years")
+                .breed("Labrador")
+                .species(PetSpecies.DOG)
+                .build();
+
+        CreatePetPostDTO dto = CreatePetPostDTO.builder()
+                .petDTO(petDTO)
+                .location("Alexandria")
+                .description("My dog had a horrible accident and needs adoption.")
+                .postType(PetPostType.ADOPTION)
+                .build();
+
+        mockMvc.perform(post("/api/pet-posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isCreated());
+    }
 }
