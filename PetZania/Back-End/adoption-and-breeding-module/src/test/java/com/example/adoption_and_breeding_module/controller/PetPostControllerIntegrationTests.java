@@ -35,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.MediaType;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.*;
 
 import static org.hamcrest.Matchers.hasItems;
@@ -631,4 +632,133 @@ public class PetPostControllerIntegrationTests {
         );
     }
 
+    @Test
+    void createPetPost_ToxicPetName_ShouldFailValidation() throws Exception {
+        PetDTO petDTO = PetDTO.builder()
+                .name("stupid dog") // toxic
+                .description("friendly and playful")
+                .gender(Gender.MALE)
+                .dateOfBirth(LocalDate.of(2020, 5, 15))
+                .age("4 years")
+                .breed("Labrador")
+                .species(PetSpecies.DOG)
+                .build();
+
+        CreatePetPostDTO dto = CreatePetPostDTO.builder()
+                .petDTO(petDTO)
+                .location("Cairo")
+                .description("Nice post")
+                .postType(PetPostType.ADOPTION)
+                .build();
+
+        mockMvc.perform(post("/api/pet-posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isNotAcceptable())
+                .andExpect(jsonPath("$.message[0].field").value("petDTO.name"))
+                .andExpect(jsonPath("$.message[0].message").value("Toxic content is not allowed."));
+    }
+
+    @Test
+    void createPetPost_ToxicDescription_ShouldFailValidation() throws Exception {
+        PetDTO petDTO = PetDTO.builder()
+                .name("Max")
+                .description("You are horrible") // toxic
+                .gender(Gender.MALE)
+                .dateOfBirth(LocalDate.of(2020, 5, 15))
+                .age("4 years")
+                .breed("Labrador")
+                .species(PetSpecies.DOG)
+                .build();
+
+        CreatePetPostDTO dto = CreatePetPostDTO.builder()
+                .petDTO(petDTO)
+                .location("Alexandria")
+                .description("Great pet")
+                .postType(PetPostType.ADOPTION)
+                .build();
+
+        mockMvc.perform(post("/api/pet-posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isNotAcceptable())
+                .andExpect(jsonPath("$.message[0].field").value("petDTO.description"))
+                .andExpect(jsonPath("$.message[0].message").value("Toxic content is not allowed."));
+    }
+
+    @Test
+    void updatePetPost_ToxicPostDescription_ShouldFail() throws Exception {
+        UpdatePetPostDTO updateDTO = new UpdatePetPostDTO();
+        updateDTO.setDescription("You're disgusting"); // toxic content
+
+        mockMvc.perform(patch("/api/pet-posts/{petPostId}", adoptionPost.getPostId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isNotAcceptable())
+                .andExpect(jsonPath("$.message[0].field").value("description"))
+                .andExpect(jsonPath("$.message[0].message").value("Toxic content is not allowed."));
+    }
+
+    @Test
+    void updatePetPost_ToxicPetName_ShouldFail() throws Exception {
+        UpdatePetDTO petDTO = UpdatePetDTO.builder()
+                .name("You're ugly") // toxic
+                .build();
+
+        UpdatePetPostDTO updateDTO = UpdatePetPostDTO.builder()
+                .updatePetDTO(petDTO)
+                .build();
+
+        mockMvc.perform(patch("/api/pet-posts/{petPostId}", adoptionPost.getPostId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isNotAcceptable())
+                .andExpect(jsonPath("$.message[0].field").value("updatePetDTO.name"))
+                .andExpect(jsonPath("$.message[0].message").value("Toxic content is not allowed."));
+    }
+
+    @Test
+    void updatePetPost_NotToxicEdgeCasePostDescription_ShouldPass() throws Exception {
+        UpdatePetDTO petDTO = UpdatePetDTO.builder()
+                .breed("Trash dog")        // toxic
+                .description("Stupid pet") // toxic
+                .build();
+
+        UpdatePetPostDTO updateDTO = UpdatePetPostDTO.builder()
+                .updatePetDTO(petDTO)
+                .build();
+
+        mockMvc.perform(patch("/api/pet-posts/{petPostId}", adoptionPost.getPostId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isNotAcceptable())
+                .andExpect(jsonPath("$.message", hasSize(2)))
+                .andExpect(jsonPath("$.message[?(@.field=='updatePetDTO.breed')].message").value(hasItem("Toxic content is not allowed.")))
+                .andExpect(jsonPath("$.message[?(@.field=='updatePetDTO.description')].message").value(hasItem("Toxic content is not allowed.")));
+    }
+
+    @Test
+    void createPetPost_NotToxicEdgeCaseDescription_ShouldPass() throws Exception {
+        PetDTO petDTO = PetDTO.builder()
+                .name("Max")
+                .description("Great dog") // toxic
+                .gender(Gender.MALE)
+                .dateOfBirth(LocalDate.of(2020, 5, 15))
+                .age("4 years")
+                .breed("Labrador")
+                .species(PetSpecies.DOG)
+                .build();
+
+        CreatePetPostDTO dto = CreatePetPostDTO.builder()
+                .petDTO(petDTO)
+                .location("Alexandria")
+                .description("My dog had a horrible accident and needs adoption.")
+                .postType(PetPostType.ADOPTION)
+                .build();
+
+        mockMvc.perform(post("/api/pet-posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isCreated());
+    }
 }

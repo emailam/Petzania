@@ -18,6 +18,9 @@ import com.example.adoption_and_breeding_module.service.IPetPostService;
 import com.example.adoption_and_breeding_module.util.PetPostSpecification;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,7 +34,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Transactional
 public class PetPostService implements IPetPostService {
 
@@ -41,7 +44,7 @@ public class PetPostService implements IPetPostService {
     private final IDTOConversionService dtoConversionService;
 
     @Override
-    public PetPostDTO createPetPost(CreatePetPostDTO dto, UUID ownerId) {
+    public PetPostDTO createPetPost(CreatePetPostDTO dto, UUID ownerId){
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new UserNotFound("User not found with id: " + ownerId));
 
@@ -54,6 +57,7 @@ public class PetPostService implements IPetPostService {
                 .build();
 
         post = petPostRepository.save(post);
+
         return dtoConversionService.mapToPetPostDTO(post);
     }
 
