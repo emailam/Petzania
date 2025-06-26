@@ -36,7 +36,8 @@ export default function ChatIndex() {
             const response = await getAllChats();
 
             // The response should be an array of chats
-            const chatsData = Array.isArray(response) ? response : [];            // Enrich each chat with user details and last message
+            const chatsData = Array.isArray(response) ? response : [];
+            // Enrich each chat with user details and last message
             const enrichedChats = await Promise.all(
                 chatsData.map(async (chat) => {
                     try {

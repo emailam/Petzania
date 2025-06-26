@@ -9,7 +9,9 @@ import { useContext, useEffect, useState } from 'react';
 import { Dropdown } from 'react-native-element-dropdown';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
+import * as Linking from 'expo-linking';
 import { AntDesign } from '@expo/vector-icons';
+import Feather from '@expo/vector-icons/Feather';
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import ImageViewing from 'react-native-image-viewing';
 
@@ -172,7 +174,9 @@ const PetDetails = () => {
         if (currentImageIndex >= updatedImages.length) {
             setCurrentImageIndex(Math.max(0, updatedImages.length - 1));
         }
-    };    const uploadAndSaveImages = async () => {
+    };
+    
+    const uploadAndSaveImages = async () => {
         if (images.length === 0) return [];
 
         try {
@@ -231,26 +235,48 @@ const PetDetails = () => {
         try {
             setIsLoading(true);
             const result = await DocumentPicker.getDocumentAsync({
-                type: 'application/pdf',
+                type: ['application/pdf'],
+                copyToCacheDirectory: true,
                 multiple: true,
             });
 
-            if (!result.canceled && result.assets?.length > 0) {
-                const files = result.assets.map(file => ({
+            if (result?.assets?.length) {
+                const newFiles = result.assets.map(file => ({
                     uri: file.uri,
                     name: file.name,
-                    size: file.size,
                 }));
-                const updatedVaccines = [...vaccineFiles, ...files];
+
+                const updatedVaccines = [...vaccineFiles, ...newFiles];
                 setVaccineFiles(updatedVaccines);
                 handleInputChange('myVaccinesURLs', updatedVaccines);
+            } else {
+                console.log('User canceled or no file selected');
             }
         } catch (err) {
             console.error('Picker Error:', err);
         } finally {
             setIsLoading(false);
         }
-    };    const handleSaveChanges = async () => {
+    };
+
+    const deleteFile = (uriToDelete) => {
+        const updated = vaccineFiles.filter(file => (file.uri || file) !== uriToDelete);
+        setVaccineFiles(updated);
+        handleInputChange('myVaccinesURLs', updated);
+    };
+
+    const openPDF = async (pdfUri) => {
+        try {
+            if (pdfUri) {
+                await Linking.openURL(pdfUri);
+            }
+        } catch (error) {
+            console.error('Error opening PDF:', error);
+            showErrorMessage('Cannot open PDF', 'Unable to open the document');
+        }
+    };
+
+    const handleSaveChanges = async () => {
         if (!pet) return;
     
         const newErrors = {
@@ -271,6 +297,26 @@ const PetDetails = () => {
             // Upload images if there are any new ones
             const uploadedImageUrls = await uploadAndSaveImages();
             
+            // Upload vaccine files if there are any new ones
+            let uploadedVaccineUrls = [];
+            if (vaccineFiles.length > 0) {
+                const localVaccineFiles = vaccineFiles.filter(file => file.uri && file.uri.startsWith('file://'));
+                const serverVaccineFiles = vaccineFiles.filter(file => !file.uri || file.uri.startsWith('http'));
+                
+                if (localVaccineFiles.length > 0) {
+                    const files = localVaccineFiles.map(file => ({
+                        uri: file.uri,
+                        name: file.name,
+                        type: 'application/pdf',
+                    }));
+                    
+                    const uploadedUrls = await uploadFiles(files);
+                    uploadedVaccineUrls = [...serverVaccineFiles.map(f => f.uri || f), ...uploadedUrls];
+                } else {
+                    uploadedVaccineUrls = serverVaccineFiles.map(f => f.uri || f);
+                }
+            }
+            
             const petData = {
                 name: pet.name || undefined,
                 description: pet.description || undefined,
@@ -278,7 +324,7 @@ const PetDetails = () => {
                 dateOfBirth: dateOfBirth || undefined,
                 breed: breed || undefined,
                 species: species ? species.toUpperCase() : undefined,
-                myVaccinesURLs: vaccineFiles.map(file => file.uri || file),
+                myVaccinesURLs: uploadedVaccineUrls,
                 myPicturesURLs: uploadedImageUrls.length > 0 ? uploadedImageUrls : (Array.isArray(pet.myPicturesURLs) ? pet.myPicturesURLs : []),
             };
 
@@ -335,7 +381,8 @@ const PetDetails = () => {
     const renderTabContent = () => {
         if (activeTab === 'info') {
             return (
-                <View style={styles.inputsContainer}>                    {/* Name */}
+                <View style={styles.inputsContainer}>
+                    {/* Name */}
                     <View style={styles.inputContainer}>
                         <Text style={styles.label}>Name {isOwner && <Text style={{ color: 'red' }}>*</Text>}</Text>
                         <TextInput
@@ -395,7 +442,8 @@ const PetDetails = () => {
                             editable={isOwner}
                         />
                         {errors.breed && isOwner && <Text style={styles.errorText}>{errors.breed}</Text>}
-                    </View>                    {/* Gender */}
+                    </View>
+                    {/* Gender */}
                     <View style={styles.inputContainer}>
                         <Text style={styles.label}>Gender {isOwner && <Text style={{ color: 'red' }}>*</Text>}</Text>
                         {isOwner ? (
@@ -419,7 +467,8 @@ const PetDetails = () => {
                             />
                         )}
                         {errors.gender && isOwner && <Text style={styles.errorText}>{errors.gender}</Text>}
-                    </View>                    {/* Description */}
+                    </View>
+                    {/* Description */}
                     <View style={styles.inputContainer}>
                         <Text style={styles.label}>Description</Text>
                         <TextInput
@@ -435,7 +484,8 @@ const PetDetails = () => {
                             numberOfLines={4}
                             editable={isOwner}
                         />
-                    </View>                    {/* Date of Birth */}
+                    </View>
+                    {/* Date of Birth */}
                     <View style={styles.inputContainer}>
                         {isOwner ? (
                             <DateOfBirthInput
@@ -504,7 +554,8 @@ const PetDetails = () => {
                                             )}
                                         </TouchableOpacity>
                                     );
-                                })}                                {/* Add Photo Button - Only for owners */}
+                                })}
+                                {/* Add Photo Button - Only for owners */}
                                 {isOwner && images.length < 6 && (
                                     <TouchableOpacity
                                         style={styles.addPhotoGridItem}
@@ -534,49 +585,61 @@ const PetDetails = () => {
                         </View>
                     )}
                 </View>
-            );        } else {
+            );
+        } else {
             // Vaccines tab
             return (
                 <View style={styles.inputsContainer}>
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Vaccine Documents</Text>
+                    {/* Always show the vaccines header */}
+                    <TouchableOpacity 
+                        style={styles.vaccinesInput} 
+                        onPress={isOwner ? handleFilePick : undefined} 
+                        disabled={isLoading}
+                    >
+                        <View style={styles.leftContainer}>
+                            <Image source={require('@/assets/images/AddPet/Vaccines.png')} style={styles.image} />
+                            <Text style={styles.vaccineLabel}>Vaccines</Text>
+                        </View>
                         {isOwner && (
-                            <TouchableOpacity 
-                                style={styles.uploadButton} 
-                                onPress={handleFilePick}
-                                disabled={isLoading}
-                            >
-                                <AntDesign name="pluscircleo" size={20} color="#9188E5" />
-                                <Text style={styles.uploadButtonText}>Add Vaccine Documents</Text>
-                            </TouchableOpacity>
-                        )}
-                        
-                        {vaccineFiles.length > 0 ? (
-                            <View style={styles.filesList}>
-                                {vaccineFiles.map((file, index) => (
-                                    <View key={index} style={styles.fileItem}>
-                                        <AntDesign name="pdffile1" size={20} color="#FF6B6B" />
-                                        <Text style={styles.fileName}>{file.name || `Document ${index + 1}`}</Text>
-                                        {isOwner && (
-                                            <TouchableOpacity
-                                                onPress={() => {
-                                                    const updatedFiles = vaccineFiles.filter((_, i) => i !== index);
-                                                    setVaccineFiles(updatedFiles);
-                                                    handleInputChange('myVaccinesURLs', updatedFiles);
-                                                }}
-                                            >
-                                                <AntDesign name="delete" size={18} color="#FF6B6B" />
-                                            </TouchableOpacity>
-                                        )}
-                                    </View>
-                                ))}
+                            <View style={styles.rightContainer}>
+                                {isLoading
+                                    ? <ActivityIndicator size="small" color="#9188E5" />
+                                    : <Feather name="file-plus" size={28} color="#9188E5" />
+                                }
                             </View>
-                        ) : (
-                            !isOwner && (
-                                <Text style={styles.emptyStateText}>No vaccine documents available</Text>
-                            )
                         )}
-                    </View>
+                    </TouchableOpacity>
+
+                    {/* Render vaccine files */}
+                    {vaccineFiles.map((item, index) => (
+                        <TouchableOpacity 
+                            key={index} 
+                            style={styles.uploadedFile}
+                            onPress={() => openPDF(item.uri || item)}
+                        >
+                            <View style={styles.leftContainer}>
+                                <Image source={require('@/assets/images/AddPet/PDF.png')} style={styles.image} />
+                                <Text style={styles.vaccineLabel}>{item.name || `Document ${index + 1}`}</Text>
+                            </View>
+                            {isOwner && (
+                                <TouchableOpacity
+                                    style={styles.rightContainer}
+                                    onPress={(e) => {
+                                        e.stopPropagation();
+                                        deleteFile(item.uri || item);
+                                    }}
+                                    disabled={isLoading}
+                                >
+                                    <AntDesign name="delete" size={22} color="#C70000" />
+                                </TouchableOpacity>
+                            )}
+                        </TouchableOpacity>
+                    ))}
+
+                    {/* Show empty state for non-owners when no files */}
+                    {!isOwner && vaccineFiles.length === 0 && (
+                        <Text style={styles.emptyStateText}>No vaccine documents available</Text>
+                    )}
                 </View>
             );
         }
@@ -655,7 +718,7 @@ const PetDetails = () => {
                 'Cancel',
             ];
             const cancelButtonIndex = options.length - 1;
-            
+
             showActionSheetWithOptions(
                 {
                     options,
@@ -684,7 +747,7 @@ const PetDetails = () => {
         <ScrollView contentContainerStyle={styles.container}>
             {/* Profile Picture Section */}
             <View style={styles.profileSection}>
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={styles.profileImageContainer}
                     onPress={isOwner ? handleProfileImagePress : () => {
                         // For non-owners, just show the image viewer
@@ -715,9 +778,9 @@ const PetDetails = () => {
                         </>
                     )}
                 </TouchableOpacity>
-                
+
                 <Text style={styles.profileImageText}>
-                    {isOwner 
+                    {isOwner
                         ? (images.length > 0 ? 'Tap to view or change profile picture' : 'Tap to add profile picture')
                         : (images.length > 0 ? 'Tap to view profile picture' : 'No profile picture')
                     }
@@ -851,7 +914,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginTop: 5,
     },
-    
+
     // Tab Navigation Styles
     tabContainer: {
         flexDirection: 'row',
@@ -1009,40 +1072,53 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginTop: 5,
     },
-    
+
     // Vaccine Files Styles
-    uploadButton: {
+    vaccinesInput: {
+        marginTop: 20,
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 12,
-        borderWidth: 1,
+        justifyContent: 'space-between',
         borderColor: '#9188E5',
-        borderRadius: 8,
-        backgroundColor: '#f8f8ff',
-        marginBottom: 10,
+        borderWidth: 1,
+        padding: 10,
+        borderRadius: 10,
     },
-    uploadButtonText: {
-        marginLeft: 8,
-        color: '#9188E5',
-        fontSize: 16,
-        fontWeight: '500',
-    },
-    filesList: {
-        marginTop: 10,
-    },
-    fileItem: {
+    uploadedFile: {
+        marginTop: 20,
         flexDirection: 'row',
         alignItems: 'center',
+        backgroundColor: 'rgba(145, 136, 229, 0.1)',
         padding: 10,
-        backgroundColor: '#f5f5f5',
-        borderRadius: 8,
-        marginBottom: 8,
+        borderRadius: 10,
     },
-    fileName: {
-        flex: 1,
-        marginLeft: 10,
+    vaccineHeader: {
+        fontSize: 19,
+        color: '#333',
+        fontWeight: 'bold'
+    },
+    vaccineLabel: {
         fontSize: 14,
         color: '#333',
+        fontWeight: 'bold',
+        flex: 1,
+    },
+    leftContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    rightContainer: {
+        padding: 1,
+    },
+    scrollContainer: {
+        paddingBottom: 20,
+    },
+    image: {
+        width: 40,
+        height: 40,
+        marginRight: 10,
+        borderRadius: 5,
     },
 
     // Button Styles
@@ -1096,7 +1172,7 @@ const styles = StyleSheet.create({
         color: '#9188E5',
         textAlign: 'center',
     },
-    
+
     // Read-only styles for non-owners
     readOnlyInput: {
         backgroundColor: '#f5f5f5',

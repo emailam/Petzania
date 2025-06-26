@@ -10,6 +10,7 @@ import Feather from '@expo/vector-icons/Feather';
 import AntDesign from '@expo/vector-icons/AntDesign';
 
 import * as DocumentPicker from 'expo-document-picker';
+import * as Linking from 'expo-linking';
 import Button from '@/components/Button';
 import { PetContext } from '@/context/PetContext';
 import { UserContext } from '@/context/UserContext';
@@ -31,6 +32,8 @@ export default function AddPet5() {
         try {
             setIsLoading(true);
 
+            let updatedPet = { ...pet };
+
             if (vaccineFiles.length > 0) {
                 const files = vaccineFiles.map(file => ({
                     uri: file.uri,
@@ -39,17 +42,20 @@ export default function AddPet5() {
                 }));
 
                 const uploadedUrls = await uploadFiles(files);
+                updatedPet.myVaccinesURLs = uploadedUrls;
 
                 setPet(prev => ({
                     ...prev,
                     myVaccinesURLs: uploadedUrls,
                 }));
-            }            const newPet = await addPetToUser(pet, user.userId);
+            }
+
+            const newPet = await addPetToUser(updatedPet, user.userId);
 
             setPets(prevPets => [...prevPets, newPet]);
             setPet({});
             router.dismissAll();
-            
+
             // Store fromPage value before resetting it
             const currentFromPage = fromPage;
 
@@ -59,7 +65,7 @@ export default function AddPet5() {
                 return;
             }
             if(currentFromPage !== 'EditProfile') {
-                setFromPage("Register"); 
+                setFromPage("Register");
                 router.push('/PetModule/AllPets');
             } else {
                 setFromPage(null);
@@ -102,6 +108,16 @@ export default function AddPet5() {
         setVaccineFiles(updated);
     };
 
+    const openPDF = async (pdfUri) => {
+        try {
+            if (pdfUri) {
+                await Linking.openURL(pdfUri);
+            }
+        } catch (error) {
+            console.error('Error opening PDF:', error);
+        }
+    };
+
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -124,19 +140,25 @@ export default function AddPet5() {
                 data={vaccineFiles}
                 keyExtractor={(item, index) => index.toString()}
                 renderItem={({ item }) => (
-                    <View style={styles.uploadedFile}>
+                    <TouchableOpacity 
+                        style={styles.uploadedFile}
+                        onPress={() => openPDF(item.uri)}
+                    >
                         <View style={styles.leftContainer}>
                             <Image source={require('@/assets/images/AddPet/PDF.png')} style={styles.image} />
                             <Text style={styles.vaccineLabel}>{item.name}</Text>
                         </View>
                         <TouchableOpacity
                             style={styles.rightContainer}
-                            onPress={() => deleteFile(item.uri)}
+                            onPress={(e) => {
+                                e.stopPropagation();
+                                deleteFile(item.uri);
+                            }}
                             disabled={isLoading}
                         >
                             <AntDesign name="delete" size={22} color="#C70000" />
                         </TouchableOpacity>
-                    </View>
+                    </TouchableOpacity>
                 )}
                 contentContainerStyle={styles.scrollContainer}
                 keyboardShouldPersistTaps="handled"

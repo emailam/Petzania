@@ -43,7 +43,7 @@ export default function LoginForm(){
                 if (userData.name === null) {
                     router.push("/RegisterModule/ProfileSetUp1");
                 } else {
-                    router.replace("/RegisterModule/ProfileSetUp1");
+                    router.replace("/Home");
                 }
             }
         } catch (error) {
@@ -58,9 +58,12 @@ export default function LoginForm(){
             const showBothFieldsError = (message) => {
                 setError("email", { type: "manual", message });
                 setError("password", { type: "manual", message });
-            };            if (status === 400 || errorMsg === "Email is incorrect") {
+            };
+
+            if (status === 400 || errorMsg === "Email is incorrect") {
                 showBothFieldsError("Invalid email or password.");
             }
+
             else if (status === 401) {
                 // Check if it's a verification issue vs authentication issue
                 if (errorMsg === "Unauthorized" && error.response?.data?.message === "There is no refresh token sent") {
@@ -104,6 +107,7 @@ export default function LoginForm(){
             }
         }
     };
+
     return(
         <View style = {styles.container}>
             <FormInput
