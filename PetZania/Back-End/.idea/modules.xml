@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/Back-End.iml" filepath="$PROJECT_DIR$/.idea/Back-End.iml" />
       <module fileurl="file://$PROJECT_DIR$/adoption-and-breeding-module/adoption-and-breeding-module.iml" filepath="$PROJECT_DIR$/adoption-and-breeding-module/adoption-and-breeding-module.iml" />
       <module fileurl="file://$PROJECT_DIR$/friends-and-chats-module/friends-and-chats-module.iml" filepath="$PROJECT_DIR$/friends-and-chats-module/friends-and-chats-module.iml" />
+      <module fileurl="file://$PROJECT_DIR$/notification-module/notification-module.iml" filepath="$PROJECT_DIR$/notification-module/notification-module.iml" />
       <module fileurl="file://$PROJECT_DIR$/petzania-system-tests/petzania-system-tests.iml" filepath="$PROJECT_DIR$/petzania-system-tests/petzania-system-tests.iml" />
       <module fileurl="file://$PROJECT_DIR$/registration-module/registration-module.iml" filepath="$PROJECT_DIR$/registration-module/registration-module.iml" />
     </modules>
