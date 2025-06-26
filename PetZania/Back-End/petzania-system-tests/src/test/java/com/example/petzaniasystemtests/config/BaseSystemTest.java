@@ -97,8 +97,32 @@ public class BaseSystemTest {
             .waitingFor(Wait.forLogMessage(".*Started FriendsAndChatsModuleApplication.*", 1)
                     .withStartupTimeout(Duration.ofMinutes(2)));
 
+    @Container
+    protected static GenericContainer<?> adoptionService = new GenericContainer<>(
+            "adoption-and-breeding-module:latest")
+            .withNetwork(network)
+            .withNetworkAliases("adoption-service")
+            .withExposedPorts(8082)
+            .withEnv("SPRING_PROFILES_ACTIVE", "test")
+            .withEnv("SPRING_DATASOURCE_URL", "jdbc:postgresql://postgres:5432/adoption_breeding")
+            .withEnv("SPRING_DATASOURCE_USERNAME", "postgres")
+            .withEnv("SPRING_DATASOURCE_PASSWORD", "admin")
+            .withEnv("SPRING_RABBITMQ_HOST", "rabbitmq")
+            .withEnv("SPRING_RABBITMQ_PORT", "5672")
+            .withEnv("SPRING_DATA_REDIS_HOST", "redis")
+            .withEnv("SPRING_DATA_REDIS_PORT", "6379")
+            .withEnv("SPRING_JPA_HIBERNATE_DDL_AUTO", "create-drop")
+            .dependsOn(postgres, rabbitmq, redis, registrationService)
+            .withLogConsumer(outputFrame -> {
+                System.err.println("ADOPTION: " + outputFrame.getUtf8String());
+            })
+            .waitingFor(Wait.forLogMessage(".*Started AdoptionAndBreedingModule.*", 1)
+                    .withStartupTimeout(Duration.ofMinutes(2)));
+
+
     protected static String registrationBaseUrl;
     protected static String friendsBaseUrl;
+    protected static String adoptionBaseUrl;
     protected static String wsUrl;
 
     @BeforeAll
@@ -107,6 +131,8 @@ public class BaseSystemTest {
                 registrationService.getMappedPort(8080));
         friendsBaseUrl = String.format("http://localhost:%d",
                 friendsService.getMappedPort(8081));
+        adoptionBaseUrl = String.format("http://localhost:%d",
+                adoptionService.getMappedPort(8082));
         wsUrl = String.format("ws://localhost:%d/ws",
                 friendsService.getMappedPort(8081));
 

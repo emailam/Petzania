@@ -309,14 +309,17 @@ public class FriendService implements IFriendService {
                 .blocked(blocked)
                 .createdAt(new Timestamp(System.currentTimeMillis()))
                 .build();
-        BlockEvent blockEvent = BlockEvent.builder()
-                .blockId(block.getId())
-                .blockedId(blockedId)
-                .blockerId(blockerId)
-                .createdAt(block.getCreatedAt())
-                .build();
+
+        BlockDTO blockDTO = dtoConversionService.mapToBlockDTO(blockRepository.save(block));
+
+        BlockEvent blockEvent = new BlockEvent();
+        blockEvent.setBlockId(block.getId());
+        blockEvent.setBlockerId(blockerId);
+        blockEvent.setBlockedId(blockedId);
+        blockEvent.setCreatedAt(block.getCreatedAt());
+
         blockPublisher.sendUserBlockedMessage(blockEvent);
-        return dtoConversionService.mapToBlockDTO(blockRepository.save(block));
+        return blockDTO;
     }
 
     @Override

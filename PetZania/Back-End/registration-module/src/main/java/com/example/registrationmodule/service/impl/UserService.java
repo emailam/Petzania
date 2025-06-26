@@ -7,6 +7,7 @@ import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.dto.EmailRequestDTO;
 import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.model.event.UserEvent;
+import com.example.registrationmodule.repository.BlockRepository;
 import com.example.registrationmodule.repository.UserRepository;
 import com.example.registrationmodule.service.IDTOConversionService;
 import com.example.registrationmodule.service.IEmailService;
@@ -40,6 +41,7 @@ public class UserService implements IUserService {
     private final IDTOConversionService converter;
     private final UserRepository userRepository;
     private final RefreshTokenService refreshTokenService;
+    private final BlockRepository blockRepository;
     private final IEmailService emailService;
     private final JWTService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -84,33 +86,29 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public Page<UserProfileDTO> getUsers(int page, int size, String sortBy, String direction) {
+    public Page<UserProfileDTO> getUsers(UUID requesterId, int page, int size, String sortBy, String direction) {
         Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        return userRepository.findAll(pageable)
+        return userRepository.findAllExcludingBlocked(requesterId, pageable)
                 .map(converter::mapToUserProfileDto);
     }
 
     @Override
-    public Page<UserProfileDTO> getUsersByPrefixUsername(int page, int size, String sortBy, String direction, String prefix) {
+    public Page<UserProfileDTO> getUsersByPrefixUsername(UUID requesterId, int page, int size, String sortBy, String direction, String prefix) {
         Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        return userRepository.findByUsernameStartingWithIgnoreCase(prefix, pageable)
+        return userRepository.findByUsernameStartingWithIgnoreCaseExcludingBlocked(prefix, requesterId, pageable)
                 .map(converter::mapToUserProfileDto);
     }
 
     @Override
-    public UserProfileDTO getUserById(UUID userId) {
+    public UserProfileDTO getUserById(UUID requesterId, UUID userId) {
+        if (blockRepository.existsByBlocker_UserIdAndBlocked_UserId(requesterId, userId) || blockRepository.existsByBlocker_UserIdAndBlocked_UserId(userId, requesterId)) {
+            throw new UserAccessDenied("Cannot Perform This Operation Due To Existence Of Blocking");
+        }
         return userRepository.findById(userId)
-                .map(converter::mapToUserProfileDto)
-                .orElseThrow(() -> new UserNotFound("User does not exist"));
-    }
-
-    @Override
-    public UserProfileDTO getUserByUsername(String username) {
-        return userRepository.findByUsernameIgnoreCase(username)
                 .map(converter::mapToUserProfileDto)
                 .orElseThrow(() -> new UserNotFound("User does not exist"));
     }
@@ -349,7 +347,10 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public ProfilePictureDTO getProfilePictureURLByUserId(UUID userId) {
+    public ProfilePictureDTO getProfilePictureURLByUserId(UUID requesterId, UUID userId) {
+        if (blockRepository.existsByBlocker_UserIdAndBlocked_UserId(requesterId, userId) || blockRepository.existsByBlocker_UserIdAndBlocked_UserId(userId, requesterId)) {
+            throw new UserAccessDenied("Cannot Perform This Operation Due To Existence Of Blocking");
+        }
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFound("User does not exist"));
         ProfilePictureDTO profilePictureDTO = new ProfilePictureDTO();
         profilePictureDTO.setProfilePictureURL(user.getProfilePictureURL());

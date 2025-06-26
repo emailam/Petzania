@@ -17,17 +17,17 @@ public interface IUserService {
 
     public void sendDeactivationMessage(String email);
 
-    public ProfilePictureDTO getProfilePictureURLByUserId(UUID userId);
-    Page<UserProfileDTO> getUsers(int page, int size, String sortBy, String direction);
+    public ProfilePictureDTO getProfilePictureURLByUserId(UUID requesterId, UUID userId);
+    Page<UserProfileDTO> getUsers(UUID requesterId, int page, int size, String sortBy, String direction);
 
-    Page<UserProfileDTO> getUsersByPrefixUsername(int page, int size, String sortBy, String direction, String prefix);
+    Page<UserProfileDTO> getUsersByPrefixUsername(UUID requesterId, int page, int size, String sortBy, String direction, String prefix);
 
     public void sendResetPasswordOTP(EmailDTO emailDTO);
 
     public void verifyResetOTP(String email, String otp);
 
     public void resetPassword(String email, String otp, String newPassword);
-    UserProfileDTO getUserById(UUID userId);
+    UserProfileDTO getUserById(UUID requesterId, UUID userId);
   
     public void deleteUser(EmailDTO emailDTO);
   
@@ -55,5 +55,4 @@ public interface IUserService {
 
     UserProfileDTO updateUserById(UUID userId, UpdateUserProfileDto updateUserProfileDto);
 
-    UserProfileDTO getUserByUsername(String username);
 }

@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 public class UserListener {
     private final UserRepository userRepository;
 
-    @RabbitListener(queues = "userRegisteredQueue")
+    @RabbitListener(queues = "userRegisteredQueueAdoptionModule")
     public void onUserRegistered(UserEvent user) {
         if (!userRepository.existsById(user.getUserId()) && !userRepository.existsByUsername(user.getUsername())
                 && !userRepository.existsByEmail(user.getEmail())) {
@@ -27,7 +27,7 @@ public class UserListener {
         }
     }
 
-    @RabbitListener(queues = "userDeletedQueue")
+    @RabbitListener(queues = "userDeletedQueueAdoptionModule")
     public void onUserDeleted(UserEvent user) {
         if (userRepository.existsById(user.getUserId())) {
             userRepository.deleteById(user.getUserId());

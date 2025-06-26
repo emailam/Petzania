@@ -1,4 +1,4 @@
-package com.example.friends.and.chats.module.model.event;
+package com.example.registrationmodule.model.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

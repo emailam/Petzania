@@ -24,7 +24,7 @@ public class TestDataUtil {
                 .profilePictureURL("http://example.com/profile.jpg")
                 .phoneNumber("1234567890")
                 .verified(true)
-                .build();
+                .online(false).isBlocked(false).build();
     }
     public static User createTestUserB() {
         return User.builder()
@@ -37,7 +37,49 @@ public class TestDataUtil {
                 .profilePictureURL("http://example.com/profile.jpg")
                 .phoneNumber("1234567890")
                 .verified(true)
-                .build();
+                .online(false).isBlocked(false).build();
+    }
+
+    public static User createTestUserC() {
+        return User.builder()
+                .username("testUserC")
+                .password("Password123#")
+                .loginTimes(0)
+                .email("testC@example.com")
+                .name("Test User")
+                .bio("I love pets!")
+                .profilePictureURL("http://example.com/profile.jpg")
+                .phoneNumber("1234567890")
+                .verified(true)
+                .online(false).isBlocked(false).build();
+    }
+
+    public static User createTestUserD() {
+        return User.builder()
+                .username("testUserD")
+                .password("Password123#")
+                .loginTimes(0)
+                .email("testD@example.com")
+                .name("Test User")
+                .bio("I love pets!")
+                .profilePictureURL("http://example.com/profile.jpg")
+                .phoneNumber("1234567890")
+                .verified(true)
+                .online(false).isBlocked(false).build();
+    }
+
+    public static User createTestUserE() {
+        return User.builder()
+                .username("testUserE")
+                .password("Password123#")
+                .loginTimes(0)
+                .email("testE@example.com")
+                .name("Test User")
+                .bio("I love pets!")
+                .profilePictureURL("http://example.com/profile.jpg")
+                .phoneNumber("1234567890")
+                .verified(true)
+                .online(false).isBlocked(false).build();
     }
 
     public static Admin createAdminA() {
@@ -51,14 +93,6 @@ public class TestDataUtil {
     public static Admin createAdminB() {
         return Admin.builder()
                 .username("adminB")
-                .password("Password123#")
-                .role(AdminRole.ADMIN)
-                .build();
-    }
-
-    public static Admin createAdminC() {
-        return Admin.builder()
-                .username("adminC")
                 .password("Password123#")
                 .role(AdminRole.ADMIN)
                 .build();

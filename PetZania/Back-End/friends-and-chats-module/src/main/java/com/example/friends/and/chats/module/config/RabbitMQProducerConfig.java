@@ -1,0 +1,64 @@
+package com.example.friends.and.chats.module.config;
+
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class RabbitMQProducerConfig {
+
+    @Bean
+    public Jackson2JsonMessageConverter jsonMessageConverter() {
+        return new Jackson2JsonMessageConverter();
+    }
+
+    @Bean
+    public TopicExchange blockExchange() {
+        return new TopicExchange("blockExchange");
+    }
+
+    @Bean
+    public Queue userBlockedQueueRegistrationModule() {
+        return new Queue("userBlockedQueueRegistrationModule", true);
+    }
+
+    @Bean
+    public Queue userBlockedQueueAdoptionModule() {
+        return new Queue("userBlockedQueueAdoptionModule", true);
+    }
+
+    @Bean
+    public Queue userUnBlockedQueueRegistrationModule() {
+        return new Queue("userUnBlockedQueueRegistrationModule", true);
+    }
+
+    @Bean
+    public Queue userUnBlockedQueueAdoptionModule() {
+        return new Queue("userUnBlockedQueueAdoptionModule", true);
+    }
+
+    @Bean
+    public Binding userBlockingRegistrationBinding(Queue userBlockedQueueRegistrationModule, TopicExchange blockExchange) {
+        return BindingBuilder.bind(userBlockedQueueRegistrationModule).to(blockExchange).with("block.add");
+    }
+
+    @Bean
+    public Binding userBlockingAdoptionBinding(Queue userBlockedQueueAdoptionModule, TopicExchange blockExchange) {
+        return BindingBuilder.bind(userBlockedQueueAdoptionModule).to(blockExchange).with("block.add");
+    }
+
+    @Bean
+    public Binding userUnBlockingRegistrationBinding(Queue userUnBlockedQueueRegistrationModule, TopicExchange blockExchange) {
+        return BindingBuilder.bind(userUnBlockedQueueRegistrationModule).to(blockExchange).with("block.delete");
+    }
+
+    @Bean
+    public Binding userUnBlockingAdoptionBinding(Queue userUnBlockedQueueAdoptionModule, TopicExchange blockExchange) {
+        return BindingBuilder.bind(userUnBlockedQueueAdoptionModule).to(blockExchange).with("block.delete");
+    }
+
+}
