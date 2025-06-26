@@ -77,6 +77,9 @@ public class PetPost {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
+    @Transient
+    private double score;
+
     @PrePersist
     public void onCreate() {
         createdAt = Instant.now();

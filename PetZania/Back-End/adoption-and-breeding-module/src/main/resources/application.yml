@@ -29,6 +29,14 @@ spring:
     jwt:
         secret-key: 4ioX3ogCr4GAZ9gB99txf1LyhqVOmTJ8RsL9hyJzZXQ=
 
+feed:
+    weights:
+        recency: 0.4
+        totalReacts: 0.3
+        petCategoryAffinity: 0.25
+        postCategoryAffinity: 0.2
+    freshness-window-hours: 96
+
 server:
     port: 8082
     error:

@@ -41,9 +41,13 @@ spring:
       expiration:
         86400000
 
-openai:
-  api:
-    secret-key: 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
+feed:
+  weights:
+    recency: 0.4
+    totalReacts: 0.3
+    petCategoryAffinity: 0.25
+    postCategoryAffinity: 0.2
+  freshness-window-hours: 96
 
 server:
   error:

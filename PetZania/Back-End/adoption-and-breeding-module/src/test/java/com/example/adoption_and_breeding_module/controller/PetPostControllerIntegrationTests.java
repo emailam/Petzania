@@ -7,15 +7,14 @@ import com.example.adoption_and_breeding_module.model.entity.Block;
 import com.example.adoption_and_breeding_module.model.entity.Pet;
 import com.example.adoption_and_breeding_module.model.entity.PetPost;
 import com.example.adoption_and_breeding_module.model.entity.User;
-import com.example.adoption_and_breeding_module.model.enumeration.Gender;
-import com.example.adoption_and_breeding_module.model.enumeration.PetPostStatus;
-import com.example.adoption_and_breeding_module.model.enumeration.PetPostType;
-import com.example.adoption_and_breeding_module.model.enumeration.PetSpecies;
+import com.example.adoption_and_breeding_module.model.enumeration.*;
 import com.example.adoption_and_breeding_module.model.principal.UserPrincipal;
 import com.example.adoption_and_breeding_module.repository.BlockRepository;
 import com.example.adoption_and_breeding_module.repository.PetPostRepository;
 import com.example.adoption_and_breeding_module.repository.UserRepository;
+import com.example.adoption_and_breeding_module.service.impl.FeedScorer;
 import com.example.adoption_and_breeding_module.util.SecurityUtils;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import static org.hamcrest.Matchers.*;
@@ -31,12 +30,16 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.MediaType;
 
 import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
@@ -62,6 +65,11 @@ public class PetPostControllerIntegrationTests {
 
     @Autowired
     private BlockRepository blockRepository;
+
+    @Autowired
+    private FeedScorer feedScorer;
+
+    double EPSILON = 1e-6;
 
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule())
@@ -295,8 +303,8 @@ public class PetPostControllerIntegrationTests {
         filter.setBreed("Test"); // Partial match
         filter.setMinAge(5);
         filter.setMaxAge(30);
-        filter.setSortBy("likes");
-        filter.setSortOrder("desc");
+        filter.setSortBy(PetPostSortBy.REACTS);
+        filter.setSortDesc(true);
 
         mockMvc.perform(get("/api/pet-posts/filtered")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -321,8 +329,8 @@ public class PetPostControllerIntegrationTests {
                 .build());
 
         PetPostFilterDTO filter = new PetPostFilterDTO();
-        filter.setSortBy("date");
-        filter.setSortOrder("desc");
+        filter.setSortBy(PetPostSortBy.CREATED_DATE);
+        filter.setSortDesc(true);
 
         mockMvc.perform(get("/api/pet-posts/filtered")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -564,8 +572,8 @@ public class PetPostControllerIntegrationTests {
 
         // Test sorting by likes descending
         PetPostFilterDTO filterLikes = new PetPostFilterDTO();
-        filterLikes.setSortBy("likes");
-        filterLikes.setSortOrder("desc");
+        filterLikes.setSortBy(PetPostSortBy.REACTS);
+        filterLikes.setSortDesc(true);
 
         mockMvc.perform(get("/api/pet-posts/filtered")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -579,8 +587,8 @@ public class PetPostControllerIntegrationTests {
 
         // Test sorting by date ascending
         PetPostFilterDTO filterDate = new PetPostFilterDTO();
-        filterDate.setSortBy("date");
-        filterDate.setSortOrder("asc");
+        filterDate.setSortBy(PetPostSortBy.CREATED_DATE);
+        filterDate.setSortDesc(false);
 
         mockMvc.perform(get("/api/pet-posts/filtered")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -761,4 +769,116 @@ public class PetPostControllerIntegrationTests {
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isCreated());
     }
+
+    @Test
+    void testFilteredPostsSortedByScore() throws Exception {
+        // 1. Create additional users
+        User userD = userRepository.save(TestDataUtil.createTestUser("userD"));
+        User userE = userRepository.save(TestDataUtil.createTestUser("userE"));
+
+        Pet dog1 = TestDataUtil.createTestPet("Dog1", PetSpecies.DOG, Gender.MALE, 12);
+        Pet cat1 = TestDataUtil.createTestPet("Cat1", PetSpecies.CAT, Gender.FEMALE, 24);
+
+        // 2. Build new test posts (mutable collections)
+        List<PetPost> newPosts = new ArrayList<>();
+
+        newPosts.add(PetPost.builder()
+                .owner(userC)
+                .pet(dog1)
+                .postType(PetPostType.ADOPTION)
+                .postStatus(PetPostStatus.PENDING)
+                .description("Recent post, 0 reacts")
+                .location("Cairo")
+                .reacts(0)
+                .reactedUsers(new HashSet<>())
+                .createdAt(Instant.now())
+                .build());
+
+        newPosts.add(PetPost.builder()
+                .owner(userC)
+                .pet(dog1)
+                .postType(PetPostType.ADOPTION)
+                .postStatus(PetPostStatus.PENDING)
+                .description("12h old, 2 reacts")
+                .location("Cairo")
+                .reacts(2)
+                .reactedUsers(new HashSet<>(Arrays.asList(userA, userB)))
+                .createdAt(Instant.now().minus(Duration.ofHours(12)))
+                .build());
+
+        newPosts.add(PetPost.builder()
+                .owner(userD)
+                .pet(cat1)
+                .postType(PetPostType.BREEDING)
+                .postStatus(PetPostStatus.PENDING)
+                .description("3d old, 5 reacts")
+                .location("Giza")
+                .reacts(5)
+                .reactedUsers(new HashSet<>(Arrays.asList(userA, userB, userC, userD, userE)))
+                .createdAt(Instant.now().minus(Duration.ofDays(3)))
+                .build());
+
+        newPosts.add(PetPost.builder()
+                .owner(userE)
+                .pet(cat1)
+                .postType(PetPostType.BREEDING)
+                .postStatus(PetPostStatus.PENDING)
+                .description("36h old, 1 react")
+                .location("Giza")
+                .reacts(1)
+                .reactedUsers(new HashSet<>(Collections.singletonList(userA)))
+                .createdAt(Instant.now().minus(Duration.ofHours(36)))
+                .build());
+
+        // 3. Persist only the new posts
+        List<PetPost> savedNew = newPosts.stream()
+                .map(petPostRepository::save)
+                .collect(Collectors.toList());
+
+        // 4. Combine with the two posts from @BeforeEach
+        List<PetPost> allPosts = new ArrayList<>(savedNew);
+        allPosts.add(adoptionPost);
+        allPosts.add(breedingPost);
+
+        // 5. Score & sort in-memory
+        feedScorer.scoreAndSort(allPosts, userA.getUserId());
+
+        // Map of postId -> expected score
+        Map<UUID, Double> expectedScores = allPosts.stream()
+                .collect(Collectors.toMap(PetPost::getPostId, PetPost::getScore));
+
+        // 6. Call the endpoint with SCORE sorting
+        PetPostFilterDTO filter = new PetPostFilterDTO();
+        filter.setSortBy(PetPostSortBy.SCORE);
+        filter.setSortDesc(true);
+
+        MvcResult result = mockMvc.perform(get("/api/pet-posts/filtered")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(filter))
+                        .param("page", "0")
+                        .param("size", String.valueOf(allPosts.size())))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // 7. Extract returned post IDs and verify descending scores
+        JsonNode content = objectMapper.readTree(result.getResponse().getContentAsString())
+                .get("content");
+
+        List<Double> returnedScores = new ArrayList<>();
+        for (JsonNode node : content) {
+            UUID id = UUID.fromString(node.get("postId").asText());
+            returnedScores.add(expectedScores.get(id));
+        }
+
+        for (int i = 0; i < returnedScores.size() - 1; i++) {
+            double curr = returnedScores.get(i);
+            double next = returnedScores.get(i + 1);
+            assertTrue(
+                    curr + EPSILON >= next,
+                    String.format("Score %.6f should be >= %.6f (with epsilon)", curr, next)
+            );
+        }
+
+    }
+
 }
