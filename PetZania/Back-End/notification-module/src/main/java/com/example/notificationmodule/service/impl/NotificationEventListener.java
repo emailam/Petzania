@@ -21,7 +21,7 @@ public class NotificationEventListener {
 
     @RabbitListener(queues = "notificationsQueue")
     @Transactional
-    public void onNotificationReceived(NotificationEvent event){
+    public void onNotificationReceived(NotificationEvent event) {
         log.info("Received notification event: {} for recipient: {}", event.getType(), event.getRecipientId());
 
         try {
@@ -35,14 +35,10 @@ public class NotificationEventListener {
             Notification savedNotification = notificationRepository.save(notification);
 
             // send real-time notification via the defined websocket
-            webSocketService.sendNotificationToUser(
-                    event.getRecipientId(),
-                    dtoConversionService.toDTO(savedNotification)
-            );
+            webSocketService.sendNotificationToUser(event.getRecipientId(), dtoConversionService.toDTO(savedNotification));
 
             log.info("Notification processed successfully with ID: {}", savedNotification.getNotificationId());
-
-        } catch(Exception e){
+        } catch (Exception e) {
             log.error("Error processing notification event: {}", event, e);
             // might want to send to a dead letter queue here
         }

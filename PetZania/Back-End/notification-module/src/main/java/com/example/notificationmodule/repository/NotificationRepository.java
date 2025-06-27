@@ -29,7 +29,4 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     int markAllAsRead(@Param("ownerId") UUID ownerId);
 
     void deleteByNotificationId(UUID notificationId);
-
-    // Check if notification exists for a recipient
-    boolean existsByNotificationIdAndRecipientId(UUID notificationId, UUID recipientId);
 }
