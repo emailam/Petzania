@@ -15,19 +15,16 @@ public class RabbitMQConsumerConfig {
         return new Jackson2JsonMessageConverter();
     }
 
-    // Single exchange for all notification events
     @Bean
     public TopicExchange notificationExchange() {
         return new TopicExchange("notificationExchange");
     }
 
-    // Single queue that receives from all modules
     @Bean
     public Queue notificationsQueue() {
         return new Queue("notificationsQueue", true);
     }
 
-    // Single binding that catches all notification events
     @Bean
     public Binding notificationsBinding(Queue notificationsQueue, TopicExchange notificationExchange) {
         return BindingBuilder.bind(notificationsQueue).to(notificationExchange).with("notification.*");

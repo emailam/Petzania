@@ -16,17 +16,20 @@ import java.util.UUID;
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, UUID> {
 
-    // Get notifications with pagination
     Page<Notification> findByRecipientId(UUID recipientId, Pageable pageable);
 
-    // Count unread notifications
-    long countByRecipientId(UUID recipientId);
+    int countByRecipientIdAndStatus(UUID recipientId, NotificationStatus status);
 
-    // Update notification status from UNREAD to READ
     @Modifying
     @Query("UPDATE Notification n SET n.status = 'READ' WHERE n.notificationId = :notificationId AND n.status = 'UNREAD'")
     int markAsRead(@Param("notificationId") UUID notificationId);
 
-    // Delete notification
+    @Modifying
+    @Query("UPDATE Notification n SET n.status = 'READ' WHERE n.status = 'UNREAD' and n.recipientId = :ownerId")
+    int markAllAsRead(@Param("ownerId") UUID ownerId);
+
     void deleteByNotificationId(UUID notificationId);
+
+    // Check if notification exists for a recipient
+    boolean existsByNotificationIdAndRecipientId(UUID notificationId, UUID recipientId);
 }
