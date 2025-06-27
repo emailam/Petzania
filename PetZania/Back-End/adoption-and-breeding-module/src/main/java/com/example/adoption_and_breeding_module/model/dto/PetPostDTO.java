@@ -2,6 +2,7 @@ package com.example.adoption_and_breeding_module.model.dto;
 
 import com.example.adoption_and_breeding_module.model.enumeration.PetPostStatus;
 import com.example.adoption_and_breeding_module.model.enumeration.PetPostType;
+import com.example.adoption_and_breeding_module.validator.NotToxicText;
 import com.example.adoption_and_breeding_module.validator.ValidEnum;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -41,10 +42,12 @@ public class PetPostDTO {
     private int reacts;
 
     @Size(max = 1000, message = "Description must be at most 1000 characters.")
+    @NotToxicText
     private String description;
 
     @NotBlank(message = "Location must not be blank.")
     @Size(max = 255, message = "Location must be at most 255 characters.")
+    @NotToxicText
     private String location;
 
     @NotNull(message = "Post type is required.")
