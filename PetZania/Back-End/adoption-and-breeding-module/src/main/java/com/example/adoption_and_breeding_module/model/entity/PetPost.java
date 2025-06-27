@@ -1,6 +1,7 @@
 package com.example.adoption_and_breeding_module.model.entity;
 import com.example.adoption_and_breeding_module.model.enumeration.PetPostStatus;
 import com.example.adoption_and_breeding_module.model.enumeration.PetPostType;
+import com.example.adoption_and_breeding_module.validator.NotToxicText;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
@@ -75,6 +76,9 @@ public class PetPost {
 
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    @Transient
+    private double score;
 
     @PrePersist
     public void onCreate() {

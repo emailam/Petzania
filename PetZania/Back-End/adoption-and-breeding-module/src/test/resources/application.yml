@@ -41,6 +41,14 @@ spring:
       expiration:
         86400000
 
+feed:
+  weights:
+    recency: 0.4
+    totalReacts: 0.3
+    petCategoryAffinity: 0.25
+    postCategoryAffinity: 0.2
+  freshness-window-hours: 96
+
 server:
   error:
     include-message: always
