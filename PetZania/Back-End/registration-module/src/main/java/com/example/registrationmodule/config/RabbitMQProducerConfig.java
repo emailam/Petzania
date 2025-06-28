@@ -32,6 +32,11 @@ public class RabbitMQProducerConfig {
     }
 
     @Bean
+    public Queue userRegisteredQueueNotificationModule() {
+        return new Queue("userRegisteredQueueNotificationModule", true);
+    }
+
+    @Bean
     public Queue userDeletedQueueFriendsModule() {
         return new Queue("userDeletedQueueFriendsModule", true);
     }
@@ -39,6 +44,11 @@ public class RabbitMQProducerConfig {
     @Bean
     public Queue userDeletedQueueAdoptionModule() {
         return new Queue("userDeletedQueueAdoptionModule", true);
+    }
+
+    @Bean
+    public Queue userDeletedQueueNotificationModule() {
+        return new Queue("userDeletedQueueNotificationModule", true);
     }
 
     @Bean
@@ -52,6 +62,11 @@ public class RabbitMQProducerConfig {
     }
 
     @Bean
+    public Binding userRegistrationNotificationModuleBinding(Queue userRegisteredQueueNotificationModule, TopicExchange userExchange) {
+        return BindingBuilder.bind(userRegisteredQueueNotificationModule).to(userExchange).with("user.registered");
+    }
+
+    @Bean
     public Binding userDeletionFriendsModuleBinding(Queue userDeletedQueueFriendsModule, TopicExchange userExchange) {
         return BindingBuilder.bind(userDeletedQueueFriendsModule).to(userExchange).with("user.deleted");
     }
@@ -59,5 +74,10 @@ public class RabbitMQProducerConfig {
     @Bean
     public Binding userDeletionAdoptionModuleBinding(Queue userDeletedQueueAdoptionModule, TopicExchange userExchange) {
         return BindingBuilder.bind(userDeletedQueueAdoptionModule).to(userExchange).with("user.deleted");
+    }
+
+    @Bean
+    public Binding userDeletionNotificationModuleBinding(Queue userDeletedQueueNotificationModule, TopicExchange userExchange) {
+        return BindingBuilder.bind(userDeletedQueueNotificationModule).to(userExchange).with("user.deleted");
     }
 }

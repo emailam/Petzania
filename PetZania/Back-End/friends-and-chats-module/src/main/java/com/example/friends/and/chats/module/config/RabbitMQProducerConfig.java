@@ -61,4 +61,19 @@ public class RabbitMQProducerConfig {
         return BindingBuilder.bind(userUnBlockedQueueAdoptionModule).to(blockExchange).with("block.delete");
     }
 
+    @Bean
+    public TopicExchange notificationExchange() {
+        return new TopicExchange("notificationExchange");
+    }
+
+    @Bean
+    public Queue notificationsQueue() {
+        return new Queue("notificationsQueue", true);
+    }
+
+    @Bean
+    public Binding notificationsBinding(Queue notificationsQueue, TopicExchange notificationExchange) {
+        return BindingBuilder.bind(notificationsQueue).to(notificationExchange).with("notification.*");
+    }
+
 }
