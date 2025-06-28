@@ -1,6 +1,7 @@
 package com.example.adoption_and_breeding_module.model.dto;
 
 import com.example.adoption_and_breeding_module.model.enumeration.Gender;
+import com.example.adoption_and_breeding_module.model.enumeration.PetPostSortBy;
 import com.example.adoption_and_breeding_module.model.enumeration.PetPostType;
 import com.example.adoption_and_breeding_module.model.enumeration.PetSpecies;
 import lombok.AllArgsConstructor;
@@ -19,6 +20,10 @@ public class PetPostFilterDTO {
     private Gender gender; // "male", "female", or null
     private Integer minAge;
     private Integer maxAge;
-    private String sortBy = "date"; // "date" or "likes"
-    private String sortOrder = "desc"; // "asc" or "desc"
+
+    @Builder.Default
+    private PetPostSortBy sortBy = PetPostSortBy.SCORE; // "created_date", "reacts", or "score"
+
+    @Builder.Default
+    private boolean sortDesc = true;
 }

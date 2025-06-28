@@ -5,11 +5,10 @@ import com.example.adoption_and_breeding_module.exception.PetPostNotFound;
 import com.example.adoption_and_breeding_module.exception.UserAccessDenied;
 import com.example.adoption_and_breeding_module.exception.UserNotFound;
 import com.example.adoption_and_breeding_module.model.dto.*;
-import com.example.adoption_and_breeding_module.model.entity.Block;
 import com.example.adoption_and_breeding_module.model.entity.Pet;
 import com.example.adoption_and_breeding_module.model.entity.PetPost;
 import com.example.adoption_and_breeding_module.model.entity.User;
-import com.example.adoption_and_breeding_module.model.enumeration.PetPostType;
+import com.example.adoption_and_breeding_module.model.enumeration.PetPostSortBy;
 import com.example.adoption_and_breeding_module.repository.BlockRepository;
 import com.example.adoption_and_breeding_module.repository.PetPostRepository;
 import com.example.adoption_and_breeding_module.repository.UserRepository;
@@ -17,21 +16,22 @@ import com.example.adoption_and_breeding_module.service.IDTOConversionService;
 import com.example.adoption_and_breeding_module.service.IPetPostService;
 import com.example.adoption_and_breeding_module.util.PetPostSpecification;
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static com.example.adoption_and_breeding_module.model.enumeration.PetPostSortBy.CREATED_DATE;
+import static com.example.adoption_and_breeding_module.model.enumeration.PetPostSortBy.REACTS;
+
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Transactional
 public class PetPostService implements IPetPostService {
 
@@ -40,10 +40,10 @@ public class PetPostService implements IPetPostService {
     private final BlockRepository blockRepository;
     private final IDTOConversionService dtoConversionService;
     private final NotificationPublisher notificationPublisher;
-
+    private final FeedScorer feedScorer;
 
     @Override
-    public PetPostDTO createPetPost(CreatePetPostDTO dto, UUID ownerId) {
+    public PetPostDTO createPetPost(CreatePetPostDTO dto, UUID ownerId){
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new UserNotFound("User not found with id: " + ownerId));
 
@@ -56,6 +56,7 @@ public class PetPostService implements IPetPostService {
                 .build();
 
         post = petPostRepository.save(post);
+
         return dtoConversionService.mapToPetPostDTO(post);
     }
 
@@ -96,7 +97,6 @@ public class PetPostService implements IPetPostService {
             if (updatePetDTO.getMyPicturesURLs() != null) pet.setMyPicturesURLs(updatePetDTO.getMyPicturesURLs());
         }
         post.setUpdatedAt(Instant.now());
-//        post = petPostRepository.save(post);
         return dtoConversionService.mapToPetPostDTO(post);
     }
 
@@ -139,8 +139,6 @@ public class PetPostService implements IPetPostService {
             reacts++;
         }
         post.setReacts(reacts);
-//        System.out.println(post);
-//        petPostRepository.save(post);
         return dtoConversionService.mapToPetPostDTO(post);
     }
 
@@ -174,18 +172,41 @@ public class PetPostService implements IPetPostService {
                     cb.not(root.get("owner").get("userId").in(usersBlockingMe))
             );
         }
-
         spec = spec.and(blockSpec);
 
-        Sort sort = Sort.by(
-                Sort.Direction.fromString(filter.getSortOrder()),
-                filter.getSortBy().equals("likes") ? "reacts" : "createdAt"
-        );
-        Pageable pageable = PageRequest.of(page, size, sort);
+        PetPostSortBy sortBy = filter.getSortBy();
+        boolean descending = filter.isSortDesc();
 
-        return petPostRepository
-                .findAll(spec, pageable)
-                .map(dtoConversionService::mapToPetPostDTO);
+        if (sortBy == PetPostSortBy.SCORE) {
+            List<PetPost> posts = petPostRepository.findAll(spec);
+            feedScorer.scoreAndSort(posts, userId);
+            if (!descending) {
+                Collections.reverse(posts);
+            }
+
+            int start = page * size;
+            int end = Math.min(start + size, posts.size());
+
+            List<PetPostDTO> pageContent = posts.subList(start, end)
+                    .stream()
+                    .map(dtoConversionService::mapToPetPostDTO)
+                    .toList();
+
+            return new PageImpl<>(pageContent, PageRequest.of(page, size), posts.size());
+        }
+        else {
+            String sortField = switch (sortBy) {
+                case REACTS -> "reacts";
+                default -> "createdAt"; // fallback
+            };
+
+            Sort.Direction direction = descending ? Sort.Direction.DESC : Sort.Direction.ASC;
+            Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
+
+            return petPostRepository
+                    .findAll(spec, pageable)
+                    .map(dtoConversionService::mapToPetPostDTO);
+        }
     }
 
 

@@ -117,7 +117,7 @@ public class BaseSystemTest {
                 System.err.println("ADOPTION: " + outputFrame.getUtf8String());
             })
             .waitingFor(Wait.forLogMessage(".*Started AdoptionAndBreedingModule.*", 1)
-                    .withStartupTimeout(Duration.ofMinutes(2)));
+                    .withStartupTimeout(Duration.ofMinutes(15)));
 
     @Container
     protected static GenericContainer<?> notificationService = new GenericContainer<>(
