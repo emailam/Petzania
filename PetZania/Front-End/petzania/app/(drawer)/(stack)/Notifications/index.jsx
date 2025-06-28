@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, Alert } from 'react-native'
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert } from 'react-native'
+import { Image } from 'expo-image';
 import React, { useState, useEffect } from 'react'
 import { Ionicons, MaterialIcons } from '@expo/vector-icons'
 import { acceptFriendRequest, cancelFriendRequest, getReceivedFriendRequests } from '@/services/friendsService'

@@ -137,7 +137,10 @@ export default function Followers() {
   };
 
   const handleUserPress = (user) => {
-    router.push(`/UserModule/${user.userId}`);
+    router.push({
+      pathname: `/UserModule/${user.userId}`,
+      params: { username: user.username || 'User Profile' }
+    });
   };
 
   const renderEmptyState = () => (
@@ -169,7 +172,7 @@ export default function Followers() {
       <UserList
         users={followers}
         onUserPress={handleUserPress}
-        keyExtractor={(item) => {item.userId}}
+        keyExtractor={(item) => item.userId}
         onEndReached={loadMoreFollowers}
         contentContainerStyle={{ padding: 16 }}
         onEndReachedThreshold={0.1}

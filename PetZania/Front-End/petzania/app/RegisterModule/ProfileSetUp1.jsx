@@ -1,14 +1,5 @@
-import {
-    StyleSheet,
-    View,
-    Image,
-    TouchableOpacity,
-    Text,
-    TextInput,
-    KeyboardAvoidingView,
-    ScrollView,
-    Platform,
-} from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, TextInput, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
+import { Image } from 'expo-image';
 import React, { useState, useContext } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { AntDesign } from '@expo/vector-icons';

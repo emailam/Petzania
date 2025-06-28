@@ -12,10 +12,11 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { UserContext } from '@/context/UserContext';
-import { getAllChats, getMessagesByChatId } from '@/services/chatService';
+import { getAllChats, getMessagesByChatId, updateMessageStatus } from '@/services/chatService';
 import { getUserById } from '@/services/userService';
 import { getFriendsByUserId } from '@/services/friendsService';
 import Toast from 'react-native-toast-message';
+
 
 export default function ChatIndex() {
     const router = useRouter();
@@ -47,24 +48,35 @@ export default function ChatIndex() {
                         // Fetch the other user's details and last message in parallel
                         const [otherUser, messagesResponse] = await Promise.all([
                             getUserById(otherUserId),
-                            getMessagesByChatId(chat.chatId, 0, 1) // Get only the most recent message
+                            getMessagesByChatId(chat.chatId, 0, 10)
                         ]);
 
-                        // Extract the last message
+                        // Extract the messages and check for unread ones
                         const messages = Array.isArray(messagesResponse) ? messagesResponse : (messagesResponse?.content || []);
                         const lastMessage = messages.length > 0 ? messages[0] : null;
+
+                        // Check if there are unread messages from the other user
+                        const unreadMessages = messages.filter(msg =>
+                            msg.senderId !== currentUser?.userId && // Message from other user
+                            msg.status === 'SENT' // Message status is SENT (unread)
+                        );
+                        const hasUnreadMessages = unreadMessages.length > 0;
 
                         return {
                             ...chat,
                             otherUser: otherUser,
-                            lastMessage: lastMessage
+                            lastMessage: lastMessage,
+                            hasUnreadMessages: hasUnreadMessages,
+                            unreadCount: unreadMessages.length
                         };
                     } catch (error) {
                         console.warn('Failed to fetch user details for chat:', chat.chatId);
                         return {
                             ...chat,
                             otherUser: null,
-                            lastMessage: null
+                            lastMessage: null,
+                            hasUnreadMessages: false,
+                            unreadCount: 0
                         };
                     }
                 })
@@ -88,6 +100,7 @@ export default function ChatIndex() {
         try {
             const friendsResponse = await getFriendsByUserId(0, 50, 'createdAt', 'desc', currentUser?.userId);
             const friends = friendsResponse.content;
+            if(!friends) return ;
 
             // Get detailed user info for each friend to check online status
             const friendsWithOnlineStatus = await Promise.all(
@@ -136,7 +149,48 @@ export default function ChatIndex() {
         } else {
             return date.toLocaleDateString();
         }
-    };    const handleChatPress = (chat) => {
+    };    const handleChatPress = async (chat) => {
+        try {
+            // Mark unread messages as read before navigating
+            if (chat.hasUnreadMessages) {
+                // Get the last 10 messages to mark as read
+                const messagesResponse = await getMessagesByChatId(chat.chatId, 0, 10);
+                const messages = Array.isArray(messagesResponse) ? messagesResponse : (messagesResponse?.content || []);
+                
+                // Filter messages that are not from current user and are unread (SENT status)
+                const unreadMessages = messages.filter(msg => 
+                    msg.senderId !== currentUser?.userId && 
+                    msg.status === 'SENT'
+                );
+
+                // Mark each unread message as READ
+                const markAsReadPromises = unreadMessages.map(async (message) => {
+                    try {
+                        await updateMessageStatus(message.messageId, 'READ');
+                        console.log(`Marked message ${message.messageId} as READ`);
+                    } catch (error) {
+                        console.warn(`Failed to mark message ${message.messageId} as read:`, error);
+                    }
+                });
+
+                // Wait for all messages to be marked as read
+                await Promise.all(markAsReadPromises);
+
+                // Update the chat state to reflect the changes
+                setChats(prevChats => 
+                    prevChats.map(c => 
+                        c.chatId === chat.chatId 
+                            ? { ...c, hasUnreadMessages: false, unreadCount: 0 }
+                            : c
+                    )
+                );
+            }
+        } catch (error) {
+            console.error('Error marking messages as read:', error);
+            // Continue to navigation even if marking as read fails
+        }
+
+        // Navigate to the chat
         router.push(`/Chat/${chat.chatId}`);
     };
 
@@ -156,13 +210,18 @@ export default function ChatIndex() {
         } catch (error) {
             console.error('Error handling online user press:', error);
         }
-    };    const renderChatItem = ({ item }) => {
+    };
+
+    const renderChatItem = ({ item }) => {
         const otherUser = item.otherUser;
         const lastMessage = item.lastMessage;
 
         return (
             <TouchableOpacity
-                style={styles.chatItem}
+                style={[
+                    styles.chatItem,
+                    item.hasUnreadMessages && styles.chatItemUnread
+                ]}
                 onPress={() => handleChatPress(item)}
             >
                 <View style={styles.avatarContainer}>
@@ -175,6 +234,9 @@ export default function ChatIndex() {
                         <View style={styles.defaultAvatar}>
                             <Ionicons name="person" size={24} color="#9188E5" />
                         </View>
+                    )}
+                    {item.hasUnreadMessages && (
+                        <View style={styles.unreadDot} />
                     )}
                 </View>
 
@@ -198,6 +260,13 @@ export default function ChatIndex() {
                                 'Start a conversation'
                             }
                         </Text>
+                        {item.hasUnreadMessages && item.unreadCount > 0 && (
+                            <View style={styles.unreadBadge}>
+                                <Text style={styles.unreadCount}>
+                                    {item.unreadCount > 9 ? '10+' : item.unreadCount}
+                                </Text>
+                            </View>
+                        )}
                     </View>
                 </View>
             </TouchableOpacity>
@@ -264,14 +333,14 @@ export default function ChatIndex() {
                 </View>
             </View>
         );
-    }    return (
+    }
+    return (
         <View style={styles.container}>
             {renderOnlineUsersSection()}
             <FlatList
                 data={chats}
                 keyExtractor={(item) => item.chatId.toString()}
                 renderItem={renderChatItem}
-                contentContainerStyle={{ padding: 16 }}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
@@ -305,9 +374,16 @@ const styles = StyleSheet.create({
     chatItem: {
         flexDirection: 'row',
         backgroundColor: '#fff',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+    },
+    chatItemUnread: {
+        backgroundColor: 'rgba(145, 140, 229, 0.1)',
+        marginHorizontal: 0,
     },
     avatarContainer: {
         marginRight: 12,
+        position: 'relative',
     },
     avatar: {
         width: 50,
@@ -321,6 +397,17 @@ const styles = StyleSheet.create({
         backgroundColor: '#f0f0f0',
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    unreadDot: {
+        position: 'absolute',
+        top: 2,
+        right: 2,
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        backgroundColor: '#918CE5',
+        borderWidth: 2,
+        borderColor: '#fff',
     },
     chatContent: {
         flex: 1,
@@ -353,13 +440,14 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     unreadBadge: {
-        backgroundColor: '#9188E5',
+        backgroundColor: '#918CE5',
         borderRadius: 10,
         minWidth: 20,
         height: 20,
         justifyContent: 'center',
         alignItems: 'center',
         marginLeft: 8,
+        paddingHorizontal: 6,
     },
     unreadCount: {
         color: '#fff',

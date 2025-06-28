@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, View, FlatList, Image, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
@@ -18,6 +19,7 @@ export default function UserList({
     const router = useRouter();
 
     const handleUserPress = (user) => {
+      console.log("User pressed:", user);
         if (onUserPress) {
             onUserPress(user);
         } else {

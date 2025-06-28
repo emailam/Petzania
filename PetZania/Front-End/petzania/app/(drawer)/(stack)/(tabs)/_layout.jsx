@@ -2,8 +2,10 @@ import { Tabs } from 'expo-router';
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 
-import React, { useState, useContext } from 'react';
-import { Platform, View, TouchableOpacity, Image, StyleSheet, Text } from 'react-native';
+import React, { useContext } from 'react';
+import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
+import { Image } from 'expo-image';
+
 
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -15,7 +17,7 @@ import { UserContext } from '@/context/UserContext';
 
 export default function TabLayout() {
 
-  const defaultImage = require('@/assets/images/AddPet/Pet Default Pic.png');
+  const defaultImage = require('@/assets/images/Defaults/default-user.png');
 
   const { user } = useContext(UserContext);
 
@@ -44,8 +46,8 @@ export default function TabLayout() {
       <TouchableOpacity onPress={() => { router.push('Chat') }}>
         <Ionicons name="chatbubble-ellipses-outline" size={24} color="#9188E5" />
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => { router.push('Notifications') }}>
-        <Ionicons name="notifications" size={24} color="#9188E5" />
+      <TouchableOpacity onPress={() => { router.push('Notifications') }} style={{ marginLeft: 8 }}>
+        <Ionicons name="notifications-outline" size={24} color="#9188E5" />
       </TouchableOpacity>
     </View>
   );
@@ -95,16 +97,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="Temp/index"
         options={{
-          title: '',
-          tabBarIcon: ({ color, focused }) => (
-            <View style={[
-              styles.addButtonContainer,
-              {
-                backgroundColor: focused ? '#5348BD' : '#9188E5',
-              }
-            ]}>
-              <AntDesign name="plus" size={30} color="#fff" />
-            </View>
+          title: 'Post',
+          tabBarIcon: ({ color }) => (
+            <IconSymbol name="add.fill" size={28} color={color} />
           ),
         }}
       />
@@ -151,13 +146,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: 16,
-  },
-  addButtonContainer: {
-    backgroundColor: '#9188E5',
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });

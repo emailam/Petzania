@@ -83,11 +83,27 @@ export async function deleteMessage(messageId) {
     }
 }
 
-export async function markMessageAsRead(messageId) {
+export async function editMessage(messageId, content) {
     try {
-        const response = await api.put(`/messages/${messageId}/read`);
+        const response = await api.patch(`/messages/${messageId}/content`, {
+            content: content
+        });
         if (response.status < 200 || response.status >= 300) {
-            throw new Error('Failed to mark message as read. Please try again later.');
+            throw new Error('Failed to edit message. Please try again later.');
+        }
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function updateMessageStatus(messageId, status) {
+    try {
+        const response = await api.patch(`/messages/${messageId}/status`, {
+            messageStatus: status
+        });
+        if (response.status < 200 || response.status >= 300) {
+            throw new Error('Failed to update message status. Please try again later.');
         }
         return response.data;
     } catch (error) {

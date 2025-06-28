@@ -8,11 +8,15 @@ import { getUserId } from '@/storage/userStorage';
 
 import { UserContext } from '@/context/UserContext';
 import { PetContext } from '@/context/PetContext';
+import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
 
 import 'react-native-gesture-handler';
 
 export default function App() {
     const [fontsLoaded] = useFonts({
+        ...Ionicons.font,
+        ...FontAwesome.font,
         'Inter-Bold': require('@/assets/fonts/Inter-Bold.ttf'),
     });
 

@@ -1,4 +1,5 @@
-import { Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Image } from 'expo-image';
 import Onboarding from "react-native-onboarding-swiper";
 import { useRouter } from "expo-router";
 import { AntDesign } from "@expo/vector-icons";
@@ -37,25 +38,25 @@ export default function OnboardingScreen() {
       pages={[
         {
           backgroundColor: "#fff",
-          image: <Image source={require("../../assets/images/Onboarding/Connected World.png")} style={styles.image} />,
+          image: <Image source={require("../../assets/images/Onboarding/Connected World.png")} style={styles.image} contentFit="contain" />,
           title: "Connect, Share, and Care",
           subtitle: "Your pet's social hub to meet, share, and explore!",
         },
         {
           backgroundColor: "#fff",
-          image: <Image source={require("../../assets/images/Onboarding/Pet needs.png")} style={styles.image} />,
+          image: <Image source={require("../../assets/images/Onboarding/Pet needs.png")} style={styles.image} contentFit="contain"/>,
           title: "Everything Your Pet Needs",
           subtitle: "Find trusted vets, pet stores, and adoption posts near you!",
         },
         {
           backgroundColor: "#fff",
-          image: <Image source={require("../../assets/images/Onboarding/Friends.png")} style={styles.image} />,
+          image: <Image source={require("../../assets/images/Onboarding/Friends.png")} style={styles.image} contentFit="contain"/>,
           title: "Join, Chat & Make Friends",
           subtitle: "Connect with pet lovers, join groups, and share your journey!",
         },
         {
           backgroundColor: "#fff",
-          image: <Image source={require("../../assets/images/Onboarding/Pet profile.png")} style={styles.image} />,
+          image: <Image source={require("../../assets/images/Onboarding/Pet profile.png")} style={styles.image} contentFit="contain" />,
           title: "Your Pet's Digital Profile",
           subtitle: "Create and manage your pet's profile—because every pet matters!",
         },
@@ -68,7 +69,6 @@ const styles = StyleSheet.create({
   image: {
     width: 350,
     height: 350,
-    resizeMode: "contain",
   },
   button: {
     marginHorizontal: 20,

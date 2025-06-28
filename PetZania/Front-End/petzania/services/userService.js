@@ -106,6 +106,20 @@ export async function resetPassword(email, password, otp) {
     }
 }
 
+export async function changePassword(email, newPassword) {
+    try {
+        const response = await api.put('/user/auth/changePassword', { email, newPassword });
+
+        if (response.status !== 200) {
+            throw new Error('Failed to change password. Please try again later.');
+        }
+
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export async function resendOTP(email) {
     try {
         const response = await api.post('/user/auth/resendOTP', { email });

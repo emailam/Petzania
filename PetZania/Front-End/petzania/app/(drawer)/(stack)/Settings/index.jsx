@@ -156,7 +156,7 @@ export default function Settings() { const router = useRouter();
                 <SettingItem
                     icon="key-outline"
                     title="Change Password"
-                    onPress={() => router.push(`/RegisterModule/ForgotPasswordScreen`)}
+                    onPress={() => router.push('/Settings/ChangePassword')}
                 />
             </SettingSection>
 

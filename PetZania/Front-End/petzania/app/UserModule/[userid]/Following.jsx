@@ -136,7 +136,10 @@ export default function Following() {
   };
 
   const handleUserPress = (user) => {
-    router.push(`/UserModule/${user.userId}`);
+    router.push({
+      pathname: `/UserModule/${user.userId}`,
+      params: { username: user.username || 'User Profile' }
+    });
   };
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>

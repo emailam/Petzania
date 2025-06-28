@@ -30,8 +30,6 @@ export default function LoginForm(){
     const { setPets } = useContext(PetContext);
 
     const Login = async (data) => {
-        data.email = data.email.trim();
-
         try {
             const response = await loginUser(data);
             console.log("Login response:", response);

@@ -1,7 +1,5 @@
-import {
-    StyleSheet, View, Text, KeyboardAvoidingView, Platform, Image, TouchableOpacity,
-    FlatList, ActivityIndicator
-} from 'react-native';
+import { StyleSheet, View, Text, KeyboardAvoidingView, Platform, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 
 import React, { useState, useContext } from 'react';
 import { useRouter } from 'expo-router';

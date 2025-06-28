@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
-import { View, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image';
 
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { FontAwesome, Ionicons, MaterialIcons, Feather } from '@expo/vector-icons';
@@ -67,7 +68,7 @@ export default function CustomDrawer(props) {
           >
             <View style={styles.imageContainer}>
               <Image
-                source={(user && user.profilePictureURL) ? { uri: user.profilePictureURL } : require('@/assets/images/AddPet/Pet Default Pic.png')}
+                source={(user && user.profilePictureURL) ? { uri: user.profilePictureURL } : require('@/assets/images/Defaults/default-user.png')}
                 style={{
                   width: 70,
                   height: 70,

@@ -33,7 +33,9 @@ export default function Friends() {
 
   useEffect(() => {
     loadInitialData();
-  }, [userid]);  const loadInitialData = async () => {
+  }, [userid]);
+
+  const loadInitialData = async () => {
     try {
       setLoading(true);
       // Load profile user info and friends in parallel
@@ -135,7 +137,10 @@ export default function Friends() {
   };
 
   const handleUserPress = (user) => {
-    router.push(`/UserModule/${user.userId}`);
+    router.push({
+      pathname: `/UserModule/${user.userId}`,
+      params: { username: user.username || 'User Profile' }
+    });
   };
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>

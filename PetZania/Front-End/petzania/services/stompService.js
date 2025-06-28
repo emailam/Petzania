@@ -46,21 +46,6 @@ class SocketService {
         return this.stompClient;
     }
 
-    disconnect() {
-        if (this.stompClient) {
-            this.subscriptions.forEach((subscription) => {
-                subscription.unsubscribe();
-            });
-            this.subscriptions.clear();
-            this.stompClient.deactivate();
-            this.stompClient = null;
-        }
-    }
-
-    getClient() {
-        return this.stompClient;
-    }
-
     isClientConnected() {
         return this.stompClient && this.stompClient.active;
     }
@@ -86,29 +71,13 @@ class SocketService {
         }
     }
 
-    // Send message to application destination
-    sendToApp(destination, message) {
-        if (this.isClientConnected()) {
-            this.stompClient.publish({
-                destination: `/app${destination}`,
-                body: JSON.stringify(message)
-            });
-        }
-    }    // Chat specific methods for STOMP
+    // Chat specific methods for STOMP
     subscribeToChatTopic(chatId, callback) {
         return this.subscribeTo(`/topic/chats/${chatId}`, callback);
     }
 
     unsubscribeFromChatTopic(chatId) {
         this.unsubscribeFrom(`/topic/chats/${chatId}`);
-    }
-
-    // Remove all subscriptions
-    removeAllSubscriptions() {
-        this.subscriptions.forEach((subscription) => {
-            subscription.unsubscribe();
-        });
-        this.subscriptions.clear();
     }
 }
 

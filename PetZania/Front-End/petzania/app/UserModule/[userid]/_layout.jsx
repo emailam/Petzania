@@ -25,7 +25,6 @@ export default function UserLayout() {
                 headerBackTitleVisible: false,
                 headerTintColor: '#9188E5',
                 headerStyle: { backgroundColor: '#FFF' },
-
             }}
         >
             <Stack.Screen

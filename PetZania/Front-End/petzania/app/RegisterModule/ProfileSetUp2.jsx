@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import Button from '@/components/Button';
 import { FlowContext } from '@/context/FlowContext';
@@ -16,7 +17,7 @@ export default function ProfileSetUp2() {
     return (
         <View style={styles.container}>
             <View style={styles.contentWrapper}>
-                <Image source={require('../../assets/images/AddPet/Cat and Dog.png')} style={styles.image} />
+                <Image source={require('../../assets/images/AddPet/Cat and Dog.png')} style={styles.image} contentFit="contain"/>
                 <Text style={styles.mainText}>Who's a good pet? 🐾</Text>
                 <Text style={styles.description}>
                     Add your pets now to begin tracking their adventures!
@@ -52,7 +53,6 @@ const styles = StyleSheet.create({
     image: {
         width: 350,
         height: 350,
-        resizeMode: 'contain',
         marginVertical: 20,
     },
     mainText: {

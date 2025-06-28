@@ -35,7 +35,7 @@ import Toast from 'react-native-toast-message';
 export default function UserProfile() {
     const { userid } = useLocalSearchParams();
     const router = useRouter();
-    const { user: currentUser, } = useContext(UserContext);
+    const { user: currentUser } = useContext(UserContext);
     const { showActionSheetWithOptions } = useActionSheet();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -47,6 +47,8 @@ export default function UserProfile() {
     const [incomingRequestId, setIncomingRequestId] = useState(null); // For received requests
     const [actionLoading, setActionLoading] = useState(false);
     const [showImageViewer, setShowImageViewer] = useState(false);
+
+    const defaultImage = require('@/assets/images/Defaults/default-user.png');
 
     // Local state for counts specific to this user profile
     const [profileCounts, setProfileCounts] = useState({
@@ -708,7 +710,11 @@ export default function UserProfile() {
               />
             ) : (
               <View style={styles.defaultProfileImage}>
-                <Ionicons name="person" size={60} color="#9188E5" />
+                <Image
+                  source={defaultImage}
+                  style={styles.defaultProfileImageIcon}
+                  contentFit="contain"
+                />
               </View>
             )}
           </TouchableOpacity>
@@ -1032,6 +1038,12 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#9188E5',
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  defaultProfileImageIcon: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
   },
   userInfoContainer: {
     marginLeft: 16,
@@ -1202,7 +1214,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
-  
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -1270,94 +1281,6 @@ const styles = StyleSheet.create({
   },
   tabContent: {
     flex: 1,
-  },
-  // Posts Section Styles
-  postsSection: {
-    paddingTop: 10,
-  },
-  postCard: {
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
-    padding: 16,
-  },
-  postHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  postUserInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  postUserImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
-  },
-  postDefaultUserImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  postUserDetails: {
-    flex: 1,
-  },
-  postUserName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  postTime: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-  },
-  postMoreButton: {
-    padding: 4,
-  },
-  postContent: {
-    fontSize: 16,
-    color: '#333',
-    lineHeight: 22,
-    marginBottom: 12,
-  },
-  postImageContainer: {
-    marginBottom: 12,
-  },
-  mockPostImage: {
-    height: 200,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  postActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-    gap: 24,
-  },
-  postActionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  postActionText: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
   },
   // Updated Pets Section Styles
   petsSection: {

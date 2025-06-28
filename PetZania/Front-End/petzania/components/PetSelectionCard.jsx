@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 
-const PetSelectionCard = ({ 
+const PetSelectionCard = ({
     item,
     isSelected,
     onPress,
@@ -24,7 +24,7 @@ const PetSelectionCard = ({
                 <Image
                     source={item.image}
                     style={[styles.image, imageStyle]}
-                    resizeMode="contain"
+                    contentFit="contain"
                 />
                 <Text style={[
                     styles.text, 

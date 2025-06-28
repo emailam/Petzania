@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image } from 'react-native'
+import { StyleSheet, Text, View, FlatList, TouchableOpacity } from 'react-native'
+import { Image } from 'expo-image';
 import React, { useContext, useEffect } from 'react'
 import { PetContext } from '@/context/PetContext';
 import PetCard from '@/components/PetCard'

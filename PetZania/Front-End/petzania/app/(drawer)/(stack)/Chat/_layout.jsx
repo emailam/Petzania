@@ -19,6 +19,13 @@ export default function ChatLayout() {
                     headerShown: false,
                 }}
             />
+            <Stack.Screen
+                name="Image"
+                options={{
+                    headerShown: false,
+                    animation: 'fade_from_bottom',
+                }}
+            />
         </Stack>
     );
 }

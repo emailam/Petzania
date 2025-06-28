@@ -1,9 +1,8 @@
 import React, { useContext, useEffect }from "react";
-import { ScrollView, Text , StyleSheet, View, Image } from 'react-native';
+import { ScrollView, Text , StyleSheet, View } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Link } from "expo-router";
 import { responsive } from "@/utilities/responsive";
-import ExternalSignIn from "@/components/ExternalSignIn";
 import LoginForm from "@/components/LoginForm";
 
 import { UserContext } from "@/context/UserContext";
@@ -30,10 +29,6 @@ export default function LoginScreen() {
           <Text style={styles.text}> Don't have an account?{" "}
             <Link href={"/RegisterModule/RegisterScreen"} style={styles.link}> Sign up now </Link>
           </Text>
-
-          <View style = {styles.button}>
-            <ExternalSignIn/>
-          </View>
 
       </ScrollView>
 

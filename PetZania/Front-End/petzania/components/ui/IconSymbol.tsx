@@ -9,6 +9,7 @@ const MAPPING = {
   'heart.circle.fill': 'favorite',
   'bell.fill': 'notifications',
   'bone.fill': 'restaurant', // Replace with a better match if needed
+  'add.fill': 'add-box',
 } as const;
 
 export type IconSymbolName = keyof typeof MAPPING;

@@ -8,6 +8,8 @@ import { Alert, View } from 'react-native';
 import React, {useContext, useState} from 'react';
 import { responsive } from '@/utilities/responsive';
 import { useRouter } from 'expo-router';
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 import { UserContext } from '@/context/UserContext';
 
@@ -66,6 +68,7 @@ export default function RegisterForm(){
             errors={errors}
             placeholder="Username"
             autoCapitalize="none"
+            icon={<FontAwesome name="user" size={24} color="#9188E5" />}
         />
 
         <FormInput
@@ -75,6 +78,7 @@ export default function RegisterForm(){
           placeholder="Email"
           keyboardType="email-address"
           autoCapitalize="none"
+          icon={<MaterialIcons name="email" size={24} color="#9188E5" />}
         />
 
         <PasswordInput
@@ -84,6 +88,7 @@ export default function RegisterForm(){
           placeholder="Password"
           showPassword={displayPassword}
           toggleShow={() => setDisplayPassword(!displayPassword)}
+          icon={<FontAwesome name="lock" size={24} color="#9188E5"/>}
         />
 
         <PasswordInput
@@ -93,6 +98,7 @@ export default function RegisterForm(){
           errors={errors}
           showPassword={displayConfirmPassword}
           toggleShow={() => setDisplayConfirmPassword(!displayConfirmPassword)}
+          icon={<FontAwesome name="lock" size={24} color="#9188E5"/>}
         />
 
         <TermsInput
