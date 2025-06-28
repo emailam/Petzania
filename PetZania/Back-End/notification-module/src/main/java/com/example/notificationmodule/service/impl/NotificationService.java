@@ -1,7 +1,7 @@
 package com.example.notificationmodule.service.impl;
 
-import com.example.notificationmodule.exception.NotificationNotFound;
-import com.example.notificationmodule.exception.UserNotFound;
+import com.example.notificationmodule.exception.notification.NotificationNotFound;
+import com.example.notificationmodule.exception.user.UserNotFound;
 import com.example.notificationmodule.model.dto.NotificationDTO;
 import com.example.notificationmodule.model.entity.Notification;
 import com.example.notificationmodule.model.enumeration.NotificationStatus;
@@ -25,7 +25,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
-
 public class NotificationService implements INotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
@@ -57,6 +56,7 @@ public class NotificationService implements INotificationService {
     }
 
     @Override
+    @Transactional
     public boolean markAsRead(UUID ownerId, UUID notificationId) {
         log.info("Marking notification as read: {}", notificationId);
         isUserExists(ownerId);

@@ -1,6 +1,6 @@
 package com.example.notificationmodule.util;
 
-import com.example.notificationmodule.exception.AuthenticatedUserNotFound;
+import com.example.notificationmodule.exception.user.AuthenticatedUserNotFound;
 import com.example.notificationmodule.model.principal.UserPrincipal;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

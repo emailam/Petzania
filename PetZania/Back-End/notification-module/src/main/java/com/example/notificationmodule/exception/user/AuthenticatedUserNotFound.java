@@ -1,4 +1,4 @@
-package com.example.notificationmodule.exception;
+package com.example.notificationmodule.exception.user;
 
 public class AuthenticatedUserNotFound extends RuntimeException {
     public AuthenticatedUserNotFound(String message) {

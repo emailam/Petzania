@@ -1,5 +1,9 @@
 package com.example.notificationmodule.exception;
 
+import com.example.notificationmodule.exception.admin.AdminNotFound;
+import com.example.notificationmodule.exception.notification.NotificationNotFound;
+import com.example.notificationmodule.exception.user.AuthenticatedUserNotFound;
+import com.example.notificationmodule.exception.user.UserNotFound;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;

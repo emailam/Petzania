@@ -1,7 +1,7 @@
 package com.example.notificationmodule.service.impl;
 
-import com.example.notificationmodule.exception.AdminNotFound;
-import com.example.notificationmodule.exception.UserNotFound;
+import com.example.notificationmodule.exception.admin.AdminNotFound;
+import com.example.notificationmodule.exception.user.UserNotFound;
 import com.example.notificationmodule.model.entity.Admin;
 import com.example.notificationmodule.model.entity.User;
 import com.example.notificationmodule.model.principal.AdminPrincipal;
