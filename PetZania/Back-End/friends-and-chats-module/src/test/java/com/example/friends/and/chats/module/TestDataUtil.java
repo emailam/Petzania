@@ -2,6 +2,7 @@ package com.example.friends.and.chats.module;
 
 import com.example.friends.and.chats.module.model.entity.User;
 
+import javax.management.Notification;
 import java.util.UUID;
 
 public class TestDataUtil {
@@ -15,4 +16,5 @@ public class TestDataUtil {
                 .email(username + "@gmail.com")
                 .build();
     }
+
 }

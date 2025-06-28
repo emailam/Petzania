@@ -17,6 +17,18 @@ public class TestDataBuilder {
                     """, username, email, password);
         }
 
+        public enum NotificationType {
+            FRIEND_REQUEST_RECEIVED,
+            FRIEND_REQUEST_ACCEPTED,
+            NEW_FOLLOWER,
+            PET_POST_LIKED
+        }
+
+        public enum NotificationStatus {
+            READ,
+            UNREAD
+        }
+
         public static String createLoginJson(String email, String password) {
             return String.format("""
                     {

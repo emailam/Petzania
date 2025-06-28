@@ -22,6 +22,7 @@ import java.util.List;
 @AllArgsConstructor
 public class SecurityConfig {
     private final JWTFilter jwtFilter;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         // disable the need for CSRF Token since it will be stateless.
@@ -30,8 +31,7 @@ public class SecurityConfig {
         // enabling cross-origin resource sharing
         http.cors(Customizer.withDefaults());        // make every request needs an authorization
         http.authorizeHttpRequests(request ->
-                request.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/ws/**").permitAll() // Allow WebSocket connections
+                request.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/ws/**").permitAll()
                         .anyRequest().authenticated()
         );
 

@@ -2,6 +2,7 @@ package com.example.adoption_and_breeding_module.model.entity;
 
 import com.example.adoption_and_breeding_module.model.enumeration.Gender;
 import com.example.adoption_and_breeding_module.model.enumeration.PetSpecies;
+import com.example.adoption_and_breeding_module.validator.NotToxicText;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

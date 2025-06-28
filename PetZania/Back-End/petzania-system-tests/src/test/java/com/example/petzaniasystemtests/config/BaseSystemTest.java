@@ -117,12 +117,35 @@ public class BaseSystemTest {
                 System.err.println("ADOPTION: " + outputFrame.getUtf8String());
             })
             .waitingFor(Wait.forLogMessage(".*Started AdoptionAndBreedingModule.*", 1)
-                    .withStartupTimeout(Duration.ofMinutes(2)));
+                    .withStartupTimeout(Duration.ofMinutes(15)));
+
+    @Container
+    protected static GenericContainer<?> notificationService = new GenericContainer<>(
+            "notification-module:latest")
+            .withNetwork(network)
+            .withNetworkAliases("notification-service")
+            .withExposedPorts(8083)
+            .withEnv("SPRING_PROFILES_ACTIVE", "test")
+            .withEnv("SPRING_DATASOURCE_URL", "jdbc:postgresql://postgres:5432/notifications")
+            .withEnv("SPRING_DATASOURCE_USERNAME", "postgres")
+            .withEnv("SPRING_DATASOURCE_PASSWORD", "admin")
+            .withEnv("SPRING_RABBITMQ_HOST", "rabbitmq")
+            .withEnv("SPRING_RABBITMQ_PORT", "5672")
+            .withEnv("SPRING_DATA_REDIS_HOST", "redis")
+            .withEnv("SPRING_DATA_REDIS_PORT", "6379")
+            .withEnv("SPRING_JPA_HIBERNATE_DDL_AUTO", "create-drop")
+            .dependsOn(postgres, rabbitmq, redis, registrationService)
+            .withLogConsumer(outputFrame -> {
+                System.err.println("NOTIFICATION: " + outputFrame.getUtf8String());
+            })
+            .waitingFor(Wait.forLogMessage(".*Started NotificationModule.*", 1)
+                    .withStartupTimeout(Duration.ofMinutes(5)));
 
 
     protected static String registrationBaseUrl;
     protected static String friendsBaseUrl;
     protected static String adoptionBaseUrl;
+    protected static String notificationBaseUrl;
     protected static String wsUrl;
 
     @BeforeAll
@@ -133,6 +156,10 @@ public class BaseSystemTest {
                 friendsService.getMappedPort(8081));
         adoptionBaseUrl = String.format("http://localhost:%d",
                 adoptionService.getMappedPort(8082));
+        notificationBaseUrl = String.format("http://localhost:%d",
+                notificationService.getMappedPort(8083));
+
+
         wsUrl = String.format("ws://localhost:%d/ws",
                 friendsService.getMappedPort(8081));
 

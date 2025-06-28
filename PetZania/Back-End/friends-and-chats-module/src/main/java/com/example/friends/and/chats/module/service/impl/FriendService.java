@@ -32,6 +32,7 @@ public class FriendService implements IFriendService {
     private final FollowRepository followRepository;
     private final IDTOConversionService dtoConversionService;
     private final BlockPublisher blockPublisher;
+    private final NotificationPublisher notificationPublisher;
 
     public void validateSelfOperation(UUID senderId, UUID receiverId) {
         if (senderId.equals(receiverId)) {
@@ -89,7 +90,9 @@ public class FriendService implements IFriendService {
                 .createdAt(new Timestamp(System.currentTimeMillis()))
                 .build();
 
-        return dtoConversionService.mapToFriendRequestDTO(friendRequestRepository.save(request));
+        FriendRequest newRequest = friendRequestRepository.save(request);
+        notificationPublisher.sendFriendRequestNotification(senderId, receiverId, newRequest.getId());
+        return dtoConversionService.mapToFriendRequestDTO(friendRequestRepository.save(newRequest));
     }
 
     public FriendRequest getFriendRequest(UUID requestId) {
@@ -122,7 +125,7 @@ public class FriendService implements IFriendService {
         UUID senderId = request.getSender().getUserId();
         Friendship friendship = createFriendship(request.getSender(), request.getReceiver());
         friendRequestRepository.deleteById(requestId);
-
+        notificationPublisher.sendFriendRequestAcceptedNotification(senderId, receiverId);
         return dtoConversionService.mapToFriendDTO(friendship, getUser(senderId));
     }
 
@@ -283,7 +286,9 @@ public class FriendService implements IFriendService {
                 .createdAt(new Timestamp(System.currentTimeMillis()))
                 .build();
 
-        return dtoConversionService.mapToFollowDTO(followRepository.save(follow));
+        Follow newFollow = followRepository.save(follow);
+        notificationPublisher.sendNewFollowerNotification(followerId, followedId);
+        return dtoConversionService.mapToFollowDTO(newFollow);
     }
 
     @Override

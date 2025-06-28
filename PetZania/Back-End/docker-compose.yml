@@ -88,6 +88,25 @@ services:
     networks:
       - app-network
 
+  notification-module:
+    build:
+      context: ./notification-module
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/notifications
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+    depends_on:
+      - postgres
+      - rabbitmq
+      - redis
+    restart: on-failure
+    networks:
+      - app-network
+
 networks:
   app-network:
     driver: bridge
