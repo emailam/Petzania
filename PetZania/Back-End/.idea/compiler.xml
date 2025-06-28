@@ -9,11 +9,11 @@
         <outputRelativeToContentRoot value="true" />
         <module name="petzania-system-tests" />
       </profile>
-      <profile name="Annotation profile for notification-module" enabled="true">
+      <profile name="Annotation profile for RegistrationModule" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
+        <processorPath>
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
         </processorPath>
         <module name="adoption-and-breeding-module" />

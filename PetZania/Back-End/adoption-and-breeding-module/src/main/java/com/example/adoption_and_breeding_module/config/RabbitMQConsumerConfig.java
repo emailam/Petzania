@@ -10,10 +10,6 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConsumerConfig {
-    @Bean
-    public Jackson2JsonMessageConverter jsonMessageConverter() {
-        return new Jackson2JsonMessageConverter();
-    }
 
     @Bean
     public TopicExchange userExchange() {

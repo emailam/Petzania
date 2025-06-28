@@ -37,6 +37,7 @@ public class NotificationEventListener {
             // send real-time notification via the defined websocket
             webSocketService.sendNotificationToUser(event.getRecipientId(), dtoConversionService.toDTO(savedNotification));
 
+            System.out.println("received new notification: " + savedNotification);
             log.info("Notification processed successfully with ID: {}", savedNotification.getNotificationId());
         } catch (Exception e) {
             log.error("Error processing notification event: {}", event, e);

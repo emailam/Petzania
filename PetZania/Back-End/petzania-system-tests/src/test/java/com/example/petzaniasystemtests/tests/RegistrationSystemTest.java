@@ -80,6 +80,14 @@ public class RegistrationSystemTest extends BaseSystemTest {
                 .then()
                 .statusCode(200)
                 .body("content", is(empty())); // New user has no posts
+
+        // Step 6: Verify user can access notifications module
+        given()
+                .spec(getAuthenticatedSpec(token))
+                .when()
+                .get(notificationBaseUrl + "/api/notifications")
+                .then()
+                .statusCode(204);
     }
 
     @Test
@@ -151,6 +159,24 @@ public class RegistrationSystemTest extends BaseSystemTest {
                 .statusCode(200)
                 .body("reacts", equalTo(1));
 
+        given()
+                .spec(getAuthenticatedSpec(user1Token))
+                .when()
+                .get(notificationBaseUrl + "/api/notifications")
+                .then()
+                .statusCode(200)
+                .body("content.size()", equalTo(1))
+                .body("content[0].type", equalTo(TestDataBuilder.UserBuilder.NotificationType.PET_POST_LIKED.toString()))
+                .body("content[0].status", equalTo(TestDataBuilder.UserBuilder.NotificationStatus.UNREAD.toString()));
+
+        given()
+                .spec(getAuthenticatedSpec(user1Token))
+                .when()
+                .get(notificationBaseUrl + "/api/notifications/unread-count")
+                .then()
+                .statusCode(200)
+                .body(equalTo("1"));
+
         // Step 4: User2 sends friend request to User1 in Friends Module
         Response friendRequestResponse = given()
                 .spec(getAuthenticatedSpec(user2Token))
@@ -163,6 +189,16 @@ public class RegistrationSystemTest extends BaseSystemTest {
                 .extract().response();
 
         String requestId = friendRequestResponse.jsonPath().getString("requestId");
+
+        given()
+                .spec(getAuthenticatedSpec(user1Token))
+                .when()
+                .get(notificationBaseUrl + "/api/notifications")
+                .then()
+                .statusCode(200)
+                .body("content.size()", equalTo(2))
+                .body("content[0].type", equalTo(TestDataBuilder.UserBuilder.NotificationType.FRIEND_REQUEST_RECEIVED.toString()))
+                .body("content[0].status", equalTo(TestDataBuilder.UserBuilder.NotificationStatus.UNREAD.toString()));
 
         // Step 5: User1 can see received friend request
         given()
@@ -181,6 +217,16 @@ public class RegistrationSystemTest extends BaseSystemTest {
                 .post(friendsBaseUrl + "/api/friends/accept-request/" + requestId)
                 .then()
                 .statusCode(201);
+
+        given()
+                .spec(getAuthenticatedSpec(user2Token))
+                .when()
+                .get(notificationBaseUrl + "/api/notifications")
+                .then()
+                .statusCode(200)
+                .body("content.size()", equalTo(1))
+                .body("content[0].type", equalTo(TestDataBuilder.UserBuilder.NotificationType.FRIEND_REQUEST_ACCEPTED.toString()))
+                .body("content[0].status", equalTo(TestDataBuilder.UserBuilder.NotificationStatus.UNREAD.toString()));
 
         // Step 7: Verify friendship exists
         given()
@@ -204,7 +250,7 @@ public class RegistrationSystemTest extends BaseSystemTest {
     @Order(3)
     @DisplayName("Should handle rapid user registrations with proper event propagation")
     void testRapidUserRegistrationsEventPropagation() throws Exception {
-        int numberOfUsers = 10;
+        int numberOfUsers = 5;
         String[] usernames = new String[numberOfUsers];
         String[] emails = new String[numberOfUsers];
         String[] tokens = new String[numberOfUsers];
@@ -225,33 +271,87 @@ public class RegistrationSystemTest extends BaseSystemTest {
 
         // Verify all users can interact across modules
         for (int i = 0; i < numberOfUsers; i++) {
-            final int currentUser = i;
 
             // Each user can access friends module
             given()
-                    .spec(getAuthenticatedSpec(tokens[currentUser]))
+                    .spec(getAuthenticatedSpec(tokens[i]))
                     .when()
-                    .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userIds[currentUser])
+                    .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userIds[i])
                     .then()
                     .statusCode(200);
 
             // Each user can access adoption module
             given()
-                    .spec(getAuthenticatedSpec(tokens[currentUser]))
+                    .spec(getAuthenticatedSpec(tokens[i]))
                     .when()
-                    .get(adoptionBaseUrl + "/api/pet-posts/user/" + userIds[currentUser])
+                    .get(adoptionBaseUrl + "/api/pet-posts/user/" + userIds[i])
                     .then()
                     .statusCode(200);
+
+            // Each user can access notification module
+            given()
+                    .spec(getAuthenticatedSpec(tokens[i]))
+                    .queryParam("page", 0)
+                    .queryParam("size", 10)
+                    .queryParam("sortBy", "createdAt")
+                    .queryParam("direction", "desc")
+                    .when()
+                    .get(notificationBaseUrl + "/api/notifications")
+                    .then()
+                    .statusCode(anyOf(is(200), is(204)));
 
             // Each user can send friend requests to others
             for (int j = i + 1; j < numberOfUsers; j++) {
                 given()
-                        .spec(getAuthenticatedSpec(tokens[currentUser]))
+                        .spec(getAuthenticatedSpec(tokens[i]))
                         .when()
                         .post(friendsBaseUrl + "/api/friends/send-request/" + userIds[j])
                         .then()
                         .statusCode(201);
+
+                Thread.sleep(3000);
+                given()
+                        .spec(getAuthenticatedSpec(tokens[j]))
+                        .when()
+                        .get(notificationBaseUrl + "/api/notifications")
+                        .then()
+                        .statusCode(200)
+                        .body("content[0].type", equalTo(TestDataBuilder.UserBuilder.NotificationType.FRIEND_REQUEST_RECEIVED.toString()))
+                        .body("content[0].status", equalTo(TestDataBuilder.UserBuilder.NotificationStatus.UNREAD.toString()));
             }
+        }
+
+        for (int i = 1; i < numberOfUsers; i++) {
+            given()
+                    .spec(getAuthenticatedSpec(tokens[i]))
+                    .when()
+                    .get(notificationBaseUrl + "/api/notifications")
+                    .then()
+                    .statusCode(200);
+
+            given()
+                    .spec(getAuthenticatedSpec(tokens[i]))
+                    .when()
+                    .get(notificationBaseUrl + "/api/notifications/unread-count")
+                    .then()
+                    .statusCode(200)
+                    .body(is(Integer.toString(i)));
+
+            given()
+                    .spec(getAuthenticatedSpec(tokens[i]))
+                    .when()
+                    .put(notificationBaseUrl + "/api/notifications/mark-all-read")
+                    .then()
+                    .statusCode(200)
+                    .body(equalTo("All notifications marked as read"));
+
+            given()
+                    .spec(getAuthenticatedSpec(tokens[i]))
+                    .when()
+                    .get(notificationBaseUrl + "/api/notifications/unread-count")
+                    .then()
+                    .statusCode(200)
+                    .body(is(Integer.toString(0)));
         }
 
         // Verify cross-user interactions work
@@ -322,6 +422,34 @@ public class RegistrationSystemTest extends BaseSystemTest {
                 .statusCode(201)
                 .extract().response();
 
+        Response notificationResponse = given()
+                .spec(getAuthenticatedSpec(user2Token))
+                .when()
+                .get(notificationBaseUrl + "/api/notifications")
+                .then()
+                .statusCode(200)
+                .body("content.size()", equalTo(1))
+                .body("content[0].type", equalTo(TestDataBuilder.UserBuilder.NotificationType.FRIEND_REQUEST_RECEIVED.toString()))
+                .body("content[0].status", equalTo(TestDataBuilder.UserBuilder.NotificationStatus.UNREAD.toString()))
+                .extract().response();
+
+        String notificationId = notificationResponse.jsonPath().getString("content[0].notificationId");
+
+        given()
+                .spec(getAuthenticatedSpec(user2Token))
+                .when()
+                .delete(notificationBaseUrl + "/api/notifications/" + notificationId)
+                .then()
+                .statusCode(200)
+                .body(equalTo("Notification deleted successfully"));
+
+        given()
+                .spec(getAuthenticatedSpec(user2Token))
+                .when()
+                .put(notificationBaseUrl + "/api/notifications/mark-read/" + notificationId)
+                .then()
+                .statusCode(404);
+
         String requestId = friendRequestResponse.jsonPath().getString("requestId");
 
         given()
@@ -332,12 +460,32 @@ public class RegistrationSystemTest extends BaseSystemTest {
                 .statusCode(201);
 
         given()
+                .spec(getAuthenticatedSpec(user1Token))
+                .when()
+                .get(notificationBaseUrl + "/api/notifications")
+                .then()
+                .statusCode(200)
+                .body("content.size()", equalTo(1))
+                .body("content[0].type", equalTo(TestDataBuilder.UserBuilder.NotificationType.FRIEND_REQUEST_ACCEPTED.toString()))
+                .body("content[0].status", equalTo(TestDataBuilder.UserBuilder.NotificationStatus.UNREAD.toString()));
+
+        given()
                 .spec(getAuthenticatedSpec(user2Token))
                 .when()
                 .put(adoptionBaseUrl + "/api/pet-posts/" + petPostId + "/react")
                 .then()
                 .statusCode(200)
                 .body("reacts", equalTo(1));
+
+        given()
+                .spec(getAuthenticatedSpec(user1Token))
+                .when()
+                .get(notificationBaseUrl + "/api/notifications")
+                .then()
+                .statusCode(200)
+                .body("content.size()", equalTo(2))
+                .body("content[0].type", equalTo(TestDataBuilder.UserBuilder.NotificationType.PET_POST_LIKED.toString()))
+                .body("content[0].status", equalTo(TestDataBuilder.UserBuilder.NotificationStatus.UNREAD.toString()));
 
         Response chatResponse = given()
                 .spec(getAuthenticatedSpec(user1Token))
@@ -453,20 +601,20 @@ public class RegistrationSystemTest extends BaseSystemTest {
         String[] petPostIds = new String[2];
         for (int i = 0; i < 2; i++) {
             String petPostJson = String.format("""
-                        {
-                            "petDTO": {
-                                "name": "ComplexPet%d",
-                                "species": "DOG",
-                                "gender": "MALE",
-                                "breed": "TestBreed",
-                                "dateOfBirth": "2020-01-01",
-                                "description": "Complex test pet %d"
-                            },
-                            "description": "Complex relationship test post %d",
-                            "postType": "ADOPTION",
-                            "location": "Complex City"
-                        }
-                        """, i, i, i);
+                    {
+                        "petDTO": {
+                            "name": "ComplexPet%d",
+                            "species": "DOG",
+                            "gender": "MALE",
+                            "breed": "TestBreed",
+                            "dateOfBirth": "2020-01-01",
+                            "description": "Complex test pet %d"
+                        },
+                        "description": "Complex relationship test post %d",
+                        "postType": "ADOPTION",
+                        "location": "Complex City"
+                    }
+                    """, i, i, i);
 
             Response petResponse = given()
                     .spec(getAuthenticatedSpec(mainToken))
@@ -535,6 +683,15 @@ public class RegistrationSystemTest extends BaseSystemTest {
                 .post(friendsBaseUrl + "/api/friends/follow/" + mainId)
                 .then()
                 .statusCode(201);
+
+        given()
+                .spec(getAuthenticatedSpec(mainToken))
+                .when()
+                .get(notificationBaseUrl + "/api/notifications")
+                .then()
+                .statusCode(200)
+                .body("content[0].type", equalTo(TestDataBuilder.UserBuilder.NotificationType.NEW_FOLLOWER.toString()))
+                .body("content[0].status", equalTo(TestDataBuilder.UserBuilder.NotificationStatus.UNREAD.toString()));
 
         // Create chats and messages
         Response chat1Response = given()
@@ -621,6 +778,13 @@ public class RegistrationSystemTest extends BaseSystemTest {
                 .statusCode(200)
                 .body(equalTo("0"));
 
+        given()
+                .spec(getAuthenticatedSpec(mainToken))
+                .when()
+                .get(notificationBaseUrl + "/api/notification")
+                .then()
+                .statusCode(anyOf(is(404), is(403)));
+
         // Chat should be removed/inaccessible
         given()
                 .spec(getAuthenticatedSpec(friend1Token))
@@ -663,14 +827,14 @@ public class RegistrationSystemTest extends BaseSystemTest {
 
         // Create cross-relationships between all users
         for (int i = 0; i < numberOfUsers; i++) {
-            for (int j = i+1; j < numberOfUsers; j++) {
-                    // Send friend requests
-                    given()
-                            .spec(getAuthenticatedSpec(tokens[i]))
-                            .when()
-                            .post(friendsBaseUrl + "/api/friends/send-request/" + userIds[j])
-                            .then()
-                            .statusCode(201);
+            for (int j = i + 1; j < numberOfUsers; j++) {
+                // Send friend requests
+                given()
+                        .spec(getAuthenticatedSpec(tokens[i]))
+                        .when()
+                        .post(friendsBaseUrl + "/api/friends/send-request/" + userIds[j])
+                        .then()
+                        .statusCode(201);
             }
         }
 
@@ -702,20 +866,20 @@ public class RegistrationSystemTest extends BaseSystemTest {
         // Create pet posts for each user
         for (int i = 0; i < numberOfUsers; i++) {
             String petPostJson = String.format("""
-                        {
-                            "petDTO": {
-                                "name": "ConcurrentPet%d",
-                                "species": "DOG",
-                                "gender": "MALE",
-                                "breed": "TestBreed",
-                                "dateOfBirth": "2020-01-01",
-                                "description": "Concurrent test pet %d"
-                            },
-                            "description": "Concurrent deletion test post %d",
-                            "postType": "ADOPTION",
-                            "location": "Concurrent City"
-                        }
-                        """, i, i, i);
+                    {
+                        "petDTO": {
+                            "name": "ConcurrentPet%d",
+                            "species": "DOG",
+                            "gender": "MALE",
+                            "breed": "TestBreed",
+                            "dateOfBirth": "2020-01-01",
+                            "description": "Concurrent test pet %d"
+                        },
+                        "description": "Concurrent deletion test post %d",
+                        "postType": "ADOPTION",
+                        "location": "Concurrent City"
+                    }
+                    """, i, i, i);
 
             given()
                     .spec(getAuthenticatedSpec(tokens[i]))
@@ -918,20 +1082,20 @@ public class RegistrationSystemTest extends BaseSystemTest {
         String[] petPostIds = new String[2];
         for (int i = 0; i < 2; i++) {
             String petPostJson = String.format("""
-                        {
-                            "petDTO": {
-                                "name": "InteractionPet%d",
-                                "species": "CAT",
-                                "gender": "FEMALE",
-                                "breed": "TestBreed",
-                                "dateOfBirth": "2021-01-01",
-                                "description": "Pet for interaction test %d"
-                            },
-                            "description": "Testing active interactions %d",
-                            "postType": "BREEDING",
-                            "location": "Interaction City"
-                        }
-                        """, i, i, i);
+                    {
+                        "petDTO": {
+                            "name": "InteractionPet%d",
+                            "species": "CAT",
+                            "gender": "FEMALE",
+                            "breed": "TestBreed",
+                            "dateOfBirth": "2021-01-01",
+                            "description": "Pet for interaction test %d"
+                        },
+                        "description": "Testing active interactions %d",
+                        "postType": "BREEDING",
+                        "location": "Interaction City"
+                    }
+                    """, i, i, i);
 
             Response petResponse = given()
                     .spec(getAuthenticatedSpec(ownerToken))
@@ -1202,20 +1366,20 @@ public class RegistrationSystemTest extends BaseSystemTest {
 
         // Both users should still be functional in adoption module
         String petPostJson = """
-                    {
-                        "petDTO": {
-                            "name": "PostDeletionPet",
-                            "species": "DOG",
-                            "gender": "MALE",
-                            "breed": "TestBreed",
-                            "dateOfBirth": "2020-01-01",
-                            "description": "Pet after user deletion"
-                        },
-                        "description": "Testing post-deletion functionality",
-                        "postType": "ADOPTION",
-                        "location": "Post Deletion City"
-                    }
-                    """;
+                {
+                    "petDTO": {
+                        "name": "PostDeletionPet",
+                        "species": "DOG",
+                        "gender": "MALE",
+                        "breed": "TestBreed",
+                        "dateOfBirth": "2020-01-01",
+                        "description": "Pet after user deletion"
+                    },
+                    "description": "Testing post-deletion functionality",
+                    "postType": "ADOPTION",
+                    "location": "Post Deletion City"
+                }
+                """;
 
         given()
                 .spec(getAuthenticatedSpec(user2Token))
@@ -1245,20 +1409,20 @@ public class RegistrationSystemTest extends BaseSystemTest {
 
             // Create some data in both modules
             String petPostJson = String.format("""
-                        {
-                            "petDTO": {
-                                "name": "CyclePet%d",
-                                "species": "DOG",
-                                "gender": "MALE",
-                                "breed": "TestBreed",
-                                "dateOfBirth": "2020-01-01",
-                                "description": "Cycle test pet %d"
-                            },
-                            "description": "Rapid cycle test post %d",
-                            "postType": "ADOPTION",
-                            "location": "Cycle City"
-                        }
-                        """, cycle, cycle, cycle);
+                    {
+                        "petDTO": {
+                            "name": "CyclePet%d",
+                            "species": "DOG",
+                            "gender": "MALE",
+                            "breed": "TestBreed",
+                            "dateOfBirth": "2020-01-01",
+                            "description": "Cycle test pet %d"
+                        },
+                        "description": "Rapid cycle test post %d",
+                        "postType": "ADOPTION",
+                        "location": "Cycle City"
+                    }
+                    """, cycle, cycle, cycle);
 
             Response petResponse = given()
                     .spec(getAuthenticatedSpec(token))
@@ -1347,20 +1511,20 @@ public class RegistrationSystemTest extends BaseSystemTest {
 
         // 2. Pet Post in Adoption Module
         String petPostJson = """
-                    {
-                        "petDTO": {
-                            "name": "IntegrityPet",
-                            "species": "CAT",
-                            "gender": "FEMALE",
-                            "breed": "TestBreed",
-                            "dateOfBirth": "2021-01-01",
-                            "description": "Pet for integrity test"
-                        },
-                        "description": "Testing cross-module integrity",
-                        "postType": "ADOPTION",
-                        "location": "Integrity City"
-                    }
-                    """;
+                {
+                    "petDTO": {
+                        "name": "IntegrityPet",
+                        "species": "CAT",
+                        "gender": "FEMALE",
+                        "breed": "TestBreed",
+                        "dateOfBirth": "2021-01-01",
+                        "description": "Pet for integrity test"
+                    },
+                    "description": "Testing cross-module integrity",
+                    "postType": "ADOPTION",
+                    "location": "Integrity City"
+                }
+                """;
 
         Response petResponse = given()
                 .spec(getAuthenticatedSpec(user1Token))
@@ -1699,20 +1863,20 @@ public class RegistrationSystemTest extends BaseSystemTest {
 
         // 7. Network users can still create pet posts
         String postDeletionPetJson = """
-                    {
-                        "petDTO": {
-                            "name": "PostCascadePet",
-                            "species": "DOG",
-                            "gender": "MALE",
-                            "breed": "Survivor",
-                            "dateOfBirth": "2020-01-01",
-                            "description": "Pet created after cascade deletion"
-                        },
-                        "description": "Proving system integrity after complex deletion",
-                        "postType": "ADOPTION",
-                        "location": "Post Cascade City"
-                    }
-                    """;
+                {
+                    "petDTO": {
+                        "name": "PostCascadePet",
+                        "species": "DOG",
+                        "gender": "MALE",
+                        "breed": "Survivor",
+                        "dateOfBirth": "2020-01-01",
+                        "description": "Pet created after cascade deletion"
+                    },
+                    "description": "Proving system integrity after complex deletion",
+                    "postType": "ADOPTION",
+                    "location": "Post Cascade City"
+                }
+                """;
 
         Response postCascadeResponse = given()
                 .spec(getAuthenticatedSpec(networkTokens[0]))

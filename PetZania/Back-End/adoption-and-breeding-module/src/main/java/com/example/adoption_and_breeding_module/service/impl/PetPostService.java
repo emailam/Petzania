@@ -39,6 +39,8 @@ public class PetPostService implements IPetPostService {
     private final PetPostRepository petPostRepository;
     private final BlockRepository blockRepository;
     private final IDTOConversionService dtoConversionService;
+    private final NotificationPublisher notificationPublisher;
+
 
     @Override
     public PetPostDTO createPetPost(CreatePetPostDTO dto, UUID ownerId) {
@@ -125,6 +127,7 @@ public class PetPostService implements IPetPostService {
             throw new BlockingExist("Operation blocked due to existing block relationship");
         }
 
+        System.out.println("yarab ala2y el error");
         Set<User> reactedUsers = post.getReactedUsers();
         int reacts = post.getReacts();
         if (reactedUsers.contains(user)) {
@@ -132,6 +135,7 @@ public class PetPostService implements IPetPostService {
             reacts--;
         } else {
             reactedUsers.add(user);
+            notificationPublisher.sendPetPostLikedNotification(ownerId, userId, postId);
             reacts++;
         }
         post.setReacts(reacts);

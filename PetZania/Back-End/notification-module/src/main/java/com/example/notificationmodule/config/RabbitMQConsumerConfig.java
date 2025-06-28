@@ -21,6 +21,31 @@ public class RabbitMQConsumerConfig {
     }
 
     @Bean
+    public TopicExchange userExchange() {
+        return new TopicExchange("userExchange");
+    }
+
+    @Bean
+    public Queue userRegisteredQueueNotificationModule() {
+        return new Queue("userRegisteredQueueNotificationModule", true);
+    }
+
+    @Bean
+    public Queue userDeletedQueueNotificationModule() {
+        return new Queue("userDeletedQueueNotificationModule", true);
+    }
+
+    @Bean
+    public Binding userRegistrationNotificationModuleBinding(Queue userRegisteredQueueNotificationModule, TopicExchange userExchange) {
+        return BindingBuilder.bind(userRegisteredQueueNotificationModule).to(userExchange).with("user.registered");
+    }
+
+    @Bean
+    public Binding userDeletionNotificationModuleBinding(Queue userDeletedQueueNotificationModule, TopicExchange userExchange) {
+        return BindingBuilder.bind(userDeletedQueueNotificationModule).to(userExchange).with("user.deleted");
+    }
+
+    @Bean
     public Queue notificationsQueue() {
         return new Queue("notificationsQueue", true);
     }
