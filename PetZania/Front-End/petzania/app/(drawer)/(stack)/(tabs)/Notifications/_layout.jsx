@@ -8,18 +8,9 @@ export default function NotificationsLayout() {
 
     const CustomHeader = () => (
         <View style={styles.customHeader}>
-            <View style={styles.headerLeft}>
-                <TouchableOpacity
-                    onPress={() => router.back()}
-                    style={styles.backButton}
-                >
-                    <Ionicons name="arrow-back" size={24} color="#9188E5" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Notifications</Text>
-            </View>
             <View style={styles.headerRight}>
-                <TouchableOpacity 
-                    onPress={() => {/* Mark all as read */}} 
+                <TouchableOpacity
+                    onPress={() => {/* Mark all as read */}}
                     style={styles.markAllButton}
                 >
                     <Text style={styles.markAllText}>Mark all read</Text>
@@ -33,7 +24,7 @@ export default function NotificationsLayout() {
             <Stack.Screen 
                 name="index"
                 options={{
-                    headerShown: true,
+                    headerShown: false,
                     header: () => <CustomHeader />,
                 }}
             />

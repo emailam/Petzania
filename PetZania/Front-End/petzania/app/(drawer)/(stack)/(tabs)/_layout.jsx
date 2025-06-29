@@ -46,9 +46,6 @@ export default function TabLayout() {
       <TouchableOpacity onPress={() => { router.push('Chat') }}>
         <Ionicons name="chatbubble-ellipses-outline" size={24} color="#9188E5" />
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => { router.push('Notifications') }} style={{ marginLeft: 8 }}>
-        <Ionicons name="notifications-outline" size={24} color="#9188E5" />
-      </TouchableOpacity>
     </View>
   );
   return (
@@ -113,11 +110,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="Pet Services"
+        name="Notifications"
         options={{
-          title: 'Pet Services',
+          title: 'Notifications',
           tabBarIcon: ({ color }) => (
-            <IconSymbol name="bone.fill" size={28} color={color} />
+            <IconSymbol name="bell.fill" size={28} color={color} />
           ),
         }}
       />

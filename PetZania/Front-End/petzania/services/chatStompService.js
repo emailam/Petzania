@@ -1,7 +1,7 @@
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
-class SocketService {
+class ChatSocketService {
     constructor() {
         this.stompClient = null;
         this.subscriptions = new Map();
@@ -12,7 +12,7 @@ class SocketService {
             return this.stompClient;
         }
 
-        // Create SockJS connection
+        // Create SockJS connection for chat service
         const socket = new SockJS('http://192.168.1.6:8081/ws');
         // Create STOMP client
         this.stompClient = new Client({
@@ -22,7 +22,7 @@ class SocketService {
                 Authorization: token ? `Bearer ${token}` : ''
             },
             debug: (str) => {
-                console.log('STOMP Debug:', str);
+                console.log('Chat STOMP Debug:', str);
             },
             reconnectDelay: 5000,
             heartbeatIncoming: 4000,
@@ -30,15 +30,15 @@ class SocketService {
         });
 
         this.stompClient.onConnect = (frame) => {
-            console.log('STOMP Connected:', frame);
+            console.log('Chat STOMP Connected:', frame);
         };
 
         this.stompClient.onDisconnect = (frame) => {
-            console.log('STOMP Disconnected:', frame);
+            console.log('Chat STOMP Disconnected:', frame);
         };
 
         this.stompClient.onStompError = (frame) => {
-            console.error('STOMP Error:', frame.headers['message']);
+            console.error('Chat STOMP Error:', frame.headers['message']);
             console.error('Details:', frame.body);
         };
 
@@ -79,8 +79,22 @@ class SocketService {
     unsubscribeFromChatTopic(chatId) {
         this.unsubscribeFrom(`/topic/chats/${chatId}`);
     }
+
+    // Disconnect the chat service
+    disconnect() {
+        if (this.stompClient) {
+            // Unsubscribe from all subscriptions
+            this.subscriptions.forEach((subscription, destination) => {
+                subscription.unsubscribe();
+            });
+            this.subscriptions.clear();
+            
+            this.stompClient.deactivate();
+            this.stompClient = null;
+        }
+    }
 }
 
 // Create a singleton instance
-const socketService = new SocketService();
-export default socketService;
+const chatSocketService = new ChatSocketService();
+export default chatSocketService;

@@ -10,6 +10,7 @@ import 'react-native-reanimated';
 import CustomHeader from '@/components/CustomHeader';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import AppProviders from '@/components/AppProviders';
+import NotificationToast from '@/components/NotificationToast';
 
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
@@ -106,6 +107,7 @@ export default function RootLayout() {
                 <Stack.Screen name="UserModule" options={{ headerShown: false }} />
               </Stack>
               <StatusBar style="auto" />
+              <NotificationToast />
             </ThemeProvider>
           </SafeAreaView>
         </AppProviders>

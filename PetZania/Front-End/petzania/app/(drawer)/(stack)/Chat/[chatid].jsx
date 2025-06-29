@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { UserContext } from '@/context/UserContext';
 import { getMessagesByChatId, sendMessage, getChatById, updateMessageStatus, editMessage, deleteMessage } from '@/services/chatService';
 import { uploadFile } from '@/services/uploadService';
-import stompService from '@/services/stompService';
+import chatStompService from '@/services/chatStompService';
 import Toast from 'react-native-toast-message';
 import { getToken } from '@/storage/tokenStorage';
 import * as Haptics from 'expo-haptics';
@@ -68,7 +68,7 @@ export default function ChatDetailScreen() {
             if (currentUser?.userId && chatid) {
                 try {
                     const token = await getToken('accessToken');
-                    const client = stompService.connect(currentUser.userId, token);
+                    const client = chatStompService.connect(currentUser.userId, token);
                 } catch (error) {
                     console.error('Error connecting to STOMP:', error);
                 }
@@ -76,8 +76,8 @@ export default function ChatDetailScreen() {
         };
         connectToStomp();
         return () => {
-            if (stompService.isClientConnected()) {
-                stompService.unsubscribeFromChatTopic(chatid);
+            if (chatStompService.isClientConnected()) {
+                chatStompService.unsubscribeFromChatTopic(chatid);
             }
         };
     }, [currentUser?.userId, chatid]);
@@ -273,8 +273,8 @@ export default function ChatDetailScreen() {
 
     const setupStompSubscription = () => {
         const checkConnection = () => {
-            if (stompService.isClientConnected()) {
-                stompService.subscribeToChatTopic(chatid, handleTopicMessage);
+            if (chatStompService.isClientConnected()) {
+                chatStompService.subscribeToChatTopic(chatid, handleTopicMessage);
             } else {
                 setTimeout(checkConnection, 100);
             }
@@ -399,7 +399,7 @@ export default function ChatDetailScreen() {
             const response = await sendMessage(chatid, message.text, replyToMessageId);
             
             if (response && response.messageId) {
-                if (!stompService.isClientConnected()) {
+                if (!chatStompService.isClientConnected()) {
                     const manualMessage = {
                         _id: response.messageId,
                         text: response.content,
@@ -809,7 +809,7 @@ export default function ChatDetailScreen() {
                 setReplyToMessage(null);
             }
 
-            if (!stompService.isClientConnected()) {
+            if (!chatStompService.isClientConnected()) {
                 const manualMessage = {
                     _id: result.messageId,
                     text: result.file ? '' : result.content,

@@ -4,7 +4,7 @@ import Button from "@/components/Button";
 import { useRouter } from "expo-router";
 import FormInput from "@/components/FormInput";
 import { useAuthForm } from "@/components/useForm";
-import { ScrollView , StyleSheet, TouchableOpacity, Text } from "react-native"
+import { ScrollView , StyleSheet, Text } from "react-native"
 import { responsive } from "@/utilities/responsive";
 
 import { sendResetPasswordOTP } from '@/services/userService';
@@ -14,8 +14,7 @@ export default function ForgotPasswordForm() {
     const router = useRouter();
 
     const goToRegisterScreen = () => {
-      router.dismissAll();
-      router.push('/RegisterModule/RegisterScreen');
+      router.replace('/RegisterModule/RegisterScreen');
     }
 
     const SendResetPasswordOTP = async (data) => {
@@ -42,6 +41,7 @@ export default function ForgotPasswordForm() {
         });
       }
     };
+
     return(
         <ScrollView contentContainerStyle={styles.container}>
             <FormInput
@@ -60,9 +60,7 @@ export default function ForgotPasswordForm() {
                 loading={isSubmitting}
             />
 
-            <TouchableOpacity >
-              <Text style={styles.link} onPress={goToRegisterScreen}>Create an account</Text>
-            </TouchableOpacity>
+            <Text style={styles.link} onPress={goToRegisterScreen}>Create an account</Text>
         </ScrollView>
     )
 }
@@ -70,7 +68,7 @@ const styles = StyleSheet.create({
   link: {
     color: '#9188E5',
     fontWeight: 'bold',
-    fontSize: responsive.fonts.small,
+    fontSize: 14,
   },
   container: {
     alignSelf: 'center',

@@ -55,6 +55,8 @@ export default function CustomDrawer(props) {
     });
   };
 
+  const isHomeActive = isActive('/Home') || isActive('/Notifications') || isActive('/Adoption') || isActive('/Post') || isActive('/Breeding');
+
   return (
     <DrawerContentScrollView {...props} keyboardShouldPersistTaps="handled" scrollToOverflowEnabled={true} contentContainerStyle={{ flexGrow: 1 }}>
       <View style={{ flex: 1 }}>
@@ -147,14 +149,14 @@ export default function CustomDrawer(props) {
                 <FontAwesome
                   name="home"
                   size={28}
-                  color={isActive('/Home') ? 'white' : 'black'}
+                  color={isHomeActive ? 'white' : 'black'}
                 />
               )}
               style={{
-                backgroundColor: isActive('/Home') ? '#9188E5' : 'transparent',
+                backgroundColor: isHomeActive ? '#9188E5' : 'transparent',
               }}
               labelStyle={{
-                color: isActive('/Home') ? 'white' : 'black',
+                color: isHomeActive ? 'white' : 'black',
               }}
             />
             <DrawerItem

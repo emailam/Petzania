@@ -8,7 +8,6 @@ const MAPPING = {
   'pawprint.fill': 'pets',
   'heart.circle.fill': 'favorite',
   'bell.fill': 'notifications',
-  'bone.fill': 'restaurant', // Replace with a better match if needed
   'add.fill': 'add-box',
 } as const;
 

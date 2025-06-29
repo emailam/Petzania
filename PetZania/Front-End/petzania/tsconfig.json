@@ -15,5 +15,5 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
 , "app/RegisterModule/_layout.js"  
-, "utilities/responsive.js", "components/FormSchemas.jsx", "utilities/auth.js", "utilities/useForm.jsx"  ]
+, "utilities/responsive.js", "components/FormSchemas.jsx", "utilities/auth.js", "utilities/useForm.jsx", "context/NotificationContext.js"  ]
 }
