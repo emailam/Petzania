@@ -53,6 +53,7 @@ public class PetPostService implements IPetPostService {
                 .description(dto.getDescription())
                 .postType(dto.getPostType())
                 .location(dto.getLocation())
+                .score(0)
                 .build();
 
         post = petPostRepository.save(post);

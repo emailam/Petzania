@@ -292,11 +292,20 @@ public class PetPostControllerIntegrationTests {
                         .postStatus(PetPostStatus.PENDING)
                         .location("Miami")
                         .reacts(10)
+                        .build(),
+                PetPost.builder()
+                        .owner(userC)
+                        .pet(TestDataUtil.createTestPet("Luna", PetSpecies.RABBIT, Gender.FEMALE, 18)) // 1.5 years
+                        .postType(PetPostType.BREEDING)
+                        .postStatus(PetPostStatus.COMPLETED)
+                        .location("Tampa")
+                        .reacts(7)
                         .build()
         ));
 
         // Test with all filter parameters
         PetPostFilterDTO filter = new PetPostFilterDTO();
+        filter.setPetPostStatus(PetPostStatus.PENDING);
         filter.setPetPostType(PetPostType.ADOPTION);
         filter.setSpecies(PetSpecies.DOG);
         filter.setGender(Gender.MALE);
