@@ -315,7 +315,7 @@ public class PetPostControllerIntegrationTests {
         filter.setSortBy(PetPostSortBy.REACTS);
         filter.setSortDesc(true);
 
-        mockMvc.perform(get("/api/pet-posts/filtered")
+        mockMvc.perform(post("/api/pet-posts/filtered")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(filter))
                         .param("page", "0")
@@ -341,7 +341,7 @@ public class PetPostControllerIntegrationTests {
         filter.setSortBy(PetPostSortBy.CREATED_DATE);
         filter.setSortDesc(true);
 
-        mockMvc.perform(get("/api/pet-posts/filtered")
+        mockMvc.perform(post("/api/pet-posts/filtered")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(filter))
                         .param("page", "0")
@@ -586,7 +586,7 @@ public class PetPostControllerIntegrationTests {
         filterLikes.setSortBy(PetPostSortBy.REACTS);
         filterLikes.setSortDesc(true);
 
-        mockMvc.perform(get("/api/pet-posts/filtered")
+        mockMvc.perform(post("/api/pet-posts/filtered")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(filterLikes))
                         .param("page", "0")
@@ -601,7 +601,7 @@ public class PetPostControllerIntegrationTests {
         filterDate.setSortBy(PetPostSortBy.CREATED_DATE);
         filterDate.setSortDesc(false);
 
-        mockMvc.perform(get("/api/pet-posts/filtered")
+        mockMvc.perform(post("/api/pet-posts/filtered")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(filterDate))
                         .param("page", "0")
@@ -863,7 +863,7 @@ public class PetPostControllerIntegrationTests {
         filter.setSortBy(PetPostSortBy.SCORE);
         filter.setSortDesc(true);
 
-        MvcResult result = mockMvc.perform(get("/api/pet-posts/filtered")
+        MvcResult result = mockMvc.perform(post("/api/pet-posts/filtered")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(filter))
                         .param("page", "0")

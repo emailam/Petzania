@@ -54,7 +54,7 @@ public class PetPostController {
 
 
     @Operation(summary = "Get filtered pet posts based on search criteria")
-    @GetMapping(path = "/filtered")
+    @PostMapping(path = "/filtered")
     public ResponseEntity<Page<PetPostDTO>> getFilteredPosts(
             @RequestBody PetPostFilterDTO filter,
             @RequestParam(defaultValue = "0") int page,
