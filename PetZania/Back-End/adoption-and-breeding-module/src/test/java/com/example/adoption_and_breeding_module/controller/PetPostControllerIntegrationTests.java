@@ -369,6 +369,7 @@ public class PetPostControllerIntegrationTests {
         UpdatePetPostDTO updateDTO = new UpdatePetPostDTO();
         updateDTO.setUpdatePetDTO(updatePetDTO);
         updateDTO.setDescription("Updated post description");
+        updateDTO.setLocation("China");
         updateDTO.setPostStatus(PetPostStatus.COMPLETED);
 
         mockMvc.perform(patch("/api/pet-posts/{petPostId}", adoptionPost.getPostId())
@@ -380,6 +381,7 @@ public class PetPostControllerIntegrationTests {
                 .andExpect(jsonPath("$.petDTO.breed").value("Golden Retriever"))
                 .andExpect(jsonPath("$.petDTO.myVaccinesURLs", hasSize(2)))
                 .andExpect(jsonPath("$.description").value("Updated post description"))
+                .andExpect(jsonPath("$.location").value("China"))
                 .andExpect(jsonPath("$.postStatus").value("COMPLETED"))
                 .andExpect(jsonPath("$.updatedAt").exists());
     }

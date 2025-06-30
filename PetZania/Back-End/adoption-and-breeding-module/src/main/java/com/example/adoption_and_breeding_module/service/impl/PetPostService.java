@@ -81,6 +81,9 @@ public class PetPostService implements IPetPostService {
         if (dto.getDescription() != null) {
             post.setDescription(dto.getDescription());
         }
+        if(dto.getLocation() != null) {
+            post.setLocation(dto.getLocation());
+        }
         if (dto.getPostStatus() != null) {
             post.setPostStatus(dto.getPostStatus());
         }
