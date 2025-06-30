@@ -292,11 +292,20 @@ public class PetPostControllerIntegrationTests {
                         .postStatus(PetPostStatus.PENDING)
                         .location("Miami")
                         .reacts(10)
+                        .build(),
+                PetPost.builder()
+                        .owner(userC)
+                        .pet(TestDataUtil.createTestPet("Luna", PetSpecies.RABBIT, Gender.FEMALE, 18)) // 1.5 years
+                        .postType(PetPostType.BREEDING)
+                        .postStatus(PetPostStatus.COMPLETED)
+                        .location("Tampa")
+                        .reacts(7)
                         .build()
         ));
 
         // Test with all filter parameters
         PetPostFilterDTO filter = new PetPostFilterDTO();
+        filter.setPetPostStatus(PetPostStatus.PENDING);
         filter.setPetPostType(PetPostType.ADOPTION);
         filter.setSpecies(PetSpecies.DOG);
         filter.setGender(Gender.MALE);
@@ -369,6 +378,7 @@ public class PetPostControllerIntegrationTests {
         UpdatePetPostDTO updateDTO = new UpdatePetPostDTO();
         updateDTO.setUpdatePetDTO(updatePetDTO);
         updateDTO.setDescription("Updated post description");
+        updateDTO.setLocation("China");
         updateDTO.setPostStatus(PetPostStatus.COMPLETED);
 
         mockMvc.perform(patch("/api/pet-posts/{petPostId}", adoptionPost.getPostId())
@@ -380,6 +390,7 @@ public class PetPostControllerIntegrationTests {
                 .andExpect(jsonPath("$.petDTO.breed").value("Golden Retriever"))
                 .andExpect(jsonPath("$.petDTO.myVaccinesURLs", hasSize(2)))
                 .andExpect(jsonPath("$.description").value("Updated post description"))
+                .andExpect(jsonPath("$.location").value("China"))
                 .andExpect(jsonPath("$.postStatus").value("COMPLETED"))
                 .andExpect(jsonPath("$.updatedAt").exists());
     }

@@ -19,5 +19,9 @@ public class UpdatePetPostDTO {
     @NotToxicText
     private String description;
 
+    @NotToxicText
+    private String location;
+
+
     PetPostStatus postStatus;
 }

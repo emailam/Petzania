@@ -17,5 +17,6 @@ public enum PetSpecies {
     RAT,        // (Domesticated pet rats)
     HEDGEHOG,   // (African Pygmy Hedgehog)
     HERMIT_CRAB,
-    SUGAR_GLIDER
+    SUGAR_GLIDER,
+    ALL
 }
