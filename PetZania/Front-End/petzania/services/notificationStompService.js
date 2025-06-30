@@ -16,7 +16,7 @@ class NotificationSocketService {
         }
 
         // Create SockJS connection for notification service
-        const socket = new SockJS('http://192.168.1.6:8083/ws');
+        const socket = new SockJS('http://192.168.1.6:8083/ws/notifications');
         // Create STOMP client
         this.stompClient = new Client({
             webSocketFactory: () => socket,
@@ -34,11 +34,11 @@ class NotificationSocketService {
 
         this.stompClient.onConnect = (frame) => {
             console.log('Notification STOMP Connected:', frame);
-            
+
             // Auto-subscribe to notification topics when connected
             this.subscribeToNotifications(userId);
             this.subscribeToNotificationCount(userId);
-            
+
             // Notify connection callbacks
             this.connectionCallbacks.forEach(callback => callback(true));
         };

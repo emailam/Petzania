@@ -3,7 +3,7 @@ import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
-import { FontAwesome, Ionicons, MaterialIcons, Feather } from '@expo/vector-icons';
+import { FontAwesome, Ionicons, MaterialIcons, Feather, FontAwesome5 } from '@expo/vector-icons';
 import { useRouter, usePathname } from 'expo-router';
 
 import { UserContext } from '@/context/UserContext';
@@ -162,7 +162,6 @@ export default function CustomDrawer(props) {
             <DrawerItem
               label="Friends"
               onPress={() => closeAndNavigate('/Friends')}
-              // pressColor="rgba(145, 136, 229, 0.4)"
               icon={() => (
                 <MaterialIcons
                   name="groups"
@@ -177,8 +176,25 @@ export default function CustomDrawer(props) {
                 color: isActive('/Friends') ? 'white' : 'black',
               }}
             />
+            <DrawerItem
+              label="Pet Services"
+              onPress={() => closeAndNavigate('/PetServices')}
+              icon={() => (
+                <FontAwesome5
+                  name="dog"
+                  size={24}
+                  color={isActive('/PetServices') ? 'white' : 'black'}
+                />
+              )}
+              style={{
+                backgroundColor: isActive('/PetServices') ? '#9188E5' : 'transparent',
+              }}
+              labelStyle={{
+                color: isActive('/PetServices') ? 'white' : 'black',
+              }}
+            />
           </View>
-        </View>  
+        </View>
 
         <View style={styles.divider} />
 

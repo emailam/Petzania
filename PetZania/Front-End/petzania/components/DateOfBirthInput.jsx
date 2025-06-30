@@ -35,7 +35,7 @@ export default function DateOfBirthInput({ label = "Date of Birth", value, onCha
                 <DateTimePicker
                     value={selectedDate}
                     mode="date"
-                    display="default"
+                    display={Platform.OS === 'ios' ? 'default' : 'spinner'}
                     maximumDate={new Date()}
                     onChange={(event, date) => {
                         setOpen(false);

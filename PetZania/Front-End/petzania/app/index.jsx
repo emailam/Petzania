@@ -8,8 +8,10 @@ import { getUserId } from '@/storage/userStorage';
 
 import { UserContext } from '@/context/UserContext';
 import { PetContext } from '@/context/PetContext';
-import { Ionicons } from '@expo/vector-icons';
-import { FontAwesome } from '@expo/vector-icons';
+import { AntDesign, FontAwesome5, Ionicons, Feather, FontAwesome } from '@expo/vector-icons';
+
+import { Asset } from 'expo-asset';
+import { PETS } from '@/constants/PETS';
 
 import 'react-native-gesture-handler';
 
@@ -17,13 +19,16 @@ export default function App() {
     const [fontsLoaded] = useFonts({
         ...Ionicons.font,
         ...FontAwesome.font,
+        ...FontAwesome5.font,
+        ...AntDesign.font,
+        ...Feather.font,
         'Inter-Bold': require('@/assets/fonts/Inter-Bold.ttf'),
     });
 
     const [isReady, setIsReady] = useState(false);
     const [redirectPath, setRedirectPath] = useState(null);
 
-    const { setUser } = useContext(UserContext);
+    const { user, setUser } = useContext(UserContext);
     const { setPets } = useContext(PetContext);
 
     useEffect(() => {
@@ -40,6 +45,7 @@ export default function App() {
 
                 const userData = await getUserById(userId);
                 setUser(userData);
+                console.log('Fetched user profile:', userData);
                 setPets(userData.myPets);
 
                 if (userData?.name === null) {
@@ -57,7 +63,19 @@ export default function App() {
         };
 
         checkAuth();
+        // preloadPetImages();
     }, []);
+
+    // Add this effect to handle when user context is lost
+    useEffect(() => {
+        if (isReady && !user) {
+            setRedirectPath('/RegisterModule/LoginScreen');
+        }
+    }, [isReady, user]);
+
+    const preloadPetImages = async () => {
+        await Promise.all(PETS.map(pet => Asset.loadAsync(pet.image)));
+    };
 
     if (!fontsLoaded || !isReady) {
         return (

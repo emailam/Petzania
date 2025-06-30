@@ -11,13 +11,15 @@ import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 
-import { Ionicons, Feather, AntDesign } from '@expo/vector-icons'; // or any icon pack you prefer
+import { Ionicons } from '@expo/vector-icons';
 
 import { UserContext } from '@/context/UserContext';
+import { useNotifications } from '@/context/NotificationContext';
 
 export default function TabLayout() {
 
   const defaultImage = require('@/assets/images/Defaults/default-user.png');
+  const { unreadCount } = useNotifications();
 
   const { user } = useContext(UserContext);
 
@@ -40,7 +42,7 @@ export default function TabLayout() {
   const HeaderRight = () => (
     <View style={{ flexDirection: 'row', gap: 4, marginRight: 16, alignItems: 'center' }}>
       <TouchableOpacity onPress={() => { router.push('Search') }}>
-        <Feather name="search" size={22} color="#9188E5" />
+        <Ionicons name="search-outline" size={24} color="#9188E5" />
       </TouchableOpacity>
       <Text style={{ fontSize: 22, color: '#808B9A' }}> | </Text>
       <TouchableOpacity onPress={() => { router.push('Chat') }}>
@@ -114,7 +116,26 @@ export default function TabLayout() {
         options={{
           title: 'Notifications',
           tabBarIcon: ({ color }) => (
-            <IconSymbol name="bell.fill" size={28} color={color} />
+            <View>
+              <IconSymbol name="bell.fill" size={28} color={color} />
+              {unreadCount > 0 && (
+                <View style={{
+                  position: 'absolute',
+                  top: -4,
+                  right: -8,
+                  backgroundColor: '#FF3B30',
+                  borderRadius: 8,
+                  minWidth: 16,
+                  height: 16,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  paddingHorizontal: 4,
+                  zIndex: 10,
+                }}>
+                  <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>{unreadCount}</Text>
+                </View>
+              )}
+            </View>
           ),
         }}
       />

@@ -10,6 +10,7 @@ export default function Layout() {
             <Stack.Screen name="Help" />
             <Stack.Screen name="Chat" />
             <Stack.Screen name="Search" />
+            <Stack.Screen name="PetServices" />
         </Stack>
     );
 }

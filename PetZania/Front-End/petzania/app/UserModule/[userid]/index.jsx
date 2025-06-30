@@ -34,7 +34,6 @@ import Toast from 'react-native-toast-message';
 
 export default function UserProfile() {
     const { userid } = useLocalSearchParams();
-    console.log('User ID:', userid);
     const router = useRouter();
     const { user: currentUser } = useContext(UserContext);
     const { showActionSheetWithOptions } = useActionSheet();

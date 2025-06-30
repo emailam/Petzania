@@ -138,7 +138,7 @@ export default function AddPet5() {
                 data={vaccineFiles}
                 keyExtractor={(item, index) => index.toString()}
                 renderItem={({ item }) => (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.uploadedFile}
                         onPress={() => openPDF(item.uri)}
                     >
@@ -185,6 +185,8 @@ const styles = StyleSheet.create({
     },
     image: {
         marginRight: '7%',
+        width: 46,
+        height: 46,
     },
     vaccinesInput: {
         marginTop: 20,

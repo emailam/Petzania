@@ -57,7 +57,7 @@ export const NotificationProvider = ({ children }) => {
     // Initialize real-time notifications when user is available
     useEffect(() => {
         const initializeNotifications = async () => {
-            if (user?.id) {
+            if (user?.userId) {
                 try {
                     // Get the access token from storage
                     const accessToken = await getToken('accessToken');
@@ -67,7 +67,7 @@ export const NotificationProvider = ({ children }) => {
                         fetchUnreadCount();
 
                         // Connect to notification service with authentication token
-                        notificationStompService.connect(user.id, accessToken);
+                        notificationStompService.connect(user.userId, accessToken);
 
                         // Set up real-time listeners
                         const unsubscribeNotification = notificationStompService.onNotification((notification) => {
@@ -111,11 +111,11 @@ export const NotificationProvider = ({ children }) => {
                 cleanup.then(cleanupFn => cleanupFn && cleanupFn());
             }
         };
-    }, [user?.id, fetchUnreadCount, incrementUnreadCount, addRecentNotification]);
+    }, [user?.userId, fetchUnreadCount, incrementUnreadCount, addRecentNotification]);
 
     // Poll for unread count as fallback (every 2 minutes)
     useEffect(() => {
-        if (!connected && user?.id) {
+        if (!connected && user?.userId) {
             const interval = setInterval(async () => {
                 try {
                     fetchUnreadCount();
@@ -123,7 +123,7 @@ export const NotificationProvider = ({ children }) => {
                     if (!notificationStompService.isClientConnected()) {
                         const accessToken = await getToken('accessToken');
                         if (accessToken) {
-                            notificationStompService.connect(user.id, accessToken);
+                            notificationStompService.connect(user.userId, accessToken);
                         }
                     }
                 } catch (error) {
@@ -132,7 +132,7 @@ export const NotificationProvider = ({ children }) => {
             }, 120000);
             return () => clearInterval(interval);
         }
-    }, [connected, user?.id, fetchUnreadCount]);
+    }, [connected, user?.userId, fetchUnreadCount]);
 
     const value = {
         unreadCount,

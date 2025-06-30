@@ -3,7 +3,6 @@ import { View, Text } from "react-native";
 import CustomHeader from "@/components/CustomHeader";
 import * as Progress from 'react-native-progress';
 import { Dimensions } from "react-native";
-import { useContext } from "react";
 
 export default function PetModuleLayout() {
     const screenWidth = Dimensions.get("window").width;

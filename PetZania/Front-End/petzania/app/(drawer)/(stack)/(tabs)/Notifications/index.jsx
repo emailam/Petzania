@@ -1,21 +1,17 @@
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native'
 import { Image } from 'expo-image';
 import React, { useState, useEffect, useCallback } from 'react'
-import { Ionicons, MaterialIcons } from '@expo/vector-icons'
+import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
-import { 
-    getAllNotifications, 
-    markNotificationAsRead, 
-    markAllNotificationsAsRead, 
-    deleteNotification 
-} from '@/services/notificationService'
+import { getAllNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification } from '@/services/notificationService'
 import { acceptFriendRequest, cancelFriendRequest } from '@/services/friendsService'
 import { useNotifications } from '@/context/NotificationContext'
+import { getUserById } from '@/services/userService';
 
 export default function index() {
-    const defaultImage = require('@/assets/images/AddPet/Pet Default Pic.png');
+    const defaultImage = require('@/assets/images/Defaults/default-user.png');
     const router = useRouter();
-    const { unreadCount, decrementUnreadCount, resetUnreadCount, connected, recentNotifications } = useNotifications();
+    const { decrementUnreadCount, resetUnreadCount, recentNotifications } = useNotifications();
 
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -34,27 +30,35 @@ export default function index() {
             setError(null);
 
             const response = await getAllNotifications(pageNum, 10);
-            console.log('Fetched notifications:', response);
-            console.log('Notifications response:', response.content[0]?.attributes);
 
             if (response && response?.content) {
-                const formattedNotifications = response.content.map((notification) => ({
-                    id: notification.notificationId,
-                    type: notification.type,
-                    title: getNotificationTitle(notification.type),
-                    message: notification.message,
-                    avatar: notification.attributes?.senderProfilePictureURL || null,
-                    time: formatTime(notification.createdAt),
-                    isRead: notification.status === 'READ',
-                    actionable: notification.type === 'FRIEND_REQUEST_RECEIVED' && notification.status === 'UNREAD',
-                    requestId: notification.attributes?.relatedEntityId || notification.attributes?.friendRequestId,
-                    senderData: {
-                        userId: notification.attributes?.senderId,
-                        username: notification.attributes?.senderUsername
-                    },
-                    relatedEntityId: notification.attributes?.relatedEntityId,
-                    attributes: notification.attributes || {}
-                }));
+                const senderIds = response.content.map(n => n.attributes?.senderId).filter(Boolean);
+                const uniqueSenderIds = [...new Set(senderIds)];
+
+                const userResults = await Promise.all(uniqueSenderIds.map(id => getUserById(id)));
+                const userMap = {};
+                uniqueSenderIds.forEach((id, idx) => {
+                    userMap[id] = userResults[idx];
+                });
+
+                const formattedNotifications = response.content.map((notification) => {
+                    const senderId = notification.attributes?.senderId;
+                    const senderUser = senderId ? userMap[senderId] : null;
+
+                    return {
+                        id: notification.notificationId,
+                        type: notification.type,
+                        title: getNotificationTitle(notification.type),
+                        message: notification.message,
+                        avatar: senderUser?.profilePictureURL || null,
+                        time: formatTime(notification.createdAt),
+                        isRead: notification.status === 'READ',
+                        actionable: notification.type === 'FRIEND_REQUEST_RECEIVED' && notification.status === 'UNREAD',
+                        requestId: notification.attributes?.friendRequestId,
+                        senderData: senderUser,
+                        attributes: notification.attributes || {}
+                    };
+                });
 
                 if (isRefresh || pageNum === 0) {
                     setNotifications(formattedNotifications);
@@ -89,14 +93,6 @@ export default function index() {
                 return 'New Follower';
             case 'PET_POST_LIKED':
                 return 'Post Liked';
-            case 'MESSAGE':
-                return 'New Message';
-            case 'POST_COMMENT':
-                return 'New Comment';
-            case 'PET_ADOPTION':
-                return 'Adoption Interest';
-            case 'SYSTEM':
-                return 'System Notification';
             default:
                 return 'Notification';
         }
@@ -127,14 +123,42 @@ export default function index() {
 
     useEffect(() => {
         fetchNotifications(0, false);
-
-        // Auto-refresh every 30 seconds
-        const interval = setInterval(() => {
-            fetchNotifications(0, true);
-        }, 30000);
-
-        return () => clearInterval(interval);
     }, []);
+
+    // Listen for real-time notifications and prepend to the list
+    useEffect(() => {
+        if (!recentNotifications || recentNotifications.length === 0) return;
+        // Only handle the most recent notification
+        const newNotification = recentNotifications[0];
+        if (!newNotification) return;
+        // Prevent duplicates
+        if (notifications.some(n => n.id === newNotification.notificationId)) return;
+        (async () => {
+            let senderUser = null;
+            if (newNotification.attributes?.senderId) {
+                try {
+                    senderUser = await getUserById(newNotification.attributes.senderId);
+                } catch (e) {
+                    senderUser = null;
+                }
+            }
+            const formatted = {
+                id: newNotification.notificationId,
+                type: newNotification.type,
+                title: getNotificationTitle(newNotification.type),
+                message: newNotification.message,
+                avatar: senderUser?.profilePictureURL || null,
+                time: formatTime(newNotification.createdAt),
+                isRead: newNotification.status === 'READ',
+                actionable: newNotification.type === 'FRIEND_REQUEST_RECEIVED' && newNotification.status === 'UNREAD',
+                requestId: newNotification.attributes?.friendRequestId,
+                senderData: senderUser,
+                attributes: newNotification.attributes || {}
+            };
+            setNotifications(prev => [formatted, ...prev]);
+        })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [recentNotifications]);
 
     const onRefresh = useCallback(() => {
         fetchNotifications(0, true);
@@ -212,7 +236,7 @@ export default function index() {
                     text: 'Accept',
                     onPress: async () => {
                         try {
-                            await acceptFriendRequest(notification.requestId);
+                            await acceptFriendRequest(notification.attributes?.requestId);
                             
                             // Mark notification as read and remove actionable state
                             await markNotificationAsRead(notification.id);
@@ -246,7 +270,9 @@ export default function index() {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            await cancelFriendRequest(notification.requestId);
+                            await cancelFriendRequest(notification.attributes?.requestId);
+
+                            await markNotificationAsRead(notification.id);
 
                             // Remove the notification entirely for rejected requests
                             setNotifications(prev => 
@@ -272,59 +298,22 @@ export default function index() {
         // Handle different notification types with navigation
         switch (notification.type) {
             case 'FRIEND_REQUEST_RECEIVED':
-                // Already handled by action buttons, just mark as read
-                
-                router.push(`/UserModule/${notification.senderData?.userId || notification.senderData?.id}`);
+                router.push({
+                    pathname: `/UserModule/${notification.senderData?.userId}`,
+                    params: { username: notification.senderData.username }
+                });
                 break;
             case 'FRIEND_REQUEST_ACCEPTED':
                 // Navigate to friends list or user profile
                 router.push(`/(drawer)/(stack)/Friends`);
                 break;
             case 'NEW_FOLLOWER':
-                // Navigate to user profile
-                if (notification.senderData?.userId) {
-                    router.push({
-                        pathname: `/UserModule/${notification.senderData?.userId}`,
-                        params: { userId: notification.senderData.userId  }
-                    });
-                }
-                break;
-            case 'MESSAGE':
-                // Navigate to chat with the sender
-                if (notification.senderData?.id) {
-                    router.push({
-                        pathname: '/(drawer)/(stack)/Chat/[chatId]',
-                        params: { 
-                            chatId: notification.relatedEntityId,
-                            recipientId: notification.senderData.id,
-                            recipientName: notification.senderData.username
-                        }
-                    });
-                }
+                router.push({
+                    pathname: `/UserModule/${notification.senderData?.userId}`,
+                    params: { username: notification.senderData.username }
+                });
                 break;
             case 'PET_POST_LIKED':
-            case 'POST_COMMENT':
-                // Navigate to the specific post
-                if (notification.relatedEntityId) {
-                    router.push({
-                        pathname: '/(drawer)/(stack)/Posts/[postId]',
-                        params: { postId: notification.relatedEntityId }
-                    });
-                }
-                break;
-            case 'PET_ADOPTION':
-                // Navigate to pet adoption details
-                if (notification.relatedEntityId) {
-                    router.push({
-                        pathname: '/(drawer)/(stack)/Pets/[petId]',
-                        params: { petId: notification.relatedEntityId }
-                    });
-                }
-                break;
-            case 'SYSTEM':
-                // Show system notification details
-                Alert.alert('System Notification', notification.message);
-                break;
             default:
                 // Generic fallback
                 Alert.alert(notification.title, notification.message);
@@ -377,8 +366,8 @@ export default function index() {
                 </View>
             )}
 
-            <ScrollView 
-                style={styles.notificationsList} 
+            <ScrollView
+                style={styles.notificationsList}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl
@@ -586,6 +575,8 @@ const styles = StyleSheet.create({
         width: 50,
         height: 50,
         borderRadius: 25,
+        borderWidth: 1,
+        borderColor: '#9188E5',
         backgroundColor: '#f0f0f0',
     },
     iconBadge: {
