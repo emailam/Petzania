@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import {
   View,
   Text,
@@ -8,99 +8,77 @@ import {
   Image,
   ScrollView,
   Dimensions,
-  Alert,
+  ActivityIndicator,
+  Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { 
-  fetchPostDetails, 
-  fetchOwnerDetails, 
-  updatePostStatus,
-  sendMessageToOwner 
-} from  '../../services/postService';
+import { getUserById } from '@/services/userService';
 
 const { width, height } = Dimensions.get('window');
 
-const PostDetailsModal = ({ 
-  visible, 
-  onClose, 
-  postId,
-  isLiked = false,
-  onLike
+const PostDetailsModal = memo(({
+  visible = false,
+  onClose,
+  post
 }) => {
-  const [postDetails, setPostDetails] = useState(null);
   const [ownerDetails, setOwnerDetails] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  // Load owner details when modal opens
   useEffect(() => {
-    if (visible && postId) {
-      loadPostDetails();
+    if (visible && post?.ownerId) {
+      loadOwnerDetails();
     }
-  }, [visible, postId]);
+    // Reset state when modal closes
+    return () => {
+      if (!visible) {
+        setCurrentImageIndex(0);
+        setOwnerDetails(null);
+      }
+    };
+  }, [visible, post?.ownerId]);
 
-  const loadPostDetails = async () => {
-    setLoading(true);
+  const loadOwnerDetails = async () => {
     try {
-      const post = await fetchPostDetails(postId);
-      const owner = await fetchOwnerDetails(post.ownerId);
-      setPostDetails(post);
+      setLoading(true);
+      const owner = await getUserById(post.ownerId);
       setOwnerDetails(owner);
     } catch (error) {
-      console.error('Error loading post details:', error);
-      Alert.alert('Error', 'Failed to load post details');
+      console.error('Error loading owner details:', error);
+      // Don't show error to user since owner section is optional
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAdopt = async () => {
-    if (!postDetails) return;
-    
-    Alert.alert(
-      'Confirm Adoption',
-      `Are you sure you want to adopt ${postDetails.petDTO.name}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Adopt', 
-          onPress: async () => {
-            try {
-              await updatePostStatus(postId, 'COMPLETED');
-              Alert.alert('Success', 'Adoption request submitted!');
-              onClose();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to submit adoption request');
-            }
-          }
-        }
-      ]
-    );
-  };
+  const handleImageScroll = useCallback((event) => {
+    const slideSize = event.nativeEvent.layoutMeasurement.width;
+    const index = Math.floor(event.nativeEvent.contentOffset.x / slideSize);
+    setCurrentImageIndex(index);
+  }, []);
 
-  const handleChatPress = async () => {
-    if (!ownerDetails || !postDetails) return;
-    
-    try {
-      // You can implement a more sophisticated messaging system here
-      const welcomeMessage = `Hi! I'm interested in adopting ${postDetails.petDTO.name}. Could we chat about it?`;
-      await sendMessageToOwner(postDetails.ownerId, welcomeMessage);
-      
-      Alert.alert('Message Sent', 'Your message has been sent to the pet owner!');
-      // Navigate to chat screen or show chat modal
-      console.log('Navigate to chat with owner:', postDetails.ownerId);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to send message');
-    }
-  };
+  const handleChatPress = useCallback(() => {
+    // TODO: Implement chat functionality
+    Alert.alert('Chat', 'Chat functionality will be implemented soon');
+  }, []);
+
+  const handleAdopt = useCallback(() => {
+    // TODO: Implement adopt functionality
+    Alert.alert('Adopt', 'Adoption process will be implemented soon');
+  }, []);
+
+  if (!visible || !post) return null;
+
+  const petData = post.petDTO;
+  const images = petData?.myPicturesURLs || [];
 
   const renderImagePagination = () => {
-    if (!postDetails?.petDTO?.myPicturesURLs || postDetails.petDTO.myPicturesURLs.length <= 1) {
-      return null;
-    }
+    if (images.length <= 1) return null;
 
     return (
       <View style={styles.paginationContainer}>
-        {postDetails.petDTO.myPicturesURLs.map((_, index) => (
+        {images.map((_, index) => (
           <View
             key={index}
             style={[
@@ -113,41 +91,35 @@ const PostDetailsModal = ({
     );
   };
 
-  if (!visible) return null;
-
   return (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={visible}
+    <Modal 
+      animationType="slide" 
+      transparent={true} 
+      visible={visible} 
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
-          {/* Close Button */}
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={onClose}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <Ionicons name="close" size={24} color="#666" />
           </TouchableOpacity>
 
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <Text>Loading...</Text>
-            </View>
-          ) : postDetails ? (
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Pet Images Section */}
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {/* Images Section */}
+            {images.length > 0 && (
               <View style={styles.imageSection}>
                 <ScrollView
                   horizontal
                   pagingEnabled
                   showsHorizontalScrollIndicator={false}
-                  onMomentumScrollEnd={(event) => {
-                    const index = Math.round(event.nativeEvent.contentOffset.x / width);
-                    setCurrentImageIndex(index);
-                  }}
+                  onMomentumScrollEnd={handleImageScroll}
                   style={styles.imageScrollView}
                 >
-                  {postDetails.petDTO.myPicturesURLs.map((imageUrl, index) => (
+                  {images.map((imageUrl, index) => (
                     <Image
                       key={index}
                       source={{ uri: imageUrl }}
@@ -158,87 +130,98 @@ const PostDetailsModal = ({
                 </ScrollView>
                 {renderImagePagination()}
               </View>
+            )}
 
-              {/* Details Section */}
-              <View style={styles.detailsSection}>
-                {/* Pet Name and Heart */}
-                <View style={styles.petNameRow}>
-                  <View style={styles.petNameContainer}>
-                    <Text style={styles.petName}>{postDetails.petDTO.name}</Text>
-                    <Ionicons 
-                      name={postDetails.petDTO.gender?.toLowerCase() === 'female' ? 'female' : 'male'} 
-                      size={20} 
-                      color={postDetails.petDTO.gender?.toLowerCase() === 'male' ? 'blue' : 'pink'} 
-                      style={styles.genderIcon} 
-                    />
-                  </View>
-                  <TouchableOpacity onPress={onLike} style={styles.heartButton}>
-                    <Ionicons 
-                      name={isLiked ? "heart" : "heart-outline"} 
-                      size={28} 
-                      color={isLiked ? "#FF3040" : "#666"} 
-                    />
-                  </TouchableOpacity>
+            <View style={styles.detailsSection}>
+              {/* Pet Name and Gender */}
+              <View style={styles.petNameRow}>
+                <View style={styles.petNameContainer}>
+                  <Text style={styles.petName}>{petData?.name || 'Unknown Pet'}</Text>
+                  <Ionicons 
+                    name={petData?.gender?.toLowerCase() === 'female' ? 'female' : 'male'} 
+                    size={20} 
+                    color={petData?.gender?.toLowerCase() === 'male' ? '#2196F3' : '#E91E63'} 
+                    style={styles.genderIcon} 
+                  />
                 </View>
+              </View>
 
-                {/* Location */}
-                <View style={styles.locationRow}>
-                  <Ionicons name="location-outline" size={16} color="#666" />
-                  <Text style={styles.locationText}>New Cairo, 5th District (50 km)</Text>
-                </View>
+              {/* Location */}
+              <View style={styles.locationRow}>
+                <Ionicons name="location-outline" size={16} color="#666" />
+                <Text style={styles.locationText}>
+                  {post.location || 'Location not specified'}
+                </Text>
+              </View>
 
-                {/* Pet Details Pills */}
-                <View style={styles.pillsContainer}>
+              {/* Pet Details Pills */}
+              <View style={styles.pillsContainer}>
+                {petData?.breed && (
                   <View style={styles.pill}>
-                    <Text style={styles.pillText}>{postDetails.petDTO.breed}</Text>
+                    <Text style={styles.pillText}>{petData.breed}</Text>
                   </View>
+                )}
+                {petData?.age && (
                   <View style={styles.pill}>
-                    <Text style={styles.pillText}>{postDetails.petDTO.age}</Text>
+                    <Text style={styles.pillText}>{petData.age}</Text>
                   </View>
+                )}
+                {petData?.vaccinated && (
                   <View style={styles.pill}>
                     <Text style={styles.pillText}>Vaccinated</Text>
                   </View>
-                </View>
+                )}
+              </View>
 
-                {/* Owner Section */}
+              {/* Owner Section */}
+              {loading ? (
+                <View style={styles.ownerLoadingContainer}>
+                  <ActivityIndicator size="small" color="#9188E5" />
+                  <Text style={styles.loadingText}>Loading owner info...</Text>
+                </View>
+              ) : ownerDetails ? (
                 <View style={styles.ownerSection}>
                   <View style={styles.ownerInfo}>
                     <Image
                       source={{ 
-                        uri: ownerDetails?.profilePictureURL || 'https://via.placeholder.com/40x40' 
+                        uri: ownerDetails.profilePictureURL || 'https://via.placeholder.com/40' 
                       }}
                       style={styles.ownerAvatar}
                     />
-                    <Text style={styles.ownerName}>{ownerDetails?.name || 'Owner Name'}</Text>
+                    <Text style={styles.ownerName}>{ownerDetails.name || ownerDetails.username}</Text>
                   </View>
-                  <TouchableOpacity style={styles.chatButton} onPress={handleChatPress}>
+                  <TouchableOpacity 
+                    style={styles.chatButton} 
+                    onPress={handleChatPress}
+                    activeOpacity={0.7}
+                  >
                     <Ionicons name="chatbubble-outline" size={20} color="#9188E5" />
                   </TouchableOpacity>
                 </View>
+              ) : null}
 
-                {/* Description */}
-                <Text style={styles.description}>
-                  {postDetails.petDTO.description || 'No description available.'}
+              {/* Description */}
+              <Text style={styles.description}>
+                {petData?.description || post.description || 'No description available.'}
+              </Text>
+
+              {/* Adopt Button */}
+              <TouchableOpacity 
+                style={styles.adoptButton} 
+                onPress={handleAdopt}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.adoptButtonText}>
+                  Adopt {petData?.name || 'this pet'}
                 </Text>
-
-                {/* Adopt Button */}
-                <TouchableOpacity style={styles.adoptButton} onPress={handleAdopt}>
-                  <Text style={styles.adoptButtonText}>
-                    Adopt {postDetails.petDTO.name}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
-          ) : (
-            <View style={styles.errorContainer}>
-              <Text>Error loading post details</Text>
+              </TouchableOpacity>
             </View>
-          )}
+          </ScrollView>
         </View>
       </View>
     </Modal>
   );
-};
+});
 
 const styles = StyleSheet.create({
   modalOverlay: {
@@ -250,8 +233,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: height * 0.8,
-    position: 'relative',
+    maxHeight: height * 0.9,
+    minHeight: height * 0.5,
   },
   closeButton: {
     position: 'absolute',
@@ -261,18 +244,25 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 20,
     padding: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  ownerLoadingContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 200,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#f0f0f0',
+    marginBottom: 16,
   },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: 200,
+  loadingText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#666',
   },
   imageSection: {
     position: 'relative',
@@ -283,6 +273,7 @@ const styles = StyleSheet.create({
   petImage: {
     width: width,
     height: height * 0.4,
+    backgroundColor: '#f5f5f5',
   },
   paginationContainer: {
     position: 'absolute',
@@ -302,13 +293,16 @@ const styles = StyleSheet.create({
   },
   paginationDotActive: {
     backgroundColor: '#9188E5',
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   detailsSection: {
     padding: 20,
+    paddingBottom: 30,
   },
   petNameRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
   },
@@ -324,9 +318,6 @@ const styles = StyleSheet.create({
   genderIcon: {
     marginLeft: 8,
   },
-  heartButton: {
-    padding: 8,
-  },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -336,6 +327,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginLeft: 4,
+    flex: 1,
   },
   pillsContainer: {
     flexDirection: 'row',
@@ -360,26 +352,34 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#f0f0f0',
   },
   ownerInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   ownerAvatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
     marginRight: 12,
+    backgroundColor: '#f0f0f0',
   },
   ownerName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#9188E5',
+    color: '#333',
   },
   chatButton: {
     padding: 8,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#f8f6ff',
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#e8e5ff',
   },
   description: {
     fontSize: 14,
@@ -392,7 +392,11 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingVertical: 16,
     alignItems: 'center',
-    marginBottom: 20,
+    shadowColor: '#9188E5',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   adoptButtonText: {
     fontSize: 16,
@@ -400,5 +404,7 @@ const styles = StyleSheet.create({
     color: 'white',
   },
 });
+
+PostDetailsModal.displayName = 'PostDetailsModal';
 
 export default PostDetailsModal;

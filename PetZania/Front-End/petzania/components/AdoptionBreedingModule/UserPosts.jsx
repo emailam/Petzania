@@ -1,95 +1,59 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   SafeAreaView,
-  Alert,
   RefreshControl,
   ActivityIndicator,
+  TouchableOpacity,
+
 } from 'react-native';
 import PostCard from './PostCard';
 import EditPostModal from './EditPostModal';
-import { fetchUserPosts, deletePost } from '../../services/postService'; // Adjust the import path as necessary
-import Posts from '../../pets.json'
-const UserPosts = ({ userId }) => {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+import { useUserPostsInfinite } from '../../services/postService';
+import { UserContext } from '@/context/UserContext';
+
+const UserPosts = () => {
   const [selectedPost, setSelectedPost] = useState(null);
   const [editModalVisible, setEditModalVisible] = useState(false);
-
-  useEffect(() => {
-    loadUserPosts();
-  }, [userId]);
-
-  const loadUserPosts = async () => {
-    try {
-      setLoading(true);
-      const userPosts = Posts;
-      setPosts(userPosts);
-    } catch (error) {
-      console.error('Error loading user posts:', error);
-      Alert.alert('Error', 'Failed to load your posts');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await loadUserPosts();
-    setRefreshing(false);
-  };
+  const { user } = useContext(UserContext);
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+    refetch,
+    isRefetching,
+    error,
+  } = useUserPostsInfinite(user.userId);
+  // Flatten pages and ensure only valid posts are mapped
+  const posts =
+    data?.pages.flatMap((page) => (Array.isArray(page.posts) ? page.posts : []))
+      .filter(Boolean) || [];
 
   const handlePostPress = (post) => {
     setSelectedPost(post);
     setEditModalVisible(true);
   };
 
-  const handleDeletePost = async (postId) => {
-    Alert.alert(
-      'Delete Post',
-      'Are you sure you want to delete this post?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deletePost(postId);
-              setPosts(posts.filter(post => post.id !== postId));
-              Alert.alert('Success', 'Post deleted successfully');
-            } catch (error) {
-              Alert.alert('Error', 'Failed to delete post');
-            }
-          }
-        }
-      ]
-    );
-  };
-
-  const handlePostUpdate = (updatedPost) => {
-    setPosts(posts.map(post => 
-      post.id === updatedPost.id ? updatedPost : post
-    ));
+  const handlePostUpdate = () => {
     setEditModalVisible(false);
     setSelectedPost(null);
   };
 
-  const handleInterestResponse = (postId, response) => {
-    console.log(`Post ${postId} marked as ${response}`);
-    // Implement your interest response logic here
-    Alert.alert('Response Recorded', `You marked this post as ${response}`);
+  const handlePostDelete = () => {
+    setEditModalVisible(false);
+    setSelectedPost(null);
   };
 
-  if (loading) {
+
+  if (error) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#9188E5" />
-        <Text style={styles.loadingText}>Loading your posts...</Text>
+        <Text style={styles.loadingText}>Failed to load posts.</Text>
       </View>
     );
   }
@@ -105,7 +69,7 @@ const UserPosts = ({ userId }) => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
         }
       >
         {posts.length === 0 ? (
@@ -116,27 +80,29 @@ const UserPosts = ({ userId }) => {
             </Text>
           </View>
         ) : (
-          posts.map((post, index) => (
-            <View key={post.id || index} style={styles.cardContainer}>
-              <PostCard
-                postId={post.id}
-                petDTO={post.petDTO}
-                reacts={post.reacts}
-                reactedUsersIds={post.reactedUsersIds}
-                location={post.location}
-                createdAt={post.createdAt}
-                isLiked={post.isLiked}
-                likes={post.likes}
-                postType={post.postType} // This will be shown since we're in userPosts
-                postStatus={post.status}
-                isUserPost={true} // Flag to show this is user's own post
-                onPress={() => handlePostPress(post)}
-                onDelete={() => handleDeletePost(post.id)}
-                index={index}
-                showAdvancedFeatures={true} // Show advanced features for user posts
-              />
-            </View>
-          ))
+          <>
+            {posts.map((post) => (
+              <View key={post.postId} style={styles.cardContainer}>
+                <PostCard
+                  onPress={() => handlePostPress(post)}
+                  showAdvancedFeatures={true}
+                  post = {post}
+                />
+              </View>
+            ))}
+
+            {hasNextPage && (
+              <TouchableOpacity
+                onPress={fetchNextPage}
+                style={styles.loadMoreButton}
+                disabled={isFetchingNextPage}
+              >
+                <Text style={styles.loadMoreText}>
+                  {isFetchingNextPage ? 'Loading more...' : 'Load More'}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </>
         )}
       </ScrollView>
 
@@ -148,10 +114,12 @@ const UserPosts = ({ userId }) => {
         }}
         post={selectedPost}
         onUpdate={handlePostUpdate}
+        onDelete={handlePostDelete}
       />
     </SafeAreaView>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -211,6 +179,18 @@ const styles = StyleSheet.create({
     color: '#999',
     textAlign: 'center',
     maxWidth: 250,
+  },
+  loadMoreButton: {
+    backgroundColor: '#9188E5',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  loadMoreText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
   },
 });
 

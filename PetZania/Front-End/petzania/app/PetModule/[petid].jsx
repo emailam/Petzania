@@ -29,7 +29,7 @@ const PetDetails = () => {
     const { petId } = useLocalSearchParams();
     const { pets, setPets } = useContext(PetContext);
     const { user: currentUser } = useContext(UserContext);
-
+    console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaa",currentUser);
     const showSuccessMessage = (message) => {
         Toast.show({
             type: 'success',

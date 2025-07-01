@@ -1,270 +1,241 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
   TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl,
+  StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import PostCard from './PostCard'; // adjust path
-import PostFiltering from './PostFiltering'; // existing component
-import PostDetailsModal from './PostDetailsModal'; // existing component
-import ReactsModal from './ReactsModal'; // new component
-import usePostsHook from './usePostsHook'; // custom hook for fetching posts
-import {
-  initializeLikesState,
-  togglePostLike,
-  getPostKey,
-  getDefaultFilters,
-  getLikesCount,
-  isPostLiked
-} from '../../services/postService'; // updated service
+import FilterModal from './FilterModal';
+import PostCard from './PostCard';
+import { useFetchPosts } from '../../services/postService';
 
-// Renamed from usePosts to PostsList (proper component name)
-export default function PostsList({ showHeader = true, postType = "" }) {
-  // Filter states
-  const [filters, setFilters] = useState(getDefaultFilters());
-  const [likesState, setLikesState] = useState({});
-
-  // Modal states
-  const [modalVisible, setModalVisible] = useState(false);
-  const [reactsModalVisible, setReactsModalVisible] = useState(false);
-  const [postDetailsModalVisible, setPostDetailsModalVisible] = useState(false);
-
-  // Selected data states
-  const [selectedPostReacts, setSelectedPostReacts] = useState({
-    postId: null,
-    reactedUsersIds: []
+const PostsList = forwardRef(({ postType = 'ADOPTION', showHeader = true }, ref) => {
+  // State management - include all filter fields
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [filters, setFilters] = useState({
+    species: 'ALL',
+    breed: 'ALL',
+    minAge: 0,
+    maxAge: 1000,
+    sortBy: 'CREATED_AT',
+    sortDesc: true
   });
-  const [selectedPostId, setSelectedPostId] = useState(null);
 
-  // Temp filter states for modal
-  const [tempFilters, setTempFilters] = useState(filters);
+  // Expose openFilter to parent
+  useImperativeHandle(ref, () => ({
+    openFilter: () => setFilterModalVisible(true),
+  }));
 
-  // Use the custom hook to get filtered data
-  const { posts, isLoading, error, filteredCount, totalCount } = usePostsHook(filters, postType);
+  // ---- (rest of your code unchanged, except for possible showHeader default) ----
 
-  // Initialize likes state when posts change
-  useEffect(() => {
-    if (posts.length > 0) {
-      const initialLikesState = initializeLikesState(posts);
-      setLikesState(initialLikesState);
+  const queryFilters = useMemo(() => ({
+    petPostType: postType,
+    ...filters
+  }), [postType, filters]);
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    refetch,
+    isRefetching
+  } = useFetchPosts(queryFilters);
+
+  const posts = useMemo(() => {
+    return data?.pages?.flatMap(page => page.items) || [];
+  }, [data]);
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.species !== 'ALL') count++;
+    if (filters.breed !== 'ALL') count++;
+    if (filters.minAge !== 0) count++;
+    if (filters.maxAge !== 1000) count++;
+    return count;
+  }, [filters]);
+
+  const postTypeDisplay = useMemo(() => {
+    const types = {
+      'ADOPTION': 'Pets for Adoption',
+      'BREEDING': 'Pets for Breeding',
+    };
+    return types[postType] || 'Posts';
+  }, [postType]);
+
+  const handleApplyFilters = useCallback((newFilters) => {
+    setFilters(newFilters);
+  }, []);
+
+  const handleOpenFilters = useCallback(() => {
+    setFilterModalVisible(true);
+  }, []);
+
+  const handleCloseFilters = useCallback(() => {
+    setFilterModalVisible(false);
+  }, []);
+
+
+  const renderItem = useCallback(({ item }) => (
+    <PostCard
+      post={item}
+      showAdvancedFeatures={false}
+    />
+  ), []);
+
+  const handleLoadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
-  }, [posts]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Universal handle like function with API integration option
-  const handleLike = (postKey, enableApiCall = false) => {
-    const apiOptions = enableApiCall ? {
-      apiCall: true,
-      onApiSuccess: (result) => {
-        console.log('Like API success:', result);
-        // Optionally sync with server response
-      },
-      onApiError: (error) => {
-        console.error('Like API error:', error);
-        // Optionally revert the like state on API failure
-        setLikesState(prev => togglePostLike(prev, postKey));
-      }
-    } : {};
-
-    setLikesState(prev => togglePostLike(prev, postKey, apiOptions));
-  };
-
-  // Handle card press to open post details
-  const handleCardPress = (postId) => {
-    console.log('Post pressed with ID:', postId);
-    setSelectedPostId(postId);
-    setPostDetailsModalVisible(true);
-  };
-
-  // Handle like from PostDetailsModal
-  const handleLikeFromModal = () => {
-    if (selectedPostId) {
-      handleLike(selectedPostId, true); // Enable API call for modal interactions
-    }
-  };
-
-  // Handle reacts counter press
-  const handleReactsPress = (postId, reactedUsersIds) => {
-    console.log('Reacts pressed for post:', postId);
-    console.log('Reacted users IDs:', reactedUsersIds);
-    setSelectedPostReacts({ postId, reactedUsersIds });
-    setReactsModalVisible(true);
-  };
-
-  // Modal control functions
-  const openFilter = () => {
-    setTempFilters({ ...filters });
-    setModalVisible(true);
-  };
-
-  const applyFilters = () => {
-    setFilters({ ...tempFilters });
-    setModalVisible(false);
-  };
-
-  const resetFilters = () => {
-    setTempFilters(getDefaultFilters());
-  };
-
-  const closeReactsModal = () => {
-    setReactsModalVisible(false);
-    setSelectedPostReacts({ postId: null, reactedUsersIds: [] });
-  };
-
-  const closePostDetailsModal = () => {
-    setPostDetailsModalVisible(false);
-    setSelectedPostId(null);
-  };
-
-  // Render functions
-  const renderPost = ({ item, index }) => {
-    const postKey = getPostKey(item, index);
-
+  const renderFooter = useCallback(() => {
+    if (!isFetchingNextPage) return null;
     return (
-      <PostCard
-        {...item}
-        index={index} // Pass index for consistent key generation
-        isLiked={isPostLiked(likesState, postKey)}
-        likes={getLikesCount(likesState, postKey, item)}
-        onLike={(key) => handleLike(key, false)} // Disable API call for card interactions (faster UX)
-        onPress={handleCardPress}
-        onReactsPress={handleReactsPress}
-     />
-    );
-  };
-
-  const renderInlineHeader = () => (
-    <View style={styles.inlineHeader}>
-      <View style={styles.headerRow}>
-        <View>
-          <Text style={styles.title}>Posts</Text>
-          <Text style={styles.subtitle}>
-            Showing {filteredCount} of {totalCount} pets
-          </Text>
-        </View>
-        <TouchableOpacity
-          style={styles.filterButton}
-          onPress={openFilter}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="filter-outline" size={20} color="#9188E5" />
-          <Text style={styles.filterText}>Filter by</Text>
-        </TouchableOpacity>
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="small" color="#9188E5" />
       </View>
-    </View>
-  );
+    );
+  }, [isFetchingNextPage]);
 
-  // Loading and error states
-  if (isLoading) return <Text style={styles.center}>Loading...</Text>;
-  if (error) return <Text style={styles.center}>Error: {error.message}</Text>;
+  const renderEmpty = useCallback(() => {
+    if (isLoading) return null;
+    return (
+      <View style={styles.centerContainer}>
+        <Ionicons name="paw" size={48} color="#ccc" />
+        <Text style={styles.centerTitle}>No pets found</Text>
+        <Text style={styles.centerSub}>
+          Try adjusting your filters to see more results
+        </Text>
+      </View>
+    );
+  }, [isLoading]);
+
+  if (isLoading && posts.length === 0) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#9188E5" />
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={styles.centerContainer}>
+        <Ionicons name="alert-circle" size={48} color="#ff6b6b" />
+        <Text style={styles.centerTitle}>Something went wrong</Text>
+        <Text style={styles.centerSub}>Pull to refresh and try again</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      {/* Conditional Inline Header */}
-      {showHeader && renderInlineHeader()}
+      {/* Header */}
+      {showHeader && (
+        <View style={styles.inlineHeader}>
+          <View style={styles.headerRow}>
+            <View>
+              <Text style={styles.title}>{postTypeDisplay}</Text>
+              <Text style={styles.subtitle}>
+                {posts.length > 0 ? `${data?.pages?.[0]?.totalCount || 0} pets available` : 'No pets available'}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.filterButton}
+              onPress={handleOpenFilters}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="filter" size={20} color="#555" />
+              <Text style={styles.filterText}>
+                Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
-      {/* Posts List */}
       <FlatList
         data={posts}
-        keyExtractor={(item, idx) => getPostKey(item, idx).toString()}
-        renderItem={renderPost}
-        contentContainerStyle={styles.listContainer}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.postId.toString()}
+        contentContainerStyle={[
+          styles.listContainer,
+          posts.length === 0 && styles.emptyListContainer
+        ]}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            colors={['#9188E5']}
+            tintColor="#9188E5"
+          />
+        }
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={renderFooter}
+        ListEmptyComponent={renderEmpty}
         showsVerticalScrollIndicator={false}
-        scrollEnabled={false} // Disable internal scroll since parent handles it
-        nestedScrollEnabled={true} // Enable nested scrolling
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={10}
       />
 
-      {/* Filter Modal */}
-      <PostFiltering
-        modalVisible={modalVisible}
-        setModalVisible={setModalVisible}
-        tempFilters={tempFilters}
-        setTempFilters={setTempFilters}
-        onApplyFilters={applyFilters}
-        onResetFilters={resetFilters} />
-
-      {/* Reacts Modal */}
-      <ReactsModal
-        visible={reactsModalVisible}
-        onClose={closeReactsModal}
-        postId={selectedPostReacts.postId}
-        reactedUsersIds={selectedPostReacts.reactedUsersIds} />
-
-      {/* Post Details Modal */}
-      <PostDetailsModal
-        visible={postDetailsModalVisible}
-        onClose={closePostDetailsModal}
-        postId={selectedPostId}
-        isLiked={selectedPostId ? isPostLiked(likesState, selectedPostId) : false}
-        onLike={handleLikeFromModal} />
+      <FilterModal
+        visible={filterModalVisible}
+        onClose={handleCloseFilters}
+        onApply={handleApplyFilters}
+        initialFilters={filters}
+      />
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: '#f9f9f9' 
-  },
-  center: { 
-    flex: 1, 
-    textAlign: 'center', 
-    marginTop: 40,
-    fontSize: 16,
-    color: '#666',
-    backgroundColor: '#f9f9f9',
-  },
+  container: { flex: 1, backgroundColor: '#f9f9f9' },
   inlineHeader: {
     backgroundColor: '#f9f9f9',
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  headerRow: { 
+  headerRow: {
     flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center',
-    paddingHorizontal: 16,
-  },
-  title: { 
-    fontSize: 24, 
-    fontWeight: '600',
-    color: '#333'
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 2
-  },
-  filterButton: { 
-    flexDirection: 'row', 
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  filterText: { 
-    marginLeft: 4, 
-    fontSize: 14,
-    color: '#555'
-  },
-  listContainer: {
+    justifyContent: 'space-between',
+    alignItems: 'center', 
     paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 40,
-    gap: 16,
   },
+  title: { fontSize: 24, fontWeight: '600', color: '#333' },
+  subtitle: { fontSize: 14, color: '#666', marginTop: 2 },
+  filterButton: {
+    flexDirection: 'row', 
+    alignItems: 'center',
+    backgroundColor: '#fff', 
+    paddingHorizontal: 12, 
+    paddingVertical: 8,
+    borderRadius: 20, 
+    borderWidth: 1, 
+    borderColor: '#ddd',
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1, 
+    shadowRadius: 2, 
+    elevation: 2,
+  },
+  filterText: { marginLeft: 4, fontSize: 14, color: '#555' },
+  listContainer: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 40, gap: 16 },
+  emptyListContainer: { flex: 1 },
+  footerLoader: { paddingVertical: 20, alignItems: 'center' },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 },
+  centerTitle: { marginTop: 10, fontSize: 18, fontWeight: '600', color: '#333' },
+  centerSub: { marginTop: 5, fontSize: 14, color: '#666', textAlign: 'center' },
 });
+
+export default PostsList;

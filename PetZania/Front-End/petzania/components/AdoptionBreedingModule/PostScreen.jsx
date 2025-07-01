@@ -1,106 +1,127 @@
-import React, { useState, useRef } from 'react';
-import { 
-  View, 
-  Text,
-  StyleSheet, 
-  ScrollView,
+import React, { useRef, useState, useCallback } from 'react';
+import {
+  View,
+  Animated,
   Dimensions,
   TouchableOpacity,
-  Animated,
+  Text,
+  StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
 import LandingImages from '@/components/AdoptionBreedingModule/LandingImages';
-import PostsList from '@/components/AdoptionBreedingModule/PostsList'; // Changed from usePosts to PostsList
+import PostsList from '@/components/AdoptionBreedingModule/PostsList';
+
 const { height: screenHeight } = Dimensions.get('window');
-const queryClient = new QueryClient();
+const LANDING_HEIGHT = screenHeight * 0.4;
+const STICKY_THRESHOLD = LANDING_HEIGHT - 100;
 
-export default function PostScreen({postType = ""}) {
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const [showStickyHeader, setShowStickyHeader] = useState(false);
-  
-  const LANDING_HEIGHT = screenHeight * 0.4;
-  const STICKY_THRESHOLD = LANDING_HEIGHT - 100; // Show sticky header 100px before landing disappears
+const StickyHeader = ({ visible, postType, onFilterPress, scrollY }) => {
+  const opacity = scrollY.interpolate({
+    inputRange: [STICKY_THRESHOLD - 50, STICKY_THRESHOLD],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
 
-  const handleScroll = Animated.event(
-    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-    { 
-      useNativeDriver: false,
-      listener: (event) => {
-        const offsetY = event.nativeEvent.contentOffset.y;
-        setShowStickyHeader(offsetY > STICKY_THRESHOLD);
-      }
-    }
-  );
+  const translateY = scrollY.interpolate({
+    inputRange: [STICKY_THRESHOLD - 50, STICKY_THRESHOLD],
+    outputRange: [-50, 0],
+    extrapolate: 'clamp',
+  });
 
-  // Mock data - replace with your actual data fetching logic
-  const [filters, setFilters] = useState({});
-
-  const filteredCount = 42; // Replace with actual count
-  const totalCount = 100; // Replace with actual count
-
-  const openFilter = () => {
-    setTempFilters({ ...filters });
-    setModalVisible(true);
+  const getPostTypeTitle = () => {
+    const titles = {
+      'ADOPTION': 'Pets for Adoption',
+      'BREEDING': 'Pets for Breeding',
+    };
+    return titles[postType] || 'Posts';
   };
 
-  const StickyHeader = () => (
-    <Animated.View 
+  return (
+    <Animated.View
       style={[
         styles.stickyHeaderContainer,
         {
-          opacity: showStickyHeader ? 1 : 0,
-          transform: [{
-            translateY: showStickyHeader ? 0 : -50
-          }]
-        }
+          opacity,
+          transform: [{ translateY }],
+          pointerEvents: visible ? 'auto' : 'none',
+        },
       ]}
     >
       <View style={styles.stickyHeaderContent}>
         <View>
-          <Text style={styles.stickyTitle}>Posts</Text>
-          <Text style={styles.stickySubtitle}>
-            Showing {filteredCount} of {totalCount} pets
-          </Text>
+          <Text style={styles.stickyTitle}>{getPostTypeTitle()}</Text>
         </View>
         <TouchableOpacity
           style={styles.stickyFilterButton}
-          onPress={openFilter}
+          onPress={onFilterPress}
           activeOpacity={0.7}
         >
-          <Ionicons name="filter-outline" size={20} color="#9188E5" />
-          <Text style={styles.filterText}>Filter by</Text>
+          <Ionicons name="filter" size={18} color="#9188E5" />
+          <Text style={styles.filterText}>Filters</Text>
         </TouchableOpacity>
       </View>
     </Animated.View>
   );
+};
+
+// Main PostScreen component
+export default function PostScreen({ postType = 'ADOPTION' }) {
+  const postsListRef = useRef(null);
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const [showStickyHeader, setShowStickyHeader] = useState(false);
+
+  const handleScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+    {
+      useNativeDriver: false,
+      listener: (event) => {
+        const offsetY = event.nativeEvent.contentOffset.y;
+        const shouldShow = offsetY > STICKY_THRESHOLD;
+
+        setShowStickyHeader(prev => {
+          if (prev !== shouldShow) return shouldShow;
+          return prev;
+        });
+      },
+    }
+  );
+
+  // Filter button in sticky header opens PostsList's modal
+  const handleFilterPress = useCallback(() => {
+    postsListRef.current?.openFilter?.();
+  }, []);
+
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <View style={styles.container}>
-        {/* Sticky Header - positioned absolutely */}
-        <StickyHeader />
-        
-        {/* Main Scroll Content */}
-        <Animated.ScrollView
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-          bounces={true}
-          scrollEventThrottle={16}
-          onScroll={handleScroll}
-        >
-          {/* Landing Images Section */}
-          <View style={styles.landingContainer}>
-            <LandingImages />
-          </View>
+    <View style={styles.container}>
+      <StickyHeader
+        visible={showStickyHeader}
+        postType={postType}
+        onFilterPress={handleFilterPress}
+        scrollY={scrollY}
+      />
 
-          {/* Posts Section */}
-          <View style={styles.postsContainer}>
-            <PostsList showHeader={!showStickyHeader} postType={postType}/>
-          </View>
-        </Animated.ScrollView>
-      </View>
-    </QueryClientProvider>
+      <Animated.ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+        scrollEventThrottle={16}
+        onScroll={handleScroll}
+      >
+        <View style={styles.landingContainer}>
+          <LandingImages postType={postType} />
+        </View>
+
+        <View style={styles.postsContainer}>
+          <PostsList
+            ref={postsListRef}
+            showHeader={!showStickyHeader}
+            postType={postType}
+          />
+        </View>
+      </Animated.ScrollView>
+    </View>
   );
 }
 
@@ -113,7 +134,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   landingContainer: {
-    height: screenHeight * 0.4,
+    height: LANDING_HEIGHT,
+    backgroundColor: '#f9f9f9',
   },
   postsContainer: {
     flex: 1,
@@ -121,8 +143,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    marginTop: -60, // Changed from -20 to -10 (half the original gap)
-    paddingTop: 10, // Changed from 20 to 10 (half the original padding)
+    marginTop: -60,
+    paddingTop: 10,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -138,12 +160,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 1000,
-    backgroundColor: 'rgba(249, 249, 249, 0.95)',
-    backdropFilter: 'blur(10px)',
+    backgroundColor: 'rgba(249, 249, 249, 0.98)',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(238, 238, 238, 0.8)',
-    paddingTop: 50, // Account for status bar
+    paddingTop: 50,
     paddingBottom: 12,
+    elevation: 8,
   },
   stickyHeaderContent: {
     flexDirection: 'row',
@@ -156,18 +178,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
   },
-  stickySubtitle: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 1,
-  },
   stickyFilterButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: '#ddd',
     shadowColor: '#000',
@@ -180,8 +197,9 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   filterText: {
-    marginLeft: 4,
-    fontSize: 12,
-    color: '#555',
+    marginLeft: 6,
+    fontSize: 14,
+    color: '#9188E5',
+    fontWeight: '500',
   },
 });

@@ -4,6 +4,6 @@ import PostScreen from '@/components/AdoptionBreedingModule/PostScreen';
 export default function AdoptionScreen() {
 
   return (
-    <PostScreen postType="adoptionPosts" />
+    <PostScreen postType="ADOPTION"/>
   );
 }

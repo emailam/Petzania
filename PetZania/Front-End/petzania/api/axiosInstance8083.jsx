@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { getToken, saveToken, clearAllTokens } from '../storage/tokenStorage';
 
-// const BASE_URL = "http://10.0.2.2:8083/api";
-const BASE_URL = "http://192.168.1.6:8083/api";
+const BASE_URL = "http://10.0.2.2:8083/api";
+//const BASE_URL = "http://192.168.1.6:8083/api";
 
 
 const api = axios.create({
@@ -57,7 +57,7 @@ api.interceptors.response.use(
             try {
                 const refreshToken = await getToken('refreshToken');
 
-                const response = await axios.post(`http://192.168.1.6:8080/api/user/auth/refresh-token`, {
+                const response = await axios.post(`http://10.0.2.2:8080/api/user/auth/refresh-token`, {
                     refreshToken,
                 });
 
