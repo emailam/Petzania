@@ -1,5 +1,6 @@
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import Constants from 'expo-constants';
 
 class NotificationSocketService {
     constructor() {
@@ -16,7 +17,7 @@ class NotificationSocketService {
         }
 
         // Create SockJS connection for notification service
-        const socket = new SockJS('http://192.168.1.6:8083/ws/notifications');
+        const socket = new SockJS(`${Constants.expoConfig.extra.API_BASE_URL_8083.replace(/\/api$/, '')}/ws/notifications`);
         // Create STOMP client
         this.stompClient = new Client({
             webSocketFactory: () => socket,

@@ -38,7 +38,6 @@ export default function AllPets() {
     }, []);
 
     const goToNextPage = () => {
-        console.log('From Page:', fromPage);
         if(fromPage === 'Home'){
             setFromPage(null);
             router.dismiss();
@@ -68,7 +67,8 @@ export default function AllPets() {
                 )}
             />
             {fromPage !== 'EditProfile' && (
-                <View style={styles.buttonContainer}>                    <Button
+                <View style={styles.buttonContainer}>
+                    <Button
                         title={fromPage === 'Register' ? 'Next' : 'Return to Home'}
                         borderRadius={10}
                         fontSize={16}
