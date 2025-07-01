@@ -38,7 +38,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + invalidToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getFriends")
+                .get(friendsBaseUrl + "/api/friends/get-friends")
                 .then()
                 .statusCode(anyOf(is(401), is(403)));
     }
@@ -96,7 +96,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + token)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
+                .get(friendsBaseUrl + "/api/friends/get-number-of-friends/" + userId)
                 .then()
                 .statusCode(200);
 
@@ -152,7 +152,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
             given()
                     .header("Authorization", "Bearer " + tamperedToken)
                     .when()
-                    .get(friendsBaseUrl + "/api/friends/getFriends")
+                    .get(friendsBaseUrl + "/api/friends/get-friends")
                     .then()
                     .statusCode(anyOf(is(401), is(403)));
         }
@@ -170,7 +170,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + userToken)
                 .when()
-                .delete(registrationBaseUrl + "/api/user/auth/deleteAll")
+                .delete(registrationBaseUrl + "/api/user/auth/delete-all")
                 .then()
                 .statusCode(anyOf(is(403), is(401)));
 
@@ -399,7 +399,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + oldToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
+                .get(friendsBaseUrl + "/api/friends/get-number-of-friends/" + userId)
                 .then()
                 .statusCode(200);
 
@@ -414,7 +414,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
                         }
                         """)
                 .when()
-                .put(registrationBaseUrl + "/api/user/auth/changePassword")
+                .put(registrationBaseUrl + "/api/user/auth/change-password")
                 .then()
                 .statusCode(200);
 
@@ -434,7 +434,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + newToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
+                .get(friendsBaseUrl + "/api/friends/get-number-of-friends/" + userId)
                 .then()
                 .statusCode(200);
 
@@ -494,7 +494,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + user2Token)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + user2Id)
+                .get(friendsBaseUrl + "/api/friends/get-number-of-friends/" + user2Id)
                 .then()
                 .statusCode(200);
     }
@@ -555,7 +555,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
             Response resp = given()
                     .header("Authorization", "Bearer " + token)
                     .when()
-                    .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
+                    .get(friendsBaseUrl + "/api/friends/get-number-of-friends/" + userId)
                     .then()
                     .extract().response();
 
@@ -587,7 +587,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Origin", "http://malicious-site.com")
                 .when()
-                .options(friendsBaseUrl + "/api/friends/getFriends/" + UUID.randomUUID())
+                .options(friendsBaseUrl + "/api/friends/get-friends/" + UUID.randomUUID())
                 .then()
                 .statusCode(anyOf(is(200), is(403)))
                 .header("Access-Control-Allow-Origin", not("*"));
@@ -629,7 +629,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + userToken)
                 .when()
-                .get(registrationBaseUrl + "/api/admin/getAll")
+                .get(registrationBaseUrl + "/api/admin/get-all")
                 .then()
                 .statusCode(anyOf(is(403), is(401)));
     }
@@ -652,7 +652,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + token)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
+                .get(friendsBaseUrl + "/api/friends/get-number-of-friends/" + userId)
                 .then()
                 .statusCode(200);
 
@@ -877,14 +877,14 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + token1)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId2)
+                .get(friendsBaseUrl + "/api/friends/get-number-of-friends/" + userId2)
                 .then()
                 .statusCode(200);
 
         given()
                 .header("Authorization", "Bearer " + token2)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId1)
+                .get(friendsBaseUrl + "/api/friends/get-number-of-friends/" + userId1)
                 .then()
                 .statusCode(200);
     }
@@ -903,7 +903,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", validToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
+                .get(friendsBaseUrl + "/api/friends/get-number-of-friends/" + userId)
                 .then()
                 .statusCode(anyOf(is(401), is(403)));
 
@@ -911,7 +911,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Basic " + validToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
+                .get(friendsBaseUrl + "/api/friends/get-number-of-friends/" + userId)
                 .then()
                 .statusCode(anyOf(is(401), is(403)));
 
@@ -919,7 +919,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer  " + validToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
+                .get(friendsBaseUrl + "/api/friends/get-number-of-friends/" + userId)
                 .then()
                 .statusCode(anyOf(is(200), is(401))); // Some implementations might handle this
 
@@ -927,7 +927,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "bearer " + validToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
+                .get(friendsBaseUrl + "/api/friends/get-number-of-friends/" + userId)
                 .then()
                 .statusCode(anyOf(is(200), is(403)));
 
@@ -935,7 +935,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer ")
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + userId)
+                .get(friendsBaseUrl + "/api/friends/get-number-of-friends/" + userId)
                 .then()
                 .statusCode(anyOf(is(401), is(403)));
     }
@@ -953,7 +953,7 @@ public class CrossServiceSecurityTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + userToken)
                 .when()
-                .get(registrationBaseUrl + "/api/admin/getAll")
+                .get(registrationBaseUrl + "/api/admin/get-all")
                 .then()
                 .statusCode(anyOf(is(403), is(401)));
 

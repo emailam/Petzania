@@ -66,7 +66,7 @@ public class AdminController {
     }
 
     @Operation(summary = "Retrieve all admins")
-    @GetMapping(path = "/admin/getAll")
+    @GetMapping(path = "/admin/get-all")
     public ResponseEntity<List<AdminDTO>> getAllAdmins(){
         return ResponseEntity.ok(adminService.getAllAdmins());
     }
