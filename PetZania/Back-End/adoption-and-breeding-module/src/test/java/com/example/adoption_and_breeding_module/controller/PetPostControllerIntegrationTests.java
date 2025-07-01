@@ -558,7 +558,7 @@ public class PetPostControllerIntegrationTests {
                     .location("Test Location " + i)
                     .reacts(i % 5) // Different react counts for sorting
                     .reactedUsers(new HashSet<>())
-                    .build()));
+                    .score(0).build()));
         }
 
         // Test first page
