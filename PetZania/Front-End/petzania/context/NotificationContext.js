@@ -32,7 +32,7 @@ export const NotificationProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [user?.userId]);
 
     const decrementUnreadCount = useCallback((amount = 1) => {
         setUnreadCount(prev => Math.max(0, prev - amount));

@@ -1,4 +1,4 @@
-import api from '@/api/axiosInstance';
+import api from '@/api/axiosInstance8080';
 
 export async function uploadFile(file) {
     const formData = new FormData();

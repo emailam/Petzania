@@ -8,6 +8,12 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "extra": {
+      "API_BASE_URL_8080": "http://157.230.114.107:8080/api",
+      "API_BASE_URL_8081": "http://157.230.114.107:8081/api",
+      "API_BASE_URL_8082": "http://157.230.114.107:8082/api",
+      "API_BASE_URL_8083": "http://157.230.114.107:8083/api"
+    },
     "ios": {
       "supportsTablet": true
     },
