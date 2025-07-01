@@ -14,6 +14,7 @@ import UserList from '@/components/UserList';
 import { getFollowersByUserId, getNumberOfFollowersByUserId } from '@/services/friendsService';
 import { getUserById, getUserProfilePicture } from '@/services/userService';
 import Toast from 'react-native-toast-message';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 export default function Followers() {
   const { userid } = useLocalSearchParams();
@@ -35,13 +36,33 @@ export default function Followers() {
     loadInitialData();
   }, [userid]);
 
+  const {
+    data: followersResponse,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['followers', userid],
+    queryFn: ({ pageParam = 0 }) => 
+      getFollowersByUserId(pageParam, 20, 'createdAt', 'desc', userid),
+      getNextPageParam: (lastPage, pages) => {
+        if (lastPage.last) return undefined;
+        return pages.length;
+    },
+    enabled: !!userid,
+  });
+
+
   const loadInitialData = async () => {
     try {
       setLoading(true);
       // Load profile user info and followers in parallel
-      const [userResponse, followersResponse, countResponse] = await Promise.all([
+      const [userResponse, countResponse] = await Promise.all([
         getUserById(userid),
-        getFollowersByUserId(0, 20, 'createdAt', 'desc', userid),
         getNumberOfFollowersByUserId(userid)
       ]);
 
