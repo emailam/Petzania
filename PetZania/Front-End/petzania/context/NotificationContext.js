@@ -22,6 +22,7 @@ export const NotificationProvider = ({ children }) => {
     const { user } = useContext(UserContext);
 
     const fetchUnreadCount = useCallback(async () => {
+        console.log('Fetching unread notification count for user:', user?.userId);
         try {
             setLoading(true);
             const count = await getUnreadNotificationCount();

@@ -3,6 +3,7 @@ import { getToken, saveToken, clearAllTokens } from '../storage/tokenStorage';
 import Constants from 'expo-constants';
 
 const BASE_URL = Constants.expoConfig.extra.API_BASE_URL_8081;
+const REFRESH_URL = `${Constants.expoConfig.extra.API_BASE_URL_8080}/user/auth/refresh-token`;
 
 const api = axios.create({
     baseURL: BASE_URL,
@@ -56,7 +57,7 @@ api.interceptors.response.use(
             try {
                 const refreshToken = await getToken('refreshToken');
 
-                const response = await axios.post(`http://10.0.2.2:8080/api/user/auth/refresh-token`, {
+                const response = await axios.post(REFRESH_URL, {
                     refreshToken,
                 });
 
