@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import {
   View,
   Text,
@@ -21,21 +21,32 @@ export default function Followers() {
   const router = useRouter();
   const { user: currentUser } = useContext(UserContext);
 
-  const [followers, setFollowers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [followersCount, setFollowersCount] = useState(0);
   const [profileUser, setProfileUser] = useState(null);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-
   const isOwnProfile = currentUser?.userId === userid;
 
+  // Get followers count
+  const { data: followersCount } = useQuery({
+    queryKey: ['followersCount', userid],
+    queryFn: () => getNumberOfFollowersByUserId(userid),
+    enabled: !!userid,
+  });
+
+  // Get profile user info
   useEffect(() => {
-    loadInitialData();
+    const loadProfileUser = async () => {
+      if (userid) {
+        try {
+          const userResponse = await getUserById(userid);
+          setProfileUser(userResponse);
+        } catch (error) {
+          console.error('Error loading profile user:', error);
+        }
+      }
+    };
+    loadProfileUser();
   }, [userid]);
 
+  // Get followers with infinite query
   const {
     data: followersResponse,
     isLoading,
@@ -45,123 +56,73 @@ export default function Followers() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    isRefetching,
   } = useInfiniteQuery({
     queryKey: ['followers', userid],
-    queryFn: ({ pageParam = 0 }) => 
-      getFollowersByUserId(pageParam, 20, 'createdAt', 'desc', userid),
-      getNextPageParam: (lastPage, pages) => {
-        if (lastPage.last) return undefined;
-        return pages.length;
+    queryFn: async ({ pageParam = 0 }) => {
+      const response = await getFollowersByUserId(pageParam, 20, 'createdAt', 'desc', userid);
+      // Transform followers data and fetch profile pictures
+      const followersWithPictures = await Promise.all(
+        (response.content || []).map(async (followItem) => {
+          try {
+            const profileResponse = await getUserProfilePicture(followItem.follower.userId);
+            return {
+              ...followItem.follower,
+              profilePictureURL: profileResponse.profilePictureURL,
+              followId: followItem.followId,
+              createdAt: followItem.createdAt
+            };
+          } catch (profileError) {
+            console.warn('Failed to fetch profile picture for follower:', followItem.follower.userId);
+            return {
+              ...followItem.follower,
+              followId: followItem.followId,
+              createdAt: followItem.createdAt
+            };
+          }
+        })
+      );
+
+      return {
+        ...response,
+        content: followersWithPictures
+      };
+    },
+    getNextPageParam: (lastPage, pages) => {
+      if (lastPage.last) return undefined;
+      return pages.length;
     },
     enabled: !!userid,
   });
 
-
-  const loadInitialData = async () => {
-    try {
-      setLoading(true);
-      // Load profile user info and followers in parallel
-      const [userResponse, countResponse] = await Promise.all([
-        getUserById(userid),
-        getNumberOfFollowersByUserId(userid)
-      ]);
-
-      setProfileUser(userResponse);
-      
-      // Transform followers data and fetch profile pictures
-      const followersData = await Promise.all(
-        (followersResponse.content || []).map(async (followItem) => {
-          try {
-            const response = await getUserProfilePicture(followItem.follower.userId);
-            
-            return {
-              ...followItem.follower,
-              profilePictureURL: response.profilePictureURL,
-              followId: followItem.followId,
-              createdAt: followItem.createdAt
-            };
-          } catch (profileError) {
-            console.warn('Failed to fetch profile picture for follower:', followItem.follower.userId);
-            return {
-              ...followItem.follower,
-              followId: followItem.followId,
-              createdAt: followItem.createdAt
-            };
-          }
-        })
-      );
-      
-      setFollowers(followersData);
-      setFollowersCount(countResponse);
-      setHasMore(followersData.length >= 20 && !followersResponse.last);
-      setPage(0);
-    } catch (error) {
-      console.error('Error loading followers:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Failed to load followers',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-  const loadMoreFollowers = async () => {
-    if (loadingMore || !hasMore) return;
-
-    try {
-      setLoadingMore(true);
-      const nextPage = page + 1;
-      const response = await getFollowersByUserId(nextPage, 20, 'createdAt', 'desc', userid);
-      
-      // Transform new followers data and fetch profile pictures
-      const newFollowersData = await Promise.all(
-        (response.content || []).map(async (followItem) => {
-          try {
-            const response = await getUserProfilePicture(followItem.follower.userId);
-            return {
-              ...followItem.follower,
-              profilePictureURL: response.profilePictureURL,
-              followId: followItem.followId,
-              createdAt: followItem.createdAt
-            };
-          } catch (profileError) {
-            console.warn('Failed to fetch profile picture for follower:', followItem.follower.userId);
-            return {
-              ...followItem.follower,
-              followId: followItem.followId,
-              createdAt: followItem.createdAt
-            };
-          }
-        })
-      );
-      
-      setFollowers(prev => [...prev, ...newFollowersData]);
-      setPage(nextPage);
-      setHasMore(newFollowersData.length >= 20 && !response.last);
-    } catch (error) {
-      console.error('Error loading more followers:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Failed to load more followers',
-      });
-    } finally {
-      setLoadingMore(false);
-    }
-  };
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await loadInitialData();
-    setRefreshing(false);
-  };
+  // Flatten the paginated data
+  const followers = useMemo(() => {
+    return followersResponse?.pages.flatMap(page => page.content) || [];
+  }, [followersResponse]);
 
   const handleUserPress = (user) => {
     router.push({
       pathname: `/UserModule/${user.userId}`,
       params: { username: user.username || 'User Profile' }
     });
+  };
+
+  const loadMoreFollowers = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
+  const onRefresh = async () => {
+    try {
+      await refetch();
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to refresh followers',
+      });
+    }
   };
 
   const renderEmptyState = () => (
@@ -177,16 +138,33 @@ export default function Followers() {
     </View>
   );
 
-    if (loading) {
-        return (
-            <View style={styles.container}>
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#9188E5" />
-                    <Text style={styles.loadingText}>Loading followers...</Text>
-                </View>
-            </View>
-        );
-    }
+  if (isLoading && !followersResponse) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#9188E5" />
+          <Text style={styles.loadingText}>Loading followers...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle-outline" size={60} color="#ff4444" />
+          <Text style={styles.errorTitle}>Error Loading Followers</Text>
+          <Text style={styles.errorSubtitle}>
+            {error?.message || 'Something went wrong'}
+          </Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+            <Text style={styles.retryButtonText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -199,7 +177,7 @@ export default function Followers() {
         onEndReachedThreshold={0.1}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
+            refreshing={isRefetching}
             onRefresh={onRefresh}
             colors={['#9188E5']}
             tintColor="#9188E5"
@@ -207,7 +185,7 @@ export default function Followers() {
         }
         ListEmptyComponent={renderEmptyState}
         ListFooterComponent={
-          loadingMore ? (
+          followers.length > 0 && isFetchingNextPage ? (
             <View style={styles.footerLoading}>
               <ActivityIndicator size="small" color="#9188E5" />
               <Text style={styles.footerLoadingText}>Loading more...</Text>
@@ -229,7 +207,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    paddingTop: 50, // Account for status bar
+    paddingTop: 50,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
     backgroundColor: '#fff',
@@ -260,6 +238,38 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 16,
     color: '#9188E5',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#ff4444',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  errorSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 8,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  retryButton: {
+    backgroundColor: '#9188E5',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   emptyContainer: {
     flex: 1,

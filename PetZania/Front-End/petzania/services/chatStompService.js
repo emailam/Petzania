@@ -1,5 +1,6 @@
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import Constants from 'expo-constants';
 
 class ChatSocketService {
     constructor() {
@@ -13,7 +14,7 @@ class ChatSocketService {
         }
 
         // Create SockJS connection for chat service
-        const socket = new SockJS('http://192.168.1.6:8081/ws');
+        const socket = new SockJS(`${Constants.expoConfig.extra.API_BASE_URL_8081.replace(/\/api$/, '')}/ws`);
         // Create STOMP client
         this.stompClient = new Client({
             webSocketFactory: () => socket,
