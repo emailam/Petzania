@@ -41,9 +41,9 @@ const EditProfile = () => {
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
-            aspect: [1, 1],
-            quality: 1,
             allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.7,
         });
 
         if (!result.canceled) {

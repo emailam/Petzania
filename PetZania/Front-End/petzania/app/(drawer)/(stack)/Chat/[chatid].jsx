@@ -571,27 +571,29 @@ export default function ChatDetailScreen() {
     };
 
     const renderHeader = () => (
-        <TouchableOpacity style={styles.header} onPress={() => {}}>
+        <View style={styles.header} onPress={() => {}}>
             <TouchableOpacity
                 style={styles.backButton}
                 onPress={() => router.back()}
             >
                 <Ionicons name="arrow-back" size={24} color="#918CE5" />
             </TouchableOpacity>
-            <Image
-                source={{ uri: otherUser?.profilePictureURL || defaultImage}}
-                style={styles.userAvatar}
-            />
 
-            <View style={styles.headerInfo}>
-                <Text style={styles.headerTitle}>
-                    {otherUser?.name || 'Loading...'}
-                </Text>
-                <Text style={styles.headerSubtitle}>
-                    {otherUser?.online ? 'Online' : 'Offline'}
-                </Text>
-            </View>
-        </TouchableOpacity>
+            <TouchableOpacity style={styles.headerInfo} onPress={() => router.push(`/Chat/Profile/${otherUser?.userId}?chatId=${chatid}`)}>
+                <Image
+                    source={otherUser?.profilePictureURL ? { uri: otherUser.profilePictureURL } : defaultImage}
+                    style={styles.userAvatar}
+                />
+                <View>
+                    <Text style={styles.headerTitle}>
+                        {otherUser?.name || 'Loading...'}
+                    </Text>
+                    <Text style={styles.headerSubtitle}>
+                        {otherUser?.online ? 'Online' : 'Offline'}
+                    </Text>
+                </View>
+            </TouchableOpacity>
+        </View>
     );
 
     const handleReplyMessage = () => {
@@ -754,7 +756,7 @@ export default function ChatDetailScreen() {
             let result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ['images'],
                 allowsEditing: true,
-                aspect: [4, 3],
+                aspect: [1, 1],
                 quality: 0.7,
             });
 
@@ -782,7 +784,7 @@ export default function ChatDetailScreen() {
     const uploadAndSendFile = async (fileInfo) => {
         try {
             setUploadingImages(true);
-            
+
             Toast.show({
                 type: 'info',
                 text1: 'Uploading...',
@@ -1068,6 +1070,8 @@ const styles = StyleSheet.create({
     },
     headerInfo: {
         flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     headerTitle: {
         fontSize: 18,

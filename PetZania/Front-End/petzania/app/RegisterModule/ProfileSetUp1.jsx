@@ -35,7 +35,7 @@ const ProfileSetUp1 = () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
             aspect: [1, 1],
-            quality: 1,
+            quality: 0.7,
             allowsEditing: true,
         });
 

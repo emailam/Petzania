@@ -16,6 +16,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { AntDesign } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ActivityIndicator } from 'react-native-paper';
+import { useActionSheet } from '@expo/react-native-action-sheet';
 
 import { uploadFiles } from '@/services/uploadService';
 
@@ -27,12 +28,15 @@ const { width } = Dimensions.get('window');
 const AddPet1 = () => {
     const flatListRef = useRef(null);
     const [loading, setLoading] = useState(false);
+    const { showActionSheetWithOptions } = useActionSheet();
 
     const defaultImage = require('../../assets/images/AddPet/Pet Default Pic.png');
     const { pet, setPet } = useContext(PetContext);
     const [images, setImages] = useState(pet.images || []);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [error, setError] = useState('');
+    const [showImageViewer, setShowImageViewer] = useState(false);
+    const [viewerIndex, setViewerIndex] = useState(0);
     const router = useRouter();
 
     useEffect(() => {
@@ -44,8 +48,7 @@ const AddPet1 = () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
             allowsMultipleSelection: true,
-            quality: 0.8,
-            aspect: [1, 1],
+            quality: 0.7,
             selectionLimit: 6,
         });
         if (!result.canceled) {
@@ -106,17 +109,52 @@ const AddPet1 = () => {
         }
     };
 
-    const renderItem = ({ item }) => (
-        <View style={styles.carouselItem}>
+    const handleCarouselImagePress = (index) => {
+        const options = [
+            'View Photo',
+            index === 0 ? null : 'Make Profile Picture',
+            'Add More Photos',
+            'Delete Photo',
+            'Cancel',
+        ].filter(Boolean);
+        const cancelButtonIndex = options.length - 1;
+        const destructiveButtonIndex = options.indexOf('Delete Photo');
+        showActionSheetWithOptions(
+            {
+                options,
+                cancelButtonIndex,
+                destructiveButtonIndex,
+            },
+            (buttonIndex) => {
+                if (buttonIndex === 0) {
+                    setViewerIndex(index);
+                    setShowImageViewer(true);
+                } else if (buttonIndex === 1 && index !== 0) {
+                    // Make profile picture
+                    const newImages = [...images];
+                    const [selected] = newImages.splice(index, 1);
+                    newImages.unshift(selected);
+                    setImages(newImages);
+                    setCurrentIndex(0);
+                } else if ((buttonIndex === 1 && index === 0) || (buttonIndex === 2 && index !== 0)) {
+                    // Add More Photos
+                    pickImage();
+                } else if ((buttonIndex === 2 && index === 0) || (buttonIndex === 3 && index !== 0)) {
+                    // Delete photo
+                    deleteImage(images[index]);
+                }
+            }
+        );
+    };
+
+    const renderItem = ({ item, index }) => (
+        <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => handleCarouselImagePress(index)}
+            style={styles.carouselItem}
+        >
             <Image source={{ uri: item }} style={styles.carouselImage} />
-            <TouchableOpacity
-                onPress={() => deleteImage(item)}
-                style={styles.trashIconMain}
-                disabled={loading}
-            >
-                <AntDesign name="delete" size={24} style={styles.icon} />
-            </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
     );
 
     return (
@@ -166,6 +204,18 @@ const AddPet1 = () => {
                             <Text style={styles.noteText}>
                                 The selected image will be used as the default pet image.
                             </Text>
+
+                            {/* Add the Add More Photos button if less than 6 images */}
+                            {images.length > 0 && images.length < 6 && (
+                                <TouchableOpacity
+                                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 15, backgroundColor: '#f8f8ff', borderRadius: 12, borderWidth: 2, borderColor: '#9188E5', borderStyle: 'dashed', paddingVertical: 12, paddingHorizontal: 24 }}
+                                    onPress={pickImage}
+                                    disabled={loading}
+                                >
+                                    <AntDesign name="plus" size={24} color="#9188E5" />
+                                    <Text style={{ color: '#9188E5', fontSize: 16, fontWeight: '600', marginLeft: 8 }}>Add More Photos</Text>
+                                </TouchableOpacity>
+                            )}
                         </>
                     ) : (
                         <TouchableOpacity onPress={pickImage} style={{ marginBottom: 15 }} disabled={loading}>
@@ -198,7 +248,6 @@ const AddPet1 = () => {
                     {error ? <Text style={styles.errorText}>{error}</Text> : null}
                 </View>
             </ScrollView>
-
             <View style={styles.buttonContainer}>
                 <Button title="Next" borderRadius={10} fontSize={16} onPress={goToNextStep} loading={loading} />
             </View>
@@ -212,13 +261,11 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     scrollContainer: {
-        paddingVertical: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
+        paddingBottom: 20,
     },
     imageBlock: {
         alignItems: 'center',
-        marginBottom: 20,
+        paddingVertical: 20,
     },
     carouselItem: {
         justifyContent: 'center',
@@ -234,21 +281,8 @@ const styles = StyleSheet.create({
         borderColor: '#9188E5',
         alignSelf: 'center',
     },
-    trashIconMain: {
-        position: 'absolute',
-        bottom: 10,
-        alignSelf: 'center',
-        backgroundColor: 'white',
-        padding: 8,
-        borderRadius: 20,
-        elevation: 3,
-    },
-    icon: {
-        color: '#9188E5',
-    },
     inputContainer: {
         paddingHorizontal: '5%',
-        width: '100%',
     },
     label: {
         fontSize: 18,
@@ -257,7 +291,6 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     input: {
-        width: '100%',
         height: 50,
         borderWidth: 1,
         borderColor: '#9188E5',
@@ -289,7 +322,7 @@ const styles = StyleSheet.create({
     },
     thumbnailRow: {
         flexDirection: 'row',
-        marginTop: 10,
+        marginTop: 20,
         justifyContent: 'center',
         flexWrap: 'wrap',
     },

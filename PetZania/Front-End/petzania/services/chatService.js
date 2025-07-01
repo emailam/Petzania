@@ -37,6 +37,18 @@ export async function createChat(userId) {
     }
 }
 
+export async function deleteChat(chatId) {
+    console.log('Deleting chat with ID:', chatId);
+    try {
+        const response = await api.delete(`/chats/user/${chatId}`);
+        if (response.status < 200 || response.status >= 300) {
+            throw new Error('Failed to delete chat. Please try again later.');
+        }
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
 
 // Message Functions
 export async function getMessagesByChatId(chatId, page = 0, size = 20) {

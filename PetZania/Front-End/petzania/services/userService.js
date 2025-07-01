@@ -54,7 +54,7 @@ export async function updateUserData(userId, userData) {
 
 export async function getUserProfilePicture(userId){
     try {
-        const response = await api.get(`/user/auth/profilePictureURL/${userId}`);
+        const response = await api.get(`/user/auth/profile-picture-url/${userId}`);
 
         if (response.status !== 200) {
             throw new Error('Failed to fetch profile picture. Please try again later.');
@@ -82,7 +82,7 @@ export async function registerUser(data) {
 
 export async function sendResetPasswordOTP(email){
     try {
-        const response = await api.put('/user/auth/sendResetPasswordOTP', { email });
+        const response = await api.put('/user/auth/send-reset-password-otp', { email });
 
         if (response.status !== 200) {
             throw new Error('Failed to send reset password request. Please try again later.');
@@ -96,7 +96,7 @@ export async function sendResetPasswordOTP(email){
 
 export async function resetPassword(email, password, otp) {
     try {
-        const response = await api.put('/user/auth/resetPassword', { email, password, otp });
+        const response = await api.put('/user/auth/reset-password', { email, password, otp });
         if (response.status !== 200) {
             throw new Error('Failed to reset password. Please try again later.');
         }
@@ -108,7 +108,7 @@ export async function resetPassword(email, password, otp) {
 
 export async function changePassword(email, newPassword) {
     try {
-        const response = await api.put('/user/auth/changePassword', { email, newPassword });
+        const response = await api.put('/user/auth/change-password', { email, newPassword });
 
         if (response.status !== 200) {
             throw new Error('Failed to change password. Please try again later.');
@@ -122,7 +122,7 @@ export async function changePassword(email, newPassword) {
 
 export async function resendOTP(email) {
     try {
-        const response = await api.post('/user/auth/resendOTP', { email });
+        const response = await api.post('/user/auth/resend-otp', { email });
 
         if (response.status !== 200) {
             throw new Error('Failed to resend OTP. Please try again later.');
@@ -150,7 +150,7 @@ export async function verifyOTP(email, otp) {
 
 export async function verifyResetOTP(email, otp) {
     try {
-        const response = await api.put('/user/auth/verifyResetOTP', { email, otp });
+        const response = await api.put('/user/auth/verify-reset-otp', { email, otp });
 
         if (response.status !== 200) {
             throw new Error('Failed to verify reset OTP. Please try again later.');

@@ -26,6 +26,12 @@ export default function ChatLayout() {
                     animation: 'fade_from_bottom',
                 }}
             />
+            <Stack.Screen
+                name="Profile"
+                options={{
+                    headerShown: false,
+                }}
+            />
         </Stack>
     );
 }

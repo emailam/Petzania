@@ -49,11 +49,11 @@ export default function SearchScreen() {
 
             setHasMore(searchResults.content.length === 10 && !searchResults.last)
         } catch (error) {
-            console.error('Search error:', error)
             if (resetResults) {
                 setResults([])
             }
-            setHasMore(false)        } finally {
+            setHasMore(false)
+        } finally {
             if (resetResults) {
                 setLoading(false)
             } else {

@@ -123,17 +123,21 @@ export default function AddPet5() {
         >
             <FlatList
                 ListHeaderComponent={
-                    <TouchableOpacity style={styles.vaccinesInput} onPress={handleFilePick} disabled={isLoading}>
-                        <View style={styles.leftContainer}>
-                            <Image source={require('@/assets/images/AddPet/Vaccines.png')} style={styles.image} />
-                            <Text style={styles.vaccineLabel}>Vaccines</Text>
-                        </View>
-                        <View style={styles.rightContainer}>
-                            {isLoading
-                                ? <ActivityIndicator size="small" color="#9188E5" />
-                                : <Feather name="file-plus" size={28} color="#9188E5" />}
-                        </View>
-                    </TouchableOpacity>
+                    <>
+                        <Text style={styles.headerLabel}>Pet Vaccines</Text>
+                        <TouchableOpacity style={styles.vaccinesInput} onPress={handleFilePick} disabled={isLoading}>
+                            <Image source={require('@/assets/images/AddPet/Vaccines.png')} style={[styles.image, {marginRight: 0, width: 48, height: 48, borderRadius: 12}]} />
+                            <View style={styles.vaccineInputTextContainer}>
+                                <Text style={styles.vaccineInputTitle}>Add pet vaccines</Text>
+                                <Text style={styles.vaccineInputSubtitle}>Upload PDF files of your pet's vaccines.</Text>
+                            </View>
+                            <View style={styles.rightContainer}>
+                                {isLoading
+                                    ? <ActivityIndicator size="small" color="#9188E5" />
+                                    : <Feather name="file-plus" size={32} color="#9188E5" />}
+                            </View>
+                        </TouchableOpacity>
+                    </>
                 }
                 data={vaccineFiles}
                 keyExtractor={(item, index) => index.toString()}
@@ -188,16 +192,38 @@ const styles = StyleSheet.create({
         width: 46,
         height: 46,
     },
+    headerLabel: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333',
+        marginTop: 30,
+        marginLeft: '5%',
+        marginBottom: 8,
+    },
     vaccinesInput: {
-        marginTop: 20,
+        marginTop: 0,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         marginHorizontal: '5%',
         borderColor: '#9188E5',
-        borderWidth: 1,
-        padding: 14,
-        borderRadius: 10,
+        borderWidth: 1.5,
+        padding: 16,
+        borderRadius: 16,
+    },
+    vaccineInputTextContainer: {
+        flex: 1,
+        marginLeft: 10,
+    },
+    vaccineInputTitle: {
+        fontSize: 15,
+        fontWeight: 'bold',
+        color: '#4B3FA7',
+    },
+    vaccineInputSubtitle: {
+        fontSize: 13,
+        color: '#6c6c8a',
+        marginTop: 2,
     },
     uploadedFile: {
         marginTop: 20,

@@ -1,7 +1,7 @@
 import {
-    View, Text, StyleSheet, ScrollView, TouchableOpacity,
+    View, Text, StyleSheet, ScrollView, Pressable,
     Alert, TextInput, Platform, ActivityIndicator,
-    Dimensions
+    Dimensions,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
@@ -107,8 +107,6 @@ const PetDetails = () => {
                 } finally {
                     setPetLoading(false);
                 }
-            } else if (pet) {
-                console.log('Pet found in context:', pet);
             }
         };
 
@@ -133,7 +131,34 @@ const PetDetails = () => {
         setPet((prev) => prev ? { ...prev, [key]: value } : null);
         setErrors((prev) => ({ ...prev, [key]: '' }));
     };
-    const pickImage = async () => {
+    const pickImage = async (replaceIndex = null) => {
+        if (replaceIndex === 0 && images.length >= 1) {
+            // Replace the profile picture (first image)
+            setUploadingImages(true);
+            try {
+                let result = await ImagePicker.launchImageLibraryAsync({
+                    mediaTypes: ['images'],
+                    allowsMultipleSelection: false,
+                    quality: 0.8,
+                    aspect: [1, 1],
+                    selectionLimit: 1,
+                });
+                if (!result.canceled) {
+                    const uri = result.assets[0].uri;
+                    const newImages = [...images];
+                    newImages[0] = uri;
+                    setImages(newImages);
+                    setCurrentImageIndex(0);
+                }
+            } catch (error) {
+                console.error('Error picking image:', error);
+                showErrorMessage('Failed to pick image', 'Please try again');
+            } finally {
+                setUploadingImages(false);
+            }
+            return;
+        }
+
         if (images.length >= 6) {
             showErrorMessage('Photo limit reached', 'You can add up to 6 photos per pet');
             return;
@@ -145,7 +170,7 @@ const PetDetails = () => {
             let result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ['images'],
                 allowsMultipleSelection: true,
-                quality: 0.8,
+                quality: 0.6,
                 aspect: [1, 1],
                 selectionLimit: remainingSlots,
             });
@@ -220,7 +245,6 @@ const PetDetails = () => {
                     finalImages.push(originalImage);
                 }
             }
-            
             return finalImages;
         } catch (error) {
             console.error('Error uploading images:', error);
@@ -329,9 +353,13 @@ const PetDetails = () => {
             };
 
             await updatePet(petId, petData);
-            setPets(prevPets => prevPets.map(p =>
-                p.petId === petId ? { ...p, ...petData } : p
-            ));
+            setPets(prevPets => {
+                const updatedPets = prevPets.map(p =>
+                    p.petId === petId ? { ...p, ...petData } : p
+                );
+                if (currentUser) currentUser.myPets = updatedPets;
+                return updatedPets;
+            });
 
             const hasImages = uploadedImageUrls.length > 0;
             const successMessage = hasImages ?
@@ -384,7 +412,7 @@ const PetDetails = () => {
                 <View style={styles.inputsContainer}>
                     {/* Name */}
                     <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Name {isOwner && <Text style={{ color: 'red' }}>*</Text>}</Text>
+                        <Text style={styles.label}>Name{isOwner && <Text style={{ color: 'red' }}>*</Text>}</Text>
                         <TextInput
                             style={[
                                 styles.input, 
@@ -397,9 +425,10 @@ const PetDetails = () => {
                             editable={isOwner}
                         />
                         {errors.name && isOwner && <Text style={styles.errorText}>{errors.name}</Text>}
-                    </View>                    {/* Species */}
+                    </View>
+                    {/* Species */}
                     <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Type {isOwner && <Text style={{ color: 'red' }}>*</Text>}</Text>
+                        <Text style={styles.label}>Type{isOwner && <Text style={{ color: 'red' }}>*</Text>}</Text>
                         {isOwner ? (
                             <Dropdown
                                 style={[styles.input, errors.species && styles.inputError]}
@@ -422,14 +451,15 @@ const PetDetails = () => {
                             />
                         )}
                         {errors.species && isOwner && <Text style={styles.errorText}>{errors.species}</Text>}
-                    </View>                    {/* Breed */}
+                    </View>
+                    {/* Breed */}
                     <View style={styles.inputContainer}>
                         <Text style={styles.label}>
-                            Breed {isOwner && <Text style={{ color: 'red' }}>*</Text>}
+                            Breed{isOwner && <Text style={{ color: 'red' }}>*</Text>}
                         </Text>
                         <TextInput
                             style={[
-                                styles.input, 
+                                styles.input,
                                 errors.breed && styles.inputError,
                                 !isOwner && styles.readOnlyInput
                             ]}
@@ -445,7 +475,7 @@ const PetDetails = () => {
                     </View>
                     {/* Gender */}
                     <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Gender {isOwner && <Text style={{ color: 'red' }}>*</Text>}</Text>
+                        <Text style={styles.label}>Gender{isOwner && <Text style={{ color: 'red' }}>*</Text>}</Text>
                         {isOwner ? (
                             <Dropdown
                                 style={[styles.input, errors.gender && styles.inputError]}
@@ -473,7 +503,7 @@ const PetDetails = () => {
                         <Text style={styles.label}>Description</Text>
                         <TextInput
                             style={[
-                                styles.input, 
+                                styles.input,
                                 { height: 100, textAlignVertical: 'top' },
                                 !isOwner && styles.readOnlyInput
                             ]}
@@ -512,7 +542,7 @@ const PetDetails = () => {
         } else if (activeTab === 'photos') {
             // Photos tab - dedicated photo management
             return (
-                <View style={styles.inputsContainer}>
+                <View style={styles.inputsContainerFull}>
                     <Text style={styles.label}>Pet Photos</Text>
                     {images.length > 0 ? (
                         <View style={styles.photoGalleryContainer}>
@@ -521,7 +551,7 @@ const PetDetails = () => {
                                 {images.map((uri, index) => {
                                     const isValidUri = isValidImageUri(uri);
                                     return (
-                                        <TouchableOpacity
+                                        <Pressable
                                             key={`photo-${index}`}
                                             style={[
                                                 styles.photoGridItem,
@@ -552,35 +582,35 @@ const PetDetails = () => {
                                                     <Text style={styles.mainPhotoLabelText}>Profile</Text>
                                                 </View>
                                             )}
-                                        </TouchableOpacity>
+                                        </Pressable>
                                     );
                                 })}
                                 {/* Add Photo Button - Only for owners */}
                                 {isOwner && images.length < 6 && (
-                                    <TouchableOpacity
+                                    <Pressable
                                         style={styles.addPhotoGridItem}
                                         onPress={pickImage}
                                         disabled={uploadingImages || isLoading}
                                     >
                                         <AntDesign name="plus" size={30} color="#9188E5" />
                                         <Text style={styles.addPhotoGridText}>Add Photo</Text>
-                                    </TouchableOpacity>
+                                    </Pressable>
                                 )}
                             </View>
                         </View>
                     ) : (
                         <View style={styles.emptyPhotoContainer}>
-                            <Image source={defaultImage} style={styles.emptyPhotoImage} />
-                            <Text style={styles.emptyPhotoText}>No photos added yet</Text>
+                            <Image source={defaultImage} style={styles.emptyImage} />
+                            <Text style={styles.emptyStateText}>No photos added yet</Text>
                             {isOwner && (
-                                <TouchableOpacity
+                                <Pressable
                                     style={styles.addFirstPhotoButton}
                                     onPress={pickImage}
                                     disabled={uploadingImages || isLoading}
                                 >
                                     <AntDesign name="camera" size={20} color="white" />
                                     <Text style={styles.addFirstPhotoButtonText}>Add First Photo</Text>
-                                </TouchableOpacity>
+                                </Pressable>
                             )}
                         </View>
                     )}
@@ -589,31 +619,35 @@ const PetDetails = () => {
         } else {
             // Vaccines tab
             return (
-                <View style={styles.inputsContainer}>
-                    {/* Always show the vaccines header */}
-                    <TouchableOpacity 
-                        style={styles.vaccinesInput} 
-                        onPress={isOwner ? handleFilePick : undefined} 
-                        disabled={isLoading}
-                    >
-                        <View style={styles.leftContainer}>
-                            <Image source={require('@/assets/images/AddPet/Vaccines.png')} style={styles.image} />
-                            <Text style={styles.vaccineLabel}>Vaccines</Text>
-                        </View>
-                        {isOwner && (
-                            <View style={styles.rightContainer}>
-                                {isLoading
-                                    ? <ActivityIndicator size="small" color="#9188E5" />
-                                    : <Feather name="file-plus" size={28} color="#9188E5" />
-                                }
+                <View style={styles.inputsContainerFull}>
+                    <Text style={styles.label}>Pet Vaccines</Text>
+                    {isOwner && (
+                        <Pressable
+                            style={styles.vaccinesInput}
+                            onPress={isOwner ? handleFilePick : undefined}
+                            disabled={isLoading}
+                        >
+                            <Image source={require('@/assets/images/AddPet/Vaccines.png')} style={[styles.image, {marginRight: 0, width: 48, height: 48, borderRadius: 12}]} />
+                            <View style={styles.vaccineInputTextContainer}>
+                                <Text style={styles.vaccineInputTitle}>Add pet vaccines</Text>
+                                <Text style={styles.vaccineInputSubtitle}>Upload PDF files of your pet's vaccines.</Text>
                             </View>
-                        )}
-                    </TouchableOpacity>
+                            {isOwner && (
+                                <View style={styles.rightContainer}>
+                                    {isLoading
+                                        ? <ActivityIndicator size="small" color="#9188E5" />
+                                        : <Feather name="file-plus" size={28} color="#9188E5" />
+                                    }
+                                </View>
+                            )}
+                        </Pressable>
+                    )}
+
 
                     {/* Render vaccine files */}
                     {vaccineFiles.map((item, index) => (
-                        <TouchableOpacity 
-                            key={index} 
+                        <Pressable
+                            key={index}
                             style={styles.uploadedFile}
                             onPress={() => openPDF(item.uri || item)}
                         >
@@ -622,7 +656,7 @@ const PetDetails = () => {
                                 <Text style={styles.vaccineLabel}>{item.name || `Document ${index + 1}`}</Text>
                             </View>
                             {isOwner && (
-                                <TouchableOpacity
+                                <Pressable
                                     style={styles.rightContainer}
                                     onPress={(e) => {
                                         e.stopPropagation();
@@ -631,14 +665,17 @@ const PetDetails = () => {
                                     disabled={isLoading}
                                 >
                                     <AntDesign name="delete" size={22} color="#C70000" />
-                                </TouchableOpacity>
+                                </Pressable>
                             )}
-                        </TouchableOpacity>
+                        </Pressable>
                     ))}
 
                     {/* Show empty state for non-owners when no files */}
                     {!isOwner && vaccineFiles.length === 0 && (
-                        <Text style={styles.emptyStateText}>No vaccine documents available</Text>
+                        <View style={styles.emptyPhotoContainer}>
+                            <Image source={require('@/assets/images/AddPet/Vaccines.png')} style={styles.emptyImage} />
+                            <Text style={styles.emptyStateText}>No vaccines added yet</Text>
+                        </View>
                     )}
                 </View>
             );
@@ -660,7 +697,6 @@ const PetDetails = () => {
 
     const makeProfilePicture = (targetIndex) => {
         if (targetIndex === 0) return; // Already profile picture
-        
         const newImages = [...images];
         const [selectedImage] = newImages.splice(targetIndex, 1);
         newImages.unshift(selectedImage);
@@ -694,7 +730,7 @@ const PetDetails = () => {
                 } else if (buttonIndex === 1) {
                     // Change Profile Picture or Make Profile Picture
                     if (imageIndex === 0) {
-                        pickImage(); // Change profile picture
+                        pickImage(0); // Change profile picture (replace first image)
                     } else {
                         makeProfilePicture(imageIndex); // Make this photo the profile picture
                     }
@@ -747,7 +783,7 @@ const PetDetails = () => {
         <ScrollView contentContainerStyle={styles.container}>
             {/* Profile Picture Section */}
             <View style={styles.profileSection}>
-                <TouchableOpacity
+                <Pressable
                     style={styles.profileImageContainer}
                     onPress={isOwner ? handleProfileImagePress : () => {
                         // For non-owners, just show the image viewer
@@ -777,7 +813,7 @@ const PetDetails = () => {
                             )}
                         </>
                     )}
-                </TouchableOpacity>
+                </Pressable>
 
                 <Text style={styles.profileImageText}>
                     {isOwner
@@ -800,30 +836,30 @@ const PetDetails = () => {
 
             {/* Tab Navigation */}
             <View style={styles.tabContainer}>
-                <TouchableOpacity
+                <Pressable
                     style={[styles.tab, activeTab === 'info' && styles.activeTab]}
                     onPress={() => setActiveTab('info')}
                 >
                     <Text style={[styles.tabText, activeTab === 'info' && styles.activeTabText]}>
                         Pet Info
                     </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
+                </Pressable>
+                <Pressable
                     style={[styles.tab, activeTab === 'photos' && styles.activeTab]}
                     onPress={() => setActiveTab('photos')}
                 >
                     <Text style={[styles.tabText, activeTab === 'photos' && styles.activeTabText]}>
                         Photos
                     </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
+                </Pressable>
+                <Pressable
                     style={[styles.tab, activeTab === 'vaccines' && styles.activeTab]}
                     onPress={() => setActiveTab('vaccines')}
                 >
                     <Text style={[styles.tabText, activeTab === 'vaccines' && styles.activeTabText]}>
                         Vaccines
                     </Text>
-                </TouchableOpacity>
+                </Pressable>
             </View>
 
             {/* Tab Content */}
@@ -831,20 +867,20 @@ const PetDetails = () => {
             {/* Action Buttons - Only show for pet owner */}
             {isOwner && (
                 <View style={styles.buttonContainer}>
-                    <TouchableOpacity 
-                        style={styles.saveButton} 
-                        onPress={handleSaveChanges} 
+                    <Pressable
+                        style={styles.saveButton}
+                        onPress={handleSaveChanges}
                         disabled={isLoading || uploadingImages}
                     >
-                     <Text style={styles.buttonText}>Save Changes</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                        style={styles.deleteButton} 
-                        onPress={handleDeletePet} 
+                        <Text style={styles.buttonText}>Save Changes</Text>
+                    </Pressable>
+                    <Pressable
+                        style={styles.deleteButton}
+                        onPress={handleDeletePet}
                         disabled={isLoading || uploadingImages}
                     >
                         <Text style={styles.buttonText}>Delete Pet</Text>
-                    </TouchableOpacity>
+                    </Pressable>
                 </View>
             )}
 
@@ -864,6 +900,7 @@ const styles = StyleSheet.create({
     container: {
         backgroundColor: '#fff',
         paddingTop: 20,
+        flexGrow: 1, // Ensure ScrollView content fills available space
     },
     // Profile Section Styles
     profileSection: {
@@ -942,7 +979,7 @@ const styles = StyleSheet.create({
         color: '#9188E5',
         fontWeight: '600',
     },
-    
+
     // Photo Gallery Styles
     photoGalleryContainer: {
         marginTop: 10,
@@ -954,9 +991,10 @@ const styles = StyleSheet.create({
         marginBottom: 15,
     },
     photoGridItem: {
-        width: '48%',
+        width: '50%',
         aspectRatio: 1,
         marginBottom: 10,
+        padding: 2,
         borderRadius: 12,
         position: 'relative',
         overflow: 'hidden',
@@ -970,6 +1008,8 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
         borderRadius: 12,
+        borderColor: '#9188E5',
+        borderWidth: 1,
     },
     mainPhotoGridImage: {
         borderRadius: 15,
@@ -989,14 +1029,14 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     addPhotoGridItem: {
-        width: '48%',
+        width: '50%',
         aspectRatio: 1,
-        marginBottom: 10,
         borderRadius: 12,
-        borderWidth: 2,
+        borderWidth: 1,
         borderColor: '#9188E5',
         borderStyle: 'dashed',
         justifyContent: 'center',
+        height: 100,
         alignItems: 'center',
         backgroundColor: '#f8f8ff',
     },
@@ -1010,19 +1050,14 @@ const styles = StyleSheet.create({
     // Empty Photo State
     emptyPhotoContainer: {
         alignItems: 'center',
-        paddingVertical: 40,
+        justifyContent: 'center',
     },
-    emptyPhotoImage: {
+    emptyImage: {
         width: 100,
         height: 100,
         borderRadius: 50,
         opacity: 0.3,
         marginBottom: 15,
-    },
-    emptyPhotoText: {
-        fontSize: 16,
-        color: '#666',
-        marginBottom: 20,
     },
     addFirstPhotoButton: {
         flexDirection: 'row',
@@ -1041,7 +1076,10 @@ const styles = StyleSheet.create({
     // Form Styles
     inputsContainer: {
         paddingHorizontal: 20,
-        minHeight: Dimensions.get('window').height - 600,
+        width: '100%',
+    },
+    inputsContainerFull: {
+        paddingHorizontal: 20,
         width: '100%',
     },
     inputContainer: {
@@ -1080,9 +1118,23 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         borderColor: '#9188E5',
-        borderWidth: 1,
-        padding: 10,
-        borderRadius: 10,
+        borderWidth: 1.5,
+        padding: 14,
+        borderRadius: 16,
+    },
+    vaccineInputTextContainer: {
+        flex: 1,
+        marginLeft: 10,
+    },
+    vaccineInputTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#4B3FA7',
+    },
+    vaccineInputSubtitle: {
+        fontSize: 13,
+        color: '#6c6c8a',
+        marginTop: 2,
     },
     uploadedFile: {
         marginTop: 20,
@@ -1124,11 +1176,13 @@ const styles = StyleSheet.create({
     // Button Styles
     buttonContainer: {
         borderTopWidth: 1,
-        borderTopColor: '#e0e0e0',
-        backgroundColor: '#f5f5f5',
+        borderTopColor: '#fff',
+        backgroundColor: '#fff',
         padding: 20,
         width: '100%',
         marginTop: 20,
+        flex: 1,
+        justifyContent: 'flex-end',
     },
     saveButton: {
         backgroundColor: '#2CA269',
@@ -1166,7 +1220,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 1000,
-    },loadingText: {
+    },
+    loadingText: {
         marginTop: 10,
         fontSize: 16,
         color: '#9188E5',
@@ -1180,11 +1235,8 @@ const styles = StyleSheet.create({
     },
     emptyStateText: {
         fontSize: 16,
-        color: '#999',
-        textAlign: 'center',
-        fontStyle: 'italic',
-        marginTop: 20,
-        paddingVertical: 20,
+        color: '#666',
+        marginBottom: 20,
     },
 });
 
