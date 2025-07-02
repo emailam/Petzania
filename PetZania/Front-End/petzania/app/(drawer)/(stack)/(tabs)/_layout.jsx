@@ -28,8 +28,8 @@ export default function TabLayout() {
 
   const HeaderLeft = () => (
     <View style={styles.leftHeader}>
-      <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())} style={{ marginRight: 8 }}>
-        <Ionicons name="menu" size={26} color="#9188E5" />
+      <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())} style={{ marginRight: 6 }}>
+        <Ionicons name="menu" size={24} color="#9188E5" />
       </TouchableOpacity>
       <TouchableOpacity onPress={() => { /* navigate to profile */ }} >
         <View style={styles.imageContainer}>
@@ -40,20 +40,24 @@ export default function TabLayout() {
   );
 
   const HeaderRight = () => (
-    <View style={{ flexDirection: 'row', gap: 4, marginRight: 16, alignItems: 'center' }}>
+    <View style={{ flexDirection: 'row', gap: 4, marginRight: 12, alignItems: 'center' }}>
       <TouchableOpacity onPress={() => { router.push('Search') }}>
-        <Ionicons name="search-outline" size={24} color="#9188E5" />
+        <Ionicons name="search-outline" size={22} color="#9188E5" />
       </TouchableOpacity>
-      <Text style={{ fontSize: 22, color: '#808B9A' }}> | </Text>
+      <Text style={{ fontSize: 20, color: '#808B9A' }}> | </Text>
       <TouchableOpacity onPress={() => { router.push('Chat') }}>
-        <Ionicons name="chatbubble-ellipses-outline" size={24} color="#9188E5" />
+        <Ionicons name="chatbubble-ellipses-outline" size={22} color="#9188E5" />
       </TouchableOpacity>
     </View>
   );
+
   return (
     <Tabs
       screenOptions={{
         headerShown: true,
+        headerStyle: {
+          height: 80,
+        },
         tabBarActiveTintColor: '#5348BD',
         tabBarInactiveTintColor: '#9188E5',
         tabBarButton: HapticTab,
@@ -67,8 +71,8 @@ export default function TabLayout() {
         headerRight: () => <HeaderRight />,
         headerTitle: () => (
           <View style={{ marginLeft: 4 }}>
-            <Text style={{ fontSize: 14, fontWeight: '', color: '#808B9A' }}>Hello,</Text>
-            <Text style={{ fontSize: 18, fontWeight: '700', color: '#9188E5' }}>
+            <Text style={{ fontSize: 12, fontWeight: '', color: '#808B9A' }}>Hello,</Text>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: '#9188E5' }}>
               {user ? user.username : 'User'}
             </Text>
           </View>
@@ -154,15 +158,15 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   image: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: '#9188E5',
   },
   leftHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 16,
+    marginLeft: 12,
   },
 });

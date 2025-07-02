@@ -161,10 +161,13 @@ const AddPet1 = () => {
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.container}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
         >
             <ScrollView
                 contentContainerStyle={styles.scrollContainer}
                 keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={true}
+                keyboardDismissMode="interactive"
             >
                 <View style={styles.imageBlock}>
                     {images.length > 0 ? (
@@ -261,7 +264,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     scrollContainer: {
-        paddingBottom: 20,
+        paddingBottom: 100,
+        flexGrow: 1,
     },
     imageBlock: {
         alignItems: 'center',

@@ -187,14 +187,26 @@ export default function index() {
     };
 
     const markAllAsRead = async () => {
-        try {
-            await markAllNotificationsAsRead();
-            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-            resetUnreadCount();
-        } catch (error) {
-            console.error('Error marking all notifications as read:', error);
-            Alert.alert('Error', 'Failed to mark all notifications as read');
-        }
+        Alert.alert(
+            'Mark All as Read',
+            `Mark all ${localUnreadCount} notification${localUnreadCount > 1 ? 's' : ''} as read?`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Mark All Read',
+                    onPress: async () => {
+                        try {
+                            await markAllNotificationsAsRead();
+                            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+                            resetUnreadCount();
+                        } catch (error) {
+                            console.error('Error marking all notifications as read:', error);
+                            Alert.alert('Error', 'Failed to mark all notifications as read');
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     const deleteNotificationItem = async (notificationId) => {
@@ -342,17 +354,26 @@ export default function index() {
         <View style={styles.container}>
             {/* Header with actions */}
             <View style={styles.header}>
-                {localUnreadCount > 0 && (
-                    <TouchableOpacity onPress={markAllAsRead} style={styles.markAllButton}>
-                        <Text style={styles.markAllButtonText}>Mark all read</Text>
-                    </TouchableOpacity>
-                )}
+                <View style={styles.headerContent}>
+                    <Text style={styles.headerTitle}>Notifications</Text>
+                    {localUnreadCount > 0 && (
+                        <TouchableOpacity onPress={markAllAsRead} style={styles.markAllButton}>
+                            <Ionicons name="checkmark-done" size={16} color="#fff" />
+                            <Text style={styles.markAllButtonText}>Mark all read</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
             </View>
 
             {/* Unread count indicator */}
             {localUnreadCount > 0 && (
                 <View style={styles.unreadIndicator}>
-                    <Text style={styles.unreadIndicatorText}>{localUnreadCount} unread notification{localUnreadCount > 1 ? 's' : ''}</Text>
+                    <View style={styles.unreadIndicatorContent}>
+                        <Ionicons name="notifications" size={16} color="#1976d2" />
+                        <Text style={styles.unreadIndicatorText}>
+                            {localUnreadCount} unread notification{localUnreadCount > 1 ? 's' : ''}
+                        </Text>
+                    </View>
                 </View>
             )}
 
@@ -468,62 +489,63 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     header: {
+        backgroundColor: '#fff',
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
+    },
+    headerContent: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
-    },
-    headerLeft: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
+        paddingVertical: 16,
+        paddingHorizontal: 20,
     },
     headerTitle: {
         fontSize: 20,
         fontWeight: 'bold',
         color: '#333',
     },
-    connectionStatus: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
-    },
-    connected: {
-        backgroundColor: '#e8f5e8',
-    },
-    disconnected: {
-        backgroundColor: '#ffeaea',
-    },
-    connectionText: {
-        fontSize: 12,
-        fontWeight: '600',
-    },
     markAllButton: {
         backgroundColor: '#9188E5',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        shadowColor: '#9188E5',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 4,
     },
     markAllButtonText: {
         color: '#fff',
-        fontSize: 12,
+        fontSize: 13,
         fontWeight: '600',
+        marginLeft: 6,
     },
     unreadIndicator: {
         backgroundColor: '#e3f2fd',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
         borderBottomWidth: 1,
         borderBottomColor: '#e0e0e0',
+    },
+    unreadIndicatorContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
     },
     unreadIndicatorText: {
         fontSize: 14,
         color: '#1976d2',
         fontWeight: '500',
-        textAlign: 'center',
+        marginLeft: 8,
     },
     errorContainer: {
         padding: 20,

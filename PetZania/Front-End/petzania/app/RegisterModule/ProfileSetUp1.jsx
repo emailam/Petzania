@@ -205,6 +205,7 @@ const styles = StyleSheet.create({
     },
     scrollContainer: {
         paddingVertical: 20,
+        paddingBottom: 50,
         alignItems: 'center',
         justifyContent: 'center',
     },

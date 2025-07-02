@@ -45,6 +45,7 @@ export default function AddPet4() {
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.container}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
         >
             <ScrollView
                 contentContainerStyle={styles.scrollContainer}
@@ -85,6 +86,8 @@ export default function AddPet4() {
                         multiline
                         numberOfLines={6}
                         textAlignVertical="top"
+                        scrollEnabled={true}
+                        showsVerticalScrollIndicator={true}
                     />
                 </View>
             </ScrollView>
@@ -102,7 +105,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     scrollContainer: {
-        paddingBottom: 20,
+        paddingBottom: 50,
+        flexGrow: 1,
     },
     inputContainer: {
         paddingHorizontal: '5%',

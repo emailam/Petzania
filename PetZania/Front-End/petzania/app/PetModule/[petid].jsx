@@ -1,7 +1,7 @@
 import {
     View, Text, StyleSheet, ScrollView, Pressable,
     Alert, TextInput, Platform, ActivityIndicator,
-    Dimensions,
+    Dimensions, KeyboardAvoidingView,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
@@ -139,7 +139,7 @@ const PetDetails = () => {
                 let result = await ImagePicker.launchImageLibraryAsync({
                     mediaTypes: ['images'],
                     allowsMultipleSelection: false,
-                    quality: 0.8,
+                    quality: 0.7,
                     aspect: [1, 1],
                     selectionLimit: 1,
                 });
@@ -170,7 +170,7 @@ const PetDetails = () => {
             let result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ['images'],
                 allowsMultipleSelection: true,
-                quality: 0.6,
+                quality: 0.7,
                 aspect: [1, 1],
                 selectionLimit: remainingSlots,
             });
@@ -513,6 +513,10 @@ const PetDetails = () => {
                             multiline
                             numberOfLines={4}
                             editable={isOwner}
+                            scrollEnabled={true}
+                            showsVerticalScrollIndicator={true}
+                            blurOnSubmit={false}
+                            returnKeyType="default"
                         />
                     </View>
                     {/* Date of Birth */}
@@ -780,7 +784,17 @@ const PetDetails = () => {
 
     if (!pet) return null;
     return (
-        <ScrollView contentContainerStyle={styles.container}>
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1 }}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        >
+            <ScrollView 
+                contentContainerStyle={styles.container}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={true}
+                keyboardDismissMode="interactive"
+            >
             {/* Profile Picture Section */}
             <View style={styles.profileSection}>
                 <Pressable
@@ -893,6 +907,7 @@ const PetDetails = () => {
                 </View>
             )}
         </ScrollView>
+        </KeyboardAvoidingView>
     );
 };
 

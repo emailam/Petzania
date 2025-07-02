@@ -26,7 +26,7 @@ export default function PetModuleLayout() {
                     headerTitleAlign: "center",
                     headerBackTitle: "",
                     headerTintColor: "#9188E5",
-                    headerStyle: { backgroundColor: "#FFF" },
+                    headerStyle: { backgroundColor: "#FFF"},
                 }}
             />
             <Stack.Screen
