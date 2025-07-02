@@ -122,3 +122,30 @@ export async function updateMessageStatus(messageId, status) {
         throw error;
     }
 }
+
+export async function reactToMessage(messageId, reaction) {
+    console.log('Reacting to message with ID:', messageId, 'Reaction:', reaction);
+    try {
+        const response = await api.put(`/messages/${messageId}/reaction`, {
+            messageReact: reaction
+        });
+        if (response.status < 200 || response.status >= 300) {
+            throw new Error('Failed to react to message. Please try again later.');
+        }
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function removeReactionFromMessage(messageId) {
+    try {
+        const response = await api.delete(`/messages/${messageId}/reaction`);
+        if (response.status < 200 || response.status >= 300) {
+            throw new Error('Failed to remove reaction from message. Please try again later.');
+        }
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}

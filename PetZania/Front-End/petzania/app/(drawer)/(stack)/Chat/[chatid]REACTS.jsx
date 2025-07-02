@@ -1,5 +1,20 @@
+import 'react-native-get-random-values';
 import React, { useState, useEffect, useContext, useCallback, useRef } from 'react';
-import { View, ActivityIndicator, Text, StyleSheet, TouchableOpacity, TextInput, Alert, Platform, KeyboardAvoidingView, FlatList, Animated, Keyboard } from 'react-native';
+import { 
+  View, 
+  ActivityIndicator, 
+  Text, 
+  StyleSheet, 
+  TouchableOpacity, 
+  TextInput, 
+  Alert, 
+  Platform, 
+  KeyboardAvoidingView, 
+  FlatList, 
+  Modal, 
+  Animated,
+  Dimensions 
+} from 'react-native';
 import { Image } from 'expo-image';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
@@ -12,13 +27,16 @@ import {
   getChatById,
   updateMessageStatus,
   editMessage,
-  deleteMessage
+  deleteMessage,
+  reactToMessage
 } from '@/services/chatService';
 import { uploadFile } from '@/services/uploadService';
 import chatStompService from '@/services/chatStompService';
 import Toast from 'react-native-toast-message';
 import { getToken } from '@/storage/tokenStorage';
 import * as Haptics from 'expo-haptics';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 export default function ChatDetailScreen() {
   const { chatid } = useLocalSearchParams();
@@ -43,13 +61,19 @@ export default function ChatDetailScreen() {
   const [inputText, setInputText] = useState('');
   const [uploadingFiles, setUploadingFiles] = useState(false);
   
+  // Reaction modal state
+  const [showReactionModal, setShowReactionModal] = useState(false);
+  const [reactionModalPosition, setReactionModalPosition] = useState({ x: 0, y: 0 });
+  
   // Refs and animations
   const flatListRef = useRef(null);
   const inputRef = useRef(null);
+  const scaleAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
-
+  
   // Constants
   const defaultImage = require('@/assets/images/Defaults/default-user.png');
+  const reactions = {'❤️': 'LOVE', '😂': 'HAHA', '😢': 'SAD', '😡': 'ANGRY', '👍': 'LIKE'};
 
   // Utility functions
   const isImageFile = (url) => {
@@ -115,6 +139,9 @@ export default function ChatDetailScreen() {
       case 'UPDATE_STATUS':
         handleStatusUpdate(messageDTO);
         break;
+      case 'REACTION':
+        handleReactionUpdate(messageDTO);
+        break;
       default:
         console.log('Unknown event type:', eventType);
     }
@@ -131,13 +158,12 @@ export default function ChatDetailScreen() {
       createdAt: new Date(messageData.sentAt),
       user: {
         _id: messageData.senderId,
-        name: messageData.senderId === currentUser?.userId 
-          ? currentUser?.name || 'You'
-          : otherUser?.name || 'Unknown',
+        name: messageData.senderName || 'Unknown',
         avatar: avatar
       },
       edited: messageData.edited || false,
       status: messageData.status || 'SENT',
+      reactions: messageData.reactions || {},
       replyToMessage: messageData.replyToMessage || null,
       ...(messageData.file && {
         ...(isImageFile(messageData.content) ? {
@@ -185,6 +211,16 @@ export default function ChatDetailScreen() {
     );
   };
 
+  const handleReactionUpdate = (reactionData) => {
+    setMessages(prev => 
+      prev.map(msg => 
+        msg._id === reactionData.messageId 
+          ? { ...msg, reactions: reactionData.reactions }
+          : msg
+      )
+    );
+  };
+
   // Load chat data
   useEffect(() => {
     if (chatid) {
@@ -203,11 +239,11 @@ export default function ChatDetailScreen() {
       const otherUserId = chatData.user1Id === currentUser?.userId ? chatData.user2Id : chatData.user1Id;
       const { getUserById } = await import('@/services/userService');
       const otherUserData = await getUserById(otherUserId);
-
+      
       setOtherUser(otherUserData);
 
       const messagesArray = Array.isArray(messagesData) ? messagesData : (messagesData.content || []);
-
+      console.log('Loaded messages:', messagesArray);
       const totalPages = messagesData.totalPages || 1;
       const currentPageNum = messagesData.number || 0;
 
@@ -220,15 +256,14 @@ export default function ChatDetailScreen() {
         createdAt: new Date(msg.sentAt),
         user: {
           _id: msg.senderId,
-          name: msg.senderId === currentUser?.userId 
-            ? currentUser?.name || 'You'
-            : otherUserData?.name || 'Unknown',
+          name: msg.senderName,
           avatar: msg.senderId === currentUser?.userId 
             ? currentUser?.profilePictureURL || defaultImage
             : otherUserData?.profilePictureURL || defaultImage
         },
         edited: msg.edited || false,
         status: msg.status || 'SENT',
+        reactions: msg.reactions || {},
         replyToMessage: msg.replyToMessage || null,
         ...(msg.file && {
           ...(isImageFile(msg.content) ? {
@@ -336,15 +371,14 @@ export default function ChatDetailScreen() {
           createdAt: new Date(msg.sentAt),
           user: {
             _id: msg.senderId,
-            name: msg.senderId === currentUser?.userId 
-              ? currentUser?.name || 'You'
-              : otherUser?.name || 'Unknown',
+            name: msg.senderName,
             avatar: msg.senderId === currentUser?.userId 
               ? currentUser?.profilePictureURL || defaultImage
               : otherUser?.profilePictureURL || defaultImage
           },
           edited: msg.edited || false,
           status: msg.status || 'SENT',
+          reactions: msg.reactions || {},
           replyToMessage: msg.replyToMessage || null,
           ...(msg.file && {
             ...(isImageFile(msg.content) ? {
@@ -371,11 +405,83 @@ export default function ChatDetailScreen() {
 
   // Message interactions
   const handleLongPress = useCallback((message, event) => {
+    const { pageX, pageY } = event.nativeEvent;
     setSelectedMessage(message);
-    setShowMessageActions(true);
+    setReactionModalPosition({ 
+      x: Math.max(10, Math.min(pageX - 150, screenWidth - 320)), 
+      y: Math.max(100, pageY - 60) 
+    });
+    setShowReactionModal(true);
+    
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
     
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
   }, []);
+
+  const handleReaction = useCallback(async (reaction) => {
+    if (!selectedMessage) return;
+
+    // Get the string value for the reaction
+    const reactionString = reactions[reaction];
+    if (!reactionString) return;
+
+    try {
+      setMessages(prev => 
+        prev.map(msg => {
+          if (msg._id === selectedMessage._id) {
+            const msgReactions = { ...msg.reactions };
+            const currentUserId = currentUser.userId.toString();
+            
+            if (msgReactions[reaction]) {
+              if (msgReactions[reaction].includes(currentUserId)) {
+                msgReactions[reaction] = msgReactions[reaction].filter(id => id !== currentUserId);
+                if (msgReactions[reaction].length === 0) {
+                  delete msgReactions[reaction];
+                }
+              } else {
+                msgReactions[reaction].push(currentUserId);
+              }
+            } else {
+              msgReactions[reaction] = [currentUserId];
+            }
+            
+            return { ...msg, reactions: msgReactions };
+          }
+          return msg;
+        })
+      );
+
+      await reactToMessage(selectedMessage._id, reactionString);
+    } catch (error) {
+      console.error('Error adding reaction:', error);
+      showToast('error', 'Error', 'Failed to add reaction');
+      
+      // Revert the optimistic update on error
+      setMessages(prev => 
+        prev.map(msg => {
+          if (msg._id === selectedMessage._id) {
+            return selectedMessage; // Revert to original message
+          }
+          return msg;
+        })
+      );
+    } finally {
+      closeReactionModal();
+    }
+  }, [selectedMessage, currentUser]);
+
+  const closeReactionModal = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowReactionModal(false);
+      setSelectedMessage(null);
+    });
+  };
 
   // Message sending
   const onSend = useCallback(async () => {
@@ -400,6 +506,7 @@ export default function ChatDetailScreen() {
               name: currentUser?.name || 'Unknown',
               avatar: currentUser?.profilePictureURL || defaultImage
             },
+            reactions: {},
             replyToMessage: replyToMessage,
             status: 'SENT'
           };
@@ -419,14 +526,17 @@ export default function ChatDetailScreen() {
   // Message actions
   const handleReplyMessage = () => {
     setReplyToMessage(selectedMessage);
+    setShowMessageActions(false);
     setSelectedMessage(null);
+    closeReactionModal();
   };
 
   const handleEditMessage = () => {
     if (!selectedMessage || !selectedMessage.text) return;
     setEditText(selectedMessage.text);
     setShowEditInput(true);
-    setSelectedMessage(null);
+    setShowMessageActions(false);
+    closeReactionModal();
   };
 
   const handleDeleteMessage = async () => {
@@ -444,7 +554,7 @@ export default function ChatDetailScreen() {
             try {
               await deleteMessage(selectedMessage._id);
               setMessages(prev => prev.filter(msg => msg._id !== selectedMessage._id));
-              setSelectedMessage(null);
+              closeReactionModal();
             } catch (error) {
               console.error('Error deleting message:', error);
               showToast('error', 'Error', 'Failed to delete message');
@@ -628,17 +738,14 @@ export default function ChatDetailScreen() {
   // Render functions
   const renderMessage = ({ item: message }) => {
     const isCurrentUser = message.user._id === currentUser?.userId;
-    console.log('Rendering message:', message);
+    const hasReactions = Object.keys(message.reactions || {}).length > 0;
 
     return (
       <View style={[styles.messageContainer, isCurrentUser ? styles.messageContainerRight : styles.messageContainerLeft]}>
         {!isCurrentUser && (
-          <Image 
-            source={otherUser?.profilePictureURL ? { uri: otherUser.profilePictureURL } : defaultImage}
-            style={styles.avatar} 
-          />
+          <Image source={{ uri: message.user.avatar }} style={styles.avatar} />
         )}
-
+        
         <View style={[styles.messageWrapper, isCurrentUser ? styles.messageWrapperRight : styles.messageWrapperLeft]}>
           {/* Reply Preview */}
           {message.replyToMessage && (
@@ -647,44 +754,39 @@ export default function ChatDetailScreen() {
               <View style={styles.replyContent}>
                 <Text style={styles.replyAuthor}>{message.replyToMessage.user.name}</Text>
                 <Text style={styles.replyText} numberOfLines={1}>
-                  {message.replyToMessage.text ||
-                   (message.replyToMessage.image ? '📷 Photo' :
-                    message.replyToMessage.file ? `📄 ${message.replyToMessage.file.name}` : 'Media')}
+                  {message.replyToMessage.text || 'File'}
                 </Text>
               </View>
             </View>
           )}
 
-            {/* Message Content */}
-            <TouchableOpacity
-                style={[styles.messageBubble, isCurrentUser ? styles.messageBubbleRight : styles.messageBubbleLeft]}
-                onLongPress={(event) => handleLongPress(message, event)}
-                activeOpacity={0.8}
-            >
+          {/* Message Content */}
+          <TouchableOpacity
+            style={[styles.messageBubble, isCurrentUser ? styles.messageBubbleRight : styles.messageBubbleLeft]}
+            onLongPress={(event) => handleLongPress(message, event)}
+            activeOpacity={0.8}
+          >
             {/* Image Message */}
             {message.image && (
-                <TouchableOpacity
-                    onPress={() => handleImagePress(message.image)}
-                    activeOpacity={0.8}
-                >
-                    <Image source={{ uri: message.image }} style={styles.messageImage} />
-                </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleImagePress(message.image)} activeOpacity={0.8}>
+                <Image source={{ uri: message.image }} style={styles.messageImage} />
+              </TouchableOpacity>
             )}
 
             {/* File Message */}
             {message.file && (
-              <TouchableOpacity
+              <TouchableOpacity 
                 style={styles.fileContainer}
                 onPress={() => handleFilePress(message.file.url)}
                 activeOpacity={0.7}
               >
-                <Ionicons name="document-outline" size={16} color="#918CE5" />
+                <Ionicons name="document-outline" size={32} color="#007AFF" />
                 <View style={styles.fileInfo}>
                   <Text style={styles.fileName} numberOfLines={1}>
                     {message.file.name}
                   </Text>
                   <Text style={styles.fileType}>
-                    {message.file.type} • Tap to open
+                    {message.file.type} • Tap to download
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -697,6 +799,25 @@ export default function ChatDetailScreen() {
               </Text>
             )}
           </TouchableOpacity>
+
+          {/* Reactions */}
+          {hasReactions && (
+            <View style={[styles.reactionsContainer, isCurrentUser ? styles.reactionsRight : styles.reactionsLeft]}>
+              {Object.entries(message.reactions).map(([reaction, userIds]) => (
+                <TouchableOpacity
+                  key={reaction}
+                  style={[
+                    styles.reactionBubble,
+                    userIds.includes(currentUser.userId.toString()) && styles.reactionBubbleActive
+                  ]}
+                  onPress={() => handleReaction(reaction)}
+                >
+                  <Text style={styles.reactionEmoji}>{reaction}</Text>
+                  <Text style={styles.reactionCount}>{userIds.length}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
 
           {/* Message Footer */}
           <View style={[styles.messageFooter, isCurrentUser ? styles.messageFooterRight : styles.messageFooterLeft]}>
@@ -713,12 +834,12 @@ export default function ChatDetailScreen() {
             {isCurrentUser && (
               <View style={styles.statusIndicator}>
                 {message.status === 'SENT' && (
-                  <Ionicons name="checkmark" size={12} color="#918CE5" />
+                  <Ionicons name="checkmark" size={12} color="#007AFF" />
                 )}
                 {message.status === 'DELIVERED' && (
                   <View style={styles.doubleCheck}>
-                    <Ionicons name="checkmark" size={12} color="#918CE5" />
-                    <Ionicons name="checkmark" size={12} color="#918CE5" style={styles.secondCheck} />
+                    <Ionicons name="checkmark" size={12} color="#007AFF" />
+                    <Ionicons name="checkmark" size={12} color="#007AFF" style={styles.secondCheck} />
                   </View>
                 )}
                 {message.status === 'read' && (
@@ -740,58 +861,23 @@ export default function ChatDetailScreen() {
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <Ionicons name="arrow-back" size={24} color="#918CE5" />
       </TouchableOpacity>
-
-      {selectedMessage ? (
-        // Action Header when message is selected
-        <View style={styles.actionHeader}>
-          <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.headerActionButton} onPress={handleReplyMessage}>
-              <Ionicons name="arrow-undo" size={24} color="#918CE5" />
-            </TouchableOpacity>
-
-            {selectedMessage?.user._id === currentUser?.userId && (
-              <>
-                <TouchableOpacity style={styles.headerActionButton} onPress={handleEditMessage}>
-                  <Ionicons name="create-outline" size={24} color="#918CE5" />
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.headerActionButton} onPress={handleDeleteMessage}>
-                  <Ionicons name="trash-outline" size={24} color="#FF3B30" />
-                </TouchableOpacity>
-              </>
-            )}
-
-            <TouchableOpacity
-              style={styles.headerActionButton}
-              onPress={() => {
-                setSelectedMessage(null);
-                setShowMessageActions(false);
-              }}
-            >
-                <Ionicons name="close" size={24} color="#666" />
-            </TouchableOpacity>
-          </View>
+      <TouchableOpacity 
+        style={styles.headerInfo} 
+        onPress={() => router.push(`/Chat/Profile/${otherUser?.userId}?chatId=${chatid}`)}
+      >
+        <Image
+          source={otherUser?.profilePictureURL ? { uri: otherUser.profilePictureURL } : defaultImage}
+          style={styles.userAvatar}
+        />
+        <View>
+          <Text style={styles.headerTitle}>
+            {otherUser?.name || 'Loading...'}
+          </Text>
+          <Text style={styles.headerSubtitle}>
+            {otherUser?.online ? 'Online' : 'Offline'}
+          </Text>
         </View>
-      ) : (
-        // Normal Header
-        <TouchableOpacity
-            style={styles.headerInfo}
-            onPress={() => router.push(`/Chat/Profile/${otherUser?.userId}?chatId=${chatid}`)}
-        >
-          <Image
-            source={otherUser?.profilePictureURL ? { uri: otherUser.profilePictureURL } : defaultImage}
-            style={styles.userAvatar}
-          />
-          <View>
-            <Text style={styles.headerTitle}>
-              {otherUser?.name || 'Loading...'}
-            </Text>
-            <Text style={styles.headerSubtitle}>
-              {otherUser?.online ? 'Online' : 'Offline'}
-            </Text>
-          </View>
-        </TouchableOpacity>
-      )}
+      </TouchableOpacity>
     </View>
   );
 
@@ -816,7 +902,7 @@ export default function ChatDetailScreen() {
               autoFocus={true}
             />
             <TouchableOpacity style={styles.saveButton} onPress={saveEditedMessage}>
-              <Ionicons name="checkmark" size={24} color="#918CE5" />
+              <Ionicons name="checkmark" size={24} color="#007AFF" />
             </TouchableOpacity>
           </View>
         </View>
@@ -824,50 +910,37 @@ export default function ChatDetailScreen() {
     }
 
     return (
-      <View style={styles.inputContainer}>
-        <View style={styles.inputToolbar}>
-          {/* Left Action Buttons */}
-          <TouchableOpacity onPress={handlePickFile} style={styles.actionButton}>
-            <Ionicons name="attach" size={24} color="#918CE5" />
+      <View style={styles.inputToolbar}>
+        <View style={styles.inputRow}>
+          <TouchableOpacity onPress={handlePickFile} style={styles.clipButton}>
+            <Ionicons name="attach" size={28} color="#918CE5" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleImagePick} style={styles.actionButton}>
-            <Ionicons name="camera" size={24} color="#918CE5" />
+          <TouchableOpacity onPress={handleImagePick} style={styles.clipButton}>
+            <Ionicons name="image-outline" size={28} color="#918CE5" />
           </TouchableOpacity>
           
-          {/* Message Input Container */}
-          <View style={styles.messageInputContainer}>
-            <TextInput
-              ref={inputRef}
-              style={styles.messageInput}
-              value={inputText}
-              onChangeText={setInputText}
-              placeholder="Message"
-              placeholderTextColor="#999"
-              multiline
-              maxLength={500}
-              textAlignVertical="center"
-              onFocus={() => {
-                setTimeout(() => {
-                  flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
-                }, 100);
-              }}
-            />
-          </View>
+          <TextInput
+            ref={inputRef}
+            style={styles.textInput}
+            value={inputText}
+            onChangeText={setInputText}
+            placeholder="Type a message..."
+            placeholderTextColor="#999"
+            multiline
+            maxLength={500}
+            onFocus={() => {
+              setTimeout(() => {
+                flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+              }, 100);
+            }}
+          />
           
-          {/* Send Button */}
-          <TouchableOpacity
-            onPress={onSend}
-            style={[
-              styles.sendButton,
-              {
-                opacity: inputText.trim() ? 1 : 0.5,
-                backgroundColor: inputText.trim() ? '#918CE5' : '#CCC'
-              }
-            ]}
+          <TouchableOpacity 
+            onPress={onSend} 
+            style={[styles.sendButton, { opacity: inputText.trim() ? 1 : 0.5 }]} 
             disabled={!inputText.trim() || uploadingFiles}
-            activeOpacity={0.8}
           >
-            <Ionicons name="send" size={20} color="#FFFFFF" />
+            <Ionicons name="send" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
       </View>
@@ -882,9 +955,7 @@ export default function ChatDetailScreen() {
         <View style={styles.replyContent}>
           <Text style={styles.replyLabel}>Replying to {replyToMessage.user.name}</Text>
           <Text style={styles.replyText} numberOfLines={1}>
-            {replyToMessage.text || 
-             (replyToMessage.image ? '📷 Photo' : 
-              replyToMessage.file ? `📄 ${replyToMessage.file.name}` : 'Media')}
+            {replyToMessage.text || 'File'}
           </Text>
         </View>
         <TouchableOpacity onPress={cancelReply} style={styles.replyCancel}>
@@ -898,54 +969,131 @@ export default function ChatDetailScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#918CE5" />
+        <ActivityIndicator size="large" color="#007AFF" />
         <Text style={styles.loadingText}>Loading chat...</Text>
       </View>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={100}
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       {renderHeader()}
       {renderReplyPreview()}
-        <View style={styles.chatContent}>
-            <FlatList
-                ref={flatListRef}
-                data={messages}
-                keyExtractor={(item) => item._id.toString()}
-                renderItem={renderMessage}
-                inverted
-                showsVerticalScrollIndicator={false}
-                onEndReached={loadEarlierMessages}
-                onEndReachedThreshold={0.1}
-                ListFooterComponent={
-                    loadingEarlier ? (
-                    <View style={styles.loadEarlierContainer}>
-                        <ActivityIndicator size="small" color="#918CE5" />
-                        <Text style={styles.loadEarlierText}>Loading earlier messages...</Text>
-                    </View>
-                    ) : hasMoreMessages ? (
-                    <TouchableOpacity style={styles.loadEarlierButton} onPress={loadEarlierMessages}>
-                        <Text style={styles.loadEarlierButtonText}>Load Earlier Messages</Text>
-                    </TouchableOpacity>
-                    ) : null
-                }
-                contentContainerStyle={styles.messagesList}
-                keyboardShouldPersistTaps="handled"
-            />
-        </View>
-
+      
+      <View style={styles.chatContent}>
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(item) => item._id.toString()}
+          renderItem={renderMessage}
+          inverted
+          showsVerticalScrollIndicator={false}
+          onEndReached={loadEarlierMessages}
+          onEndReachedThreshold={0.1}
+          ListFooterComponent={
+            loadingEarlier ? (
+              <View style={styles.loadEarlierContainer}>
+                <ActivityIndicator size="small" color="#007AFF" />
+                <Text style={styles.loadEarlierText}>Loading earlier messages...</Text>
+              </View>
+            ) : hasMoreMessages ? (
+              <TouchableOpacity style={styles.loadEarlierButton} onPress={loadEarlierMessages}>
+                <Text style={styles.loadEarlierButtonText}>Load Earlier Messages</Text>
+              </TouchableOpacity>
+            ) : null
+          }
+          contentContainerStyle={styles.messagesList}
+          keyboardShouldPersistTaps="handled"
+        />
+      </View>
+      
       {renderInputToolbar()}
+      
+      {/* Enhanced Reaction Modal */}
+      <Modal
+        visible={showReactionModal}
+        transparent
+        animationType="none"
+        onRequestClose={closeReactionModal}
+      >
+        <TouchableOpacity 
+          style={styles.reactionModalOverlay}
+          activeOpacity={1}
+          onPress={closeReactionModal}
+        >
+          <Animated.View
+            style={[
+              styles.reactionModal,
+              {
+                transform: [{ scale: scaleAnim }],
+                left: reactionModalPosition.x,
+                top: reactionModalPosition.y,
+              }
+            ]}
+          >
+            <View style={styles.reactionRow}>
+              {Object.keys(reactions).map((reaction) => (
+                <TouchableOpacity
+                  key={reaction}
+                  style={styles.reactionButton}
+                  onPress={() => handleReaction(reaction)}
+                >
+                  <Text style={styles.reactionEmoji}>{reaction}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            
+            <View style={styles.actionRow}>
+              <TouchableOpacity 
+                style={styles.actionRowButton}
+                onPress={() => {
+                  closeReactionModal();
+                  handleReplyMessage();
+                }}
+              >
+                <Ionicons name="arrow-undo-outline" size={24} color="#007AFF" />
+                <Text style={styles.actionRowText}>Reply</Text>
+              </TouchableOpacity>
+              
+              {selectedMessage?.user._id === currentUser?.userId && !selectedMessage?.file && !selectedMessage?.image && (
+                <TouchableOpacity 
+                  style={styles.actionRowButton}
+                  onPress={() => {
+                    closeReactionModal();
+                    handleEditMessage();
+                  }}
+                >
+                  <Ionicons name="create-outline" size={24} color="#007AFF" />
+                  <Text style={styles.actionRowText}>Edit</Text>
+                </TouchableOpacity>
+              )}
+              
+              {selectedMessage?.user._id === currentUser?.userId && (
+                <TouchableOpacity 
+                  style={styles.actionRowButton}
+                  onPress={() => {
+                    closeReactionModal();
+                    handleDeleteMessage();
+                  }}
+                >
+                  <Ionicons name="trash-outline" size={24} color="#FF3B30" />
+                  <Text style={[styles.actionRowText, {color: '#FF3B30'}]}>Delete</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </Animated.View>
+        </TouchableOpacity>
+      </Modal>
 
       {/* Upload Progress Indicator */}
       {uploadingFiles && (
         <View style={styles.uploadIndicator}>
-            <ActivityIndicator size="small" color="#918CE5" />
-            <Text style={styles.uploadText}>Uploading file...</Text>
+          <ActivityIndicator size="small" color="#007AFF" />
+          <Text style={styles.uploadText}>Uploading file...</Text>
         </View>
       )}
     </KeyboardAvoidingView>
@@ -980,7 +1128,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   loadEarlierButtonText: {
-    color: '#918CE5',
+    color: '#007AFF',
     fontSize: 14,
     fontWeight: '500',
   },
@@ -1023,7 +1171,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   messageBubbleRight: {
-    backgroundColor: '#918CE5',
+    backgroundColor: '#007AFF',
     borderBottomRightRadius: 4,
   },
   messageBubbleLeft: {
@@ -1052,7 +1200,7 @@ const styles = StyleSheet.create({
   },
   replyLine: {
     width: 3,
-    backgroundColor: '#918CE5',
+    backgroundColor: '#007AFF',
     borderRadius: 1.5,
     marginRight: 8,
   },
@@ -1063,12 +1211,45 @@ const styles = StyleSheet.create({
   replyAuthor: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#918CE5',
+    color: '#007AFF',
   },
   replyText: {
     fontSize: 14,
     color: '#666',
     marginTop: 2,
+  },
+  reactionsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 4,
+  },
+  reactionsRight: {
+    justifyContent: 'flex-end',
+  },
+  reactionsLeft: {
+    justifyContent: 'flex-start',
+  },
+  reactionBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F0F0',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginRight: 4,
+    marginTop: 2,
+  },
+  reactionBubbleActive: {
+    backgroundColor: '#007AFF',
+  },
+  reactionEmoji: {
+    fontSize: 16,
+  },
+  reactionCount: {
+    fontSize: 12,
+    marginLeft: 4,
+    color: '#666',
+    fontWeight: '500',
   },
   inputToolbar: {
     backgroundColor: '#FFFFFF',
@@ -1099,7 +1280,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#918CE5',
+    backgroundColor: '#007AFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1107,6 +1288,43 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 4,
+  },
+  editInputToolbar: {
+    backgroundColor: '#F8F8F8',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E5EA',
+    padding: 12,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 16,
+  },
+  editHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  editTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  editInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  editInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 16,
+    maxHeight: 100,
+    backgroundColor: '#FFFFFF',
+  },
+  saveButton: {
+    marginLeft: 8,
+    padding: 8,
   },
   replyPreview: {
     backgroundColor: '#F0F0F0',
@@ -1119,11 +1337,55 @@ const styles = StyleSheet.create({
   },
   replyLabel: {
     fontSize: 12,
-    color: '#918CE5',
+    color: '#007AFF',
     fontWeight: 'bold',
   },
   replyCancel: {
     padding: 4,
+  },
+  reactionModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  reactionModal: {
+    position: 'absolute',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    minWidth: 300,
+  },
+  reactionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5EA',
+  },
+  reactionButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#F0F0F0',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingTop: 8,
+  },
+  actionRowButton: {
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  actionRowText: {
+    fontSize: 12,
+    marginTop: 4,
+    color: '#007AFF',
+    fontWeight: '500',
   },
   loadingContainer: {
     flex: 1,
@@ -1144,28 +1406,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5EA',
     backgroundColor: '#FFFFFF',
-    paddingTop: Platform.OS === 'ios' ? 50 : 12,
+    paddingTop: 50,
   },
   backButton: {
     marginRight: 8,
-  },
-  actionHeader: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'flex-end',
-  },
-  headerActionButton: {
-    padding: 8,
-    marginLeft: 8,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   userAvatar: {
     width: 40,
@@ -1196,27 +1440,31 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   fileContainer: {
-    backgroundColor: '#F8F8F8',
-    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E5E5EA',
-    padding: 6,
+    padding: 12,
+    marginVertical: 4,
     flexDirection: 'row',
     alignItems: 'center',
-    width: 200,
-    maxHeight: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   fileInfo: {
-    marginLeft: 6,
+    marginLeft: 8,
     flex: 1,
   },
   fileName: {
-    fontSize: 12,
+    fontSize: 16,
     color: '#333',
     fontWeight: '500',
   },
   fileType: {
-    fontSize: 11,
+    fontSize: 14,
     color: '#666',
     marginTop: 2,
   },
@@ -1249,7 +1497,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   editedTextRight: {
-    color: '#918CE5',
+    color: '#007AFF',
   },
   editedTextLeft: {
     color: '#666',
@@ -1270,87 +1518,5 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginLeft: 8,
     fontSize: 14,
-  },
-  // WhatsApp-style Input Styles
-  inputContainer: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E5EA',
-    paddingBottom: Platform.OS === 'ios' ? 24 : 12,
-  },
-  inputToolbar: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    paddingHorizontal: 4,
-    paddingVertical: 4,
-  },
-  actionButton: {
-    padding: 10,
-    marginRight: 8,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 44,
-    height: 44,
-  },
-  messageInputContainer: {
-    flex: 1,
-    marginHorizontal: 4,
-    backgroundColor: '#F8F8F8',
-    borderRadius: 22,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    maxHeight: 120,
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E5E5EA',
-  },
-  messageInput: {
-    fontSize: 16,
-    lineHeight: 20,
-    color: '#000',
-    textAlignVertical: 'center',
-    minHeight: 20,
-    paddingVertical: 0,
-  },
-  // Edit Input Styles
-  editInputToolbar: {
-    backgroundColor: '#F8F8F8',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E5EA',
-  },
-  editHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  editTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#918CE5',
-  },
-  editInputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-  },
-  editInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#E5E5EA',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 16,
-    maxHeight: 100,
-    backgroundColor: '#FFFFFF',
-  },
-  saveButton: {
-    marginLeft: 8,
-    padding: 8,
   },
 });
