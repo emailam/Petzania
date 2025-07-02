@@ -22,6 +22,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -69,6 +70,9 @@ public class MessageService implements IMessageService {
         if (userChat.isEmpty()) {
             throw new UserAccessDenied("You can only send messages in your own chats");
         }
+
+        chat.setLastMessageTimestamp(LocalDateTime.now());
+        chat = chatRepository.save(chat);
 
         Message message = Message.builder()
                 .chat(chat)

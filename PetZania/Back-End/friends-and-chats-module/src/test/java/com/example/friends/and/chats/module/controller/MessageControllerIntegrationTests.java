@@ -154,7 +154,7 @@ public class MessageControllerIntegrationTests {
                 .chat(chatAB)
                 .user(userA)
                 .pinned(false)
-                .unread(false)
+                .unread(0)
                 .muted(false)
                 .build());
 
@@ -162,7 +162,7 @@ public class MessageControllerIntegrationTests {
                 .chat(chatAB)
                 .user(userB)
                 .pinned(false)
-                .unread(true)
+                .unread(0)
                 .muted(false)
                 .build());
 

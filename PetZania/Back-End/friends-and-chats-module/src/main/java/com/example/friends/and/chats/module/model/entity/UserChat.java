@@ -37,11 +37,14 @@ public class UserChat {
     private User user;
 
     @Column(name = "pinned", nullable = false)
-    private boolean pinned = false;
+    @Builder.Default
+    private Boolean pinned = false;
 
     @Column(name = "unread", nullable = false)
-    private boolean unread = false;
+    @Builder.Default
+    private Integer unread = 0;
 
     @Column(name = "muted", nullable = false)
-    private boolean muted = false;
+    @Builder.Default
+    private Boolean muted = false;
 }

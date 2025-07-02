@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -18,5 +19,5 @@ public class ChatDTO {
     private UUID user1Id;
     private UUID user2Id;
     private LocalDateTime createdAt;
-
+    private LocalDateTime lastMessageTimestamp;
 }

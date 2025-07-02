@@ -38,6 +38,7 @@ public class DTOConversionService implements IDTOConversionService {
                 .user1Id(chat.getUser1().getUserId())
                 .user2Id(chat.getUser2().getUserId())
                 .createdAt(chat.getCreatedAt())
+                .lastMessageTimestamp(chat.getLastMessageTimestamp())
                 .build();
     }
 
@@ -56,6 +57,7 @@ public class DTOConversionService implements IDTOConversionService {
                 .user1(user1)
                 .user2(user2)
                 .createdAt(chatDTO.getCreatedAt())
+                .lastMessageTimestamp(chatDTO.getLastMessageTimestamp())
                 .build();
     }
 
@@ -79,9 +81,9 @@ public class DTOConversionService implements IDTOConversionService {
                 .userChatId(userChat.getUserChatId())
                 .chatId(userChat.getChat().getChatId())
                 .userId(userChat.getUser().getUserId())
-                .pinned(userChat.isPinned())
-                .unread(userChat.isUnread())
-                .muted(userChat.isMuted())
+                .pinned(userChat.getPinned())
+                .unread(userChat.getUnread())
+                .muted(userChat.getMuted())
 
                 .build();
     }
