@@ -18,6 +18,8 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -99,7 +101,9 @@ public class DTOConversionService implements IDTOConversionService {
     }
 
     public MessageDTO mapToMessageDTO(Message message) {
-        if (message == null) return null;
+        if (message == null) {
+            return null;
+        }
 
         return MessageDTO.builder()
                 .messageId(message.getMessageId())
@@ -107,14 +111,24 @@ public class DTOConversionService implements IDTOConversionService {
                 .senderId(message.getSender().getUserId())
                 .content(message.getContent())
                 .replyToMessageId(
-                        message.getReplyTo() != null ? message.getReplyTo().getMessageId() : null
+                        Optional.ofNullable(message.getReplyTo())
+                                .map(Message::getMessageId)
+                                .orElse(null)
                 )
                 .sentAt(message.getSentAt())
                 .status(message.getStatus())
                 .isFile(message.isFile())
                 .isEdited(message.isEdited())
+                .reactions(
+                        Optional.ofNullable(message.getReactions())
+                                .orElseGet(Collections::emptyList)
+                                .stream()
+                                .map(this::mapToMessageReactionDTO)
+                                .toList()
+                )
                 .build();
     }
+
 
     @Override
     public FriendDTO mapToFriendDTO(Friendship friendship, User user) {
