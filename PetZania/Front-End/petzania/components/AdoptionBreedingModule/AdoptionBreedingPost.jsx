@@ -42,8 +42,6 @@ export default function AdoptionBreedingForm() {
   const isFormValid = postType && location && descriptionValue && selectedPetId;
   
   const onSubmit = (data) => {
-    console.log('User in AdoptionBreedingForm:', user.userId);
-    console.log('Form submitted with data:', data);
   createPost(data, {
     onSuccess: (res) => {
       Toast.show({
@@ -55,7 +53,6 @@ export default function AdoptionBreedingForm() {
     },
     onError: (error) => {
       console.error('Error creating post:', error.response?.data?.message || error.message);
-      console.error('Error fetching post details:', error.message);
       Toast.show({
         type: 'error',
         text1: 'Failed to create post',

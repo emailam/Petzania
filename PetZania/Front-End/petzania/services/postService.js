@@ -1,13 +1,26 @@
 import api from "@/api/axiosInstance8082"
 import { useMutation , useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { getPetById } from './petService';
-
 async function fetchPosts(filters, page = 0, pageSize = 10) {
   try {
-    const { data } = await api.get('/pet-posts/filtered', {
-      params: { ...filters, page, pageSize },
+    console.log('Fetching posts for page:', page, 'with filters:', filters); // Debug log
+    
+    // Put pagination parameters in the URL as query parameters
+    // Put filters in the request body
+    const response = await api.post(`/pet-posts/filtered?page=${page}&size=${pageSize}`, {
+      ...filters,
     });
-    return data;
+    
+    console.log('Paginated user posts response:', response.data);
+    const { content, last, number } = response.data;
+    
+    console.log(`Fetched page ${number}, hasNext: ${!last}, items: ${content?.length}`); // Debug log
+    
+    return {
+      posts: content,
+      hasNext: !last,
+      currentPage: number, // Include current page for debugging
+    };
   } catch (error) {
     console.error('Error fetching posts:', error.response?.data?.message || error.message);
     throw error;
@@ -15,41 +28,48 @@ async function fetchPosts(filters, page = 0, pageSize = 10) {
 }
 
 export const useFetchPosts = (filters) => {
-  const newfilters = {
-      ...filters,petPostStatus:"PENDING"}
-  console.log('usePosts called with filters:', newfilters);
+  const newfilters = { ...filters, petPostStatus: "PENDING" };
+  
   return useInfiniteQuery({
     queryKey: ['posts', newfilters],
-    queryFn: ({ pageParam = 0 }) => fetchPosts(newfilters, pageParam),
-    getNextPageParam: (lastPage) => {
-      const next = lastPage.page + 1;
-      const max = Math.ceil(lastPage.totalCount / lastPage.pageSize);
-      return next < max ? next : undefined;
+    queryFn: ({ pageParam = 0 }) => {
+      // Pass pageParam as the page parameter, and include filters
+      console.log('Fetching page:', pageParam); // Add this for debugging
+      return fetchPosts(newfilters, pageParam);
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      // Since pages are 0-indexed, the next page number should be the current length
+      // allPages.length gives us the next page number (0-indexed)
+      return lastPage.hasNext ? allPages.length : undefined;
     },
     staleTime: 1000 * 60 * 2,
-    placeholderData: (previousData) => previousData, // keepPreviousData is now placeholderData
+    placeholderData: previousData => previousData,
   });
 };
 
 async function toggleLike({ postId }) {
   try {
-    const response = await api.put(`/api/posts/${postId}/react`);
+    const response = await api.put(`/pet-posts/${postId}/react`);
     return response.data;
   } catch (error) {
-    // Optionally log, transform, or wrap the error here
+    console.error('Error toggling like:', error.response?.data?.message || error.message);
     throw error;
   }
 }
 
-// Exported React Query mutation hook
 export function useToggleLike() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: toggleLike,
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries(['posts']);
-      queryClient.invalidateQueries(['post', variables.postId]);
+      // Invalidate all posts queries
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      queryClient.invalidateQueries({ queryKey: ['user-posts-infinite'] });
+      queryClient.invalidateQueries({ queryKey: ['post', variables.postId] });
+    },
+    onError: (error) => {
+      console.error('Toggle like failed:', error.response?.data?.message || error.message);
     },
   });
 }
@@ -69,7 +89,6 @@ async function getUserPostsPaginated({ pageParam = 0, userId }) {
       hasNext: !last,
     };
   } catch (error) {
-    //console.error('Error fetching paginated user postaaaaaaaaaaaaaaaas:', error.response?.data?.message || error.message);
     throw error;
   }
 }
@@ -79,7 +98,6 @@ export function useUserPostsInfinite(userId) {
     queryKey: ['user-posts-infinite', userId],
     queryFn: ({ pageParam = 0 }) => getUserPostsPaginated({ pageParam, userId }),
     getNextPageParam: (lastPage, allPages) => {
-      // Customize based on your API response
       return lastPage.hasNext ? allPages.length : undefined;
     },
     enabled: !!userId,
@@ -91,7 +109,6 @@ async function deletePost(postId) {
     const response = await api.delete(`/pet-posts/${postId}`);
     return response.data;
   } catch (error) {
-    //console.error('Error deleting post:', error.response?.data?.message || error.message);
     throw error;
   }
 }
@@ -101,11 +118,14 @@ export function useDeletePost() {
 
   return useMutation({
     mutationFn: deletePost,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userPosts'] });
+    onSuccess: (data, variables) => {
+      // Invalidate all relevant queries
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      queryClient.invalidateQueries({ queryKey: ['user-posts-infinite'] });
+      queryClient.removeQueries({ queryKey: ['post', variables] });
     },
     onError: (error) => {
-      //console.error('Delete post failed:', error.response?.data?.message || error.message);
+      console.error('Delete post failed:', error.response?.data?.message || error.message);
     },
   });
 }
@@ -125,39 +145,77 @@ async function createPost(postData) {
     return response.data;
   } catch (error) {
     console.error('Error creating post:', error.response?.data?.message || error.message);
-    throw error; // re-throw to let React Query or caller handle it
+    throw error;
   }
 }
+
 export function useCreatePost() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: createPost,
+    onSuccess: (data, variables) => {
+      // Invalidate posts queries to show the new post
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      queryClient.invalidateQueries({ queryKey: ['user-posts-infinite'] });
+    },
+    onError: (error) => {
+      console.error('Create post failed:', error.response?.data?.message || error.message);
+    },
   });
 }
+
 async function updatePost(postId, newPostData) {
   try {
     console.log('Updating post with ID:', postId, 'and data:', newPostData);    
-    //console.log('Payload for post update:', payload);
     const response = await api.patch(`/pet-posts/${postId}`, newPostData);
-    //console.log('Post updated successfully:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error updating post:', error.response?.data?.message || error.message);
-    throw error; // re-throw to let React Query or caller handle it
+    throw error;
   }
 }
-export function useUpdatePost() {
+
+export function useUpdatePost(filters, userId) {
+  const qc = useQueryClient();
+
   return useMutation({
-    mutationFn: ({ postId, newPostData }) => updatePost(postId, newPostData),
-    onSuccess: (data, variables) => {
-      //console.log('Post updated successfully:', data);
-      // Optionally invalidate queries or perform other actions
-      // queryClient.invalidateQueries({ queryKey: ['posts'] });
+    mutationFn: ({ postId, newPostData }) =>
+      updatePost(postId, newPostData),
+    onSuccess: (updated, { postId }) => {
+      // 1) Immediately patch the 'posts' infinite list
+      qc.setQueryData(
+        ['posts', filters],
+        old => old && {
+          pageParams: old.pageParams,
+          pages: old.pages.map(page => ({
+            ...page,
+            data: page.data.map(p =>
+              p.id === postId ? { ...p, ...updated } : p
+            )
+          }))
+        }
+      );
+      // 2) Patch the user's infinite list
+      qc.setQueryData(
+        ['user-posts-infinite', userId],
+        old => old && {
+          pageParams: old.pageParams,
+          pages: old.pages.map(page => ({
+            ...page,
+            posts: page.posts.map(p =>
+              p.id === postId ? { ...p, ...updated } : p
+            )
+          }))
+        }
+      );
+      // 3) Invalidate so any other views refetch
+      qc.invalidateQueries(['posts']);
+      qc.invalidateQueries(['user-posts-infinite']);
+      qc.invalidateQueries(['post', postId]);
     },
-    onError: (error) => {
-      //console.error('Error updating post:', error.response?.data?.message || error.message);
-    },
-  })
-  };
+  });
+}
 async function getPostById(postId) {
   try {
     const response = await api.get(`/pet-posts/${postId}`);

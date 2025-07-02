@@ -1,205 +1,446 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
-  Animated,
+  FlatList,
   Dimensions,
-  TouchableOpacity,
-  Text,
   StyleSheet,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl,
+  Platform,
+  SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import PostCard from './PostCard';
+import FilterModal from '@/components/AdoptionBreedingModule/FilterModal';
+import {
+  useFetchPosts,
+  useToggleLike,
+} from '../../services/postService';
+import { getUserById } from '@/services/userService';
+import toast from 'react-native-toast-message';
 
-import LandingImages from '@/components/AdoptionBreedingModule/LandingImages';
-import PostsList from '@/components/AdoptionBreedingModule/PostsList';
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-const { height: screenHeight } = Dimensions.get('window');
-const LANDING_HEIGHT = screenHeight * 0.4;
-const STICKY_THRESHOLD = LANDING_HEIGHT - 100;
+export default function PostScreen({ postType }) {
+  // Responsive calculations
+  const isSmallScreen = screenWidth < 380;
+  const isMediumScreen = screenWidth >= 380 && screenWidth < 768;
+  const isLargeScreen = screenWidth >= 768;
 
-const StickyHeader = ({ visible, postType, onFilterPress, scrollY }) => {
-  const opacity = scrollY.interpolate({
-    inputRange: [STICKY_THRESHOLD - 50, STICKY_THRESHOLD],
-    outputRange: [0, 1],
-    extrapolate: 'clamp',
+  const [filters, setFilters] = useState({
+    species: 'ALL',
+    breed: 'ALL',
+    minAge: 0,
+    maxAge: 1000,
+    sortBy: 'CREATED_DATE',
+    sortDesc: true,
   });
 
-  const translateY = scrollY.interpolate({
-    inputRange: [STICKY_THRESHOLD - 50, STICKY_THRESHOLD],
-    outputRange: [-50, 0],
-    extrapolate: 'clamp',
-  });
+  const [isFilterModalVisible, setFilterModalVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const getPostTypeTitle = () => {
-    const titles = {
-      'ADOPTION': 'Pets for Adoption',
-      'BREEDING': 'Pets for Breeding',
-    };
-    return titles[postType] || 'Posts';
+  const toggleLikeMutation = useToggleLike();
+
+  const titleMap = {
+    ADOPTION: 'Pets for Adoption',
+    BREEDING: 'Pets for Breeding',
   };
+  const title = titleMap[postType] || 'Posts';
 
-  return (
-    <Animated.View
-      style={[
-        styles.stickyHeaderContainer,
-        {
-          opacity,
-          transform: [{ translateY }],
-          pointerEvents: visible ? 'auto' : 'none',
-        },
-      ]}
-    >
-      <View style={styles.stickyHeaderContent}>
-        <View>
-          <Text style={styles.stickyTitle}>{getPostTypeTitle()}</Text>
-        </View>
-        <TouchableOpacity
-          style={styles.stickyFilterButton}
-          onPress={onFilterPress}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="filter" size={18} color="#9188E5" />
-          <Text style={styles.filterText}>Filters</Text>
-        </TouchableOpacity>
-      </View>
-    </Animated.View>
+  const {
+    data,
+    isLoading,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useFetchPosts({ petPostType: postType, ...filters });
+
+  const posts = data?.pages.flatMap(page => (Array.isArray(page.posts) ? page.posts : [])) || [];
+  // Handlers
+  const handlePostLike = useCallback(
+    async postId => {
+      try {
+        await toggleLikeMutation.mutateAsync({ postId });
+      } catch (err) {
+        toast.show({ type: 'error', text1: 'Failed to toggle like' });
+      }
+    },
+    [toggleLikeMutation]
   );
-};
 
-// Main PostScreen component
-export default function PostScreen({ postType = 'ADOPTION' }) {
-  const postsListRef = useRef(null);
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const [showStickyHeader, setShowStickyHeader] = useState(false);
-
-  const handleScroll = Animated.event(
-    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-    {
-      useNativeDriver: false,
-      listener: (event) => {
-        const offsetY = event.nativeEvent.contentOffset.y;
-        const shouldShow = offsetY > STICKY_THRESHOLD;
-
-        setShowStickyHeader(prev => {
-          if (prev !== shouldShow) return shouldShow;
-          return prev;
-        });
-      },
+  const handleGetUserById = useCallback(async userId => {
+    try {
+      return await getUserById(userId);
+    } catch {
+      return null;
     }
-  );
-
-  // Filter button in sticky header opens PostsList's modal
-  const handleFilterPress = useCallback(() => {
-    postsListRef.current?.openFilter?.();
   }, []);
 
+  const handleFilterPress = useCallback(() => setFilterModalVisible(true), []);
+  const handleCloseFilters = useCallback(() => setFilterModalVisible(false), []);
+  const handleApplyFilters = useCallback(newFilters => {
+    setFilters(newFilters);
+    setFilterModalVisible(false);
+    toast.show({ type: 'success', text1: 'Filters applied' });
+  }, []);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
+
+  const renderPost = useCallback(({ item }) => (
+    <View style={[styles.cardWrapper, isLargeScreen && styles.cardWrapperLarge]}>
+      <PostCard
+        showAdvancedFeatures={false}
+        post={item}
+        onPostUpdate={() => {}}
+        onPostDelete={() => {}}
+        onPostLikeToggle={handlePostLike}
+        getUsers={handleGetUserById}
+      />
+    </View>
+  ), [handlePostLike, handleGetUserById, isLargeScreen]);
+
+  const renderFooter = useCallback(() => {
+    if (!hasNextPage) return null;
+    
+    return (
+      <TouchableOpacity
+        onPress={fetchNextPage}
+        style={styles.loadMoreButton}
+        disabled={isFetchingNextPage}
+        activeOpacity={0.8}
+      >
+        {isFetchingNextPage ? (
+          <ActivityIndicator size="small" color="#7C3AED" />
+        ) : (
+          <>
+            <Text style={styles.loadMoreText}>Load More</Text>
+            <Ionicons name="chevron-down" size={20} color="#7C3AED" />
+          </>
+        )}
+      </TouchableOpacity>
+    );
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  const renderEmpty = useCallback(() => (
+    <View style={styles.emptyContainer}>
+      <View style={styles.emptyIconContainer}>
+        <Ionicons 
+          name={postType === 'ADOPTION' ? 'heart-outline' : 'git-branch-outline'} 
+          size={64} 
+          color="#E5E7EB" 
+        />
+      </View>
+      <Text style={styles.emptyText}>No {title} Found</Text>
+      <Text style={styles.emptySubtext}>
+        {postType === 'ADOPTION' 
+          ? 'Check back later for pets looking for their forever homes'
+          : 'No breeding posts available at the moment'}
+      </Text>
+      <TouchableOpacity 
+        style={styles.refreshButton} 
+        onPress={handleRefresh}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="refresh" size={20} color="#7C3AED" />
+        <Text style={styles.refreshButtonText}>Refresh</Text>
+      </TouchableOpacity>
+    </View>
+  ), [postType, title, handleRefresh]);
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#7C3AED" />
+        <Text style={styles.loadingText}>Loading {title}...</Text>
+      </View>
+    );
+  }
+
+  // Error state
+  if (isError) {
+    return (
+      <View style={styles.errorContainer}>
+        <View style={styles.errorIconContainer}>
+          <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
+        </View>
+        <Text style={styles.errorText}>Something went wrong</Text>
+        <Text style={styles.errorSubtext}>Unable to load posts</Text>
+        <TouchableOpacity 
+          style={styles.retryButton} 
+          onPress={refetch}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.retryButtonText}>Try Again</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      <StickyHeader
-        visible={showStickyHeader}
-        postType={postType}
-        onFilterPress={handleFilterPress}
-        scrollY={scrollY}
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={[styles.header, isLargeScreen && styles.headerLarge]}>
+        <View style={styles.headerContent}>
+          <Text style={[styles.headerTitle, isSmallScreen && styles.headerTitleSmall]}>
+            {title}
+          </Text>
+          <TouchableOpacity
+            style={styles.filterButton}
+            onPress={handleFilterPress}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="filter" size={20} color="#7C3AED" />
+            <Text style={styles.filterButtonText}>Filter</Text>
+            {Object.keys(filters).some(key => 
+              (key === 'species' && filters[key] !== 'ALL') ||
+              (key === 'breed' && filters[key] !== 'ALL') ||
+              (key === 'minAge' && filters[key] !== 0) ||
+              (key === 'maxAge' && filters[key] !== 1000)
+            ) && <View style={styles.filterBadge} />}
+          </TouchableOpacity>
+        </View>
+        {posts.length > 0 && (
+          <Text style={styles.postCount}>
+            {posts.length} {posts.length === 1 ? 'pet' : 'pets'} available
+          </Text>
+        )}
+      </View>
+
+      {/* Posts List */}
+      <FlatList
+        data={posts}
+        renderItem={renderPost}
+        keyExtractor={item => item.postId}
+        contentContainerStyle={[
+          styles.listContent,
+          posts.length === 0 && styles.listContentEmpty
+        ]}
+        ListEmptyComponent={renderEmpty}
+        ListFooterComponent={renderFooter}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={['#7C3AED']}
+            tintColor="#7C3AED"
+          />
+        }
+        showsVerticalScrollIndicator={false}
+        initialNumToRender={5}
+        maxToRenderPerBatch={5}
+        windowSize={10}
+        removeClippedSubviews={true}
       />
 
-      <Animated.ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        bounces={true}
-        scrollEventThrottle={16}
-        onScroll={handleScroll}
-      >
-        <View style={styles.landingContainer}>
-          <LandingImages postType={postType} />
-        </View>
-
-        <View style={styles.postsContainer}>
-          <PostsList
-            ref={postsListRef}
-            showHeader={!showStickyHeader}
-            postType={postType}
-          />
-        </View>
-      </Animated.ScrollView>
-    </View>
+      {/* Filter Modal */}
+      <FilterModal
+        visible={isFilterModalVisible}
+        initialFilters={{ ...filters, petPostType: postType }}
+        onApply={handleApplyFilters}
+        onClose={handleCloseFilters}
+      />
+    </SafeAreaView>
+    
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#F9FAFB',
   },
-  scrollView: {
+  loadingContainer: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
   },
-  landingContainer: {
-    height: LANDING_HEIGHT,
-    backgroundColor: '#f9f9f9',
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#6B7280',
   },
-  postsContainer: {
+  errorContainer: {
     flex: 1,
-    minHeight: screenHeight,
-    backgroundColor: '#f9f9f9',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    marginTop: -60,
-    paddingTop: 10,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: 32,
   },
-  stickyHeaderContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-    backgroundColor: 'rgba(249, 249, 249, 0.98)',
+  errorIconContainer: {
+    marginBottom: 16,
+  },
+  errorText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 8,
+  },
+  errorSubtext: {
+    fontSize: 16,
+    color: '#6B7280',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: '#7C3AED',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#7C3AED',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  header: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(238, 238, 238, 0.8)',
-    paddingTop: 50,
-    paddingBottom: 12,
-    elevation: 8,
+    borderBottomColor: '#E5E7EB',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
-  stickyHeaderContent: {
+  headerLarge: {
+    paddingHorizontal: 24,
+  },
+  headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
   },
-  stickyTitle: {
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  headerTitleSmall: {
     fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
   },
-  stickyFilterButton: {
+  filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 12,
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    gap: 6,
+    position: 'relative',
   },
-  filterText: {
-    marginLeft: 6,
+  filterButtonText: {
     fontSize: 14,
-    color: '#9188E5',
     fontWeight: '500',
+    color: '#7C3AED',
+  },
+  filterBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#EF4444',
+  },
+  postCount: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginTop: 8,
+  },
+  listContent: {
+    paddingVertical: 16,
+  },
+  listContentEmpty: {
+    flex: 1,
+  },
+  cardWrapper: {
+    marginBottom: 16,
+  },
+  cardWrapperLarge: {
+    alignItems: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    paddingBottom: 100,
+  },
+  emptyIconContainer: {
+    marginBottom: 24,
+  },
+  emptyText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  refreshButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EDE9FE',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    gap: 8,
+  },
+  refreshButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#7C3AED',
+  },
+  loadMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginVertical: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    gap: 8,
+  },
+  loadMoreText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#7C3AED',
   },
 });

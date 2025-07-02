@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useCallback, useContext } from 'react';
 import {
   View,
   Text,
@@ -11,14 +11,14 @@ import {
 
 } from 'react-native';
 import PostCard from './PostCard';
-import EditPostModal from './EditPostModal';
-import { useUserPostsInfinite } from '../../services/postService';
+import { useUserPostsInfinite, useDeletePost, useUpdatePost, useToggleLike } from '../../services/postService';
 import { UserContext } from '@/context/UserContext';
 
 const UserPosts = () => {
-  const [selectedPost, setSelectedPost] = useState(null);
-  const [editModalVisible, setEditModalVisible] = useState(false);
   const { user } = useContext(UserContext);
+  const deletePostMutation = useDeletePost();
+  const updatePostMutation = useUpdatePost();
+  const toggleLikeMutation = useToggleLike();
   const {
     data,
     isLoading,
@@ -29,26 +29,45 @@ const UserPosts = () => {
     isRefetching,
     error,
   } = useUserPostsInfinite(user.userId);
+
   // Flatten pages and ensure only valid posts are mapped
-  const posts =
-    data?.pages.flatMap((page) => (Array.isArray(page.posts) ? page.posts : []))
-      .filter(Boolean) || [];
+  const posts = data?.pages.flatMap((page) => (Array.isArray(page.posts) ? page.posts : [])).filter(Boolean) || [];
+  const handlePostUpdate = useCallback(async (postId, updatedData) => {
+    try {
+      await updatePostMutation.mutateAsync({ 
+        postId, 
+        newPostData: updatedData 
+      })
+    // Reset mutation state after success
+    } catch (error) {
+      console.error('Failed to update post:', error);
+    }
+  }, [updatePostMutation.mutateAsync]);
 
-  const handlePostPress = (post) => {
-    setSelectedPost(post);
-    setEditModalVisible(true);
-  };
+const handlePostDelete = useCallback(async (postId) => {
+  try {
+    await deletePostMutation.mutateAsync(postId);
+  } catch (error) {
+    console.error('Failed to delete post:', error);
+  }
+}, [deletePostMutation.mutateAsync]);
 
-  const handlePostUpdate = () => {
-    setEditModalVisible(false);
-    setSelectedPost(null);
-  };
+const handlePostLike = useCallback(async (postId) => {
+  try {
+    await toggleLikeMutation.mutateAsync({ postId });
+  } catch (error) {
+    console.error('Failed to toggle like:', error);
+  }
+}, [toggleLikeMutation.mutateAsync]);
 
-  const handlePostDelete = () => {
-    setEditModalVisible(false);
-    setSelectedPost(null);
-  };
-
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#9188E5" />
+        <Text style={styles.loadingText}>Loading posts...</Text>
+      </View>
+    );
+  }
 
   if (error) {
     return (
@@ -84,9 +103,12 @@ const UserPosts = () => {
             {posts.map((post) => (
               <View key={post.postId} style={styles.cardContainer}>
                 <PostCard
-                  onPress={() => handlePostPress(post)}
                   showAdvancedFeatures={true}
-                  post = {post}
+                  post={post}
+                  onPostUpdate={handlePostUpdate}
+                  onPostDelete={handlePostDelete}
+                  onPostLikeToggle={handlePostLike}
+                  onPostDetails={() => {}} 
                 />
               </View>
             ))}
@@ -105,17 +127,6 @@ const UserPosts = () => {
           </>
         )}
       </ScrollView>
-
-      <EditPostModal
-        visible={editModalVisible}
-        onClose={() => {
-          setEditModalVisible(false);
-          setSelectedPost(null);
-        }}
-        post={selectedPost}
-        onUpdate={handlePostUpdate}
-        onDelete={handlePostDelete}
-      />
     </SafeAreaView>
   );
 };

@@ -26,6 +26,7 @@ const processQueue = (error, token = null) => {
 api.interceptors.request.use(
     async (config) => {
         const token = await getToken('accessToken');
+        console.log('Request token:', token);
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }

@@ -1,4 +1,4 @@
-import React, { memo, useState, useCallback } from 'react';
+import React, { memo, useState, useCallback, useContext } from 'react';
 import {
   View,
   Text,
@@ -6,61 +6,54 @@ import {
   StyleSheet,
   TouchableOpacity,
   useWindowDimensions,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getTimeAgo } from '../../services/postService';
 import ToggleLike from './ToggleLike';
-import ToggleInterest from './ToggleInterest';
 import PostDetailsModal from './PostDetailsModal';
 import EditPostModal from './EditPostModal';
+import ReactsModal from './ReactsModal';
+import { UserContext } from '@/context/UserContext';
 
 function PostCard({
   post = null,
-  showAdvancedFeatures = false,
+  showAdvancedFeatures,
   onPostUpdate,
   onPostDelete,
-  onLikeChange,
-  onToggleInterest = () => {},
-  onPostDetails = () => {},
+  onPostLikeToggle,
+  getUsers,
 }) {
-  const { width } = useWindowDimensions();
-  const imageSize = width * 0.30;
-  const detailsMaxWidth = width * 0.70 - 16;
-  
-  // Fix: Check if current user liked the post (you'll need currentUserId)
-  // const initialLikedState = post?.reactedUsersIds?.includes(currentUserId) || false;
-  const initialLikedState = post?.reactedUsersIds?.includes(post?.ownerId) || false; // Temporary fix
-  
-  // Local state
-  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
-  const [editModalVisible, setEditModalVisible] = useState(false);
-  const [isLiked, setIsLiked] = useState(initialLikedState);
-
-  // Null checks
   if (!post) {
-    console.warn('PostCard: Missing required props', { post });
     return null;
   }
 
-  // Pet details with null safety
-  const petName = post?.petDTO?.name || 'Unknown Pet';
-  const petGender = post?.petDTO?.gender?.toLowerCase() || 'male';
-  const petBreed = post?.petDTO?.breed || '—';
-  const petAge = post?.petDTO?.age || '—';
-  const petImage = post?.petDTO?.myPicturesURLs?.[0]
-    ? { uri: post?.petDTO.myPicturesURLs[0] }
-    : require('@/assets/images/Defaults/default-pet.png');
-
+  const { width, height } = useWindowDimensions();
+  const { user } = useContext(UserContext);
+  
+  // Responsive calculations
+  const isSmallScreen = width < 380;
+  const isMediumScreen = width >= 380 && width < 768;
+  const isLargeScreen = width >= 768;
+  
+  // Dynamic image sizing
+  const imageSize = isSmallScreen ? 100 : isMediumScreen ? 120 : 140;
+  
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [reactsModalVisible, setReactsModalVisible] = useState(false);
+  
+  const petDTO = post?.petDTO || {};
   const displayTimeAgo = getTimeAgo(post?.createdAt);
 
   // Handlers
-  const handlePress = useCallback(() => {
+  const handleCardPress = () => {
     if (showAdvancedFeatures) {
       setEditModalVisible(true);
     } else {
       setDetailsModalVisible(true);
     }
-  }, [showAdvancedFeatures]);
+  };
 
   const handleCloseDetailsModal = useCallback(() => {
     setDetailsModalVisible(false);
@@ -70,91 +63,109 @@ function PostCard({
     setEditModalVisible(false);
   }, []);
 
-  const handleLikeChange = useCallback((newLikedState) => {
-    setIsLiked(newLikedState);
-    onLikeChange?.(newLikedState);
-  }, [onLikeChange]);
-
-  const handlePostUpdate = useCallback((updatedPost) => {
-    onPostUpdate?.(updatedPost);
-    setEditModalVisible(false);
-  }, [onPostUpdate]);
-
-  const handlePostDelete = useCallback(() => {
-    onPostDelete?.(post?.postId);
-    setEditModalVisible(false);
-  }, [post?.postId, onPostDelete]);
+  const handleReactsModalPress = useCallback(() => {
+    setReactsModalVisible(true);
+  }, []);
+  
+  const handleReactsModalClose = useCallback(() => {
+    setReactsModalVisible(false);
+  }, []);
 
   return (
     <>
       <TouchableOpacity
-        activeOpacity={0.7}
+        activeOpacity={0.8}
         accessibilityRole="button"
-        accessibilityLabel={`Open ${showAdvancedFeatures ? 'edit' : 'details'} for ${petName}`}
-        onPress={handlePress}
+        accessibilityLabel={`Open ${showAdvancedFeatures ? 'edit' : 'details'} for ${petDTO.name}`}
+        onPress={handleCardPress}
       >
-        <View style={styles.container}>
-          <Image
-            source={petImage}
-            style={[styles.image, { width: imageSize, height: imageSize }]}
-            defaultSource={require('@/assets/images/Defaults/default-pet.png')}
-          />
+        <View style={[styles.container, isLargeScreen && styles.containerLarge]}>
+          <View style={styles.imageContainer}>
+            <Image
+              source={petDTO.myPicturesURLs[0] ? { uri: petDTO.myPicturesURLs[0] } : require('@/assets/images/Defaults/default-pet.png')}
+              style={[styles.image, { width: imageSize, height: imageSize }]}
+            />
+          </View>
 
-          <View style={[styles.details, { maxWidth: detailsMaxWidth }]}>
-            <View style={styles.headerRow}>
-              <View style={styles.nameGenderRow}>
-                <Text style={styles.nameText} numberOfLines={1}>
-                  {petName}
-                </Text>
+          <View style={styles.contentContainer}>
+            {/* Header Section */}
+            <View style={styles.headerSection}>
+              <View style={styles.titleRow}>
+                <View style={styles.nameGenderContainer}>
+                  <Text style={[styles.nameText, isSmallScreen && styles.nameTextSmall]} numberOfLines={1}>
+                    {petDTO.name}
+                  </Text>
+                  <Ionicons
+                    name={petDTO.gender === 'FEMALE' ? 'female' : 'male'}
+                    size={isSmallScreen ? 16 : 18}
+                    color={petDTO.gender === 'MALE' ? '#3B82F6' : '#EC4899'}
+                    style={styles.genderIcon}
+                  />
+                </View>
+                <Text style={styles.timeText}>{displayTimeAgo}</Text>
+              </View>
+
+              {/* Location */}
+              <View style={styles.locationContainer}>
                 <Ionicons
-                  name={petGender === 'female' ? 'female' : 'male'}
-                  size={16}
-                  color={petGender === 'male' ? '#2196F3' : '#E91E63'}
-                  style={styles.genderIcon}
+                  name="location-outline"
+                  size={14}
+                  color="#6B7280"
                 />
-              </View>
-
-              <View style={styles.actionsContainer}>
-                <ToggleLike
-                  post={post}
-                  onLikeChange={handleLikeChange}
-                />
-                <ToggleInterest postId={post?.postId} />
+                <Text style={styles.locationText} numberOfLines={1}>
+                  {post.location}
+                </Text>
               </View>
             </View>
 
-            <Text style={styles.timeText}>{displayTimeAgo}</Text>
-
-            <View style={styles.locationRow}>
-              <Ionicons
-                name="location-outline"
-                size={14}
-                color="#777"
-                style={{ marginRight: 4 }}
-              />
-              <Text style={styles.locationText}>{post?.location}</Text>
-            </View>
-
-            <View style={styles.pillsRow}>
-              <View style={styles.pill}>
-                <Text style={styles.pillText}>{petBreed}</Text>
+            {/* Tags Section */}
+            <View style={styles.tagsContainer}>
+              <View style={styles.tagPrimary}>
+                <Text style={styles.tagTextPrimary}>{petDTO.breed}</Text>
               </View>
-              <View style={styles.pill}>
-                <Text style={styles.pillText}>{petAge}</Text>
+              <View style={styles.tagSecondary}>
+                <Text style={styles.tagTextSecondary}>{petDTO.age}</Text>
               </View>
               {showAdvancedFeatures && (
-                <View style={[styles.pill, styles.postTypePill]}>
-                  <Text style={styles.pillText}>
+                <View style={styles.tagAccent}>
+                  <Text style={styles.tagTextAccent}>
                     {post?.postType?.charAt(0).toUpperCase() + post?.postType?.slice(1).toLowerCase()}
                   </Text>
                 </View>
               )}
             </View>
+
+            {/* Actions Section */}
+            <View style={styles.actionsSection}>
+              <View style={styles.likeContainer}>
+                <ToggleLike
+                  postId={post.postId}
+                  onLikeChange={onPostLikeToggle}
+                  initialLiked={post?.reactedUsersIds?.includes(user.userId)}
+                />
+                <TouchableOpacity
+                  style={styles.reactCountButton}
+                  onPress={handleReactsModalPress}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.reactCountText}>
+                    {post.reactedUsersIds.length}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
         </View>
       </TouchableOpacity>
 
-      {/* Post Details Modal - for regular users */}
+      {/* Modals */}
+      <ReactsModal
+        post={post}
+        visible={reactsModalVisible}
+        onClose={handleReactsModalClose}
+        getUsers={getUsers}
+      />
+
       {!showAdvancedFeatures && (
         <PostDetailsModal
           visible={detailsModalVisible}
@@ -163,14 +174,13 @@ function PostCard({
         />
       )}
 
-      {/* Edit Post Modal - for advanced features/post owners */}
       {showAdvancedFeatures && (
         <EditPostModal
           visible={editModalVisible}
           onClose={handleCloseEditModal}
           post={post}
-          onUpdate={handlePostUpdate}
-          onDelete={handlePostDelete}
+          onUpdate={onPostUpdate}
+          onDelete={onPostDelete}
         />
       )}
     </>
@@ -180,83 +190,142 @@ function PostCard({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderColor: '#ddd',
-    borderWidth: 1,
-    overflow: 'hidden',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    padding: 8,
-    alignItems: 'center',
-    gap: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    padding: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  containerLarge: {
+    maxWidth: 600,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  imageContainer: {
+    marginRight: 12,
   },
   image: {
-    borderRadius: 8
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
   },
-  details: {
-    marginLeft: 8
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  contentContainer: {
+    flex: 1,
     justifyContent: 'space-between',
   },
-  nameGenderRow: {
+  headerSection: {
+    marginBottom: 8,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 4,
+  },
+  nameGenderContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    maxWidth: '75%'
+    flex: 1,
+    marginRight: 8,
   },
   nameText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginRight: 6,
+  },
+  nameTextSmall: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-    flexShrink: 1
   },
   genderIcon: {
-    marginLeft: 8
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8
+    marginTop: 2,
   },
   timeText: {
     fontSize: 12,
-    color: '#888',
-    marginTop: 2
+    color: '#9CA3AF',
+    fontWeight: '400',
   },
-  locationRow: {
+  locationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 3
+    gap: 4,
   },
   locationText: {
-    fontSize: 12,
-    color: '#555'
+    fontSize: 13,
+    color: '#6B7280',
+    flex: 1,
   },
-  pillsRow: {
+  tagsContainer: {
     flexDirection: 'row',
-    marginTop: 6,
-    flexWrap: 'wrap'
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 8,
   },
-  pill: {
-    backgroundColor: '#9188E5',
-    borderRadius: 16,
+  tagPrimary: {
+    backgroundColor: '#EDE9FE',
+    borderRadius: 20,
     paddingVertical: 4,
     paddingHorizontal: 12,
-    marginRight: 8,
-    marginBottom: 4,
   },
-  postTypePill: {
-    backgroundColor: '#9188E5'
+  tagSecondary: {
+    backgroundColor: '#F3F4F6',
+    borderRadius: 20,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
   },
-  pillText: {
+  tagAccent: {
+    backgroundColor: '#DBEAFE',
+    borderRadius: 20,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+  },
+  tagTextPrimary: {
     fontSize: 12,
-    color: 'white'
+    color: '#7C3AED',
+    fontWeight: '500',
+  },
+  tagTextSecondary: {
+    fontSize: 12,
+    color: '#4B5563',
+    fontWeight: '500',
+  },
+  tagTextAccent: {
+    fontSize: 12,
+    color: '#2563EB',
+    fontWeight: '500',
+  },
+  actionsSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  likeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  reactCountButton: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 16,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  reactCountText: {
+    fontSize: 13,
+    color: '#6B7280',
+    fontWeight: '500',
   },
 });
 
@@ -265,7 +334,9 @@ const areEqual = (prev, next) => {
   return (
     prev.post?.postId === next.post?.postId &&
     prev.post?.reacts === next.post?.reacts &&
-    prev.post?.reactedUsersIds?.length === next.post?.reactedUsersIds?.length
+    prev.post?.reactedUsersIds?.length === next.post?.reactedUsersIds?.length &&
+    prev.post?.location === next.post?.location &&
+    prev.post?.createdAt === next.post?.createdAt
   );
 };
 

@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
   Dimensions,
   Animated,
 } from 'react-native';
@@ -115,13 +114,14 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   mainText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    textAlign: 'left', // Left align text
-    textShadowColor: 'rgba(0, 0, 0, 0.8)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 4,
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#fff',
+    opacity: 0.92,                        // Make text a bit less than fully opaque
+    fontFamily: 'System',                  // Replace with your brand font if available, e.g., 'Nunito', 'Baloo', etc.
+    textShadowColor: 'rgba(35, 21, 80, 0.44)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
     lineHeight: 44,
     maxWidth: '70%', // Limit width to left portion of screen
   },
