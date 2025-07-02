@@ -22,6 +22,7 @@ import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -72,7 +73,7 @@ public class ChatService implements IChatService {
                         .chat(chat)
                         .user(user)
                         .pinned(false)
-                        .unread(false)
+                        .unread(0)
                         .muted(false)
                         .build());
             }
@@ -92,8 +93,14 @@ public class ChatService implements IChatService {
             throw new UserNotFound("User not found with id: " + userId);
         }
 
-        return userChatRepository.findByUser_UserId(userId).stream()
-                .map(userChat -> dtoConversionService.mapToChatDTO(userChat.getChat()))
+        Sort sort = Sort.by(
+                Sort.Order.desc("pinned"),
+                Sort.Order.desc("chat.lastMessageTimestamp")
+        );
+        return userChatRepository
+                .findByUser_UserId(userId, sort)
+                .stream()
+                .map(uc -> dtoConversionService.mapToChatDTO(uc.getChat()))
                 .collect(Collectors.toList());
     }
 
@@ -105,9 +112,9 @@ public class ChatService implements IChatService {
     @RateLimiter(name = CHAT_RATE_LIMITER, fallbackMethod = "rateLimitFallbackUpdate")
     public UserChatDTO partialUpdateUserChat(UUID chatId, UUID userId, UpdateUserChatDTO updateUserChatDTO) {
         return userChatRepository.findByChat_ChatIdAndUser_UserId(chatId, userId).map(existingUserChat -> {
-            Optional.of(updateUserChatDTO.isPinned()).ifPresent(existingUserChat::setPinned);
-            Optional.of(updateUserChatDTO.isUnread()).ifPresent(existingUserChat::setUnread);
-            Optional.of(updateUserChatDTO.isMuted()).ifPresent(existingUserChat::setMuted);
+            Optional.ofNullable(updateUserChatDTO.getPinned()).ifPresent(existingUserChat::setPinned);
+            Optional.ofNullable(updateUserChatDTO.getUnread()).ifPresent(existingUserChat::setUnread);
+            Optional.ofNullable(updateUserChatDTO.getMuted()).ifPresent(existingUserChat::setMuted);
 
             UserChat updatedUserChat = userChatRepository.save(existingUserChat);
             return dtoConversionService.mapToUserChatDTO(updatedUserChat);
@@ -145,5 +152,16 @@ public class ChatService implements IChatService {
         }
 
         return dtoConversionService.mapToChatDTO(chat);
+    }
+
+    @Override
+    public UserChatDTO getUserChatById(UUID chatId, UUID userId) {
+        UserChat userChat = userChatRepository
+                .findByChat_ChatIdAndUser_UserId(chatId, userId)
+                .orElseThrow(() -> new UserChatNotFound(
+                        String.format("UserChat not found for chatId=%s and userId=%s", chatId, userId)
+                ));
+
+        return dtoConversionService.mapToUserChatDTO(userChat);
     }
 }

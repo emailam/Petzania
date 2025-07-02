@@ -92,7 +92,7 @@ public class ChatControllerIntegrationTests {
                         .chat(chatAB)
                         .user(userA)
                         .pinned(false)
-                        .unread(false)
+                        .unread(0)
                         .muted(false)
                         .build());
 
@@ -101,7 +101,7 @@ public class ChatControllerIntegrationTests {
                         .chat(chatAB)
                         .user(userB)
                         .pinned(false)
-                        .unread(true)
+                        .unread(0)
                         .muted(false)
                         .build());
     }
@@ -182,6 +182,25 @@ public class ChatControllerIntegrationTests {
     }
 
     @Test
+    void getUserChatByChatId_Success() throws Exception {
+        mockMvc.perform(get("/api/chats/{chatId}/user-chat", chatAB.getChatId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.userChatId").value(userAChatAB.getUserChatId().toString()))
+                .andExpect(jsonPath("$.chatId").value(chatAB.getChatId().toString()))
+                .andExpect(jsonPath("$.userId").value(userA.getUserId().toString()))
+                .andExpect(jsonPath("$.pinned").value(false))
+                .andExpect(jsonPath("$.unread").value(0))
+                .andExpect(jsonPath("$.muted").value(false));
+    }
+
+    @Test
+    void getUserChatByChatId_Success_NonExistentUserChat_ShouldFail() throws Exception {
+        UUID nonExistentUserChatId = UUID.randomUUID();
+        mockMvc.perform(get("/api/chats/{chatId}/user-chat", nonExistentUserChatId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void getUserChats_Success() throws Exception {
 
         mockMvc.perform(get("/api/chats"))
@@ -207,8 +226,8 @@ public class ChatControllerIntegrationTests {
         // Verify the changes were persisted
         UserChat updatedUserChat = userChatRepository.findByChat_ChatIdAndUser_UserId(
                 chatAB.getChatId(), userA.getUserId()).orElseThrow();
-        assertTrue(updatedUserChat.isPinned());
-        assertTrue(updatedUserChat.isMuted());
+        assertTrue(updatedUserChat.getPinned());
+        assertTrue(updatedUserChat.getMuted());
     }
 
     @Test

@@ -15,7 +15,7 @@ public class UserChatDTO {
     private UUID userChatId;
     private UUID chatId;
     private UUID userId;
-    private boolean pinned;
-    private boolean unread;
-    private boolean muted;
+    private Boolean pinned;
+    private Integer unread;
+    private Boolean muted;
 }

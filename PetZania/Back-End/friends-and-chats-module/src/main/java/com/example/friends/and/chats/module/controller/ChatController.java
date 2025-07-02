@@ -50,6 +50,14 @@ public class ChatController {
         return ResponseEntity.ok(chatService.getChatsForUser(userId));
     }
 
+    @Operation(summary = "Get a specific userChat by chat ID for the current user")
+    @GetMapping("{chatId}/user-chat")
+    public ResponseEntity<UserChatDTO> getUserChatByChatId(@PathVariable(name = "chatId") UUID chatId) {
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId = userPrincipal.getUserId();
+        return ResponseEntity.ok(chatService.getUserChatById(chatId, userId));
+    }
+
     @Operation(summary = "Partially update a user chat (like renaming, muting, etc.)")
     @PatchMapping("/{chatId}")
     public ResponseEntity<UserChatDTO> partialUpdateUserChat(@PathVariable(name = "chatId") UUID chatId,
