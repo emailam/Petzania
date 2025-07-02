@@ -234,6 +234,7 @@ public class MessageService implements IMessageService {
                             .orElseThrow(() -> new UserNotFound("User not found")))
                     .reactionType(reactionType)
                     .build();
+            message.getReactions().add(reaction);
         }
 
         MessageReaction messageReaction = messageReactionRepository.save(reaction);
@@ -251,7 +252,11 @@ public class MessageService implements IMessageService {
                 .findByMessage_MessageIdAndUser_UserId(messageId, userId)
                 .orElseThrow(() -> new MessageNotFound("Reaction not found"));
 
+        Message message = messageReaction.getMessage();
+        message.getReactions().remove(messageReaction);
+
         messageReactionRepository.delete(messageReaction);
+
         return dtoConversionService.mapToMessageReactionDTO(messageReaction);
     }
 

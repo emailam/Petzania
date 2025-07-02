@@ -7,6 +7,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -57,7 +58,8 @@ public class Message {
     private boolean isEdited = false;
 
     @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<MessageReaction> reactions;
+    @Builder.Default
+    private List<MessageReaction> reactions = new ArrayList<>();
 
     @PrePersist
     public void onSend() {
