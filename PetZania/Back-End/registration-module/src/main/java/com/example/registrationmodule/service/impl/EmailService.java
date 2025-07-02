@@ -3,37 +3,28 @@ package com.example.registrationmodule.service.impl;
 import com.example.registrationmodule.exception.authenticationAndVerificattion.EmailNotSent;
 import com.example.registrationmodule.model.dto.EmailRequestDTO;
 import com.example.registrationmodule.service.IEmailService;
-import com.sendgrid.Method;
-import com.sendgrid.Request;
-import com.sendgrid.SendGrid;
-import com.sendgrid.helpers.mail.Mail;
-import com.sendgrid.helpers.mail.objects.Content;
-import com.sendgrid.helpers.mail.objects.Email;
 import lombok.AllArgsConstructor;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
-
-import java.io.IOException;
 
 @Service
 @AllArgsConstructor
 public class EmailService implements IEmailService {
-    private final SendGrid sendGrid;
+    private final JavaMailSender javaMailSender;
 
     @Override
     public void sendEmail(EmailRequestDTO request) {
-        Email from = new Email(request.getFrom());
-        Email to = new Email(request.getTo());
-        Content emailContent = new Content("text/plain", request.getBody());
-        String subject = request.getSubject();
-        Mail mail = new Mail(from, subject, to, emailContent);
-        mail.addHeader("X-Priority", "1");
-        Request req = new Request();
+        System.out.println("New Sending email service");
         try {
-            req.setMethod(Method.POST);
-            req.setEndpoint("mail/send");
-            req.setBody(mail.build());
-            sendGrid.api(req);
-        } catch (IOException e) {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(request.getFrom());
+            message.setTo(request.getTo());
+            message.setSubject(request.getSubject());
+            message.setText(request.getBody());
+            
+            javaMailSender.send(message);
+        } catch (Exception e) {
             String errorMessage = "Error sending email: " + e.getMessage();
             throw new EmailNotSent(errorMessage);
         }

@@ -49,8 +49,18 @@ spring:
       expiration:
         86400000
 
-  sendgrid:
-    key: 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
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: petzaniasystem@gmail.com
+    password: hhiyrxqgoamgbzuo
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 
   email:
     sender:
@@ -220,3 +230,5 @@ logging:
   level:
     org.springframework.cache: DEBUG
     org.springframework.data.redis.cache: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web.servlet.DispatcherServlet: DEBUG
