@@ -25,11 +25,11 @@ import { PET_BREEDS } from '@/constants/PETBREEDS';
 import { updatePet, deletePet, getPetById } from '@/services/petService';
 import Toast from 'react-native-toast-message';
 
-const PetDetails = () => {
+export default function PetDetails() {
     const { petId } = useLocalSearchParams();
     const { pets, setPets } = useContext(PetContext);
     const { user: currentUser } = useContext(UserContext);
-    console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaa",currentUser);
+
     const showSuccessMessage = (message) => {
         Toast.show({
             type: 'success',
@@ -87,7 +87,8 @@ const PetDetails = () => {
     const genderOptions = [
         { label: 'Male', value: 'MALE' },
         { label: 'Female', value: 'FEMALE' },
-    ];    const speciesOptions = PETS.map(p => ({ label: p.name, value: p.value }));
+    ];
+    const speciesOptions = PETS.map(p => ({ label: p.name, value: p.value }));
     const breedOptions = species
         ? (PET_BREEDS[species]?.map(b => ({ label: b.name, value: b.name })) || [])
         : [];    // Fetch pet data if not found in context
@@ -127,6 +128,17 @@ const PetDetails = () => {
         }
     }, [pet?.myPicturesURLs]);
 
+    // Sync form data when pet data changes
+    useEffect(() => {
+        if (pet) {
+            setGender(pet.gender || '');
+            setSpecies(pet.species || '');
+            setBreed(pet.breed || '');
+            setDateOfBirth(pet.dateOfBirth || '');
+            setVaccineFiles(pet.myVaccinesURLs || []);
+        }
+    }, [pet]);
+
     const handleInputChange = (key, value) => {
         setPet((prev) => prev ? { ...prev, [key]: value } : null);
         setErrors((prev) => ({ ...prev, [key]: '' }));
@@ -151,7 +163,6 @@ const PetDetails = () => {
                     setCurrentImageIndex(0);
                 }
             } catch (error) {
-                console.error('Error picking image:', error);
                 showErrorMessage('Failed to pick image', 'Please try again');
             } finally {
                 setUploadingImages(false);
@@ -186,7 +197,6 @@ const PetDetails = () => {
                 }
             }
         } catch (error) {
-            console.error('Error picking images:', error);
             showErrorMessage('Failed to pick images', 'Please try again');
         } finally {
             setUploadingImages(false);
@@ -247,7 +257,6 @@ const PetDetails = () => {
             }
             return finalImages;
         } catch (error) {
-            console.error('Error uploading images:', error);
             showErrorMessage('Failed to upload images', 'Please try again');
             return images.filter(isServerImage); // Return only server images if upload fails
         } finally {
@@ -295,14 +304,13 @@ const PetDetails = () => {
                 await Linking.openURL(pdfUri);
             }
         } catch (error) {
-            console.error('Error opening PDF:', error);
             showErrorMessage('Cannot open PDF', 'Unable to open the document');
         }
     };
 
     const handleSaveChanges = async () => {
         if (!pet) return;
-    
+
         const newErrors = {
             name: !pet.name?.trim() ? 'Name is required' : '',
             species: !species?.trim() ? 'Type is required' : '',
@@ -317,30 +325,30 @@ const PetDetails = () => {
 
         try {
             setIsLoading(true);
-            
+
             // Upload images if there are any new ones
             const uploadedImageUrls = await uploadAndSaveImages();
-            
+
             // Upload vaccine files if there are any new ones
             let uploadedVaccineUrls = [];
             if (vaccineFiles.length > 0) {
                 const localVaccineFiles = vaccineFiles.filter(file => file.uri && file.uri.startsWith('file://'));
                 const serverVaccineFiles = vaccineFiles.filter(file => !file.uri || file.uri.startsWith('http'));
-                
+
                 if (localVaccineFiles.length > 0) {
                     const files = localVaccineFiles.map(file => ({
                         uri: file.uri,
                         name: file.name,
                         type: 'application/pdf',
                     }));
-                    
+
                     const uploadedUrls = await uploadFiles(files);
                     uploadedVaccineUrls = [...serverVaccineFiles.map(f => f.uri || f), ...uploadedUrls];
                 } else {
                     uploadedVaccineUrls = serverVaccineFiles.map(f => f.uri || f);
                 }
             }
-            
+
             const petData = {
                 name: pet.name || undefined,
                 description: pet.description || undefined,
@@ -369,7 +377,6 @@ const PetDetails = () => {
             router.back();
         } catch (error) {
             showErrorMessage('Failed to update pet', error);
-            console.error('Error updating pet:', error);
         } finally {
             setIsLoading(false);
         }
@@ -415,11 +422,12 @@ const PetDetails = () => {
                         <Text style={styles.label}>Name{isOwner && <Text style={{ color: 'red' }}>*</Text>}</Text>
                         <TextInput
                             style={[
-                                styles.input, 
+                                styles.input,
                                 errors.name && styles.inputError,
                                 !isOwner && styles.readOnlyInput
                             ]}
                             placeholder="Pet's name"
+                            placeholderTextColor="#999"
                             value={pet?.name || ''}
                             onChangeText={isOwner ? (text) => handleInputChange('name', text) : undefined}
                             editable={isOwner}
@@ -433,6 +441,7 @@ const PetDetails = () => {
                             <Dropdown
                                 style={[styles.input, errors.species && styles.inputError]}
                                 placeholder="Select Type"
+                                placeholderTextColor="#999"
                                 data={speciesOptions}
                                 labelField="label"
                                 valueField="value"
@@ -446,7 +455,7 @@ const PetDetails = () => {
                         ) : (
                             <TextInput
                                 style={[styles.input, styles.readOnlyInput]}
-                                value={species || 'Not specified'}
+                                value={species ? (speciesOptions.find(s => s.value === species)?.label || species) : 'Not specified'}
                                 editable={false}
                             />
                         )}
@@ -463,8 +472,9 @@ const PetDetails = () => {
                                 errors.breed && styles.inputError,
                                 !isOwner && styles.readOnlyInput
                             ]}
-                            placeholder="Enter breed"
-                            value={breed}
+                            placeholder={isOwner ? "Enter breed" : "Not specified"}
+                            placeholderTextColor="#999"
+                            value={breed || (isOwner ? '' : 'Not specified')}
                             onChangeText={isOwner ? (text) => {
                                 setBreed(text);
                                 handleInputChange('breed', text);
@@ -480,6 +490,7 @@ const PetDetails = () => {
                             <Dropdown
                                 style={[styles.input, errors.gender && styles.inputError]}
                                 placeholder="Select Gender"
+                                placeholderTextColor="#999"
                                 data={genderOptions}
                                 labelField="label"
                                 valueField="value"
@@ -492,7 +503,7 @@ const PetDetails = () => {
                         ) : (
                             <TextInput
                                 style={[styles.input, styles.readOnlyInput]}
-                                value={gender || 'Not specified'}
+                                value={gender ? (genderOptions.find(g => g.value === gender)?.label || gender) : 'Not specified'}
                                 editable={false}
                             />
                         )}
@@ -508,6 +519,7 @@ const PetDetails = () => {
                                 !isOwner && styles.readOnlyInput
                             ]}
                             placeholder="Pet's description"
+                            placeholderTextColor="#999"
                             value={pet?.description || ''}
                             onChangeText={isOwner ? (text) => handleInputChange('description', text) : undefined}
                             multiline
@@ -1254,5 +1266,3 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
 });
-
-export default PetDetails;

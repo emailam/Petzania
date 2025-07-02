@@ -210,6 +210,7 @@ const EditProfile = () => {
                     <TextInput
                         style={[styles.input, styles.disabledInput]}
                         placeholder="@username"
+                        placeholderTextColor="#999"
                         value={`@${username}`}
                         editable={false}
                     />
@@ -218,6 +219,7 @@ const EditProfile = () => {
                     <TextInput
                         style={[styles.input, styles.disabledInput]}
                         placeholder="Email"
+                        placeholderTextColor="#999"
                         value={email}
                         editable={false}
                     />
@@ -228,6 +230,7 @@ const EditProfile = () => {
                     <TextInput
                         style={[styles.input, error ? styles.inputError : null]}
                         placeholder="Tyler Gregory Okonma"
+                        placeholderTextColor="#999"
                         value={name}
                         onChangeText={(text) => {
                             setName(text);
@@ -241,6 +244,7 @@ const EditProfile = () => {
                         style={[styles.input, phoneError ? styles.inputError : null]}
                         placeholder="+20 101 234 5678"
                         keyboardType="phone-pad"
+                        placeholderTextColor="#999"
                         value={phoneNumber}
                         onChangeText={(text) => {
                             setPhoneNumber(text);
@@ -253,6 +257,7 @@ const EditProfile = () => {
                     <TextInput
                         style={[styles.input, styles.textArea]}
                         placeholder="About"
+                        placeholderTextColor="#999"
                         multiline
                         value={bio}
                         onChangeText={setBio}

@@ -130,7 +130,7 @@ export default function Followers() {
       <Ionicons name="people-outline" size={60} color="#ccc" />
       <Text style={styles.emptyTitle}>No Followers Yet</Text>
       <Text style={styles.emptySubtitle}>
-        {isOwnProfile 
+        {isOwnProfile
           ? "When people follow you, they'll appear here"
           : `${profileUser?.name || 'This user'} doesn't have any followers yet`
         }
@@ -173,7 +173,7 @@ export default function Followers() {
         onUserPress={handleUserPress}
         keyExtractor={(item) => item.userId}
         onEndReached={loadMoreFollowers}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ padding: 12 }}
         onEndReachedThreshold={0.1}
         refreshControl={
           <RefreshControl

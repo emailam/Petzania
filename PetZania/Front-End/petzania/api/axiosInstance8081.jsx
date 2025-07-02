@@ -61,9 +61,14 @@ api.interceptors.response.use(
                     refreshToken,
                 });
 
-                console.log('New access token:', response.data);
-                const newAccessToken = response.data.accessToken;
-                await saveToken('accessToken', newAccessToken);
+                const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data;
+                if (newAccessToken) {
+                    await saveToken('accessToken', newAccessToken);
+                }
+                if (newRefreshToken) {
+                    await saveToken('refreshToken', newRefreshToken);
+                }
+
                 processQueue(null, newAccessToken);
 
                 originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;

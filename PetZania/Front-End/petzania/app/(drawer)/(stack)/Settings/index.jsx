@@ -262,6 +262,7 @@ export default function Settings() { const router = useRouter();
                         <TextInput
                             style={[styles.modalInput, inputError ? styles.modalInputError : null]}
                             placeholder="Enter your username"
+                            placeholderTextColor="#999"
                             value={usernameInput}
                             onChangeText={(text) => {
                                 setUsernameInput(text);

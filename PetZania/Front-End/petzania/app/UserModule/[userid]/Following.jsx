@@ -173,7 +173,7 @@ export default function Following() {
         keyExtractor={(item) => item.userId}
         onEndReached={loadMoreFollowing}
         onEndReachedThreshold={0.1}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ padding: 12 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

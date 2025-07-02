@@ -157,7 +157,7 @@ export default function FriendsScreen() {
         FooterComponent={<FooterComponent />}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.1}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ padding: 12 }}
         itemStyle={styles.friendItem}
       />
     </View>

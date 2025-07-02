@@ -159,6 +159,7 @@ const ProfileSetUp1 = () => {
                 <TextInput
                     style={[styles.input, error ? styles.inputError : null]}
                     placeholder="Tyler Gregory Okonma"
+                    placeholderTextColor="#999"
                     value={name}
                     onChangeText={(text) => {
                         setName(text);
@@ -171,6 +172,7 @@ const ProfileSetUp1 = () => {
                 <TextInput
                     style={[styles.input, phoneError ? styles.inputError : null]}
                     placeholder="+20 101 234 5678"
+                    placeholderTextColor="#999"
                     keyboardType="phone-pad"
                     value={phoneNumber}
                     onChangeText={(text) => {
@@ -184,6 +186,7 @@ const ProfileSetUp1 = () => {
                 <TextInput
                     style={[styles.input, styles.textArea]}
                     placeholder="About"
+                    placeholderTextColor="#999"
                     multiline
                     value={bio}
                     onChangeText={setBio}

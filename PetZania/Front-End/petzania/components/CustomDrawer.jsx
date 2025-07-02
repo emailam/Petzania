@@ -208,7 +208,8 @@ export default function CustomDrawer(props) {
   );
 }
 
-const styles = StyleSheet.create({  userInfo: {
+const styles = StyleSheet.create({
+  userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
@@ -236,7 +237,7 @@ const styles = StyleSheet.create({  userInfo: {
 
   username: {
     fontSize: 16,
-    color: '#666',
+    color: '#9188E5',
   },
 
   petsSection: {

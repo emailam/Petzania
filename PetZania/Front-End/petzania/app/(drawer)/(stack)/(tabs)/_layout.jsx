@@ -8,7 +8,6 @@ import { Image } from 'expo-image';
 
 
 import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -58,8 +57,8 @@ export default function TabLayout() {
         headerStyle: {
           height: 80,
         },
-        tabBarActiveTintColor: '#5348BD',
-        tabBarInactiveTintColor: '#9188E5',
+        tabBarActiveTintColor: '#9188E5',
+        tabBarInactiveTintColor: '#808B9A',
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
         tabBarPosition: 'bottom',
@@ -83,8 +82,8 @@ export default function TabLayout() {
         name="Home"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol name="house.fill" size={28} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "home" : "home-outline"} size={28} color={color} />
           ),
         }}
       />
@@ -92,8 +91,8 @@ export default function TabLayout() {
         name="Adoption"
         options={{
           title: 'Adoption',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol name="pawprint.fill" size={28} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "paw" : "paw-outline"} size={28} color={color} />
           ),
         }}
       />
@@ -101,8 +100,8 @@ export default function TabLayout() {
         name="Temp/index"
         options={{
           title: 'Post',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol name="add.fill" size={28} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "add-circle" : "add-circle-outline"} size={28} color={color} />
           ),
         }}
       />
@@ -110,8 +109,8 @@ export default function TabLayout() {
         name="Breeding"
         options={{
           title: 'Breeding',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol name="heart.circle.fill" size={28} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "heart" : "heart-outline"} size={28} color={color} />
           ),
         }}
       />
@@ -119,9 +118,9 @@ export default function TabLayout() {
         name="Notifications"
         options={{
           title: 'Notifications',
-          tabBarIcon: ({ color }) => (
+          tabBarIcon: ({ color, focused }) => (
             <View>
-              <IconSymbol name="bell.fill" size={28} color={color} />
+              <Ionicons name={focused ? "notifications" : "notifications-outline"} size={28} color={color} />
               {unreadCount > 0 && (
                 <View style={{
                   position: 'absolute',

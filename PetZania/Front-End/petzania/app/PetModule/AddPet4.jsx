@@ -56,6 +56,7 @@ export default function AddPet4() {
                     <Dropdown
                         style={styles.input}
                         placeholder="Select gender"
+                        placeholderStyle={{ color: '#999' }}
                         data={data}
                         labelField="label"
                         valueField="value"
@@ -81,6 +82,7 @@ export default function AddPet4() {
                     <TextInput
                         style={[styles.input, styles.descriptionInput]}
                         placeholder="Enter description"
+                        placeholderTextColor="#999"
                         value={pet.description}
                         onChangeText={(text) => setPet({ ...pet, description: text })}
                         multiline
@@ -122,6 +124,7 @@ const styles = StyleSheet.create({
         width: '100%',
         height: 50,
         borderWidth: 1,
+        fontSize: 16,
         borderColor: '#9188E5',
         borderRadius: 10,
         paddingHorizontal: 15,

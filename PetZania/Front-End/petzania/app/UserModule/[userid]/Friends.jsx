@@ -173,7 +173,7 @@ export default function Friends() {
         keyExtractor={(item) => item.friendshipId || item.userId}
         onEndReached={loadMoreFriends}
         onEndReachedThreshold={0.1}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ padding: 12 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

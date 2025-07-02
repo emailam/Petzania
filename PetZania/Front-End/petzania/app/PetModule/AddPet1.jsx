@@ -241,7 +241,8 @@ const AddPet1 = () => {
                     <TextInput
                         style={[styles.input, error ? styles.inputError : null]}
                         placeholder="Pet's name"
-                        value={pet.name}
+                        placeholderTextColor="#999"
+                        value={pet.name || ''}
                         onChangeText={(name) => {
                             setPet({ ...pet, name });
                             setError('');
@@ -301,7 +302,6 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         paddingHorizontal: 15,
         fontSize: 16,
-        backgroundColor: '#fff',
     },
     inputError: {
         borderColor: 'red',

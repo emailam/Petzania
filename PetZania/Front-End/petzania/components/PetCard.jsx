@@ -11,6 +11,16 @@ export default function PetCard({ pet }) {
         router.push({ pathname: `/PetModule/${pet.petId}` });
     };
 
+    const formatSpecies = (species) => {
+        if (!species) return '';
+        return species
+            .replace(/_/g, ' ') // Replace underscores with spaces
+            .toLowerCase() // Convert to lowercase first
+            .split(' ') // Split into words
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize each word
+            .join(' '); // Join words back together
+    };
+
     return (
         <TouchableOpacity style={styles.container} onPress={() => {showPetInfo(pet)}} >
             <View style={styles.leftContainer}>
@@ -20,7 +30,7 @@ export default function PetCard({ pet }) {
                         {pet.name}
                     </Text>
                     <Text style={styles.subHeader}>
-                        {pet.species.charAt(0).toUpperCase() + pet.species.slice(1).toLowerCase()} | {pet.breed}
+                        {formatSpecies(pet.species)} | {pet.breed}
                     </Text>
                 </View>
             </View>

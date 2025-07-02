@@ -12,7 +12,7 @@ export default function FormInput({ control, name, errors, icon, ...props }) {
             {icon && <View style={styles.iconContainer}>{icon}</View>}
             <TextInput
               {...props}
-              placeholderTextColor="#989898"
+              placeholderTextColor="#999"
               style={styles.input}
               onChangeText={field.onChange}
               onBlur={() => {

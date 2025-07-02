@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "petzania",
+    "name": "PetZania",
     "slug": "petzania",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/petzania-icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -12,31 +12,43 @@
       "API_BASE_URL_8080": "http://157.230.114.107:8080/api",
       "API_BASE_URL_8081": "http://157.230.114.107:8081/api",
       "API_BASE_URL_8082": "http://157.230.114.107:8082/api",
-      "API_BASE_URL_8083": "http://157.230.114.107:8083/api"
+      "API_BASE_URL_8083": "http://157.230.114.107:8083/api",
+      "router": {},
+      "eas": {
+        "projectId": "bab41ac0-5714-4e1a-8ef7-9a1e560479da"
+      }
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.alivetube.petzania",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
+        "foregroundImage": "./assets/images/petzania-adaptive-icon.png",
+        "backgroundColor": "#9188E5"
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.alivetube.petzania"
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/petzania-favicon.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/petzania-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#9188E5"
         }
       ],
       [

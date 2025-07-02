@@ -6,7 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { Text, View, ActivityIndicator } from 'react-native';
 import 'react-native-reanimated';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
 import CustomHeader from '@/components/CustomHeader';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import AppProviders from '@/components/AppProviders';
@@ -14,18 +14,6 @@ import NotificationToast from '@/components/NotificationToast';
 
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 3,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
-    mutations: {
-      retry: 1,
-    },
-  },
-});
 
 SplashScreen.preventAutoHideAsync();
 
@@ -59,7 +47,6 @@ export default function RootLayout() {
   }
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
         <AppProviders>
           <SafeAreaView style={{ flex: 1 }}>
@@ -126,7 +113,6 @@ export default function RootLayout() {
         </AppProviders>
         <Toast />
       </SafeAreaProvider>
-      </QueryClientProvider>
     </ErrorBoundary>
   );
 }

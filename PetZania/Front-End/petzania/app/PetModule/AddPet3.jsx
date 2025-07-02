@@ -58,6 +58,7 @@ export default function AddPet3() {
                     style={styles.input}
                     value={!allBreeds.some(p => p.name === pet.breed) ? pet.breed : ''}
                     onChangeText={handleManualInput}
+                    placeholderTextColor="#999"
                 />
                 {error ? <Text style={styles.error}>{error}</Text> : null}
                 <Button title="Next" borderRadius={10} fontSize={16} onPress={goToNextStep} />

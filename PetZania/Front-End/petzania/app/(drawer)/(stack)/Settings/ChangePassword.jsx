@@ -95,6 +95,7 @@ export default function ChangePasswordScreen() {
             <TextInput
               style={[styles.input, error ? styles.inputError : null]}
               placeholder="Enter your new password"
+              placeholderTextColor="#999"
               value={newPassword}
               onChangeText={(text) => {
                 setNewPassword(text);
@@ -125,6 +126,7 @@ export default function ChangePasswordScreen() {
             <TextInput
               style={[styles.input, error ? styles.inputError : null]}
               placeholder="Confirm your new password"
+              placeholderTextColor="#999"
               value={confirmPassword}
               onChangeText={(text) => {
                 setConfirmPassword(text);
