@@ -72,7 +72,7 @@ const PostDetailsModal = memo(({
 
   const petData = post.petDTO;
   const images = petData?.myPicturesURLs || [];
-
+  const hasImages = images.length > 0;
   const renderImagePagination = () => {
     if (images.length <= 1) return null;
 
@@ -110,27 +110,35 @@ const PostDetailsModal = memo(({
 
           <ScrollView showsVerticalScrollIndicator={false}>
             {/* Images Section */}
-            {images.length > 0 && (
-              <View style={styles.imageSection}>
-                <ScrollView
-                  horizontal
-                  pagingEnabled
-                  showsHorizontalScrollIndicator={false}
-                  onMomentumScrollEnd={handleImageScroll}
-                  style={styles.imageScrollView}
-                >
-                  {images.map((imageUrl, index) => (
+            <View style={styles.imageSection}>
+                  {hasImages ? (
+                    <>
+                      <ScrollView
+                        horizontal
+                        pagingEnabled
+                        showsHorizontalScrollIndicator={false}
+                        onMomentumScrollEnd={handleImageScroll}
+                        style={styles.imageScrollView}
+                      >
+                        {images.map((imageUrl, index) => (
+                          <Image
+                            key={index}
+                            source={{ uri: imageUrl }}
+                            style={styles.petImage}
+                            resizeMode="cover"
+                          />
+                        ))}
+                      </ScrollView>
+                      {renderImagePagination()}
+                    </>
+                  ) : (
                     <Image
-                      key={index}
-                      source={{ uri: imageUrl }}
+                      source={require('@/assets/images/Defaults/default-pet.png')}
                       style={styles.petImage}
                       resizeMode="cover"
                     />
-                  ))}
-                </ScrollView>
-                {renderImagePagination()}
-              </View>
-            )}
+                  )}
+            </View>
 
             <View style={styles.detailsSection}>
               {/* Pet Name and Gender */}
@@ -155,55 +163,48 @@ const PostDetailsModal = memo(({
               </View>
 
               {/* Pet Details Pills */}
-              <View style={styles.pillsContainer}>
-                {petData?.breed && (
-                  <View style={styles.pill}>
-                    <Text style={styles.pillText}>{petData.breed}</Text>
-                  </View>
-                )}
-                {petData?.age && (
-                  <View style={styles.pill}>
-                    <Text style={styles.pillText}>{petData.age}</Text>
-                  </View>
-                )}
-                {petData?.vaccinated && (
-                  <View style={styles.pill}>
-                    <Text style={styles.pillText}>Vaccinated</Text>
-                  </View>
-                )}
-              </View>
+              {/* Pet Details Pills */}
+<View style={{marginBottom: 20}}>
+  <Text style={styles.sectionLabel}>Pet Details</Text>
+  <View style={styles.pillsContainer}>
+    {petData?.breed && (
+      <View style={styles.pill}>
+        <Text style={styles.pillText}>{petData.breed}</Text>
+      </View>
+    )}
+    {petData?.age && (
+      <View style={styles.pill}>
+        <Text style={styles.pillText}>{petData.age}</Text>
+      </View>
+    )}
+    {petData?.vaccinated && (
+      <View style={styles.pill}>
+        <Text style={styles.pillText}>Vaccinated</Text>
+      </View>
+    )}
+  </View>
+</View>
 
-              {/* Owner Section */}
-              {loading ? (
-                <View style={styles.ownerLoadingContainer}>
-                  <ActivityIndicator size="small" color="#9188E5" />
-                  <Text style={styles.loadingText}>Loading owner info...</Text>
-                </View>
-              ) : ownerDetails ? (
-                <View style={styles.ownerSection}>
-                  <View style={styles.ownerInfo}>
-                    <Image
-                      source={{ 
-                        uri: ownerDetails.profilePictureURL || 'https://via.placeholder.com/40' 
-                      }}
-                      style={styles.ownerAvatar}
-                    />
-                    <Text style={styles.ownerName}>{ownerDetails.name || ownerDetails.username}</Text>
-                  </View>
-                  <TouchableOpacity 
-                    style={styles.chatButton} 
-                    onPress={handleChatPress}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons name="chatbubble-outline" size={20} color="#9188E5" />
-                  </TouchableOpacity>
-                </View>
-              ) : null}
+{/* Owner Section */}
+{(loading || ownerDetails) && (
+  <Text style={styles.sectionLabel}>Owner</Text>
+)}
+{loading ? (
+  <View style={styles.ownerLoadingContainer}>
+    <ActivityIndicator size="small" color="#9188E5" />
+    <Text style={styles.loadingText}>Loading owner info...</Text>
+  </View>
+) : ownerDetails ? (
+  <View style={styles.ownerSection}>
+    {/* ...owner info... */}
+  </View>
+) : null}
 
-              {/* Description */}
-              <Text style={styles.description}>
-                {petData?.description || post.description || 'No description available.'}
-              </Text>
+{/* Description Section */}
+<Text style={styles.sectionLabel}>Description</Text>
+<Text style={styles.description}>
+  {petData?.description || post.description || 'No description available.'}
+</Text>
 
               {/* Adopt Button */}
               <TouchableOpacity 
@@ -224,6 +225,12 @@ const PostDetailsModal = memo(({
 });
 
 const styles = StyleSheet.create({
+  sectionLabel: {
+  fontSize: 14,
+  color: '#374151', // gray-700
+  fontWeight: '500',
+  marginBottom: 8,
+},
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -266,6 +273,7 @@ const styles = StyleSheet.create({
   },
   imageSection: {
     position: 'relative',
+    
   },
   imageScrollView: {
     height: height * 0.4,

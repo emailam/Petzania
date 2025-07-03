@@ -15,6 +15,9 @@ import { UserContext } from '@/context/UserContext';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useCreatePost} from "@/services/postService";
 import Toast from 'react-native-toast-message'; // Adjust the import path as needed
+import Ionicons from '@expo/vector-icons/Ionicons';
+import LottieView from "lottie-react-native";
+
 export default function AdoptionBreedingForm() {
   const {
     control,
@@ -231,7 +234,7 @@ export default function AdoptionBreedingForm() {
             rules={{ required: 'Location is required.' }}
             render={({ field: { value, onChange } }) => (
               <View style={styles.inputWrapper}>
-                <Text style={styles.inputIcon}>📍</Text>
+                <Text style={styles.inputIcon}><Ionicons name="location-sharp" size={24} color="#9188E5" /></Text>
                 <TextInput
                   style={styles.textInput}
                   placeholder="State, Country"
@@ -286,26 +289,44 @@ export default function AdoptionBreedingForm() {
 
       {/* Bottom Action Bar */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity 
-          style={[styles.postButton, (!isFormValid || isPending) && { opacity: 0.6 }]} 
-          onPress={handleSubmit(onSubmit)}
-          disabled={!isFormValid || isPending}
-        >
-        <Text style={styles.postButtonIcon}>
-          {isPending ? <FontAwesome5 name="spinner" size={24} color="white" spin /> : <FontAwesome5 name="telegram-plane" size={24} color="white" />}
-        </Text>
-        <Text style={styles.postButtonText}>
-          {isPending ? 'Posting...' : 'Post'}
-        </Text>
-</TouchableOpacity>
-
-
-      </View>
+  <TouchableOpacity
+    style={[
+      styles.postButton,
+      (!isFormValid || isPending) && { opacity: 0.6 }
+    ]}
+    onPress={handleSubmit(onSubmit)}
+    disabled={!isFormValid || isPending}
+    activeOpacity={0.8}
+  >
+    {isPending ? (
+      <LottieView
+        source={require("@/assets/lottie/loading.json")}
+        autoPlay
+        loop
+        style={styles.lottie}
+      />
+    ) : (
+      <>
+        <FontAwesome5
+          name="telegram-plane"
+          size={24}
+          color="white"
+          style={styles.postButtonIcon}
+        />
+        <Text style={styles.postButtonText}>Post</Text>
+      </>
+    )}
+  </TouchableOpacity>
+</View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  lottie: {
+    width: 70,
+    height: 70,
+  },
   container: {
     flex: 1,
     backgroundColor: '#fff',

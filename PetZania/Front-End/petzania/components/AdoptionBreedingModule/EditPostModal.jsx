@@ -15,7 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { FlatList } from 'react-native-gesture-handler';
 const { height } = Dimensions.get('window');
-
+import { LinearGradient } from 'expo-linear-gradient';
 const EditPostModal = memo(({visible ,onClose, post, onUpdate, onDelete}) => {
 
   if (!post) return null;
@@ -64,13 +64,13 @@ const EditPostModal = memo(({visible ,onClose, post, onUpdate, onDelete}) => {
   const formValid = Object.keys(validateForm()).length === 0;
 
   const handleSave = async () => {
-if (isSaving || isDeleting) return;    
-    // Client-side validation
-    const errors = validateForm();
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
-    }
+  if (isSaving || isDeleting) return;    
+      // Client-side validation
+      const errors = validateForm();
+      if (Object.keys(errors).length > 0) {
+        setFormErrors(errors);
+        return;
+      }
 
     
     setIsSaving(true);
@@ -339,22 +339,29 @@ if (isSaving || isDeleting) return;
 
           {/* Action Buttons */}
           <View style={styles.actionButtons}>
-            {/* Save Button */}
-            <TouchableOpacity
-              onPress={handleSave}
-              disabled={isSaving || isDeleting || !hasChanges() || !formValid}
+          {/* Save Button */}
+          <TouchableOpacity
+            onPress={handleSave}
+            disabled={isSaving || isDeleting || !hasChanges() || !formValid}
+            activeOpacity={0.8}
+            style={styles.saveButtonWrapper}
+          >
+            <LinearGradient
+              colors={['#9188E5', '#7C3AED']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
               style={[
                 styles.saveButton,
                 (isSaving || isDeleting || !hasChanges() || !formValid) && styles.saveButtonDisabled,
               ]}
-              activeOpacity={0.8}
             >
               {isSaving ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
                 <Text style={styles.saveButtonText}>Save Changes</Text>
               )}
-            </TouchableOpacity>
+            </LinearGradient>
+          </TouchableOpacity>
 
             {/* Delete Button */}
             <TouchableOpacity
@@ -380,6 +387,22 @@ if (isSaving || isDeleting) return;
 });
 
 const styles = StyleSheet.create({
+  saveButtonWrapper: {
+  flex: 2,
+  borderRadius: 8,
+  overflow: 'hidden',
+},
+saveButton: {
+  // Remove backgroundColor: '#9188E5',
+  paddingVertical: 14,
+  borderRadius: 8,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+saveButtonDisabled: {
+  // Change from backgroundColor to opacity only
+  opacity: 0.6,
+},
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -397,8 +420,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    // HEADER BACKGROUND REMOVED - These lines were removed:
+    // borderBottomWidth: 1,
+    // borderBottomColor: '#e0e0e0',
+    // The header now has no border/background separation
   },
   headerTitle: {
     fontSize: 18,
@@ -410,7 +435,9 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 16,
+    // MODAL CONTENT WIDTH ADJUSTMENT
+    // Original: padding: 16,
+    padding: 8, // Reduced padding for wider content area
   },
   sectionTitle: {
     fontSize: 16,
@@ -433,7 +460,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: 'hidden',
     elevation: 2,
-    shadowColor: '#000',
+        shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 1,
@@ -523,9 +550,10 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   saveButtonText: {
-    color: 'white',
-    fontWeight: '600',
-    fontSize: 16,
+    fontSize: 16, 
+    color: '#fff', 
+    fontWeight: '700',
+    zIndex: 1,
   },
   deleteButton: {
     flex: 1,
@@ -558,6 +586,12 @@ const styles = StyleSheet.create({
   statusButtonError: {
     borderColor: '#FF3040',
     borderWidth: 2,
+  },
+  charCount: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+    textAlign: 'right',
   },
 });
 

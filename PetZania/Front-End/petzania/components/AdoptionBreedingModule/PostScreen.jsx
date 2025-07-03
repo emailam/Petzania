@@ -26,7 +26,6 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 export default function PostScreen({ postType }) {
   // Responsive calculations
   const isSmallScreen = screenWidth < 380;
-  const isMediumScreen = screenWidth >= 380 && screenWidth < 768;
   const isLargeScreen = screenWidth >= 768;
 
   const [filters, setFilters] = useState({

@@ -3,19 +3,12 @@ import { useMutation , useInfiniteQuery, useQueryClient } from '@tanstack/react-
 import { getPetById } from './petService';
 async function fetchPosts(filters, page = 0, pageSize = 10) {
   try {
-    console.log('Fetching posts for page:', page, 'with filters:', filters); // Debug log
     
-    // Put pagination parameters in the URL as query parameters
-    // Put filters in the request body
     const response = await api.post(`/pet-posts/filtered?page=${page}&size=${pageSize}`, {
       ...filters,
     });
     
-    console.log('Paginated user posts response:', response.data);
     const { content, last, number } = response.data;
-    
-    console.log(`Fetched page ${number}, hasNext: ${!last}, items: ${content?.length}`); // Debug log
-    
     return {
       posts: content,
       hasNext: !last,
@@ -34,7 +27,6 @@ export const useFetchPosts = (filters) => {
     queryKey: ['posts', newfilters],
     queryFn: ({ pageParam = 0 }) => {
       // Pass pageParam as the page parameter, and include filters
-      console.log('Fetching page:', pageParam); // Add this for debugging
       return fetchPosts(newfilters, pageParam);
     },
     getNextPageParam: (lastPage, allPages) => {
@@ -132,7 +124,6 @@ export function useDeletePost() {
 
 async function createPost(postData) {
   try {
-    console.log('Creating post with data:', postData);
     const { petId, ...rest } = postData;
     const petDTO = await getPetById(petId);
     
@@ -140,7 +131,6 @@ async function createPost(postData) {
       ...rest,
       petDTO: petDTO,
     };
-    console.log('Payload for post creation:', payload);
     const response = await api.post('/pet-posts', payload);
     return response.data;
   } catch (error) {
@@ -167,7 +157,6 @@ export function useCreatePost() {
 
 async function updatePost(postId, newPostData) {
   try {
-    console.log('Updating post with ID:', postId, 'and data:', newPostData);    
     const response = await api.patch(`/pet-posts/${postId}`, newPostData);
     return response.data;
   } catch (error) {
