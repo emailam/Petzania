@@ -108,7 +108,7 @@ public class MessageController {
 
         MessageReactionDTO messageReactionDTO = messageService.reactToMessage(messageId, userId, messageReact);
         messagingTemplate.convertAndSend(
-                "/topic/" + userId.toString() + "/messages",
+                "/topic/" + userId.toString() + "/reactions",
                 new MessageReactionEventDTO(messageReactionDTO, EventType.REACT)
         );
 
@@ -124,7 +124,7 @@ public class MessageController {
 
         MessageReactionDTO messageReactionDTO = messageService.removeReaction(messageId, userId);
         messagingTemplate.convertAndSend(
-                "/topic/" + userId.toString() + "/messages",
+                "/topic/" + userId.toString() + "/reactions",
                 new MessageReactionEventDTO(messageReactionDTO, EventType.REMOVE_REACT)
         );
 
