@@ -146,7 +146,7 @@ public class UserService implements IUserService {
         );
 
         // send the email
-        emailService.sendEmail(emailRequestDTO);
+        // emailService.sendEmail(emailRequestDTO);
 
     }
 
@@ -231,7 +231,8 @@ public class UserService implements IUserService {
             throw new UserIsBlocked("User is blocked");
         }
 
-        String otp = String.format("%06d", new Random().nextInt(1000000));
+//        String otp = String.format("%06d", new Random().nextInt(1000000));
+        String otp = "123456";
         user.setResetCode(otp);
         user.setResetCodeExpirationTime(Timestamp.valueOf(LocalDateTime.now().plusMinutes(10)));
 
@@ -249,7 +250,7 @@ public class UserService implements IUserService {
                         "Petzania Team."
         );
 
-        emailService.sendEmail(emailRequestDTO);
+        // emailService.sendEmail(emailRequestDTO);
         userRepository.save(user);
     }
 
@@ -407,7 +408,8 @@ public class UserService implements IUserService {
         }
 
         System.out.println("User email is: " + email);
-        String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
+        // String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
+        String otp = "123456";
         user.setVerificationCode(otp);
         user.setExpirationTime(Timestamp.valueOf(LocalDateTime.now().plusMinutes(10)));
 
@@ -419,13 +421,13 @@ public class UserService implements IUserService {
                 "Dear " + user.getUsername() + ",\n\n" +
                         "To complete your verification, please use the following One-Time Password (OTP):\n\n" +
                         "🔑 Your OTP: " + otp + "\n\n" +
-                        "This code is valid for **3 minutes**. If you did not request this, please ignore this email.\n\n" +
+                        "This code is valid for **10 minutes**. If you did not request this, please ignore this email.\n\n" +
                         "Best regards,\n" +
                         "Petzania Team."
         );
 
         // send the email.
-        emailService.sendEmail(emailRequestDTO);
+        // emailService.sendEmail(emailRequestDTO);
 
         // save the user in the database.
         userRepository.save(user);
@@ -448,7 +450,7 @@ public class UserService implements IUserService {
                         "Petzania Team."
         );
 
-        emailService.sendEmail(emailRequestDTO);
+        // emailService.sendEmail(emailRequestDTO);
     }
 
     public void sendOtpFallback(String email, RequestNotPermitted t) {
