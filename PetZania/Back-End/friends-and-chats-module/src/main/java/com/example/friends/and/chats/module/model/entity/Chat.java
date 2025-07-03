@@ -40,11 +40,11 @@ public class Chat {
     private LocalDateTime createdAt;
 
     @Column(name = "last_message_timestamp", nullable = false)
-    @Builder.Default
-    private LocalDateTime lastMessageTimestamp = LocalDateTime.MIN;
+    private LocalDateTime lastMessageTimestamp;
 
     @PrePersist
     public void onCreate() {
         this.createdAt = LocalDateTime.now();
+        this.lastMessageTimestamp = LocalDateTime.now();
     }
 }
