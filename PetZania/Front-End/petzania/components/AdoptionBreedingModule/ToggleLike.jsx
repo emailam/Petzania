@@ -1,11 +1,11 @@
 import React, { useState, useCallback, memo } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-const ToggleLike = memo(({ 
-  post,
+const ToggleLike = memo(({
+  postId,
   onLikeChange,
+  initialLiked
 }) => {
-  const initialLiked = post?.reactedUsersIds?.includes(post?.ownerId) || false;
 
   const [liked, setLiked] = useState(initialLiked);
 
@@ -13,19 +13,18 @@ const ToggleLike = memo(({
 
     const nextLiked = !liked;
     setLiked(nextLiked);    
-    onLikeChange?.(nextLiked);
+    onLikeChange?.(postId);
     
-  }, [liked, post, onLikeChange]);
+  }, [liked, postId]);
 
 
   return (
     <>
       <View style={styles.container}>
         <TouchableOpacity 
-          style={[styles.likeButton, isLoading && styles.likeButtonDisabled]}
+          style={styles.likeButton}
           onPress={handleToggle}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          disabled={isLoading}
           activeOpacity={0.7}
         >
           <Ionicons 

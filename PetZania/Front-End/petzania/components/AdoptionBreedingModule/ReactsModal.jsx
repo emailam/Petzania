@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,72 +6,90 @@ import {
   FlatList,
   TouchableOpacity,
   Modal,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 const ReactsModal = ({
+  post,
   visible,
   onClose,
-  postId,
-  reactedUsersIds = [],
+  getUsers,
 }) => {
-  const reactsCount = reactedUsersIds.length;
-  const hasReactions = reactsCount > 0;
+  const [profiles, setProfiles] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const renderUserItem = ({ item, index }) => (
-    <View style={styles.userIdItem}>
-      <Ionicons name="person-circle-outline" size={20} color="#666" />
-      <Text style={styles.userIdText}>{item}</Text>
-    </View>
-  );
+  useEffect(() => {
+    if (!visible) return;
 
-  const renderContent = () => (
-    <View style={styles.reactsModalContent}>
-      <Text style={styles.postIdText}>
-        Post ID: {postId}
-      </Text>
-      <Text style={styles.reactsCountText}>
-        {reactsCount} reaction{reactsCount !== 1 ? 's' : ''}
-      </Text>
-      
-      {hasReactions ? (
-        <FlatList
-          data={reactedUsersIds}
-          keyExtractor={(item, index) => `${item}-${index}`}
-          renderItem={renderUserItem}
-          style={styles.usersList}
-          showsVerticalScrollIndicator={false}
+    (async () => {
+      setLoading(true);
+      try {
+        const outs = await Promise.all(
+          post.reactedUsersIds.map(id => getUsers(id))
+        );
+        setProfiles(outs.filter(Boolean));
+      } catch (err) {
+        console.error('Error fetching user profiles:', err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [visible, post.reactedUsersIds, getUsers]);
+
+  const renderUserItem = ({ item }) => (
+    <View style={styles.userItem}>
+      {item.profilePictureURL ? (
+        <Image
+          source={{ uri: item.profilePictureURL }}
+          style={styles.avatar}
+          onError={() => {}}
         />
       ) : (
-        <Text style={styles.noReactsText}>No reactions yet</Text>
+        <Ionicons name="person-circle-outline" size={32} color="#666" />
       )}
-    </View>
-  );
-
-  const renderHeader = () => (
-    <View style={styles.reactsModalHeader}>
-      <Text style={styles.reactsModalTitle}>Post Reactions</Text>
-      <TouchableOpacity
-        style={styles.closeButton}
-        onPress={onClose}
-        activeOpacity={0.7}
-      >
-        <Ionicons name="close" size={24} color="#666" />
-      </TouchableOpacity>
+      <Text style={styles.usernameText}>{item.username}</Text>
     </View>
   );
 
   return (
     <Modal
       animationType="slide"
-      transparent={true}
+      transparent
       visible={visible}
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.reactsModal}>
-          {renderHeader()}
-          {renderContent()}
+      <View style={styles.overlay}>
+        <View style={styles.modal}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Post Reactions</Text>
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+              <Ionicons name="close" size={24} color="#666" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.content}>
+            <Text style={styles.postId}>Post ID: {post.postId}</Text>
+            <Text style={styles.count}>
+              {post.reactedUsersIds.length} reaction
+              {post.reactedUsersIds.length !== 1 ? 's' : ''}
+            </Text>
+
+            {loading ? (
+              <ActivityIndicator style={{ marginTop: 20 }} />
+            ) : profiles.length > 0 ? (
+              <FlatList
+                data={profiles}
+                keyExtractor={u => u.userId}
+                renderItem={renderUserItem}
+                style={styles.list}
+                showsVerticalScrollIndicator={false}
+              />
+            ) : (
+              <Text style={styles.noReacts}>No reactions yet</Text>
+            )}
+          </View>
         </View>
       </View>
     </Modal>
@@ -79,59 +97,45 @@ const ReactsModal = ({
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: {
+  overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  reactsModal: {
-    backgroundColor: 'white',
-    borderRadius: 20,
+  modal: {
     width: '90%',
     maxHeight: '80%',
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    overflow: 'hidden',
     elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
   },
-  reactsModalHeader: {
+  header: {
     flexDirection: 'row',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderColor: '#eee',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
-  reactsModalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-  },
-  closeButton: {
-    padding: 4,
-    borderRadius: 12,
-  },
-  reactsModalContent: {
-    padding: 20,
-  },
-  postIdText: {
+  title: { fontSize: 18, fontWeight: '600', color: '#333' },
+  closeBtn: { padding: 4 },
+  content: { padding: 16 },
+  postId: {
     fontSize: 12,
     color: '#666',
-    marginBottom: 8,
     fontFamily: 'monospace',
+    marginBottom: 8,
   },
-  reactsCountText: {
+  count: {
     fontSize: 16,
     fontWeight: '500',
     color: '#333',
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  usersList: {
-    maxHeight: 300,
-  },
-  userIdItem: {
+  list: { maxHeight: 300 },
+  userItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
@@ -140,13 +144,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 8,
   },
-  userIdText: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 8,
-    fontFamily: 'monospace',
+  avatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
   },
-  noReactsText: {
+  usernameText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#333',
+  },
+  noReacts: {
     fontSize: 14,
     color: '#999',
     textAlign: 'center',

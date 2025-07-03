@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, memo, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,262 +7,183 @@ import {
   TextInput,
   ScrollView,
   Dimensions,
-  Pressable
+  Pressable,
+  Alert,
+  StyleSheet
 } from 'react-native';
+import CategoryButton from './CategoryButton';
+import { RotateCcw  } from 'lucide-react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { LinearGradient } from 'expo-linear-gradient';
+const { width, height } = Dimensions.get('window');
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import Entypo from '@expo/vector-icons/Entypo';
 
-const { width } = Dimensions.get('window');
-
-const FilterModal = memo(({ visible, onClose, onApply, initialFilters = {} }) => {
-  // Initialize filters with default values
+export default function FilterModal({ visible, onClose, onApply, initialFilters = {} }) {
+  // Initialize filters
   const [filters, setFilters] = useState({
     species: initialFilters.species || 'ALL',
     breed: initialFilters.breed || 'ALL',
-    minAge: initialFilters.minAge || 0,
-    maxAge: initialFilters.maxAge || 1000,
-    sortBy: initialFilters.sortBy || 'CREATED_AT',
-    sortDesc: initialFilters.sortDesc !== undefined ? initialFilters.sortDesc : true,
+    minAge: initialFilters.minAge != null ? initialFilters.minAge : 0,
+    maxAge: initialFilters.maxAge != null ? initialFilters.maxAge : 100,
+    sortBy: initialFilters.sortBy || 'CREATED_DATE',
+    sortDesc: initialFilters.sortDesc != null ? initialFilters.sortDesc : true,
   });
 
-  // Update filters when modal opens with new initialFilters
-  useEffect(() => {
-    if (visible) {
-      setFilters({
-        species: initialFilters.species || 'ALL',
-        breed: initialFilters.breed || 'ALL',
-        minAge: initialFilters.minAge || 0,
-        maxAge: initialFilters.maxAge || 1000,
-        sortBy: initialFilters.sortBy || 'CREATED_AT',
-        sortDesc: initialFilters.sortDesc !== undefined ? initialFilters.sortDesc : true,
-      });
-    }
-  }, [visible, initialFilters]);
+  const speciesOptions = [
+    { value: 'DOG', label: 'Dog', icon: <FontAwesome5 name="dog" size={20} color="#4a4a4a" /> },
+    { value: 'CAT', label: 'Cat', icon: <FontAwesome5 name="cat" size={20} color="#4a4a4a" /> },
+    { value: 'BIRD', label: 'Bird', icon: <Entypo name="twitter" size={20} color="#4a4a4a" /> },
+    { value: 'FISH', label: 'Fish', icon: <FontAwesome6 name="fish" size={20} color="#4a4a4a" /> },
+    { value: 'RABBIT', label: 'Rabbit', icon: <MaterialCommunityIcons name="rabbit" size={24} color="#4a4a4a" /> },
+  ];
 
-  // Filter options
-  const species = useMemo(() => [
-    { value: 'DOG', label: 'Dog' },
-    { value: 'CAT', label: 'Cat' },
-    { value: 'BIRD', label: 'Bird' },
-    { value: 'FISH', label: 'Fish' },
-    { value: 'HAMSTER', label: 'Hamster' },
-    { value: 'RABBIT', label: 'Rabbit' },
-    { value: 'GUINEA_PIG', label: 'Guinea Pig' },
-    { value: 'TURTLE', label: 'Turtle' }
-  ], []);
-
-  const sortOptions = useMemo(() => [
+  const sortOptions = [
     { value: 'CREATED_AT', label: 'Date' },
     { value: 'REACTS', label: 'Likes' }
-  ], []);
+  ];
 
-  // Handle filter changes
+  // Handlers
   const handleFilterChange = useCallback((key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   }, []);
 
-  // Handle option selection - toggle between value and 'ALL'
-  const handleOptionSelect = useCallback((key, value) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: prev[key] === value ? 'ALL' : value
-    }));
+  const handleAgeChange = useCallback((key, text) => {
+    const num = parseInt(text, 10);
+    if (isNaN(num) || num < 0) return;
+    setFilters(prev => ({ ...prev, [key]: num }));
   }, []);
 
-  // Handle sort order toggle
+  const handleOptionSelect = useCallback((key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  }, []);
+
   const handleSortOrderToggle = useCallback(() => {
     setFilters(prev => ({ ...prev, sortDesc: !prev.sortDesc }));
   }, []);
 
-  // Handle age input change with validation
-  const handleAgeChange = useCallback((key, value) => {
-    // Allow empty string or valid numbers
-    if (value === '') {
-      setFilters(prev => ({ ...prev, [key]: null }));
-    } else if (/^\d+$/.test(value)) {
-      setFilters(prev => ({ ...prev, [key]: parseInt(value, 10) }));
-    }
-  }, []);
-
-  // Reset all filters
   const handleReset = useCallback(() => {
     setFilters({
       species: 'ALL',
       breed: 'ALL',
       minAge: 0,
-      maxAge: 1000,
-      sortBy: 'CREATED_AT',
+      maxAge: 100,
+      sortBy: 'CREATED_DATE',
       sortDesc: true,
     });
   }, []);
 
-  // Apply filters
   const handleApply = useCallback(() => {
-    // Validate age range
-    if (filters.minAge !== null && filters.maxAge !== null && filters.minAge > filters.maxAge) {
-      alert('Minimum age cannot be greater than maximum age');
+    if (filters.minAge > filters.maxAge) {
+      Alert.alert('Error', 'Minimum age cannot be greater than maximum age');
       return;
     }
-    
     onApply(filters);
   }, [filters, onApply]);
 
-  // Cancel and close
-  const handleCancel = useCallback(() => {
-    onClose();
-  }, [onClose]);
-
-  // Render option button
-  const renderOptionButton = useCallback((option, isSelected, onPress, style = {}) => (
-    <TouchableOpacity
-      key={option.value}
-      style={[styles.optionButton, isSelected && styles.optionSelected, style]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <Text 
-        style={[styles.optionText, isSelected && styles.optionTextSelected]}
-        numberOfLines={1}
-      >
-        {option.label}
-      </Text>
-    </TouchableOpacity>
-  ), []);
-
-  // Responsive layout for species
   const isSmallScreen = width < 360;
-  const speciesPerRow = isSmallScreen ? 2 : 3;
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={handleCancel}
-    >
-      <Pressable style={styles.modalOverlay} onPress={handleCancel}>
-        <Pressable 
-          style={[
-            styles.modalContent, 
-            isSmallScreen && styles.modalContentSmall
-          ]} 
-          onPress={(e) => e.stopPropagation()}
-        >
-          <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
-            {/* Header */}
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Filters</Text>
-              <TouchableOpacity onPress={handleReset} activeOpacity={0.7}>
-                <Text style={styles.resetText}>Reset</Text>
-              </TouchableOpacity>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable style={styles.modalOverlay} onPress={onClose}>
+        <Pressable style={[styles.modalContent, isSmallScreen && styles.modalContentSmall]} onPress={e => e.stopPropagation()}>
+          <View style={styles.headerRow}>
+            <Text style={styles.title}>Filters</Text>
+            <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
+              <RotateCcw size={16} color="#7C3AED" />
+              <Text style={styles.resetText}>Reset</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <Text style={styles.label}>Species</Text>
+            <View style={styles.speciesGrid}>
+              {speciesOptions.map(opt => (
+                <View key={opt.value} style={styles.speciesButtonWrapper}>
+                  <CategoryButton
+                    title={opt.label}
+                    onPress={() => handleOptionSelect('species', opt.value)}
+                    style={[
+                      styles.category,
+                      filters.species === opt.value && styles.categorySelected
+                    ]}
+                    icon={opt.icon}
+                  />
+                </View>
+              ))}
             </View>
 
-            {/* Species Filter */}
-            <Text style={styles.filterLabel}>Species</Text>
-            {/* First row - responsive */}
-            <View style={[styles.speciesRow, isSmallScreen && styles.speciesRowSmall]}>
-              {species.slice(0, speciesPerRow).map(sp =>
-                renderOptionButton(
-                  sp,
-                  filters.species === sp.value,
-                  () => handleOptionSelect('species', sp.value),
-                  styles.speciesButton
-                )
-              )}
-            </View>
-            {/* Second row - responsive */}
-            <View style={[styles.speciesRow, isSmallScreen && styles.speciesRowSmall]}>
-              {species.slice(speciesPerRow, speciesPerRow * 2).map(sp =>
-                renderOptionButton(
-                  sp,
-                  filters.species === sp.value,
-                  () => handleOptionSelect('species', sp.value),
-                  styles.speciesButton
-                )
-              )}
-            </View>
-            {/* Remaining species */}
-            {species.length > speciesPerRow * 2 && (
-              <View style={styles.optionsRow}>
-                {species.slice(speciesPerRow * 2).map(sp =>
-                  renderOptionButton(
-                    sp,
-                    filters.species === sp.value,
-                    () => handleOptionSelect('species', sp.value)
-                  )
-                )}
-              </View>
-            )}
-
-            {/* Breed */}
-            <Text style={styles.filterLabel}>Breed</Text>
+            <Text style={styles.label}>Breed</Text>
             <TextInput
-              style={[styles.input, isSmallScreen && styles.inputSmall]}
-              placeholder="Enter breed or leave empty for all"
+              style={styles.input}
+              placeholder="Enter breed"
               value={filters.breed === 'ALL' ? '' : filters.breed}
-              onChangeText={(text) => handleFilterChange('breed', text || 'ALL')}
+              onChangeText={text => handleFilterChange('breed', text || 'ALL')}
               placeholderTextColor="#999"
             />
 
-            {/* Age Range */}
-            <Text style={styles.filterLabel}>Age Range (years)</Text>
+            <Text style={styles.label}>Age Range (months)</Text>
             <View style={styles.rangeRow}>
               <TextInput
-                style={[styles.input, styles.rangeInput, isSmallScreen && styles.inputSmall]}
+                style={[styles.input, styles.rangeInput]}
                 placeholder="Min"
-                value={filters.minAge !== null ? String(filters.minAge) : ''}
-                onChangeText={(text) => handleAgeChange('minAge', text)}
                 keyboardType="numeric"
+                value={String(filters.minAge)}
+                onChangeText={text => handleAgeChange('minAge', text)}
                 placeholderTextColor="#999"
               />
               <TextInput
-                style={[styles.input, styles.rangeInput, isSmallScreen && styles.inputSmall]}
+                style={[styles.input, styles.rangeInput]}
                 placeholder="Max"
-                value={filters.maxAge !== null ? String(filters.maxAge) : ''}
-                onChangeText={(text) => handleAgeChange('maxAge', text)}
                 keyboardType="numeric"
+                value={String(filters.maxAge)}
+                onChangeText={text => handleAgeChange('maxAge', text)}
                 placeholderTextColor="#999"
               />
             </View>
 
-            {/* Sort Options */}
-            <Text style={styles.filterLabel}>Sort By</Text>
+            <Text style={styles.label}>Sort By</Text>
             <View style={styles.optionsRow}>
-              {sortOptions.map(sort =>
-                renderOptionButton(
-                  sort,
-                  filters.sortBy === sort.value,
-                  () => handleFilterChange('sortBy', sort.value)
-                )
-              )}
+              {sortOptions.map(opt => (
+                <TouchableOpacity
+                  key={opt.value}
+                  style={[styles.option]}
+                  onPress={() => handleFilterChange('sortBy', opt.value)}
+                >
+                  {filters.sortBy === opt.value ? (
+                    <LinearGradient
+                      colors={['#9188E5', '#7C3AED']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={StyleSheet.absoluteFillObject}
+                    />
+                  ) : null}
+                  <Text style={[styles.optionText, filters.sortBy === opt.value && styles.optionTextSelected]}>
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
 
-            {/* Sort Order */}
-            <TouchableOpacity 
-              style={styles.sortOrderContainer}
-              onPress={handleSortOrderToggle}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.optionButton, filters.sortDesc && styles.optionSelected]}>
-                <Text style={[styles.optionText, filters.sortDesc && styles.optionTextSelected]}>
-                  {filters.sortDesc ? 'Newest/Most First' : 'Oldest/Least First'}
-                </Text>
-              </View>
+            <TouchableOpacity style={styles.sortOrder} onPress={handleSortOrderToggle}>
+              <Text style={styles.optionText}>
+                {filters.sortDesc ? 'Newest First' : 'Oldest First'}
+              </Text>
             </TouchableOpacity>
 
-            {/* Action Buttons */}
-            <View style={[styles.modalButtons, isSmallScreen && styles.modalButtonsSmall]}>
-              <TouchableOpacity
-                style={[styles.button, styles.cancelButton]}
-                onPress={handleCancel}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+            <View style={styles.buttonRow}>
+              <TouchableOpacity style={[styles.button, styles.cancelBtn]} onPress={onClose}>
+                <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.button, styles.applyButton]}
-                onPress={handleApply}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.applyButtonText}>Apply Filters</Text>
+              <TouchableOpacity style={[styles.button, styles.applyBtn]} onPress={handleApply}>
+                <LinearGradient
+                  colors={['#9188E5', '#7C3AED']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFillObject}
+                />
+                <Text style={styles.applyText}>Apply</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -270,149 +191,195 @@ const FilterModal = memo(({ visible, onClose, onApply, initialFilters = {} }) =>
       </Pressable>
     </Modal>
   );
-});
+}
 
-const styles = {
+const styles = StyleSheet.create({
   modalOverlay: { 
     flex: 1, 
-    backgroundColor: 'rgba(0,0,0,0.5)', 
+    backgroundColor: 'rgba(0,0,0,0.6)', 
     justifyContent: 'center', 
     alignItems: 'center' 
   },
   modalContent: { 
     width: width * 0.9, 
     maxWidth: 500,
-    maxHeight: '80%',
-    backgroundColor: '#fff', 
-    borderRadius: 12, 
-    padding: 20 
+    maxHeight: height * 0.85, 
+    backgroundColor: '#ffffff', 
+    borderRadius: 20, 
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
   },
-  modalContentSmall: {
+  modalContentSmall: { 
     padding: 16,
+    width: width * 0.95,
   },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20
+  headerRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  modalTitle: { 
-    fontSize: 20, 
-    fontWeight: '600',
-    color: '#333'
+  title: { 
+    fontSize: 24, 
+    fontWeight: '700', 
+    color: '#1a1a1a',
+    letterSpacing: -0.5,
   },
-  resetText: {
-    fontSize: 16,
+  reset: { 
+    fontSize: 16, 
     color: '#9188E5',
-    fontWeight: '500'
+    fontWeight: '600',
   },
-  filterLabel: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-    marginTop: 16,
-    marginBottom: 8
+  label: { 
+    fontSize: 16, 
+    fontWeight: '600', 
+    marginTop: 16, 
+    marginBottom: 10, 
+    color: '#2d2d2d',
+    letterSpacing: -0.2,
+  },
+  speciesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: 0,
+    marginBottom: 8,
+  },
+  speciesButtonWrapper: {
+    width: '33.33%',
+    paddingHorizontal: 4,
+    marginBottom: 8,
   },
   optionsRow: { 
     flexDirection: 'row', 
+    flexWrap: 'wrap', 
     marginBottom: 8,
-    flexWrap: 'wrap'
+    marginHorizontal: 2,
   },
-  speciesRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-    gap: 8,
+  category: { 
+    paddingHorizontal: 14, 
+    paddingVertical: 10, 
+    backgroundColor: '#f8f8f8',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#e8e8e8',
+    minHeight: 38,
+    width: '100%',
   },
-  speciesRowSmall: {
-    gap: 6,
-  },
-  speciesButton: {
-    flex: 1,
-    paddingHorizontal: 8,
-  },
-  optionButton: { 
-    borderWidth: 1, 
-    borderColor: '#ddd', 
-    borderRadius: 20, 
-    paddingVertical: 8, 
-    paddingHorizontal: 16, 
-    marginRight: 8,
-    marginBottom: 8,
-    backgroundColor: '#fff'
-  },
-  optionSelected: { 
+  categorySelected: { 
     backgroundColor: '#9188E5',
-    borderColor: '#9188E5'
+    borderColor: '#9188E5',
   },
-  optionText: {
-    fontSize: 14,
+    input: { 
+    borderWidth: 1.5, 
+    borderColor: '#e0e0e0', 
+    borderRadius: 12, 
+    padding: 14, 
+    marginBottom: 8, 
+    fontSize: 16, 
+    backgroundColor: '#fafafa',
     color: '#333',
-    textAlign: 'center'
-  },
-  optionTextSelected: {
-    color: '#fff',
-    fontWeight: '500'
-  },
-  input: { 
-    borderWidth: 1, 
-    borderColor: '#ddd', 
-    borderRadius: 8, 
-    padding: 12, 
-    marginBottom: 8,
-    backgroundColor: '#fff',
-    fontSize: 16
-  },
-  inputSmall: {
-    padding: 10,
-    fontSize: 14,
   },
   rangeRow: { 
     flexDirection: 'row', 
-    justifyContent: 'space-between',
+    justifyContent: 'space-between', 
     marginBottom: 8,
-    gap: 8
   },
   rangeInput: { 
-    flex: 1
+    flex: 1,
+    marginHorizontal: 4,
+    textAlign: 'center',
   },
-  modalButtons: { 
+  option: { 
+    borderWidth: 1.5, 
+    borderColor: '#e0e0e0', 
+    borderRadius: 12, 
+    paddingHorizontal: 20, 
+    paddingVertical: 12, 
+    marginRight: 10, 
+    marginBottom: 10,
+    backgroundColor: '#fafafa',
+    minWidth: 80,
+    alignItems: 'center',
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  optionText: { 
+    fontSize: 14, 
+    color: '#4a4a4a', 
+    textAlign: 'center',
+    fontWeight: '500',
+    zIndex: 1,
+  },
+  optionTextSelected: { 
+    color: '#ffffff', 
+    fontWeight: '600' 
+  },
+  sortOrder: { 
+    marginBottom: 16,
+    backgroundColor: '#f0f0f0',
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  buttonRow: { 
     flexDirection: 'row', 
     justifyContent: 'space-between', 
     marginTop: 24,
-    gap: 12
+    marginBottom: 8,
   },
-  modalButtonsSmall: {
-    marginTop: 20,
-    gap: 8,
+  button: { 
+    flex: 1, 
+    paddingVertical: 14, 
+    borderRadius: 12, 
+    alignItems: 'center',
+    marginHorizontal: 5,
+    overflow: 'hidden',
+    position: 'relative',
   },
-  button: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center'
+  cancelBtn: { 
+    backgroundColor: '#f5f5f5', 
+    borderWidth: 1.5, 
+    borderColor: '#e0e0e0' 
   },
-  cancelButton: {
-    backgroundColor: '#f0f0f0',
-    borderWidth: 1,
-    borderColor: '#ddd'
+  cancelText: { 
+    fontSize: 16, 
+    color: '#666',
+    fontWeight: '600',
   },
-  cancelButtonText: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '500'
+  applyBtn: { 
+    backgroundColor: '#9188E5',
+    shadowColor: '#9188E5',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  applyButton: {
-    backgroundColor: '#9188E5'
+  applyText: { 
+    fontSize: 16, 
+    color: '#fff', 
+    fontWeight: '700',
+    zIndex: 1,
   },
-  applyButtonText: {
-    fontSize: 16,
-    color: '#fff',
-    fontWeight: '600'
-  },
-  sortOrderContainer: {
-    marginTop: 8,
-  }
-};
-
-export default FilterModal;
+  resetButton: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 8,
+  paddingHorizontal: 12,
+  paddingVertical: 8,
+  backgroundColor: '#EDE9FE', // purple-100
+  borderRadius: 8,
+},
+resetText: {
+  fontSize: 14,
+  fontWeight: '500',
+  color: '#7C3AED', // purple-600
+},
+});

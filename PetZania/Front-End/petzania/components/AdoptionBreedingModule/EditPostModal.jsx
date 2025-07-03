@@ -13,20 +13,21 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
+import { FlatList } from 'react-native-gesture-handler';
 const { height } = Dimensions.get('window');
 
-const EditPostModal = memo(({ onClose, post, onUpdate, onDelete, isUpdating, isDeleting }) => {
+const EditPostModal = memo(({visible ,onClose, post, onUpdate, onDelete}) => {
+
+  if (!post) return null;
+
   const [descriptionValue, setDescriptionValue] = useState(post?.description || '');
   const [statusValue, setStatusValue] = useState(post?.postStatus || 'PENDING');
   const [locationValue, setLocationValue] = useState(post?.location || '');
 
   const [formErrors, setFormErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  
-
-  if (!post) return null;
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const petDTO = post.petDTO || {};
 
   const validateForm = () => {
     const errors = {};
@@ -43,7 +44,7 @@ const EditPostModal = memo(({ onClose, post, onUpdate, onDelete, isUpdating, isD
       errors.location = 'Location must be 100 characters or less';
     }
     
-    if (!statusValue || !['PENDING', 'completed'].includes(statusValue)) {
+    if (!statusValue || !['PENDING', 'COMPLETED'].includes(statusValue)) {
       errors.status = 'Please select a valid status';
     }
     
@@ -63,70 +64,59 @@ const EditPostModal = memo(({ onClose, post, onUpdate, onDelete, isUpdating, isD
   const formValid = Object.keys(validateForm()).length === 0;
 
   const handleSave = async () => {
-    if (isSubmitting || isUpdating) return;
-    
+if (isSaving || isDeleting) return;    
     // Client-side validation
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       return;
     }
+
     
-    if (!hasChanges()) {
-      Alert.alert('No Changes', 'No changes detected to save.');
-      return;
-    }
-    
-    if (!post?.postId) {
-      Alert.alert('Error', 'Post ID missing. Cannot update.');
-      return;
-    }
-    
-    setIsSubmitting(true);
+    setIsSaving(true);
     setFormErrors({});
     
     try {
-      // Construct update object from individual states
       const updatedData = {
         description: descriptionValue.trim(),
         postStatus: statusValue,
-        location: locationValue.trim()
-      };
-      
+        location: locationValue.trim(),
+        updatePetDTO: petDTO,
+      }; 
       await onUpdate?.(post.postId, updatedData);
-      
+      onClose?.();
     } catch (error) {
       console.error('Save failed:', error);
     } finally {
-      setIsSubmitting(false);
+      setIsSaving(false);
     }
   };
 
   const handleDelete = () => {
-    if (!post?.postId) {
-      Alert.alert('Error', 'Post ID missing. Cannot delete.');
-      return;
-    }
-    
-    Alert.alert(
-      'Delete Post',
-      'Are you sure you want to delete this post? This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await onDelete?.(post.postId);
-            } catch (error) {
-              console.error('Delete failed:', error);
-            }
-          },
+  Alert.alert(
+    'Delete Post',
+    'Are you sure you want to delete this post? This action cannot be undone.',
+    [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          setIsDeleting(true);
+          try {
+            await onDelete?.(post.postId);
+            onClose?.();
+          } catch (error) {
+            console.error('Delete failed:', error);
+          } finally {
+            setIsDeleting(false);
+          }
         },
-      ]
-    );
-  };
+      },
+    ]
+  );
+};
+
   const handleCancel = () => {
     if (hasChanges()) {
       Alert.alert(
@@ -149,16 +139,14 @@ const EditPostModal = memo(({ onClose, post, onUpdate, onDelete, isUpdating, isD
     }
   };
 
-  const petDTO = post.petDTO || {};
-  const petImage = petDTO?.myPicturesURLs?.[0]
-    ? { uri: petDTO.myPicturesURLs[0] }
-    : require('@/assets/images/Defaults/default-pet.png');
+  
 
   return (
     <Modal
       animationType="slide"
       transparent={true}
       onRequestClose={onClose}
+      visible={visible}
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
@@ -180,9 +168,34 @@ const EditPostModal = memo(({ onClose, post, onUpdate, onDelete, isUpdating, isD
             keyboardShouldPersistTaps="handled"
           >
             {/* Pet Image (read-only) */}
-            <Text style={styles.sectionTitle}>Pet Image</Text>
-            <View style={styles.imageContainer}>
-              <Image source={petImage} style={styles.image} />
+            <Text style={styles.sectionTitle}>Pet Images</Text>
+            <View style={styles.imagesContainer}>
+              {petDTO?.myPicturesURLs && petDTO.myPicturesURLs.length > 0 ? (
+                <FlatList
+                  horizontal
+                  data={petDTO.myPicturesURLs}
+                  keyExtractor={(item, index) => index.toString()}
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.imagesScrollContainer}
+                  renderItem={({ item, index }) => (
+                    <View style={styles.imageWrapper}>
+                      <Image 
+                        source={{ uri: item }} 
+                        style={styles.image} 
+                        resizeMode="cover"
+                      />
+                    </View>
+                  )}
+                />
+              ) : (
+                <View style={styles.imageContainer}>
+                  <Image 
+                    source={require('@/assets/images/Defaults/default-pet.png')} 
+                    style={styles.image} 
+                    resizeMode="cover"
+                  />
+                </View>
+              )}
             </View>
 
             {/* Pet Details (read-only except location, description) */}
@@ -235,7 +248,7 @@ const EditPostModal = memo(({ onClose, post, onUpdate, onDelete, isUpdating, isD
                 }}
                 placeholder="Enter location"
                 maxLength={100}
-                editable={!isSubmitting && !isUpdating}
+                editable={!isSaving}
               />
               {formErrors.location && (
                 <Text style={styles.errorText}>{formErrors.location}</Text>
@@ -261,7 +274,7 @@ const EditPostModal = memo(({ onClose, post, onUpdate, onDelete, isUpdating, isD
                 numberOfLines={4}
                 maxLength={500}
                 textAlignVertical="top"
-                editable={!isSubmitting && !isUpdating}
+                editable={!isSaving}
               />
               <Text style={styles.charCount}>
                 {descriptionValue.length}/500
@@ -288,7 +301,7 @@ const EditPostModal = memo(({ onClose, post, onUpdate, onDelete, isUpdating, isD
                   }
                 }}
                 activeOpacity={0.7}
-                disabled={isSubmitting || isUpdating}
+                disabled={isSaving}
               >
                 <Text style={[
                   styles.statusButtonText,
@@ -299,22 +312,22 @@ const EditPostModal = memo(({ onClose, post, onUpdate, onDelete, isUpdating, isD
               <TouchableOpacity
                 style={[
                   styles.statusButton,
-                  statusValue === 'completed' && styles.statusButtonActive,
-                  { backgroundColor: statusValue === 'completed' ? '#4CAF50' : '#f0f0f0' },
+                  statusValue === 'COMPLETED' && styles.statusButtonActive,
+                  { backgroundColor: statusValue === 'COMPLETED' ? '#4CAF50' : '#f0f0f0' },
                   formErrors.status && styles.statusButtonError
                 ]}
                 onPress={() => {
-                  setStatusValue('completed');
+                  setStatusValue('COMPLETED');
                   if (formErrors.status) {
                     setFormErrors(prev => ({ ...prev, status: null }));
                   }
                 }}
                 activeOpacity={0.7}
-                disabled={isSubmitting || isUpdating}
+                disabled={isSaving}
               >
                 <Text style={[
                   styles.statusButtonText,
-                  statusValue === 'completed' && styles.statusButtonTextActive
+                  statusValue === 'COMPLETED' && styles.statusButtonTextActive
                 ]}>Completed</Text>
               </TouchableOpacity>
             </View>
@@ -326,26 +339,28 @@ const EditPostModal = memo(({ onClose, post, onUpdate, onDelete, isUpdating, isD
 
           {/* Action Buttons */}
           <View style={styles.actionButtons}>
+            {/* Save Button */}
             <TouchableOpacity
               onPress={handleSave}
-              disabled={isUpdating || isSubmitting || !hasChanges() || !formValid}
+              disabled={isSaving || isDeleting || !hasChanges() || !formValid}
               style={[
                 styles.saveButton,
-                (!hasChanges() || isUpdating || isSubmitting || !formValid) && styles.saveButtonDisabled,
+                (isSaving || isDeleting || !hasChanges() || !formValid) && styles.saveButtonDisabled,
               ]}
               activeOpacity={0.8}
             >
-              {(isUpdating || isSubmitting) ? (
+              {isSaving ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
                 <Text style={styles.saveButtonText}>Save Changes</Text>
               )}
             </TouchableOpacity>
 
+            {/* Delete Button */}
             <TouchableOpacity
               onPress={handleDelete}
-              disabled={isDeleting}
-              style={[styles.deleteButton, isDeleting && styles.deleteButtonDisabled]}
+              disabled={isSaving || isDeleting}
+              style={[styles.deleteButton, (isSaving || isDeleting) && styles.deleteButtonDisabled]}
               activeOpacity={0.8}
             >
               {isDeleting ? (
@@ -404,15 +419,37 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginTop: 16,
   },
-  imageContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
+  imagesContainer: {
+    marginBottom: 20,
+  },
+  imagesScrollView: {
+    maxHeight: 120, // Adjust based on your image height
+  },
+  imagesScrollContainer: {
+    paddingHorizontal: 5,
+  },
+  imageWrapper: {
+    marginRight: 10,
+    borderRadius: 8,
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   image: {
-    width: 170,
-    height: 170,
-    borderRadius: 16,
-    backgroundColor: '#f5f5f5',
+    width: 100,  // Adjust width as needed
+    height: 100, // Adjust height as needed
+    borderRadius: 8,
+  },
+  // Keep your existing imageContainer style for the default image case
+  imageContainer: {
+    alignItems: 'center',
+    marginBottom: 10,
   },
   inputGroup: {
     marginBottom: 16,
