@@ -77,14 +77,6 @@ export default function ContactSupport() {
             keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
         >
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-                <View style={styles.header}>
-                    <Ionicons name="mail" size={32} color="#9188E5" />
-                    <Text style={styles.title}>Contact Support</Text>
-                    <Text style={styles.subtitle}>
-                        Need help? Send us a message and we'll get back to you as soon as possible.
-                    </Text>
-                </View>
-
                 <View style={styles.form}>
                     {/* Category Selection */}
                     <View style={styles.inputGroup}>
@@ -298,7 +290,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         padding: 16,
         borderRadius: 12,
-        marginBottom: 20,
     },
     sendButtonText: {
         color: '#fff',

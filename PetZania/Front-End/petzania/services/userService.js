@@ -66,7 +66,7 @@ export async function getUserProfilePicture(userId){
     }
 }
 
-export async function registerUser(data) {
+export async function signup(data) {
     try {
         const response = await api.post('/user/auth/signup', data);
 
@@ -165,7 +165,6 @@ export async function verifyResetOTP(email, otp) {
 export async function logout(email) {
     try {
         const refreshToken = await getToken('refreshToken');
-        console.log('Logging out user:', email, refreshToken);
         const response = await api.post('/user/auth/logout', {
             email: email,
             refreshToken: refreshToken,

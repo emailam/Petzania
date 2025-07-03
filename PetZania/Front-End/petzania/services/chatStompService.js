@@ -9,42 +9,90 @@ class ChatSocketService {
     }
 
     connect(userId, token = null) {
-        if (this.stompClient) {
-            return this.stompClient;
-        }
+        return new Promise((resolve, reject) => {
+            if (this.stompClient && this.stompClient.active) {
+                console.log('✅ STOMP client already connected');
+                resolve(this.stompClient);
+                return;
+            }
 
-        // Create SockJS connection for chat service
-        const socket = new SockJS(`${Constants.expoConfig.extra.API_BASE_URL_8081.replace(/\/api$/, '')}/ws`);
-        // Create STOMP client
-        this.stompClient = new Client({
-            webSocketFactory: () => socket,
-            connectHeaders: {
-                userId: userId,
-                Authorization: token ? `Bearer ${token}` : ''
-            },
-            debug: (str) => {
-                console.log('Chat STOMP Debug:', str);
-            },
-            reconnectDelay: 5000,
-            heartbeatIncoming: 4000,
-            heartbeatOutgoing: 4000,
+            // Disconnect any existing client
+            if (this.stompClient) {
+                this.disconnect();
+            }
+
+            try {
+                // Create SockJS connection for chat service
+                const baseUrl = Constants.expoConfig.extra.API_BASE_URL_8081.replace(/\/api$/, '');
+                const wsUrl = `${baseUrl}/ws`;
+                console.log('🔌 Chat service base URL:', baseUrl);
+                console.log('🔌 Connecting to WebSocket:', wsUrl);
+                
+                const socket = new SockJS(wsUrl);
+                
+                // Add SockJS event listeners for debugging
+                socket.onopen = () => {
+                    console.log('✅ SockJS connection opened');
+                };
+                
+                socket.onclose = (event) => {
+                    console.log('🔌 SockJS connection closed:', event);
+                };
+                
+                socket.onerror = (error) => {
+                    console.error('❌ SockJS error:', error);
+                };
+                
+                // Create STOMP client
+                this.stompClient = new Client({
+                    webSocketFactory: () => socket,
+                    connectHeaders: {
+                        userId: userId,
+                        Authorization: token ? `Bearer ${token}` : ''
+                    },
+                    debug: (str) => {
+                        console.log('Chat STOMP Debug:', str);
+                    },
+                    reconnectDelay: 5000,
+                    heartbeatIncoming: 4000,
+                    heartbeatOutgoing: 4000,
+                });
+
+                this.stompClient.onConnect = (frame) => {
+                    console.log('✅ Chat STOMP Connected:', frame);
+                    resolve(this.stompClient);
+                };
+
+                this.stompClient.onDisconnect = (frame) => {
+                    console.log('🔌 Chat STOMP Disconnected:', frame);
+                };
+
+                this.stompClient.onStompError = (frame) => {
+                    console.error('❌ Chat STOMP Error:', frame.headers['message']);
+                    console.error('Details:', frame.body);
+                    reject(new Error(`STOMP Error: ${frame.headers['message'] || 'Unknown error'}`));
+                };
+
+                this.stompClient.onWebSocketError = (error) => {
+                    console.error('❌ WebSocket Error:', error);
+                    reject(new Error(`WebSocket Error: ${error.message || 'Connection failed'}`));
+                };
+
+                console.log('🔄 Activating STOMP client...');
+                this.stompClient.activate();
+                
+                // Add timeout for connection
+                setTimeout(() => {
+                    if (!this.stompClient || !this.stompClient.active) {
+                        reject(new Error('STOMP connection timeout'));
+                    }
+                }, 10000); // 10 second timeout
+
+            } catch (error) {
+                console.error('❌ Error creating STOMP client:', error);
+                reject(error);
+            }
         });
-
-        this.stompClient.onConnect = (frame) => {
-            console.log('Chat STOMP Connected:', frame);
-        };
-
-        this.stompClient.onDisconnect = (frame) => {
-            console.log('Chat STOMP Disconnected:', frame);
-        };
-
-        this.stompClient.onStompError = (frame) => {
-            console.error('Chat STOMP Error:', frame.headers['message']);
-            console.error('Details:', frame.body);
-        };
-
-        this.stompClient.activate();
-        return this.stompClient;
     }
 
     isClientConnected() {
@@ -53,15 +101,30 @@ class ChatSocketService {
 
     // STOMP subscription methods
     subscribeTo(destination, callback) {
-        if (this.isClientConnected()) {
-            const subscription = this.stompClient.subscribe(destination, (message) => {
-                const body = JSON.parse(message.body);
-                callback(body);
-            });
-            this.subscriptions.set(destination, subscription);
-            return subscription;
-        }
-        return null;
+        return new Promise((resolve, reject) => {
+            if (!this.isClientConnected()) {
+                reject(new Error('STOMP client not connected'));
+                return;
+            }
+
+            try {
+                const subscription = this.stompClient.subscribe(destination, (message) => {
+                    try {
+                        const body = JSON.parse(message.body);
+                        callback(body);
+                    } catch (error) {
+                        console.error('❌ Error parsing STOMP message:', error);
+                    }
+                });
+                
+                this.subscriptions.set(destination, subscription);
+                console.log('✅ Subscribed to:', destination);
+                resolve(subscription);
+            } catch (error) {
+                console.error('❌ Error subscribing to:', destination, error);
+                reject(error);
+            }
+        });
     }
 
     unsubscribeFrom(destination) {

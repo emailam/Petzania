@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext, useCallback, useRef } from 'react';
-import { View, ActivityIndicator, Text, StyleSheet, TouchableOpacity, TextInput, Alert, Platform, KeyboardAvoidingView, FlatList, Animated, Keyboard } from 'react-native';
+import React, { useState, useEffect, useContext, useCallback, useRef, useMemo } from 'react';
+import { View, ActivityIndicator, Text, StyleSheet, TouchableOpacity, TextInput, Alert, Platform, KeyboardAvoidingView, FlatList, Animated } from 'react-native';
 import { Image } from 'expo-image';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
@@ -48,16 +48,17 @@ export default function ChatDetailScreen() {
   const inputRef = useRef(null);
   const slideAnim = useRef(new Animated.Value(0)).current;
 
-  // Constants
   const defaultImage = require('@/assets/images/Defaults/default-user.png');
 
-  // Utility functions
-  const isImageFile = (url) => {
+  const memoizedMessages = useMemo(() => messages, [messages]);
+
+  // Utility functions - memoized for better performance
+  const isImageFile = useCallback((url) => {
     const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
     return imageExtensions.some(ext => url.toLowerCase().includes(ext));
-  };
+  }, []);
 
-  const getFileNameFromUrl = (url) => {
+  const getFileNameFromUrl = useCallback((url) => {
     try {
       const parts = url.split('/');
       const fileName = parts[parts.length - 1];
@@ -65,9 +66,9 @@ export default function ChatDetailScreen() {
     } catch (error) {
       return 'Unknown File';
     }
-  };
+  }, []);
 
-  const getFileTypeFromUrl = (url) => {
+  const getFileTypeFromUrl = useCallback((url) => {
     try {
       const fileName = getFileNameFromUrl(url);
       const extension = fileName.split('.').pop();
@@ -75,17 +76,56 @@ export default function ChatDetailScreen() {
     } catch (error) {
       return 'Unknown';
     }
-  };
+  }, [getFileNameFromUrl]);
 
-  // STOMP connection setup
+  // STOMP connection setup with improved error handling
   useEffect(() => {
+    let connectionAttempts = 0;
+    const maxRetries = 3;
+    const retryDelay = 2000;
+
     const connectToStomp = async () => {
-      if (currentUser?.userId && chatid) {
+      if (!currentUser?.userId || !chatid) {
+        console.log('⚠️ Missing userId or chatId for STOMP connection');
+        return;
+      }
+
+      try {
+        connectionAttempts++;
+        console.log(`🔄 STOMP connection attempt ${connectionAttempts}/${maxRetries}`);
+        
+        const token = await getToken('accessToken');
+        if (!token) {
+          console.log('❌ No access token available for STOMP connection');
+          return;
+        }
+
+        console.log('🔌 Connecting to STOMP with userId:', currentUser.userId);
+
+        // Connect to STOMP (now returns a Promise)
+        await chatStompService.connect(currentUser.userId, token);
+        console.log('✅ STOMP connection successful');
+
+        // Subscribe to chat topic after successful connection
         try {
-          const token = await getToken('accessToken');
-          chatStompService.connect(currentUser.userId, token);
-        } catch (error) {
-          console.error('Error connecting to STOMP:', error);
+          await chatStompService.subscribeToChatTopic(chatid, handleTopicMessage);
+          console.log('✅ Successfully subscribed to chat topic:', chatid);
+        } catch (subscriptionError) {
+          console.error('❌ Failed to subscribe to chat topic:', subscriptionError);
+          throw subscriptionError;
+        }
+        connectionAttempts = 0;
+
+      } catch (error) {
+        console.error(`❌ STOMP connection attempt ${connectionAttempts} failed:`, error.message);
+
+        // Retry logic
+        if (connectionAttempts < maxRetries) {
+          console.log(`⏳ Retrying STOMP connection in ${retryDelay/1000} seconds...`);
+          setTimeout(connectToStomp, retryDelay);
+        } else {
+          console.error('❌ STOMP connection failed after maximum retries');
+          showToast('error', 'Connection Error', 'Failed to connect to chat service');
         }
       }
     };
@@ -93,8 +133,13 @@ export default function ChatDetailScreen() {
     connectToStomp();
 
     return () => {
-      if (chatStompService.isClientConnected()) {
-        chatStompService.unsubscribeFromChatTopic(chatid);
+      try {
+        if (chatStompService.isClientConnected()) {
+          console.log('🔌 Disconnecting STOMP and unsubscribing from chat:', chatid);
+          chatStompService.unsubscribeFromChatTopic(chatid);
+        }
+      } catch (error) {
+        console.error('Error during STOMP cleanup:', error);
       }
     };
   }, [currentUser?.userId, chatid]);
@@ -152,7 +197,14 @@ export default function ChatDetailScreen() {
       })
     };
 
-    setMessages(prev => [newMessage, ...prev]);
+    // Prevent duplicate messages
+    setMessages(prev => {
+      const messageExists = prev.some(msg => msg._id === messageData.messageId);
+      if (messageExists) {
+        return prev;
+      }
+      return [newMessage, ...prev];
+    });
 
     // Auto-mark messages as read if not from current user
     if (messageData.senderId !== currentUser.userId) {
@@ -244,7 +296,6 @@ export default function ChatDetailScreen() {
       }));
 
       setMessages(transformedMessages);
-      setupStompSubscription();
       
       // Mark unread messages as read
       const unreadMessages = transformedMessages.filter(msg => 
@@ -273,17 +324,6 @@ export default function ChatDetailScreen() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const setupStompSubscription = () => {
-    const checkConnection = () => {
-      if (chatStompService.isClientConnected()) {
-        chatStompService.subscribeToChatTopic(chatid, handleTopicMessage);
-      } else {
-        setTimeout(checkConnection, 100);
-      }
-    };
-    setTimeout(checkConnection, 500);
   };
 
   // Message status updates
@@ -359,7 +399,7 @@ export default function ChatDetailScreen() {
           }),
         }));
 
-        setMessages(prev => [...transformedMessages, ...prev]);
+        setMessages(prev => [...prev, ...transformedMessages]);
       }
     } catch (error) {
       console.error('Error loading earlier messages:', error);
@@ -373,7 +413,6 @@ export default function ChatDetailScreen() {
   const handleLongPress = useCallback((message, event) => {
     setSelectedMessage(message);
     setShowMessageActions(true);
-    
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
   }, []);
 
@@ -426,7 +465,7 @@ export default function ChatDetailScreen() {
     if (!selectedMessage || !selectedMessage.text) return;
     setEditText(selectedMessage.text);
     setShowEditInput(true);
-    setSelectedMessage(null);
+    // Don't clear selectedMessage here - we need it for saving
   };
 
   const handleDeleteMessage = async () => {
@@ -456,6 +495,7 @@ export default function ChatDetailScreen() {
   };
 
   const saveEditedMessage = async () => {
+    console.log('Saving edited message:', editText, selectedMessage);
     if (!editText.trim() || !selectedMessage) return;
 
     try {
@@ -625,17 +665,43 @@ export default function ChatDetailScreen() {
     }
   };
 
+  // Memoized components for better performance
+  const FooterComponent = useMemo(() => {
+    if (loadingEarlier) {
+      return (
+        <View style={styles.loadEarlierContainer}>
+          <ActivityIndicator size="small" color="#918CE5" />
+          <Text style={styles.loadEarlierText}>Loading earlier messages...</Text>
+        </View>
+      );
+    }
+    
+    if (hasMoreMessages) {
+      return (
+        <TouchableOpacity style={styles.loadEarlierButton} onPress={loadEarlierMessages}>
+          <Text style={styles.loadEarlierButtonText}>Load Earlier Messages</Text>
+        </TouchableOpacity>
+      );
+    }
+    
+    return null;
+  }, [loadingEarlier, hasMoreMessages, loadEarlierMessages]);
+
   // Render functions
-  const renderMessage = ({ item: message }) => {
+  const renderMessage = useCallback(({ item: message }) => {
     const isCurrentUser = message.user._id === currentUser?.userId;
-    console.log('Rendering message:', message);
+    const isSelected = selectedMessage?._id === message._id;
 
     return (
-      <View style={[styles.messageContainer, isCurrentUser ? styles.messageContainerRight : styles.messageContainerLeft]}>
+      <View style={[
+        styles.messageContainer, 
+        isCurrentUser ? styles.messageContainerRight : styles.messageContainerLeft,
+        isSelected && styles.messageContainerSelected
+      ]}>
         {!isCurrentUser && (
-          <Image 
+          <Image
             source={otherUser?.profilePictureURL ? { uri: otherUser.profilePictureURL } : defaultImage}
-            style={styles.avatar} 
+            style={styles.avatar}
           />
         )}
 
@@ -657,7 +723,11 @@ export default function ChatDetailScreen() {
 
             {/* Message Content */}
             <TouchableOpacity
-                style={[styles.messageBubble, isCurrentUser ? styles.messageBubbleRight : styles.messageBubbleLeft]}
+                style={[
+                  styles.messageBubble, 
+                  isCurrentUser ? styles.messageBubbleRight : styles.messageBubbleLeft,
+                  isSelected && styles.messageBubbleSelected
+                ]}
                 onLongPress={(event) => handleLongPress(message, event)}
                 activeOpacity={0.8}
             >
@@ -666,6 +736,7 @@ export default function ChatDetailScreen() {
                 <TouchableOpacity
                     onPress={() => handleImagePress(message.image)}
                     activeOpacity={0.8}
+                    onLongPress={(event) => handleLongPress(message, event)}
                 >
                     <Image source={{ uri: message.image }} style={styles.messageImage} />
                 </TouchableOpacity>
@@ -676,6 +747,7 @@ export default function ChatDetailScreen() {
               <TouchableOpacity
                 style={styles.fileContainer}
                 onPress={() => handleFilePress(message.file.url)}
+                onLongPress={(event) => handleLongPress(message, event)}
                 activeOpacity={0.7}
               >
                 <Ionicons name="document-outline" size={16} color="#918CE5" />
@@ -733,7 +805,7 @@ export default function ChatDetailScreen() {
         </View>
       </View>
     );
-  };
+  }, [currentUser?.userId, selectedMessage?._id, otherUser?.profilePictureURL, handleLongPress, handleImagePress, handleFilePress]);
 
   const renderHeader = () => (
     <View style={styles.header}>
@@ -915,25 +987,14 @@ export default function ChatDetailScreen() {
         <View style={styles.chatContent}>
             <FlatList
                 ref={flatListRef}
-                data={messages}
-                keyExtractor={(item) => item._id.toString()}
+                data={memoizedMessages}
+                keyExtractor={(item, index) => `${item._id}_${index}`}
                 renderItem={renderMessage}
                 inverted
                 showsVerticalScrollIndicator={false}
                 onEndReached={loadEarlierMessages}
                 onEndReachedThreshold={0.1}
-                ListFooterComponent={
-                    loadingEarlier ? (
-                    <View style={styles.loadEarlierContainer}>
-                        <ActivityIndicator size="small" color="#918CE5" />
-                        <Text style={styles.loadEarlierText}>Loading earlier messages...</Text>
-                    </View>
-                    ) : hasMoreMessages ? (
-                    <TouchableOpacity style={styles.loadEarlierButton} onPress={loadEarlierMessages}>
-                        <Text style={styles.loadEarlierButtonText}>Load Earlier Messages</Text>
-                    </TouchableOpacity>
-                    ) : null
-                }
+                ListFooterComponent={FooterComponent}
                 contentContainerStyle={styles.messagesList}
                 keyboardShouldPersistTaps="handled"
             />
@@ -995,6 +1056,12 @@ const styles = StyleSheet.create({
   messageContainerLeft: {
     justifyContent: 'flex-start',
   },
+  messageContainerSelected: {
+    backgroundColor: 'hsla(243, 63.10%, 72.40%, 0.10)',
+    borderRadius: 24,
+    padding: 4,
+    marginHorizontal: -4,
+  },
   avatar: {
     width: 32,
     height: 32,
@@ -1016,11 +1083,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
   },
   messageBubbleRight: {
     backgroundColor: '#918CE5',
@@ -1029,6 +1091,15 @@ const styles = StyleSheet.create({
   messageBubbleLeft: {
     backgroundColor: '#E5E5EA',
     borderBottomLeftRadius: 4,
+  },
+  messageBubbleSelected: {
+    shadowColor: '#918CE5',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+    borderWidth: 2,
+    borderColor: 'rgba(145, 140, 229, 0.3)',
   },
   messageText: {
     fontSize: 16,

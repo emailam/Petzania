@@ -168,22 +168,6 @@ export default function Settings() { const router = useRouter();
                 />
             </SettingSection>
 
-            <SettingSection title="App Preferences">
-                <SettingItem
-                    icon="moon-outline"
-                    title="Dark Mode"
-                    rightComponent={
-                        <Switch
-                            value={darkMode}
-                            onValueChange={setDarkMode}
-                            trackColor={{ false: "#e0e0e0", true: "#9188E5" }}
-                            thumbColor={darkMode ? "#fff" : "#f4f3f4"}
-                        />
-                    }
-                    showArrow={false}
-                />
-            </SettingSection>
-
             <SettingSection title="Pet Care">
                 <SettingItem
                     icon="heart-outline"
@@ -193,11 +177,6 @@ export default function Settings() { const router = useRouter();
             </SettingSection>
 
             <SettingSection title="Support">
-                <SettingItem
-                    icon="help-circle-outline"
-                    title="Help & FAQ"
-                    onPress={() => router.push('/Settings/Help')}
-                />
                 <SettingItem
                     icon="chatbubble-outline"
                     title="Contact Support"

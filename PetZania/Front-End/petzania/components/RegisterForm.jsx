@@ -13,7 +13,7 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 import { UserContext } from '@/context/UserContext';
 
-import { registerUser } from '@/services/userService';
+import { signup } from '@/services/userService';
 
 
 export default function RegisterForm(){
@@ -27,7 +27,7 @@ export default function RegisterForm(){
 
     const Register = async (data) => {
       try {
-        const response = await registerUser(data);
+        const response = await signup(data);
 
         if (response) {
           setUser({

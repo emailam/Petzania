@@ -45,7 +45,7 @@ export default function App() {
 
                 const userData = await getUserById(userId);
                 setUser(userData);
-                console.log('Fetched user profile:', userData);
+
                 setPets(userData.myPets);
 
                 if (userData?.name === null) {

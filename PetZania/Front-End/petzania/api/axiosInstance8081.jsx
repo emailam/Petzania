@@ -47,7 +47,7 @@ api.interceptors.response.use(
                 })
                 .then((token) => {
                     originalRequest.headers.Authorization = 'Bearer ' + token;
-                    return axios(originalRequest);
+                    return api(originalRequest);
                 })
                 .catch((err) => Promise.reject(err));
             }
