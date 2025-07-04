@@ -10,6 +10,7 @@ import com.example.friends.and.chats.module.exception.user.UserAccessDenied;
 import com.example.friends.and.chats.module.exception.user.UserNotFound;
 import com.example.friends.and.chats.module.model.dto.message.*;
 import com.example.friends.and.chats.module.model.entity.*;
+import com.example.friends.and.chats.module.model.enumeration.EventType;
 import com.example.friends.and.chats.module.model.enumeration.MessageReact;
 import com.example.friends.and.chats.module.model.enumeration.MessageStatus;
 import com.example.friends.and.chats.module.repository.*;
@@ -20,6 +21,7 @@ import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.*;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -39,6 +41,7 @@ public class MessageService implements IMessageService {
     private final BlockRepository blockRepository;
     private final MessageReactionRepository messageReactionRepository;
     private final IDTOConversionService dtoConversionService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Override
     @RateLimiter(name = MESSAGE_RATE_LIMITER, fallbackMethod = "rateLimitFallbackSend")
@@ -85,7 +88,13 @@ public class MessageService implements IMessageService {
                 .build();
 
         Message saved = messageRepository.save(message);
-        return dtoConversionService.mapToMessageDTO(saved);
+        MessageDTO savedDTO = dtoConversionService.mapToMessageDTO(saved);
+
+        messagingTemplate.convertAndSend(
+                "/topic/" + receiver.getUserId().toString() + "/messages",
+                new MessageEventDTO(savedDTO, EventType.SEND)
+        );
+        return savedDTO;
     }
 
     private MessageDTO rateLimitFallbackSend(SendMessageDTO sendMessageDTO, UUID senderId, RequestNotPermitted t) {
@@ -125,7 +134,7 @@ public class MessageService implements IMessageService {
 
     @Override
     @RateLimiter(name = MESSAGE_RATE_LIMITER, fallbackMethod = "rateLimitFallbackDelete")
-    public MessageDTO deleteMessage(UUID messageId, UUID userId) {
+    public void deleteMessage(UUID messageId, UUID userId) {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new MessageNotFound("Message not found"));
 
@@ -138,8 +147,21 @@ public class MessageService implements IMessageService {
             throw new UserAccessDenied("You can only delete messages that you sent");
         }
 
+        User receiver;
+        if (message.getChat().getUser1().getUserId().equals(userId)) {
+            receiver = message.getChat().getUser2();
+        }
+        else {
+            receiver = message.getChat().getUser1();
+        }
+
+        MessageDTO deletedMessageDTO = dtoConversionService.mapToMessageDTO(message);
+        messagingTemplate.convertAndSend(
+                "/topic/" + receiver.getUserId().toString() + "/messages",
+                new MessageEventDTO(deletedMessageDTO, EventType.DELETE)
+        );
+
         messageRepository.deleteById(messageId);
-        return dtoConversionService.mapToMessageDTO(message);
     }
 
     private MessageDTO rateLimitFallbackDelete(UUID messageId, UUID userId, RequestNotPermitted t) {
@@ -168,7 +190,20 @@ public class MessageService implements IMessageService {
         message.setContent(content);
         message.setEdited(true);
         message = messageRepository.save(message);
-        return dtoConversionService.mapToMessageDTO(message);
+
+        User receiver;
+        if (message.getChat().getUser1().getUserId().equals(userId)) {
+            receiver = message.getChat().getUser2();
+        } else {
+            receiver = message.getChat().getUser1();
+        }
+
+        MessageDTO updatedMessageDTO = dtoConversionService.mapToMessageDTO(message);
+        messagingTemplate.convertAndSend(
+                "/topic/" + receiver.getUserId().toString() + "/messages",
+                new MessageEventDTO(updatedMessageDTO, EventType.EDIT)
+        );
+        return updatedMessageDTO;
     }
 
     private MessageDTO rateLimitFallbackUpdate(UUID messageId, UUID userId, String content, RequestNotPermitted t) {
@@ -205,7 +240,21 @@ public class MessageService implements IMessageService {
 
         message.setStatus(newStatus);
         message = messageRepository.save(message);
-        return dtoConversionService.mapToMessageDTO(message);
+
+        User receiver;
+        if (message.getChat().getUser1().getUserId().equals(userId)) {
+            receiver = message.getChat().getUser2();
+        } else {
+            receiver = message.getChat().getUser1();
+        }
+        MessageDTO updatedMessageDTO = dtoConversionService.mapToMessageDTO(message);
+
+        messagingTemplate.convertAndSend(
+                "/topic/" + receiver.getUserId().toString() + "/messages",
+                new MessageEventDTO(updatedMessageDTO, EventType.UPDATE_STATUS)
+        );
+
+        return updatedMessageDTO;
     }
 
     @Override
@@ -227,7 +276,8 @@ public class MessageService implements IMessageService {
         if (existingReaction.isPresent()) {
             reaction = existingReaction.get();
             reaction.setReactionType(reactionType);
-        } else {
+        }
+        else {
             reaction = MessageReaction.builder()
                     .message(message)
                     .user(userRepository.findById(userId)
@@ -239,7 +289,21 @@ public class MessageService implements IMessageService {
 
         MessageReaction messageReaction = messageReactionRepository.save(reaction);
 
-        return dtoConversionService.mapToMessageReactionDTO(messageReaction);
+        User receiver;
+        if (message.getChat().getUser1().getUserId().equals(userId)) {
+            receiver = message.getChat().getUser2();
+        }
+        else {
+            receiver = message.getChat().getUser1();
+        }
+
+        MessageReactionDTO messageReactionDTO = dtoConversionService.mapToMessageReactionDTO(messageReaction);
+        messagingTemplate.convertAndSend(
+                "/topic/" + receiver.getUserId().toString() + "/reactions",
+                new MessageReactionEventDTO(messageReactionDTO, EventType.REACT)
+        );
+
+        return messageReactionDTO;
     }
 
     private MessageReactionDTO rateLimitFallbackReact(UUID messageId, UUID userId, MessageReact reactionType, RequestNotPermitted t) {
@@ -247,7 +311,7 @@ public class MessageService implements IMessageService {
     }
 
     @Override
-    public MessageReactionDTO removeReaction(UUID messageId, UUID userId) {
+    public void removeReaction(UUID messageId, UUID userId) {
         MessageReaction messageReaction = messageReactionRepository
                 .findByMessage_MessageIdAndUser_UserId(messageId, userId)
                 .orElseThrow(() -> new MessageNotFound("Reaction not found"));
@@ -257,7 +321,18 @@ public class MessageService implements IMessageService {
 
         messageReactionRepository.delete(messageReaction);
 
-        return dtoConversionService.mapToMessageReactionDTO(messageReaction);
+        User receiver;
+        if (message.getChat().getUser1().getUserId().equals(userId)) {
+            receiver = message.getChat().getUser2();
+        }
+        else {
+            receiver = message.getChat().getUser1();
+        }
+        MessageReactionDTO messageReactionDTO = dtoConversionService.mapToMessageReactionDTO(messageReaction);
+        messagingTemplate.convertAndSend(
+                "/topic/" + receiver.getUserId().toString() + "/reactions",
+                new MessageReactionEventDTO(messageReactionDTO, EventType.REMOVE_REACT)
+        );
     }
 
     @Override

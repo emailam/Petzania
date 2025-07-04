@@ -25,7 +25,6 @@ import java.util.UUID;
 public class MessageController {
 
     private final IMessageService messageService;
-    private final SimpMessagingTemplate messagingTemplate;
 
     @Operation(summary = "Send a new message in a chat")
     @PostMapping("/send")
@@ -33,10 +32,6 @@ public class MessageController {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();
         MessageDTO saved = messageService.sendMessage(sendMessageDTO, userId);
-        messagingTemplate.convertAndSend(
-                "/topic/" + userId.toString() + "/messages",
-                new MessageEventDTO(saved, EventType.SEND)
-        );
         return ResponseEntity.ok(saved);
     }
 
@@ -71,11 +66,6 @@ public class MessageController {
         String content = updateMessageContentDTO.getContent();
 
         MessageDTO updatedMessage = messageService.updateMessageContent(messageId, userId, content);
-        messagingTemplate.convertAndSend(
-                "/topic/" + userId.toString() + "/messages",
-                new MessageEventDTO(updatedMessage, EventType.EDIT)
-        );
-
         return ResponseEntity.ok(updatedMessage);
     }
 
@@ -87,13 +77,7 @@ public class MessageController {
         UUID userId = userPrincipal.getUserId();
 
         MessageStatus messageStatus = updateMessageStatusDTO.getMessageStatus();
-
         MessageDTO updatedMessage = messageService.updateMessageStatus(messageId, userId, messageStatus);
-        messagingTemplate.convertAndSend(
-                "/topic/" + userId.toString() + "/messages",
-                new MessageEventDTO(updatedMessage, EventType.UPDATE_STATUS)
-        );
-
         return ResponseEntity.ok(updatedMessage);
     }
 
@@ -105,13 +89,7 @@ public class MessageController {
         UUID userId = userPrincipal.getUserId();
 
         MessageReact messageReact = updateMessageReact.getMessageReact();
-
         MessageReactionDTO messageReactionDTO = messageService.reactToMessage(messageId, userId, messageReact);
-        messagingTemplate.convertAndSend(
-                "/topic/" + userId.toString() + "/reactions",
-                new MessageReactionEventDTO(messageReactionDTO, EventType.REACT)
-        );
-
         return ResponseEntity.ok(messageReactionDTO);
     }
 
@@ -121,14 +99,7 @@ public class MessageController {
     public ResponseEntity<Void> removeReactionFromMessage(@PathVariable UUID messageId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();
-
-        MessageReactionDTO messageReactionDTO = messageService.removeReaction(messageId, userId);
-        messagingTemplate.convertAndSend(
-                "/topic/" + userId.toString() + "/reactions",
-                new MessageReactionEventDTO(messageReactionDTO, EventType.REMOVE_REACT)
-        );
-
-
+        messageService.removeReaction(messageId, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -145,13 +116,7 @@ public class MessageController {
     public ResponseEntity<Void> deleteMessage(@PathVariable UUID messageId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();
-        MessageDTO deletedMessage = messageService.deleteMessage(messageId, userId);
-
-        messagingTemplate.convertAndSend(
-                "/topic/" + userId.toString() + "/messages",
-                new MessageEventDTO(deletedMessage, EventType.DELETE)
-        );
-
+        messageService.deleteMessage(messageId, userId);
         return ResponseEntity.noContent().build();
     }
 }
