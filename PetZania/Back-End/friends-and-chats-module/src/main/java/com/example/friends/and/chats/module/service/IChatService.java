@@ -18,4 +18,6 @@ public interface IChatService {
     ChatDTO getChatById(UUID chatId, UUID userId);
 
     void deleteUserChatById(UUID userChatId, UUID userId);
+
+    UserChatDTO getUserChatById(UUID chatId, UUID userId);
 }

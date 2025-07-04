@@ -55,7 +55,7 @@ export default function CustomDrawer(props) {
     });
   };
 
-  const isHomeActive = isActive('/Home') || isActive('/Notifications') || isActive('/Adoption') || isActive('/Post') || isActive('/Breeding');
+  const isHomeActive = isActive('/Home') || isActive('/Notifications') || isActive('/Adoption') || isActive('/Breeding') || isActive('/AddPost');
 
   return (
     <DrawerContentScrollView {...props} keyboardShouldPersistTaps="handled" scrollToOverflowEnabled={true} contentContainerStyle={{ flexGrow: 1 }}>
@@ -174,23 +174,6 @@ export default function CustomDrawer(props) {
               }}
               labelStyle={{
                 color: isActive('/Friends') ? 'white' : 'black',
-              }}
-            />
-            <DrawerItem
-              label="Pet Services"
-              onPress={() => closeAndNavigate('/PetServices')}
-              icon={() => (
-                <FontAwesome5
-                  name="dog"
-                  size={24}
-                  color={isActive('/PetServices') ? 'white' : 'black'}
-                />
-              )}
-              style={{
-                backgroundColor: isActive('/PetServices') ? '#9188E5' : 'transparent',
-              }}
-              labelStyle={{
-                color: isActive('/PetServices') ? 'white' : 'black',
               }}
             />
           </View>

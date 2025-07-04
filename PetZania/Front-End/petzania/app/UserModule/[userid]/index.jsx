@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import ImageViewing from 'react-native-image-viewing';
+import LottieView from 'lottie-react-native';
 import UserPosts from '@/components/AdoptionBreedingModule/UserPosts';
 
 import { UserContext } from '@/context/UserContext';
@@ -672,7 +673,12 @@ export default function UserProfile() {
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#9188E5" />
+                <LottieView
+                    source={require("@/assets/lottie/loading.json")}
+                    autoPlay
+                    loop
+                    style={styles.lottie}
+                />
                 <Text style={styles.loadingText}>Loading profile...</Text>
                 <Text style={styles.loadingSubText}>
                     Getting user information and status
@@ -755,7 +761,12 @@ export default function UserProfile() {
                 disabled={actionLoading}
               >
                 {actionLoading ? (
-                  <ActivityIndicator size="small" color="#fff" />
+                  <LottieView
+                    source={require("@/assets/lottie/loading.json")}
+                    autoPlay
+                    loop
+                    style={styles.smallLottie}
+                  />
                 ) : (
                   <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
                 )}
@@ -775,7 +786,12 @@ export default function UserProfile() {
                 disabled={actionLoading || friendshipStatus === 'blocked'}
               >
                 {actionLoading ? (
-                  <ActivityIndicator size="small" color={getFriendButtonConfig().textStyle.color} />
+                  <LottieView
+                    source={require("@/assets/lottie/loading.json")}
+                    autoPlay
+                    loop
+                    style={styles.smallLottie}
+                  />
                 ) : (
                   <Ionicons
                     name={getFriendButtonConfig().icon}
@@ -898,9 +914,8 @@ export default function UserProfile() {
       {/* Tab Content */}
       {activeTab === 'posts' && (
         <View style={styles.tabContent}>
-            {/* No posts message */}
-            <UserPosts />
-          </View>
+          <UserPosts userId={userid} />
+        </View>
       )}
 
       {activeTab === 'pets' && (
@@ -966,7 +981,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },  loadingContainer: {
+  },  lottie: {
+    width: 80,
+    height: 80,
+  },
+  smallLottie: {
+    width: 20,
+    height: 20,
+  },
+  loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',

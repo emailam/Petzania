@@ -15,7 +15,7 @@ spring:
 
     jpa:
         hibernate:
-            ddl-auto: create
+            ddl-auto: update
         #        show-sql: true
         properties:
             hibernate:
@@ -47,3 +47,5 @@ logging:
     level:
         org.springframework.cache: DEBUG
         org.springframework.data.redis.cache: DEBUG
+        org.springframework.security: DEBUG
+        org.springframework.web.servlet.DispatcherServlet: DEBUG

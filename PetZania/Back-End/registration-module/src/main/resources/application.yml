@@ -53,6 +53,7 @@ spring:
   sendgrid:
     key: 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
 
+
   email:
     sender:
       petzaniasystem@gmail.com
@@ -162,4 +163,10 @@ logging:
     org.springframework.cache: DEBUG
     org.springframework.data.redis.cache: DEBUG
     org.springframework.data.redis: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web.servlet.DispatcherServlet: DEBUG
     io.lettuce.core: DEBUG
+    com.example.registrationmodule.service.impl.EmailService: DEBUG
+    com.example.registrationmodule.service.impl.UserService: DEBUG
+    com.example.registrationmodule.config.EmailConfig: DEBUG
+    com.sendgrid: DEBUG

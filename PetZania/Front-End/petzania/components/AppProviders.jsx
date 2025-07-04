@@ -6,6 +6,7 @@ import { FlowProvider } from '@/context/FlowContext';
 import { FriendsProvider } from '@/context/FriendsContext';
 import { NotificationProvider } from '@/context/NotificationContext';
 import { GlobalMessageProvider } from '@/context/GlobalMessageContext';
+import { ChatProvider } from '@/context/ChatContext';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 
 const queryClient = new QueryClient();
@@ -19,15 +20,17 @@ export default function AppProviders({ children }) {
             <FlowProvider>
                 <UserProvider>
                     <GlobalMessageProvider>
-                        <NotificationProvider>
-                            <FriendsProvider>
-                                <PetProvider>
-                                    <ActionSheetProvider>
-                                        {children}
-                                    </ActionSheetProvider>
-                                </PetProvider>
-                            </FriendsProvider>
-                        </NotificationProvider>
+                        <ChatProvider>
+                            <NotificationProvider>
+                                <FriendsProvider>
+                                    <PetProvider>
+                                        <ActionSheetProvider>
+                                            {children}
+                                        </ActionSheetProvider>
+                                    </PetProvider>
+                                </FriendsProvider>
+                            </NotificationProvider>
+                        </ChatProvider>
                     </GlobalMessageProvider>
                 </UserProvider>
             </FlowProvider>

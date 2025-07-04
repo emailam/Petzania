@@ -83,7 +83,19 @@ api.interceptors.response.use(
             return Promise.reject(error);
         }
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // Handle other client errors that shouldn't trigger token refresh
+        if (error.response?.status >= 400 && error.response?.status < 500 && error.response?.status !== 401 && error.response?.status !== 403) {
+            console.log(`🔴 Client error (${error.response.status}):`, {
+                url: originalRequest.url,
+                method: originalRequest.method,
+                status: error.response.status,
+                message: error.response?.data?.message || error.message
+            });
+            return Promise.reject(error);
+        }
+
+        // Treat 401 and 403 as triggers for token refresh
+        if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
             console.log('🔄 Starting token refresh process...');
             originalRequest._retry = true;
 
@@ -142,18 +154,16 @@ api.interceptors.response.use(
                     message: err.message,
                     data: err.response?.data
                 });
-                
                 // Clear tokens and queue
                 processQueue(err, null);
                 await clearAllTokens();
                 console.log('🗑️ Cleared all tokens due to refresh failure');
-                
                 // If refresh token is invalid (400/401), don't retry the original request
                 if (err.response?.status === 400 || err.response?.status === 401) {
                     console.log('🚫 Refresh token invalid, not retrying original request');
                     return Promise.reject(new Error('Authentication failed. Please log in again.'));
                 }
-                
+                // Catch-all: reject all failed requests
                 return Promise.reject(err);
             } finally {
                 isRefreshing = false;

@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 
-import React, { useContext } from 'react';
+import React, { useContext, useMemo } from 'react';
 import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import { Image } from 'expo-image';
 
@@ -14,21 +14,53 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { UserContext } from '@/context/UserContext';
 import { useNotifications } from '@/context/NotificationContext';
+import { useChat } from '@/context/ChatContext';
+
+// Memoized indicator component to prevent unnecessary re-renders
+const ChatIndicator = React.memo(({ hasUnread }) => {
+  if (!hasUnread) return null;
+  
+  return (
+    <View style={{
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: '#FF3B30',
+      zIndex: 10,
+    }} />
+  );
+});
 
 export default function TabLayout() {
 
   const defaultImage = require('@/assets/images/Defaults/default-user.png');
   const { unreadCount } = useNotifications();
+  const { hasUnreadMessages } = useChat();
+
+  // Memoize the unread indicator to prevent unnecessary re-renders
+  const memoizedChatUnreadIndicator = useMemo(() => hasUnreadMessages, [hasUnreadMessages]);
+
+  // Debug logging for unread indicators (only when they change)
+  React.useEffect(() => {
+    console.log('🏷️ TabLayout unread indicators updated:', { 
+      notifications: unreadCount, 
+      chat: hasUnreadMessages 
+    });
+  }, [unreadCount, hasUnreadMessages]);
 
   const { user } = useContext(UserContext);
 
   const navigation = useNavigation();
   const router = useRouter();
 
-  const HeaderLeft = () => (
+  // Memoized header components to prevent unnecessary re-renders
+  const HeaderLeft = React.memo(() => (
     <View style={styles.leftHeader}>
       <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())} style={{ marginRight: 6 }}>
-        <Ionicons name="menu" size={24} color="#9188E5" />
+        <Ionicons name="menu" size={24} color="#9188E8" />
       </TouchableOpacity>
       <TouchableOpacity onPress={() => { /* navigate to profile */ }} >
         <View style={styles.imageContainer}>
@@ -36,19 +68,20 @@ export default function TabLayout() {
         </View>
       </TouchableOpacity>
     </View>
-  );
+  ));
 
-  const HeaderRight = () => (
+  const HeaderRight = React.memo(() => (
     <View style={{ flexDirection: 'row', gap: 4, marginRight: 12, alignItems: 'center' }}>
       <TouchableOpacity onPress={() => { router.push('Search') }}>
         <Ionicons name="search-outline" size={22} color="#9188E5" />
       </TouchableOpacity>
       <Text style={{ fontSize: 20, color: '#808B9A' }}> | </Text>
-      <TouchableOpacity onPress={() => { router.push('Chat') }}>
+      <TouchableOpacity onPress={() => { router.push('Chat') }} style={{ position: 'relative' }}>
         <Ionicons name="chatbubble-ellipses-outline" size={22} color="#9188E5" />
+        <ChatIndicator hasUnread={memoizedChatUnreadIndicator} />
       </TouchableOpacity>
     </View>
-  );
+  ));
 
   return (
     <Tabs

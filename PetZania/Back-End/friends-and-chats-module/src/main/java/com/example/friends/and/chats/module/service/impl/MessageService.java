@@ -22,6 +22,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -69,6 +70,9 @@ public class MessageService implements IMessageService {
         if (userChat.isEmpty()) {
             throw new UserAccessDenied("You can only send messages in your own chats");
         }
+
+        chat.setLastMessageTimestamp(LocalDateTime.now());
+        chat = chatRepository.save(chat);
 
         Message message = Message.builder()
                 .chat(chat)
@@ -230,6 +234,7 @@ public class MessageService implements IMessageService {
                             .orElseThrow(() -> new UserNotFound("User not found")))
                     .reactionType(reactionType)
                     .build();
+            message.getReactions().add(reaction);
         }
 
         MessageReaction messageReaction = messageReactionRepository.save(reaction);
@@ -247,7 +252,11 @@ public class MessageService implements IMessageService {
                 .findByMessage_MessageIdAndUser_UserId(messageId, userId)
                 .orElseThrow(() -> new MessageNotFound("Reaction not found"));
 
+        Message message = messageReaction.getMessage();
+        message.getReactions().remove(messageReaction);
+
         messageReactionRepository.delete(messageReaction);
+
         return dtoConversionService.mapToMessageReactionDTO(messageReaction);
     }
 

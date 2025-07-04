@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback, useRef, useMemo } from 'react';
-import { View, ActivityIndicator, Text, StyleSheet, TouchableOpacity, TextInput, Alert, Platform, KeyboardAvoidingView, FlatList, Animated } from 'react-native';
+import { View, ActivityIndicator, Text, StyleSheet, TouchableOpacity, TextInput, Alert, Platform, KeyboardAvoidingView, FlatList, Animated, Dimensions } from 'react-native';
 import { Image } from 'expo-image';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
@@ -7,6 +7,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { UserContext } from '@/context/UserContext';
 import { useGlobalMessage } from '@/context/GlobalMessageContext';
+import LottieView from 'lottie-react-native';
 import {
   getMessagesByChatId,
   sendMessage,
@@ -16,7 +17,8 @@ import {
   deleteMessage,
   reactToMessage,
   removeReactionFromMessage,
-  getReactionsForMessage
+  getReactionsForMessage,
+  getMessageById
 } from '@/services/chatService';
 import { uploadFile } from '@/services/uploadService';
 import chatStompService from '@/services/chatStompService';
@@ -44,22 +46,35 @@ export default function ChatDetailScreen() {
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [showEditInput, setShowEditInput] = useState(false);
   const [editText, setEditText] = useState('');
+  const [editingMessage, setEditingMessage] = useState(null);
   const [replyToMessage, setReplyToMessage] = useState(null);
   const [inputText, setInputText] = useState('');
   const [uploadingFiles, setUploadingFiles] = useState(false);
-  
+
+  // Reaction state
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [reactionMessage, setReactionMessage] = useState(null);
+  const [reactionPickerPosition, setReactionPickerPosition] = useState({ x: 0, y: 0 });
+
   // Refs and animations
   const flatListRef = useRef(null);
   const inputRef = useRef(null);
   const slideAnim = useRef(new Animated.Value(0)).current;
 
+  // Reaction types with emojis
+  const reactionTypes = [
+    { type: 'LIKE', emoji: '👍', name: 'Like' },
+    { type: 'LOVE', emoji: '❤️', name: 'Love' },
+    { type: 'HAHA', emoji: '😂', name: 'Haha' },
+    { type: 'SAD', emoji: '😢', name: 'Sad' },
+    { type: 'ANGRY', emoji: '😡', name: 'Angry' }
+  ];
+
   // Set current open chat when component mounts and clear on unmount
   useEffect(() => {
-    console.log('💬 Setting current open chat to:', chatid);
     setCurrentOpenChat(chatid);
-    
+
     return () => {
-      console.log('💬 Clearing current open chat');
       setCurrentOpenChat(null);
     };
   }, [chatid, setCurrentOpenChat]);
@@ -123,13 +138,18 @@ export default function ChatDetailScreen() {
         await chatStompService.connect(currentUser.userId, token);
         console.log('✅ STOMP connection successful');
 
-        // Subscribe to chat topic after successful connection
+        // Subscribe to user-specific message updates (as per backend implementation)
         try {
-          await chatStompService.subscribeToChatTopic(chatid, handleTopicMessage);
-          console.log('✅ Successfully subscribed to chat topic:', chatid);
+          await chatStompService.subscribeToUserMessages(currentUser.userId, handleTopicMessage);
+          console.log('✅ Successfully subscribed to user messages:', currentUser.userId);
+
+          // Also subscribe to user-specific reaction updates
+          await chatStompService.subscribeToUserReactions(currentUser.userId, handleReactionMessage);
+          console.log('✅ Successfully subscribed to user reactions:', currentUser.userId);
+
           connectionAttempts = 0; // Reset attempts on success
         } catch (subscriptionError) {
-          console.error('❌ Failed to subscribe to chat topic:', subscriptionError);
+          console.error('❌ Failed to subscribe to user topics:', subscriptionError);
           throw subscriptionError;
         }
 
@@ -157,36 +177,15 @@ export default function ChatDetailScreen() {
       
       try {
         if (chatStompService.isClientConnected()) {
-          console.log('🔌 Disconnecting STOMP and unsubscribing from chat:', chatid);
-          chatStompService.unsubscribeFromChatTopic(chatid);
+          console.log('🔌 Disconnecting STOMP and unsubscribing from user topics');
+          chatStompService.unsubscribeFromUserMessages(currentUser.userId);
+          chatStompService.unsubscribeFromUserReactions(currentUser.userId);
         }
       } catch (error) {
         console.error('Error during STOMP cleanup:', error);
       }
     };
   }, [currentUser?.userId, chatid]);
-
-  // Re-subscribe to chat topic when message handler changes
-  useEffect(() => {
-    if (!chatid || !chatStompService.isClientConnected()) {
-      return;
-    }
-
-    const resubscribe = async () => {
-      try {
-        console.log('🔄 Re-subscribing to chat topic with updated handler:', chatid);
-        // Unsubscribe first
-        chatStompService.unsubscribeFromChatTopic(chatid);
-        // Subscribe with the updated handler
-        await chatStompService.subscribeToChatTopic(chatid, handleTopicMessage);
-        console.log('✅ Successfully re-subscribed to chat topic:', chatid);
-      } catch (error) {
-        console.error('❌ Failed to re-subscribe to chat topic:', error);
-      }
-    };
-
-    resubscribe();
-  }, [chatid, handleTopicMessage]);
 
   // Handle incoming STOMP messages
   const handleTopicMessage = useCallback((data) => {
@@ -198,6 +197,12 @@ export default function ChatDetailScreen() {
     }
 
     const { eventType, messageDTO } = data;
+    
+    // Only process messages for the current chat
+    if (messageDTO.chatId !== chatid) {
+      console.log('💬 Message not for current chat, ignoring:', messageDTO.chatId, 'vs', chatid);
+      return;
+    }
     
     switch (eventType) {
       case 'SEND':
@@ -215,7 +220,72 @@ export default function ChatDetailScreen() {
       default:
         console.log('⚠️ Unknown event type:', eventType);
     }
-  }, [handleNewMessage, handleMessageEdit, handleMessageDelete, handleStatusUpdate]);
+  }, [handleNewMessage, handleMessageEdit, handleMessageDelete, handleStatusUpdate, chatid]);
+
+  // Handle incoming reaction messages
+  const handleReactionMessage = useCallback((data) => {
+    console.log('📡 Received STOMP reaction message:', data);
+    
+    if (!data || !data.eventType || !data.messageReactionDTO) {
+      console.warn('⚠️ Invalid STOMP reaction message format:', data);
+      return;
+    }
+
+    const { eventType, messageReactionDTO } = data;
+    
+    switch (eventType) {
+      case 'REACT':
+        console.log('👍 Message reaction added:', messageReactionDTO);
+        setMessages(prev => 
+          prev.map(msg => {
+            if (msg._id === messageReactionDTO.messageId) {
+              const existingReactions = msg.reactions || [];
+              const existingReactionIndex = existingReactions.findIndex(r => r.userId === messageReactionDTO.userId);
+              
+              let updatedReactions;
+              if (existingReactionIndex >= 0) {
+                // Update existing reaction
+                updatedReactions = existingReactions.map((r, index) =>
+                  index === existingReactionIndex 
+                    ? { ...r, reactionType: messageReactionDTO.reactionType }
+                    : r
+                );
+              } else {
+                // Add new reaction
+                updatedReactions = [
+                  ...existingReactions,
+                  {
+                    userId: messageReactionDTO.userId,
+                    reactionType: messageReactionDTO.reactionType,
+                    userName: 'User' // We might need to fetch this from user context
+                  }
+                ];
+              }
+              
+              return { ...msg, reactions: updatedReactions };
+            }
+            return msg;
+          })
+        );
+        break;
+        
+      case 'REMOVE_REACT':
+        console.log('👎 Message reaction removed:', messageReactionDTO);
+        setMessages(prev => 
+          prev.map(msg => {
+            if (msg._id === messageReactionDTO.messageId) {
+              const updatedReactions = (msg.reactions || []).filter(r => r.userId !== messageReactionDTO.userId);
+              return { ...msg, reactions: updatedReactions };
+            }
+            return msg;
+          })
+        );
+        break;
+        
+      default:
+        console.log('⚠️ Unknown reaction event type:', eventType);
+    }
+  }, [chatid]);
 
   const handleNewMessage = useCallback((messageData) => {
     console.log('📨 Handling new message from STOMP:', messageData);
@@ -264,7 +334,13 @@ export default function ChatDetailScreen() {
         },
         edited: messageData.edited || false,
         status: messageData.status || 'SENT',
-        replyToMessage: messageData.replyToMessage || null,
+        reactions: messageData.reactions || [],
+        replyToMessage: messageData.replyToMessageId ? {
+          _id: messageData.replyToMessageId,
+          // We'd need to fetch the reply message details or have them in the response
+          text: 'Reply message content would go here',
+          user: { name: 'Reply User' }
+        } : null,
         ...(messageData.file && {
           ...(isImageFile(messageData.content) ? {
             image: messageData.content,
@@ -360,7 +436,13 @@ export default function ChatDetailScreen() {
         },
         edited: msg.edited || false,
         status: msg.status || 'SENT',
-        replyToMessage: msg.replyToMessage || null,
+        reactions: msg.reactions || [],
+        replyToMessage: msg.replyToMessageId ? {
+          _id: msg.replyToMessageId,
+          // Would need to fetch actual reply message content
+          text: 'Reply message',
+          user: { name: 'Reply User' }
+        } : null,
         ...(msg.file && {
           ...(isImageFile(msg.content) ? {
             image: msg.content,
@@ -464,7 +546,12 @@ export default function ChatDetailScreen() {
           },
           edited: msg.edited || false,
           status: msg.status || 'SENT',
-          replyToMessage: msg.replyToMessage || null,
+          reactions: msg.reactions || [],
+          replyToMessage: msg.replyToMessageId ? {
+            _id: msg.replyToMessageId,
+            text: 'Reply message',
+            user: { name: 'Reply User' }
+          } : null,
           ...(msg.file && {
             ...(isImageFile(msg.content) ? {
               image: msg.content,
@@ -490,10 +577,14 @@ export default function ChatDetailScreen() {
 
   // Message interactions
   const handleLongPress = useCallback((message, event) => {
+    console.log('🔔 Long press detected on message:', message._id);
+    // Show both reactions picker and message actions
+    handleReactToMessage(message, event);
     setSelectedMessage(message);
     setShowMessageActions(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-  }, []);
+    console.log('✅ Action bar should now be visible for message:', message._id);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid);
+  }, [handleReactToMessage]);
 
   // Message sending
   const onSend = useCallback(async () => {
@@ -520,7 +611,9 @@ export default function ChatDetailScreen() {
             avatar: currentUser?.profilePictureURL || defaultImage
           },
           replyToMessage: replyToMessage,
-          status: 'SENT'
+          status: 'SENT',
+          reactions: response.reactions || [],
+          edited: false
         };
         
         console.log('🚀 Adding optimistic message to local state:', optimisticMessage);
@@ -549,33 +642,69 @@ export default function ChatDetailScreen() {
 
   // Message actions
   const handleReplyMessage = () => {
+    console.log('📝 Reply button pressed, selectedMessage:', selectedMessage?._id);
     setReplyToMessage(selectedMessage);
+    // Clear action bar and selection for reply since it's a one-time action
     setSelectedMessage(null);
+    setShowMessageActions(false);
+    setShowReactionPicker(false);
+    setReactionMessage(null);
+    setReactionPickerPosition({ x: 0, y: 0 });
   };
 
   const handleEditMessage = () => {
-    if (!selectedMessage || !selectedMessage.text) return;
+    console.log('✏️ Edit button pressed, selectedMessage:', selectedMessage?._id);
+    if (!selectedMessage || !selectedMessage.text) {
+      console.log('❌ Cannot edit: no selected message or no text');
+      return;
+    }
+    
+    // Store the message to edit in separate state
+    setEditingMessage(selectedMessage);
     setEditText(selectedMessage.text);
     setShowEditInput(true);
-    // Don't clear selectedMessage here - we need it for saving
+    
+    // Hide both the reaction picker and action modal when starting edit
+    setShowReactionPicker(false);
+    setReactionMessage(null);
+    setReactionPickerPosition({ x: 0, y: 0 });
+    setSelectedMessage(null);
+    setShowMessageActions(false);
+    console.log('✅ Edit mode activated, modal and reactions hidden');
   };
 
   const handleDeleteMessage = async () => {
+    console.log('🗑️ Delete button pressed, selectedMessage:', selectedMessage?._id);
     if (!selectedMessage) return;
+
+    // Hide the reaction picker and action modal immediately
+    setShowReactionPicker(false);
+    setReactionMessage(null);
+    setReactionPickerPosition({ x: 0, y: 0 });
+    setShowMessageActions(false);
+    setSelectedMessage(null);
 
     Alert.alert(
       'Delete Message',
       'Are you sure you want to delete this message?',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Cancel', 
+          style: 'cancel',
+          onPress: () => {
+            console.log('❌ Delete cancelled');
+            // Don't restore action bar, keep it hidden
+          }
+        },
         {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
             try {
+              console.log('🗑️ Deleting message:', selectedMessage._id);
               await deleteMessage(selectedMessage._id);
               setMessages(prev => prev.filter(msg => msg._id !== selectedMessage._id));
-              setSelectedMessage(null);
+              console.log('✅ Message deleted successfully');
             } catch (error) {
               console.error('Error deleting message:', error);
               showToast('error', 'Error', 'Failed to delete message');
@@ -587,35 +716,221 @@ export default function ChatDetailScreen() {
   };
 
   const saveEditedMessage = async () => {
-    console.log('Saving edited message:', editText, selectedMessage);
-    if (!editText.trim() || !selectedMessage) return;
+    console.log('Saving edited message:', editText, editingMessage);
+    if (!editText.trim() || !editingMessage) return;
 
     try {
-      await editMessage(selectedMessage._id, editText.trim());
+      await editMessage(editingMessage._id, editText.trim());
       setMessages(prev => 
         prev.map(msg => 
-          msg._id === selectedMessage._id 
+          msg._id === editingMessage._id 
             ? { ...msg, text: editText.trim(), edited: true }
             : msg
         )
       );
+      // Clear edit mode and all related states after successful save
       setShowEditInput(false);
       setEditText('');
+      setEditingMessage(null);
       setSelectedMessage(null);
+      setShowMessageActions(false);
+      setShowReactionPicker(false);
+      setReactionMessage(null);
+      setReactionPickerPosition({ x: 0, y: 0 });
+      console.log('✅ Message edited successfully');
     } catch (error) {
       console.error('Error editing message:', error);
       showToast('error', 'Error', 'Failed to edit message');
+      // Keep edit mode visible on error
     }
   };
 
   const cancelEdit = () => {
+    // Clear edit mode and all related states
     setShowEditInput(false);
     setEditText('');
+    setEditingMessage(null);
     setSelectedMessage(null);
+    setShowMessageActions(false);
+    setShowReactionPicker(false);
+    setReactionMessage(null);
+    setReactionPickerPosition({ x: 0, y: 0 });
+    console.log('❌ Edit cancelled, all states cleared');
   };
 
   const cancelReply = () => {
     setReplyToMessage(null);
+  };
+
+  // Reaction functions
+  const handleReactToMessage = (message, event = null) => {
+    setReactionMessage(message);
+    
+    // Calculate position for floating picker with better positioning logic
+    if (event && event.nativeEvent) {
+      const { pageX, pageY } = event.nativeEvent;
+      const { width: screenWidth } = Dimensions.get('window');
+      const pickerWidth = 250; // Approximate picker width (5 reactions * 40px + padding)
+      
+      // Calculate X position - ensure picker doesn't go off screen
+      let xPosition = pageX - (pickerWidth / 2); // Center picker on touch point
+      
+      // Adjust if too far left
+      if (xPosition < 20) {
+        xPosition = 20;
+      }
+      // Adjust if too far right
+      if (xPosition + pickerWidth > screenWidth - 20) {
+        xPosition = screenWidth - pickerWidth - 20;
+      }
+      
+      setReactionPickerPosition({
+        x: xPosition,
+        y: Math.max(100, pageY - 80) // Position above the touch point with more space
+      });
+    } else {
+      // Default position if no event (e.g., from header button)
+      const { width: screenWidth } = Dimensions.get('window');
+      const pickerWidth = 250;
+      setReactionPickerPosition({ 
+        x: (screenWidth - pickerWidth) / 2, // Center on screen
+        y: 200 
+      });
+    }
+    
+    setShowReactionPicker(true);
+    // Don't close message actions here - let them show simultaneously
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  const addReaction = async (reactionType) => {
+    if (!reactionMessage) return;
+
+    try {
+      console.log('Adding reaction:', reactionType, 'to message:', reactionMessage._id);
+      
+      // Optimistic update
+      setMessages(prev => 
+        prev.map(msg => {
+          if (msg._id === reactionMessage._id) {
+            const existingReaction = msg.reactions?.find(r => r.userId === currentUser?.userId);
+            let updatedReactions = msg.reactions || [];
+            
+            if (existingReaction) {
+              // Update existing reaction
+              updatedReactions = updatedReactions.map(r =>
+                r.userId === currentUser?.userId 
+                  ? { ...r, reactionType: reactionType }
+                  : r
+              );
+            } else {
+              // Add new reaction
+              updatedReactions = [
+                ...updatedReactions,
+                {
+                  userId: currentUser?.userId,
+                  userName: currentUser?.name,
+                  reactionType: reactionType
+                }
+              ];
+            }
+            
+            return { ...msg, reactions: updatedReactions };
+          }
+          return msg;
+        })
+      );
+
+      // API call
+      await reactToMessage(reactionMessage._id, reactionType);
+      
+      // Hide both reaction picker and action buttons
+      setShowReactionPicker(false);
+      setReactionMessage(null);
+      setReactionPickerPosition({ x: 0, y: 0 });
+      setSelectedMessage(null);
+      setShowMessageActions(false);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      
+    } catch (error) {
+      console.error('Error adding reaction:', error);
+      showToast('error', 'Error', 'Failed to add reaction');
+      
+      // Revert optimistic update on error
+      const messageData = await getMessagesByChatId(chatid, 0, messagesPerPage);
+      if (messageData) {
+        // Re-fetch and update the specific message
+        const messagesArray = Array.isArray(messageData) ? messageData : (messageData.content || []);
+        const updatedMessage = messagesArray.find(msg => msg.messageId === reactionMessage._id);
+        if (updatedMessage) {
+          setMessages(prev => 
+            prev.map(msg => 
+              msg._id === reactionMessage._id 
+                ? { ...msg, reactions: updatedMessage.reactions || [] }
+                : msg
+            )
+          );
+        }
+      }
+    }
+  };
+
+  const removeReaction = async (message) => {
+    try {
+      console.log('Removing reaction from message:', message._id);
+      
+      // Optimistic update
+      setMessages(prev => 
+        prev.map(msg => {
+          if (msg._id === message._id) {
+            const updatedReactions = (msg.reactions || []).filter(r => r.userId !== currentUser?.userId);
+            return { ...msg, reactions: updatedReactions };
+          }
+          return msg;
+        })
+      );
+
+      // API call
+      await removeReactionFromMessage(message._id);
+      
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      
+    } catch (error) {
+      console.error('Error removing reaction:', error);
+      showToast('error', 'Error', 'Failed to remove reaction');
+      
+      // Revert optimistic update on error
+      const messageData = await getMessagesByChatId(chatid, 0, messagesPerPage);
+      if (messageData) {
+        const messagesArray = Array.isArray(messageData) ? messageData : (messageData.content || []);
+        const updatedMessage = messagesArray.find(msg => msg.messageId === message._id);
+        if (updatedMessage) {
+          setMessages(prev => 
+            prev.map(msg => 
+              msg._id === message._id 
+                ? { ...msg, reactions: updatedMessage.reactions || [] }
+                : msg
+            )
+          );
+        }
+      }
+    }
+  };
+
+  const getUserReaction = (message) => {
+    if (!message.reactions || !currentUser?.userId) return null;
+    return message.reactions.find(r => r.userId === currentUser.userId);
+  };
+
+  const getReactionSummary = (message) => {
+    if (!message.reactions || message.reactions.length === 0) return null;
+    
+    const reactionCounts = {};
+    message.reactions.forEach(reaction => {
+      reactionCounts[reaction.reactionType] = (reactionCounts[reaction.reactionType] || 0) + 1;
+    });
+    
+    return reactionCounts;
   };
 
   // File handling
@@ -682,7 +997,6 @@ export default function ChatDetailScreen() {
 
       if (result && result.messageId) {
         console.log('File message sent:', result);
-        
         // Always add the file message locally for immediate feedback
         const optimisticFileMessage = {
           _id: result.messageId,
@@ -694,6 +1008,7 @@ export default function ChatDetailScreen() {
             avatar: currentUser?.profilePictureURL || defaultImage
           },
           status: 'SENT',
+          reactions: result.reactions || [],
           ...(result.file && {
             ...(isImageFile(fileUrl) ? {
               image: fileUrl,
@@ -907,50 +1222,54 @@ export default function ChatDetailScreen() {
               </View>
             )}
           </View>
+
+          {/* Reactions */}
+          {message.reactions && message.reactions.length > 0 && (
+            <View style={[styles.reactionsContainer, isCurrentUser ? styles.reactionsContainerRight : styles.reactionsContainerLeft]}>
+              {Object.entries(getReactionSummary(message) || {}).map(([reactionType, count]) => {
+                const reactionEmoji = reactionTypes.find(r => r.type === reactionType)?.emoji || '👍';
+                const userReaction = getUserReaction(message);
+                const isUserReaction = userReaction?.reactionType === reactionType;
+                
+                return (
+                  <TouchableOpacity
+                    key={reactionType}
+                    style={[
+                      styles.reactionBubble,
+                      isUserReaction && styles.reactionBubbleActive
+                    ]}
+                    onPress={() => {
+                      if (isUserReaction) {
+                        removeReaction(message);
+                      } else {
+                        // If user already has a different reaction, this will update it
+                        addReaction(reactionType);
+                        setReactionMessage(message);
+                      }
+                    }}
+                  >
+                    <Text style={styles.reactionEmoji}>{reactionEmoji}</Text>
+                    {count > 1 && <Text style={styles.reactionCount}>{count}</Text>}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
         </View>
       </View>
     );
   }, [currentUser?.userId, selectedMessage?._id, otherUser?.profilePictureURL, handleLongPress, handleImagePress, handleFilePress]);
 
-  const renderHeader = () => (
-    <View style={styles.header}>
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Ionicons name="arrow-back" size={24} color="#918CE5" />
-      </TouchableOpacity>
+  const renderHeader = () => {
+    console.log('🎨 Rendering header, selectedMessage:', selectedMessage?._id, 'showMessageActions:', showMessageActions);
+    
+    return (
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color="#918CE5" />
+        </TouchableOpacity>
 
-      {selectedMessage ? (
-        // Action Header when message is selected
-        <View style={styles.actionHeader}>
-          <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.headerActionButton} onPress={handleReplyMessage}>
-              <Ionicons name="arrow-undo" size={24} color="#918CE5" />
-            </TouchableOpacity>
-
-            {selectedMessage?.user._id === currentUser?.userId && (
-              <>
-                <TouchableOpacity style={styles.headerActionButton} onPress={handleEditMessage}>
-                  <Ionicons name="create-outline" size={24} color="#918CE5" />
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.headerActionButton} onPress={handleDeleteMessage}>
-                  <Ionicons name="trash-outline" size={24} color="#FF3B30" />
-                </TouchableOpacity>
-              </>
-            )}
-
-            <TouchableOpacity
-              style={styles.headerActionButton}
-              onPress={() => {
-                setSelectedMessage(null);
-                setShowMessageActions(false);
-              }}
-            >
-                <Ionicons name="close" size={24} color="#666" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      ) : (
-        // Normal Header
+        {/* Always show normal header */}
         <TouchableOpacity
             style={styles.headerInfo}
             onPress={() => router.push(`/Chat/Profile/${otherUser?.userId}?chatId=${chatid}`)}
@@ -968,9 +1287,9 @@ export default function ChatDetailScreen() {
             </Text>
           </View>
         </TouchableOpacity>
-      )}
-    </View>
-  );
+      </View>
+    );
+  };
 
   const renderInputToolbar = () => {
     if (showEditInput) {
@@ -1075,7 +1394,12 @@ export default function ChatDetailScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#918CE5" />
+        <LottieView
+          source={require("@/assets/lottie/loading.json")}
+          autoPlay
+          loop
+          style={styles.lottie}
+        />
         <Text style={styles.loadingText}>Loading chat...</Text>
       </View>
     );
@@ -1114,6 +1438,112 @@ export default function ChatDetailScreen() {
             <Text style={styles.uploadText}>Uploading file...</Text>
         </View>
       )}
+
+      {/* Floating Reaction Picker */}
+      {showReactionPicker && (
+        <>
+          {/* Transparent overlay to close picker */}
+          <TouchableOpacity 
+            style={styles.reactionOverlay}
+            activeOpacity={1}
+            onPress={() => {
+              setShowReactionPicker(false);
+              setReactionMessage(null);
+              setReactionPickerPosition({ x: 0, y: 0 });
+              setSelectedMessage(null);
+              setShowMessageActions(false);
+            }}
+          />
+          
+          {/* Floating reaction picker */}
+          <View 
+            style={[
+              styles.floatingReactionPicker,
+              {
+                left: reactionPickerPosition.x,
+                top: reactionPickerPosition.y,
+              }
+            ]}
+          >
+            {reactionTypes.map((reaction) => (
+              <TouchableOpacity
+                key={reaction.type}
+                style={styles.floatingReactionButton}
+                onPress={() => addReaction(reaction.type)}
+              >
+                <Text style={styles.floatingReactionEmoji}>{reaction.emoji}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </>
+      )}
+
+      {/* Messenger-style Bottom Action Modal */}
+      {showMessageActions && selectedMessage && (
+        <>
+          {/* Semi-transparent overlay */}
+          <TouchableOpacity 
+            style={styles.actionModalOverlay}
+            activeOpacity={1}
+            onPress={() => {
+              console.log('❌ Action modal overlay pressed, clearing all states');
+              setSelectedMessage(null);
+              setShowMessageActions(false);
+              setShowReactionPicker(false);
+              setReactionMessage(null);
+              setReactionPickerPosition({ x: 0, y: 0 });
+            }}
+          />
+          
+          {/* Bottom action modal */}
+          <View style={styles.bottomActionModal}>
+            <View style={styles.actionModalHeader}>
+              <Text style={styles.actionModalTitle}>Message Actions</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  console.log('❌ Close button pressed, clearing all states');
+                  setSelectedMessage(null);
+                  setShowMessageActions(false);
+                  setShowReactionPicker(false);
+                  setReactionMessage(null);
+                  setReactionPickerPosition({ x: 0, y: 0 });
+                }}
+              >
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.actionsList}>
+              {/* Reply Action */}
+              <TouchableOpacity style={styles.actionItem} onPress={handleReplyMessage}>
+                <View style={styles.actionIconContainer}>
+                  <Ionicons name="arrow-undo" size={24} color="#918CE5" />
+                </View>
+                <Text style={styles.actionText}>Reply</Text>
+              </TouchableOpacity>
+
+              {/* Edit and Delete actions only for current user's messages */}
+              {selectedMessage?.user._id === currentUser?.userId && (
+                <>
+                  <TouchableOpacity style={styles.actionItem} onPress={handleEditMessage}>
+                    <View style={styles.actionIconContainer}>
+                      <Ionicons name="create-outline" size={24} color="#918CE5" />
+                    </View>
+                    <Text style={styles.actionText}>Edit</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity style={styles.actionItem} onPress={handleDeleteMessage}>
+                    <View style={styles.actionIconContainer}>
+                      <Ionicons name="trash-outline" size={24} color="#FF3B30" />
+                    </View>
+                    <Text style={[styles.actionText, { color: '#FF3B30' }]}>Delete</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          </View>
+        </>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -1129,6 +1559,41 @@ const styles = StyleSheet.create({
   messagesList: {
     paddingHorizontal: 16,
     paddingVertical: 8,
+  },
+  // Header Styles
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5EA',
+  },
+  backButton: {
+    marginRight: 12,
+    padding: 8,
+  },
+  headerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  userAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
   },
   loadEarlierContainer: {
     flexDirection: 'row',
@@ -1246,14 +1711,6 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 2,
   },
-  inputToolbar: {
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E5EA',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 16,
-  },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -1278,11 +1735,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#918CE5',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  clipButton: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 4,
   },
   replyPreview: {
     backgroundColor: '#F0F0F0',
@@ -1324,24 +1776,6 @@ const styles = StyleSheet.create({
   },
   backButton: {
     marginRight: 8,
-  },
-  actionHeader: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'flex-end',
-  },
-  headerActionButton: {
-    padding: 8,
-    marginLeft: 8,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   userAvatar: {
     width: 40,
@@ -1450,7 +1884,7 @@ const styles = StyleSheet.create({
   // WhatsApp-style Input Styles
   inputContainer: {
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 12,
+    paddingHorizontal: 6,
     paddingVertical: 8,
     borderTopWidth: 1,
     borderTopColor: '#E5E5EA',
@@ -1459,12 +1893,9 @@ const styles = StyleSheet.create({
   inputToolbar: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    paddingHorizontal: 4,
-    paddingVertical: 4,
   },
   actionButton: {
     padding: 10,
-    marginRight: 8,
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1528,5 +1959,154 @@ const styles = StyleSheet.create({
   saveButton: {
     marginLeft: 8,
     padding: 8,
+  },
+  // Reaction Styles
+  reactionsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 4,
+    marginHorizontal: 8,
+  },
+  reactionsContainerRight: {
+    justifyContent: 'flex-end',
+  },
+  reactionsContainerLeft: {
+    justifyContent: 'flex-start',
+  },
+  reactionBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F0F0',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginRight: 4,
+    marginBottom: 4,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  reactionBubbleActive: {
+    backgroundColor: '#918CE5',
+    borderColor: '#918CE5',
+  },
+  reactionEmoji: {
+    fontSize: 14,
+    marginRight: 2,
+  },
+  reactionCount: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+  },
+  // Floating Reaction Picker Styles
+  reactionOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
+    zIndex: 999,
+  },
+  floatingReactionPicker: {
+    position: 'absolute',
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 25,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 1000,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  floatingReactionButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 2,
+  },
+  floatingReactionEmoji: {
+    fontSize: 24,
+  },
+  // Bottom Action Modal Styles (Messenger-style)
+  actionModalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 998,
+  },
+  bottomActionModal: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 999,
+  },
+  actionModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5EA',
+  },
+  actionModalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+  },
+  actionsList: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  actionItem: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    borderRadius: 12,
+  },
+  actionIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#000',
+    textAlign: 'center',
+  },
+  lottie: {
+    width: 80,
+    height: 80,
   },
 });

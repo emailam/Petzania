@@ -168,7 +168,7 @@ export default function PostScreen({ postType }) {
           onPress={handleFilterPress}
           activeOpacity={0.8}
         >
-          <Ionicons name="filter" size={20} color="#7C3AED" />
+          <Ionicons name="filter" size={20} color="#9188E5" />
           <Text style={styles.filterButtonText}>Filter</Text>
           {Object.keys(filters).some(key => 
             (key === 'species' && filters[key] !== 'ALL') ||
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
   filterButtonText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#7C3AED',
+    color: '#9188E5',
   },
   filterBadge: {
     position: 'absolute',

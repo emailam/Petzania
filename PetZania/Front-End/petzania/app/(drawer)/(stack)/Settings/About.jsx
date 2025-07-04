@@ -67,15 +67,15 @@ export default function About() {
         />
         
         <InfoCard
-          icon="medical-outline"
-          title="Health Tracking"
-          description="Keep track of vaccinations, vet visits, and health records"
+          icon="home-outline"
+          title="Pet Adoption Services"
+          description="Find loving homes for pets in need and discover your perfect companion"
         />
         
         <InfoCard
-          icon="location-outline"
-          title="Local Community"
-          description="Find pet services and connect with nearby pet owners"
+          icon="flower-outline"
+          title="Breeding Services"
+          description="Connect responsible breeders with caring families looking for specific breeds"
         />
       </View>
 

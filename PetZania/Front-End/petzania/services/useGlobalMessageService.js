@@ -2,12 +2,6 @@ import { useEffect, useCallback, useRef } from 'react';
 import globalMessageService from './globalMessageService';
 import { getToken } from '@/storage/tokenStorage';
 
-/**
- * React hook for managing global message service
- * @param {Object} user - Current user object
- * @param {string} token - Authentication token
- * @returns {Object} - Hook interface
- */
 export function useGlobalMessageService(user = null, token = null) {
     const isInitializedRef = useRef(false);
     const currentUserRef = useRef(null);

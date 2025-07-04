@@ -84,13 +84,13 @@ export async function getMessagesByChatId(chatId, page = 0, size = 20) {
     }
 }
 
-export async function sendMessage(chatId, content, replyToMessageId = null, file = false) {
+export async function sendMessage(chatId, content, replyToMessageId = null, isFile = false) {
     try {
         const messageData = {
             chatId: chatId,
             content: content,
             replyToMessageId: replyToMessageId,
-            file: file
+            file: isFile  // Backend expects 'file' not 'isFile'
         };
         
         console.log('Sending message:', messageData);
@@ -232,6 +232,19 @@ export async function deleteUserChat(userChatId) {
         return response.data;
     } catch (error) {
         console.error('Error deleting user chat:', error);
+        throw error;
+    }
+}
+
+export async function getMessageById(messageId) {
+    try {
+        const response = await api.get(`/messages/${messageId}`);
+        if (response.status < 200 || response.status >= 300) {
+            throw new Error('Failed to retrieve message. Please try again later.');
+        }
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching message by ID:', error);
         throw error;
     }
 }

@@ -5,7 +5,6 @@ import {
     StyleSheet,
     FlatList,
     TouchableOpacity,
-    ActivityIndicator,
     RefreshControl,
     Alert,
     Vibration,
@@ -13,8 +12,11 @@ import {
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import LottieView from 'lottie-react-native';
 import { UserContext } from '@/context/UserContext';
 import { useGlobalMessage } from '@/context/GlobalMessageContext';
+import { useChat } from '@/context/ChatContext';
+
 import {
     getAllChats,
     getMessagesByChatId,
@@ -30,6 +32,12 @@ export default function ChatIndex() {
     const router = useRouter();
     const { user: currentUser } = useContext(UserContext);
     const { addMessageHandler, addReactionHandler, isConnected, getConnectionStatus } = useGlobalMessage();
+    const {
+        setChatUnreadIndicator,
+        resetChatUnreadIndicator,
+        initializeChatUnreadIndicators,
+        getChatUnreadIndicator
+    } = useChat();
     const [chats, setChats] = useState([]);
     const [userChats, setUserChats] = useState(new Map());
     const [onlineUsers, setOnlineUsers] = useState([]);
@@ -40,14 +48,32 @@ export default function ChatIndex() {
         loadInitialChats();
         loadOnlineUsers();
         setupGlobalMessageHandlers();
+        
+        // Debug: Test setting an indicator manually after 5 seconds
+        const testIndicator = setTimeout(() => {
+            if (chats.length > 0) {
+                const firstChatId = chats[0].chatId;
+                console.log('🧪 TEST: Manually setting unread indicator for chat:', firstChatId);
+                setChatUnreadIndicator(firstChatId, true);
+            }
+        }, 5000);
+        
         // Debug: Log connection status periodically
         const connectionStatusInterval = setInterval(() => {
             const status = getConnectionStatus();
             console.log('🔍 Global message service status:', status);
         }, 10000); // Every 10 seconds
 
+        // Periodically refresh unread counts as a fallback (but preserve real-time updates)
+        const unreadCountRefreshInterval = setInterval(() => {
+            console.log('🔄 Refreshing chats as fallback (preserving real-time unread counts)...');
+            loadInitialChats(true); // Pass flag to preserve real-time counts
+        }, 30000); // Every 30 seconds
+
         return () => {
+            clearTimeout(testIndicator);
             clearInterval(connectionStatusInterval);
+            clearInterval(unreadCountRefreshInterval);
         };
     }, [currentUser]);
 
@@ -73,9 +99,28 @@ export default function ChatIndex() {
                         });
                     });
 
-                    // Update unread count if message is not from current chat and not from current user
+                    // Update unread indicator if message is not from current chat and not from current user
+                    console.log('🔍 Message evaluation for unread indicator:', {
+                        chatId: messageDTO.chatId,
+                        senderId: messageDTO.senderId,
+                        currentUserId: currentUser?.userId,
+                        isFromCurrentChat,
+                        messageId: messageDTO.messageId,
+                        shouldSetIndicator: !isFromCurrentChat && messageDTO.senderId !== currentUser?.userId
+                    });
+                    
                     if (!isFromCurrentChat && messageDTO.senderId !== currentUser?.userId) {
-                        updateUnreadCount(messageDTO.chatId, 1); // Increment by 1
+                        console.log('📈 Chat list setting unread indicator for chat:', messageDTO.chatId);
+                        // Update the backend unread count and set indicator
+                        updateUnreadIndicator(messageDTO.chatId, true);
+                    } else {
+                        console.log('📝 Not setting unread indicator:', {
+                            chatId: messageDTO.chatId,
+                            senderId: messageDTO.senderId,
+                            currentUserId: currentUser?.userId,
+                            isFromCurrentChat,
+                            reason: isFromCurrentChat ? 'from current chat' : 'from current user'
+                        });
                     }
                     break;
 
@@ -181,33 +226,50 @@ export default function ChatIndex() {
         };
     }, [addMessageHandler, addReactionHandler, currentUser?.userId]);
 
-    // Update unread count helper
-    const updateUnreadCount = async (chatId, increment) => {
+    // Update unread indicator helper
+    const updateUnreadIndicator = async (chatId, hasUnread) => {
+        console.log(`🔄 updateUnreadIndicator called for chat ${chatId} with hasUnread: ${hasUnread}`);
+        
         try {
             const userChat = userChats.get(chatId);
-            if (userChat) {
-                const newUnreadCount = Math.max(0, (userChat.unread || 0) + increment);
-                console.log(`🔄 Updating unread count for chat ${chatId}: ${userChat.unread} -> ${newUnreadCount}`);
-                await partialUpdateUserChat(chatId, {
+            if (!userChat) {
+                console.warn(`⚠️ UserChat not found for chatId: ${chatId}`);
+                return;
+            }
+
+            console.log(`🔄 Updating unread indicator for chat ${chatId}:`, {
+                hasUnread,
+                source: 'real-time message',
+                currentUserChatUnread: userChat.unread || 0
+            });
+            
+            // Update ChatContext immediately for real-time UI updates
+            console.log(`📊 Setting ChatContext indicator for chat ${chatId} to: ${hasUnread}`);
+            setChatUnreadIndicator(chatId, hasUnread);
+            
+            // Update backend - increment count by 1 if setting to true, reset to 0 if setting to false
+            const newUnreadCount = hasUnread ? Math.max(1, (userChat.unread || 0) + 1) : 0;
+            await partialUpdateUserChat(chatId, {
+                unread: newUnreadCount
+            });
+            console.log(`✅ Backend updated for chat ${chatId} with unread count: ${newUnreadCount}`);
+
+            // Update local state
+            setUserChats(prev => {
+                const updated = new Map(prev);
+                updated.set(chatId, {
+                    ...userChat,
                     unread: newUnreadCount
                 });
-
-                // Update local stateZ
-                setUserChats(prev => {
-                    const updated = new Map(prev);
-                    updated.set(chatId, {
-                        ...userChat,
-                        unread: newUnreadCount
-                    });
-                    return updated;
-                });
-            }
+                return updated;
+            });
+            console.log(`✅ Local state updated for chat ${chatId} with unread indicator: ${hasUnread}`);
         } catch (error) {
-            console.error('❌ Error updating unread count:', error);
+            console.error('❌ Error updating unread indicator:', error);
         }
     };
 
-    const loadInitialChats = async () => {
+    const loadInitialChats = async (preserveRealTimeUnreadCounts = false) => {
         try {
             setLoading(true);
             
@@ -279,6 +341,26 @@ export default function ChatIndex() {
             // No need to sort - backend already returns chats sorted
             setUserChats(userChatsMap);
             setChats(enrichedChats);
+
+            // Initialize ChatContext with unread indicators (preserve real-time updates if needed)
+            const unreadIndicatorsForContext = new Map();
+            userChatsMap.forEach((userChat, chatId) => {
+                const backendHasUnread = (userChat.unread || 0) > 0;
+                
+                if (preserveRealTimeUnreadCounts) {
+                    // Keep current context indicator or set based on backend count
+                    const currentContextIndicator = getChatUnreadIndicator(chatId);
+                    const finalIndicator = currentContextIndicator || backendHasUnread;
+                    unreadIndicatorsForContext.set(chatId, finalIndicator);
+                    console.log(`📊 Preserving real-time indicator for chat ${chatId}: context=${currentContextIndicator}, backend=${backendHasUnread}, final=${finalIndicator}`);
+                } else {
+                    // Use backend value as is (for initial load)
+                    unreadIndicatorsForContext.set(chatId, backendHasUnread);
+                    console.log(`📊 Setting initial indicator for chat ${chatId}: backend=${backendHasUnread}, unreadCount=${userChat.unread}`);
+                }
+            });
+            console.log('📊 Initializing ChatContext with unread indicators:', unreadIndicatorsForContext);
+            initializeChatUnreadIndicators(unreadIndicatorsForContext);
         } catch (error) {
             console.error('Error loading chats:', error);
             Toast.show({
@@ -375,6 +457,9 @@ export default function ChatIndex() {
                             : c
                     )
                 );
+
+                // Reset ChatContext unread indicator
+                resetChatUnreadIndicator(chat.chatId);
             }
         } catch (error) {
             console.error('Error resetting unread count:', error);
@@ -468,10 +553,12 @@ export default function ChatIndex() {
             );
 
             if (existingChat) {
-                router.push(`/Chat/${existingChat.chatId}`);
+                handleChatPress(existingChat);
             } else {
-                // Create new chat or navigate to user profile
-                router.push(`/UserModule/${user.userId}`);
+                router.push({
+                    pathname: `/UserModule/${user.userId}`,
+                    params: { username: user.username }
+                });
             }
         } catch (error) {
             console.error('Error handling online user press:', error);
@@ -481,18 +568,28 @@ export default function ChatIndex() {
     const renderChatItem = ({ item }) => {
         const otherUser = item.otherUser;
         const lastMessage = item.lastMessage;
-        
-        // Get real-time unread count and pinned status from userChats map
+
+        // Get real-time unread indicator and pinned status from ChatContext and userChats map
         const userChat = userChats.get(item.chatId);
-        const realTimeUnreadCount = userChat?.unread || 0;
-        const hasUnreadMessages = realTimeUnreadCount > 0;
+        const contextUnreadIndicator = getChatUnreadIndicator(item.chatId);
+        const userChatHasUnread = (userChat?.unread || 0) > 0;
+        const realTimeHasUnread = contextUnreadIndicator || userChatHasUnread;
         const isPinned = userChat?.pinned || false;
+
+        // Debug logging for unread indicators - always log for debugging
+        console.log(`📊 Chat ${item.chatId} (${item.otherUser?.name}) unread indicators:`, {
+            contextUnreadIndicator,
+            userChatHasUnread,
+            userChatUnreadCount: userChat?.unread || 0,
+            realTimeHasUnread,
+            isPinned
+        });
 
         return (
             <TouchableOpacity
                 style={[
                     styles.chatItem,
-                    hasUnreadMessages && styles.chatItemUnread,
+                    realTimeHasUnread && styles.chatItemUnread,
                 ]}
                 onPress={() => handleChatPress(item)}
                 onLongPress={() => handleChatLongPress(item)}
@@ -509,7 +606,7 @@ export default function ChatIndex() {
                             <Ionicons name="person" size={24} color="#9188E5" />
                         </View>
                     )}
-                    {hasUnreadMessages && (
+                    {realTimeHasUnread && (
                         <View style={styles.unreadDot} />
                     )}
                 </View>
@@ -544,13 +641,7 @@ export default function ChatIndex() {
                                 'Start a conversation'
                             }
                         </Text>
-                        {hasUnreadMessages && (
-                            <View style={styles.unreadBadge}>
-                                <Text style={styles.unreadCount}>
-                                    {realTimeUnreadCount > 99 ? '99+' : realTimeUnreadCount}
-                                </Text>
-                            </View>
-                        )}
+                        {/* Removed unread badge - now only using dot indicator */}
                     </View>
                 </View>
             </TouchableOpacity>
@@ -612,7 +703,12 @@ export default function ChatIndex() {
         return (
             <View style={styles.container}>
                 <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#9188E5" />
+                    <LottieView
+                        source={require("@/assets/lottie/loading.json")}
+                        autoPlay
+                        loop
+                        style={styles.lottie}
+                    />
                     <Text style={styles.loadingText}>Loading chats...</Text>
                 </View>
             </View>
@@ -649,6 +745,10 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    lottie: {
+        width: 80,
+        height: 80,
     },
     loadingText: {
         marginTop: 12,

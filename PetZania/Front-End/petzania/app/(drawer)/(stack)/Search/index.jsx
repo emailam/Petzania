@@ -2,6 +2,7 @@ import { StyleSheet, Text, View, TextInput, TouchableOpacity, ActivityIndicator 
 import React, { useState, useEffect } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
+import LottieView from 'lottie-react-native'
 
 import { searchByUsername } from '@/services/searchService'
 import UserList from '@/components/UserList'
@@ -83,7 +84,12 @@ export default function SearchScreen() {
         if (loading) {
             return (
                 <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#9188E5" />
+                    <LottieView
+                        source={require("@/assets/lottie/loading.json")}
+                        autoPlay
+                        loop
+                        style={styles.lottie}
+                    />
                     <Text style={styles.loadingText}>Searching users...</Text>
                 </View>
             );
@@ -117,7 +123,12 @@ export default function SearchScreen() {
                     disabled={loadingMore}
                 >
                     {loadingMore ? (
-                        <ActivityIndicator size="small" color="#9188E5" />
+                        <LottieView
+                            source={require("@/assets/lottie/loading.json")}
+                            autoPlay
+                            loop
+                            style={styles.smallLottie}
+                        />
                     ) : (
                         <Text style={styles.showMoreText}>Show more</Text>
                     )}
@@ -204,6 +215,14 @@ const styles = StyleSheet.create({
     loadingContainer: {
         alignItems: 'center',
         marginTop: 60,
+    },
+    lottie: {
+        width: 80,
+        height: 80,
+    },
+    smallLottie: {
+        width: 20,
+        height: 20,
     },
     loadingText: {
         marginTop: 12,

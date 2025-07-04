@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, Alert, Linking, ScrollView, Switch, TextInput, Modal } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, Alert, ScrollView, TextInput, Modal } from 'react-native'
 import React, { useState, useContext} from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
@@ -7,7 +7,6 @@ import { deleteUser, logout } from '@/services/userService'
 import { UserContext } from '@/context/UserContext'
 
 export default function Settings() { const router = useRouter();
-    const [darkMode, setDarkMode] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [usernameInput, setUsernameInput] = useState('');
     const [inputError, setInputError] = useState('');
@@ -119,10 +118,6 @@ export default function Settings() { const router = useRouter();
         setInputError('');
     }
 
-    const openURL = (url) => {
-        Linking.openURL(url)
-    }
-
     const SettingItem = ({ icon, title, onPress, rightComponent, showArrow = true, isDestructive = false }) => (
         <TouchableOpacity style={styles.settingItem} onPress={onPress}>
             <View style={styles.settingLeft}>
@@ -185,7 +180,7 @@ export default function Settings() { const router = useRouter();
             </SettingSection>
 
             <SettingSection title="Legal">
-                <SettingItem
+                {/* <SettingItem
                     icon="document-text-outline"
                     title="Terms of Service"
                     onPress={() => openURL('https://example.com/terms')}
@@ -194,7 +189,7 @@ export default function Settings() { const router = useRouter();
                     icon="shield-outline"
                     title="Privacy Policy"
                     onPress={() => openURL('https://example.com/privacy')}
-                />
+                /> */}
                 <SettingItem
                     icon="information-circle-outline"
                     title="About"

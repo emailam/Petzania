@@ -58,7 +58,7 @@ public class UserService implements IUserService {
     public UserProfileDTO registerUser(RegisterUserDTO registerUserDTO) {
         // convert to regular user.
         User user = converter.mapToUser(registerUserDTO);
-
+        System.out.println("Sending an email to the user...");
         if (userRepository.findByUsernameIgnoreCase(user.getUsername()).isPresent()) {
             throw new UsernameAlreadyExists("Username '" + user.getUsername() + "' already exists");
         } else if (userRepository.findByEmailIgnoreCase(user.getEmail()).isPresent()) {
@@ -75,7 +75,16 @@ public class UserService implements IUserService {
         }
 
         // send verification code.
-        sendVerificationCode(user.getEmail());
+        try {
+            System.out.println("About to send verification code to: " + user.getEmail());
+            sendVerificationCode(user.getEmail());
+            System.out.println("Verification code sent successfully");
+        } catch (Exception e) {
+            System.err.println("Failed to send verification code: " + e.getMessage());
+            e.printStackTrace();
+            // Don't throw the exception here to avoid breaking the registration flow
+            // The user is already saved, we just couldn't send the email
+        }
 
         return converter.mapToUserProfileDto(user);
     }
@@ -419,16 +428,20 @@ public class UserService implements IUserService {
                 "Dear " + user.getUsername() + ",\n\n" +
                         "To complete your verification, please use the following One-Time Password (OTP):\n\n" +
                         "🔑 Your OTP: " + otp + "\n\n" +
-                        "This code is valid for **3 minutes**. If you did not request this, please ignore this email.\n\n" +
+                        "This code is valid for **10 minutes**. If you did not request this, please ignore this email.\n\n" +
                         "Best regards,\n" +
                         "Petzania Team."
         );
+
+        System.out.println("Email sender configured as: " + emailSender);
+        System.out.println("About to send email with OTP: " + otp);
 
         // send the email.
         emailService.sendEmail(emailRequestDTO);
 
         // save the user in the database.
         userRepository.save(user);
+        System.out.println("User saved with verification code");
     }
 
     @Override

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,12 +9,13 @@ import {
   Dimensions,
   Pressable,
   Alert,
-  StyleSheet
+  StyleSheet,
+  Animated,
+  Easing
 } from 'react-native';
 import CategoryButton from './CategoryButton';
 import { RotateCcw  } from 'lucide-react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { LinearGradient } from 'expo-linear-gradient';
 const { width, height } = Dimensions.get('window');
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
@@ -31,6 +32,72 @@ export default function FilterModal({ visible, onClose, onApply, initialFilters 
     sortDesc: initialFilters.sortDesc != null ? initialFilters.sortDesc : true,
   });
 
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(height)).current;
+  const buttonScale = useRef(new Animated.Value(1)).current;
+
+  // Animation functions
+  const showModal = useCallback(() => {
+    requestAnimationFrame(() => {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 350,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    });
+  }, [fadeAnim, slideAnim]);
+
+  const hideModal = useCallback(() => {
+    requestAnimationFrame(() => {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 250,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: height,
+          duration: 280,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        onClose();
+      });
+    });
+  }, [fadeAnim, slideAnim, onClose]);
+
+  // Effect to handle visibility changes
+  useEffect(() => {
+    if (visible) {
+      // Reset animation values and show modal after a small delay
+      fadeAnim.setValue(0);
+      slideAnim.setValue(height);
+      // Use setTimeout to defer animation to next tick
+      const timeoutId = setTimeout(() => {
+        showModal();
+      }, 0);
+      return () => clearTimeout(timeoutId);
+    } else {
+      // Use setTimeout to defer animation to next tick
+      const timeoutId = setTimeout(() => {
+        hideModal();
+      }, 0);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [visible, fadeAnim, slideAnim, showModal, hideModal]);
+
   const speciesOptions = [
     { value: 'DOG', label: 'Dog', icon: <FontAwesome5 name="dog" size={20} color="#4a4a4a" /> },
     { value: 'CAT', label: 'Cat', icon: <FontAwesome5 name="cat" size={20} color="#4a4a4a" /> },
@@ -40,7 +107,7 @@ export default function FilterModal({ visible, onClose, onApply, initialFilters 
   ];
 
   const sortOptions = [
-    { value: 'CREATED_AT', label: 'Date' },
+    { value: 'CREATED_DATE', label: 'Date' },
     { value: 'REACTS', label: 'Likes' }
   ];
 
@@ -80,14 +147,61 @@ export default function FilterModal({ visible, onClose, onApply, initialFilters 
       return;
     }
     onApply(filters);
-  }, [filters, onApply]);
+    hideModal();
+  }, [filters, onApply, hideModal]);
+
+  const handleCancel = useCallback(() => {
+    hideModal();
+  }, [hideModal]);
+
+  // Button animation helpers
+  const animateButtonPress = useCallback(() => {
+    Animated.sequence([
+      Animated.timing(buttonScale, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.spring(buttonScale, {
+        toValue: 1,
+        tension: 150,
+        friction: 4,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [buttonScale]);
 
   const isSmallScreen = width < 360;
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.modalOverlay} onPress={onClose}>
-        <Pressable style={[styles.modalContent, isSmallScreen && styles.modalContentSmall]} onPress={e => e.stopPropagation()}>
+    <Modal 
+      visible={visible} 
+      transparent 
+      animationType="none" 
+      onRequestClose={handleCancel}
+      statusBarTranslucent
+    >
+      <Animated.View 
+        style={[
+          styles.modalOverlay,
+          {
+            opacity: fadeAnim,
+          }
+        ]}
+      >
+        <Pressable style={styles.modalBackdrop} onPress={handleCancel} />
+        <Animated.View 
+          style={[
+            styles.modalContent, 
+            isSmallScreen && styles.modalContentSmall,
+            {
+              transform: [
+                { translateY: slideAnim }
+              ]
+            }
+          ]}
+        >
+          <View style={styles.modalHandle} />
           <View style={styles.headerRow}>
             <Text style={styles.title}>Filters</Text>
             <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
@@ -96,7 +210,11 @@ export default function FilterModal({ visible, onClose, onApply, initialFilters 
             </TouchableOpacity>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView 
+            showsVerticalScrollIndicator={false}
+            bounces={true}
+            decelerationRate="fast"
+          >
             <Text style={styles.label}>Species</Text>
             <View style={styles.speciesGrid}>
               {speciesOptions.map(opt => (
@@ -171,47 +289,72 @@ export default function FilterModal({ visible, onClose, onApply, initialFilters 
             </TouchableOpacity>
 
             <View style={styles.buttonRow}>
-              <TouchableOpacity style={[styles.button, styles.cancelBtn]} onPress={onClose}>
+              <TouchableOpacity 
+                style={[styles.button, styles.cancelBtn]} 
+                onPress={handleCancel}
+                activeOpacity={0.8}
+              >
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.button, styles.applyBtn]} onPress={handleApply}>
-                <Text style={styles.applyText}>Apply</Text>
+              <TouchableOpacity 
+                style={[styles.button, styles.applyBtn]} 
+                onPress={() => {
+                  animateButtonPress();
+                  handleApply();
+                }}
+                activeOpacity={0.8}
+              >
+                <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+                  <Text style={styles.applyText}>Apply</Text>
+                </Animated.View>
               </TouchableOpacity>
             </View>
           </ScrollView>
-        </Pressable>
-      </Pressable>
+        </Animated.View>
+      </Animated.View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  optionSelected: { 
-  backgroundColor: '#9188E5',
-  borderColor: '#9188E5',
-},
   modalOverlay: { 
     flex: 1, 
-    backgroundColor: 'rgba(0,0,0,0.6)', 
-    justifyContent: 'center', 
-    alignItems: 'center' 
+    backgroundColor: 'rgba(0,0,0,0.5)', 
+    justifyContent: 'flex-end',
+  },
+  modalBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   modalContent: { 
-    width: width * 0.9, 
-    maxWidth: 500,
+    width: '100%',
     maxHeight: height * 0.85, 
     backgroundColor: '#ffffff', 
-    borderRadius: 20, 
-    padding: 24,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
+    shadowOffset: { width: 0, height: -5 },
     shadowOpacity: 0.15,
     shadowRadius: 20,
     elevation: 10,
   },
   modalContentSmall: { 
-    padding: 16,
-    width: width * 0.95,
+    paddingHorizontal: 16,
+    maxHeight: height * 0.9,
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 16,
   },
   headerRow: { 
     flexDirection: 'row', 
@@ -377,5 +520,9 @@ resetText: {
   fontSize: 14,
   fontWeight: '500',
   color: '#7C3AED', // purple-600
+},
+optionSelected: { 
+  backgroundColor: '#9188E5',
+  borderColor: '#9188E5',
 },
 });

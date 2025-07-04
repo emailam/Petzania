@@ -15,7 +15,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { FlatList } from 'react-native-gesture-handler';
 const { height } = Dimensions.get('window');
-import { LinearGradient } from 'expo-linear-gradient';
 const EditPostModal = memo(({visible ,onClose, post, onUpdate, onDelete}) => {
 
   if (!post) return null;

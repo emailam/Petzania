@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View, ActivityIndicator } from 'react-native'
+import LottieView from 'lottie-react-native'
 import React, { useContext, useCallback } from 'react'
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getFriendsByUserId } from '@/services/friendsService';
@@ -91,7 +92,12 @@ export default function FriendsScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#9188E5" />
+        <LottieView
+          source={require("@/assets/lottie/loading.json")}
+          autoPlay
+          loop
+          style={styles.lottie}
+        />
         <Text style={styles.loadingText}>Loading friends...</Text>
       </View>
     );
@@ -162,5 +168,9 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 14,
     color: '#9188E5',
+  },
+  lottie: {
+    width: 80,
+    height: 80,
   },
 });

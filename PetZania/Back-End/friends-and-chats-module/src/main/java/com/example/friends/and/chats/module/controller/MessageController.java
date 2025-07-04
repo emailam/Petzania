@@ -34,7 +34,7 @@ public class MessageController {
         UUID userId = userPrincipal.getUserId();
         MessageDTO saved = messageService.sendMessage(sendMessageDTO, userId);
         messagingTemplate.convertAndSend(
-                "/topic/chats/" + sendMessageDTO.getChatId(),
+                "/topic/" + userId.toString() + "/messages",
                 new MessageEventDTO(saved, EventType.SEND)
         );
         return ResponseEntity.ok(saved);
@@ -72,7 +72,7 @@ public class MessageController {
 
         MessageDTO updatedMessage = messageService.updateMessageContent(messageId, userId, content);
         messagingTemplate.convertAndSend(
-                "/topic/chats/" + updatedMessage.getChatId(),
+                "/topic/" + userId.toString() + "/messages",
                 new MessageEventDTO(updatedMessage, EventType.EDIT)
         );
 
@@ -90,7 +90,7 @@ public class MessageController {
 
         MessageDTO updatedMessage = messageService.updateMessageStatus(messageId, userId, messageStatus);
         messagingTemplate.convertAndSend(
-                "/topic/chats/" + updatedMessage.getChatId(),
+                "/topic/" + userId.toString() + "/messages",
                 new MessageEventDTO(updatedMessage, EventType.UPDATE_STATUS)
         );
 
@@ -108,7 +108,7 @@ public class MessageController {
 
         MessageReactionDTO messageReactionDTO = messageService.reactToMessage(messageId, userId, messageReact);
         messagingTemplate.convertAndSend(
-                "/topic/chats/" + messageService.getChatIdFromMessageId(messageId),
+                "/topic/" + userId.toString() + "/reactions",
                 new MessageReactionEventDTO(messageReactionDTO, EventType.REACT)
         );
 
@@ -124,7 +124,7 @@ public class MessageController {
 
         MessageReactionDTO messageReactionDTO = messageService.removeReaction(messageId, userId);
         messagingTemplate.convertAndSend(
-                "/topic/chats/" + messageService.getChatIdFromMessageId(messageId),
+                "/topic/" + userId.toString() + "/reactions",
                 new MessageReactionEventDTO(messageReactionDTO, EventType.REMOVE_REACT)
         );
 
@@ -148,12 +148,10 @@ public class MessageController {
         MessageDTO deletedMessage = messageService.deleteMessage(messageId, userId);
 
         messagingTemplate.convertAndSend(
-                "/topic/chats/" + deletedMessage.getChatId(),
+                "/topic/" + userId.toString() + "/messages",
                 new MessageEventDTO(deletedMessage, EventType.DELETE)
         );
 
         return ResponseEntity.noContent().build();
     }
-
-
 }

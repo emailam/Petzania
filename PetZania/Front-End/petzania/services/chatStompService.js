@@ -144,6 +144,24 @@ class ChatSocketService {
         this.unsubscribeFrom(`/topic/chats/${chatId}`);
     }
 
+    // Subscribe to user-specific message updates (as per backend implementation)
+    subscribeToUserMessages(userId, callback) {
+        return this.subscribeTo(`/topic/${userId}/messages`, callback);
+    }
+
+    unsubscribeFromUserMessages(userId) {
+        this.unsubscribeFrom(`/topic/${userId}/messages`);
+    }
+
+    // Subscribe to user-specific reaction updates
+    subscribeToUserReactions(userId, callback) {
+        return this.subscribeTo(`/topic/${userId}/reactions`, callback);
+    }
+
+    unsubscribeFromUserReactions(userId) {
+        this.unsubscribeFrom(`/topic/${userId}/reactions`);
+    }
+
     // Disconnect the chat service
     disconnect() {
         if (this.stompClient) {

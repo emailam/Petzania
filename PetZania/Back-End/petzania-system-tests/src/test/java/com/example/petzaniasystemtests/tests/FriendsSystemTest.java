@@ -109,7 +109,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(blockerToken))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/isBlockingExists/" + blockedId)
+                .get(friendsBaseUrl + "/api/friends/is-blocking-exists/" + blockedId)
                 .then()
                 .statusCode(200)
                 .body(equalTo("true"));
@@ -167,7 +167,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(blockerToken))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getBlockedUsers")
+                .get(friendsBaseUrl + "/api/friends/get-blocked-users")
                 .then()
                 .statusCode(200)
                 .body("content", hasSize(1))
@@ -277,7 +277,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/isFriend/" + user2Id)
+                .get(friendsBaseUrl + "/api/friends/is-friend/" + user2Id)
                 .then()
                 .statusCode(200)
                 .body(equalTo("true"));
@@ -285,7 +285,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/isFollowing/" + user2Id)
+                .get(friendsBaseUrl + "/api/friends/is-following/" + user2Id)
                 .then()
                 .statusCode(200)
                 .body(equalTo("true"));
@@ -304,7 +304,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/isFriend/" + user2Id)
+                .get(friendsBaseUrl + "/api/friends/is-friend/" + user2Id)
                 .then()
                 .statusCode(200)
                 .body(equalTo("false"));
@@ -312,7 +312,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/isFollowing/" + user2Id)
+                .get(friendsBaseUrl + "/api/friends/is-following/" + user2Id)
                 .then()
                 .statusCode(200)
                 .body(equalTo("false"));
@@ -320,7 +320,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + user1Id)
+                .get(friendsBaseUrl + "/api/friends/get-number-of-friends/" + user1Id)
                 .then()
                 .statusCode(200)
                 .body(equalTo("0"));
@@ -337,7 +337,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/isBlockingExists/" + user2Id)
+                .get(friendsBaseUrl + "/api/friends/is-blocking-exists/" + user2Id)
                 .then()
                 .statusCode(200)
                 .body(equalTo("true"));
@@ -457,7 +457,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/isBlockingExists/" + user2Id)
+                .get(friendsBaseUrl + "/api/friends/is-blocking-exists/" + user2Id)
                 .then()
                 .statusCode(200)
                 .body(equalTo("true"));
@@ -465,7 +465,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user2Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/isBlockingExists/" + user1Id)
+                .get(friendsBaseUrl + "/api/friends/is-blocking-exists/" + user1Id)
                 .then()
                 .statusCode(200)
                 .body(equalTo("true"));
@@ -602,7 +602,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(tokens[0]))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfBlockedUsers")
+                .get(friendsBaseUrl + "/api/friends/get-number-of-blocked-users")
                 .then()
                 .statusCode(200)
                 .body(equalTo("3"));
@@ -704,7 +704,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(unblockerToken))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/isBlockingExists/" + unblockedId)
+                .get(friendsBaseUrl + "/api/friends/is-blocking-exists/" + unblockedId)
                 .then()
                 .statusCode(200)
                 .body(equalTo("true"));
@@ -731,7 +731,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(unblockerToken))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/isBlockingExists/" + unblockedId)
+                .get(friendsBaseUrl + "/api/friends/is-blocking-exists/" + unblockedId)
                 .then()
                 .statusCode(200)
                 .body(equalTo("false"));
@@ -739,7 +739,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(unblockerToken))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfBlockedUsers")
+                .get(friendsBaseUrl + "/api/friends/get-number-of-blocked-users")
                 .then()
                 .statusCode(200)
                 .body(equalTo("0"));
@@ -898,7 +898,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/isFriend/" + user2Id)
+                .get(friendsBaseUrl + "/api/friends/is-friend/" + user2Id)
                 .then()
                 .statusCode(200)
                 .body(equalTo("false"));
@@ -1040,7 +1040,7 @@ public class FriendsSystemTest extends BaseSystemTest {
             given()
                     .spec(getAuthenticatedSpec(user1Token))
                     .when()
-                    .get(friendsBaseUrl + "/api/friends/isBlockingExists/" + user2Id)
+                    .get(friendsBaseUrl + "/api/friends/is-blocking-exists/" + user2Id)
                     .then()
                     .statusCode(200)
                     .body(equalTo("true"));
@@ -1066,7 +1066,7 @@ public class FriendsSystemTest extends BaseSystemTest {
             given()
                     .spec(getAuthenticatedSpec(user1Token))
                     .when()
-                    .get(friendsBaseUrl + "/api/friends/isBlockingExists/" + user2Id)
+                    .get(friendsBaseUrl + "/api/friends/is-blocking-exists/" + user2Id)
                     .then()
                     .statusCode(200)
                     .body(equalTo("false"));
@@ -1214,7 +1214,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + user1Id)
+                .get(friendsBaseUrl + "/api/friends/get-number-of-friends/" + user1Id)
                 .then()
                 .statusCode(200)
                 .body(equalTo("2"));
@@ -1222,7 +1222,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFollowing/" + user1Id)
+                .get(friendsBaseUrl + "/api/friends/get-number-of-following/" + user1Id)
                 .then()
                 .statusCode(200)
                 .body(equalTo("1"));
@@ -1230,7 +1230,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFollowers/" + user1Id)
+                .get(friendsBaseUrl + "/api/friends/get-number-of-followers/" + user1Id)
                 .then()
                 .statusCode(200)
                 .body(equalTo("1"));
@@ -1238,7 +1238,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getFriends/" + user1Id)
+                .get(friendsBaseUrl + "/api/friends/get-friends/" + user1Id)
                 .then()
                 .statusCode(200)
                 .body("content", hasSize(2));
@@ -1246,7 +1246,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getFollowing/" + user1Id)
+                .get(friendsBaseUrl + "/api/friends/get-following/" + user1Id)
                 .then()
                 .statusCode(200)
                 .body("content", hasSize(1));
@@ -1254,7 +1254,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getFollowers/" + user1Id)
+                .get(friendsBaseUrl + "/api/friends/get-followers/" + user1Id)
                 .then()
                 .statusCode(200)
                 .body("content", hasSize(1));
@@ -1281,7 +1281,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFriends/" + user1Id)
+                .get(friendsBaseUrl + "/api/friends/get-number-of-friends/" + user1Id)
                 .then()
                 .statusCode(200)
                 .body(equalTo("1")); // Should be 1 (only User3)
@@ -1289,7 +1289,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFollowing/" + user1Id)
+                .get(friendsBaseUrl + "/api/friends/get-number-of-following/" + user1Id)
                 .then()
                 .statusCode(200)
                 .body(equalTo("0")); // Follow relationship should be removed
@@ -1297,7 +1297,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfFollowers/" + user1Id)
+                .get(friendsBaseUrl + "/api/friends/get-number-of-followers/" + user1Id)
                 .then()
                 .statusCode(200)
                 .body(equalTo("0")); // Follow relationship should be removed
@@ -1305,7 +1305,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getNumberOfBlockedUsers")
+                .get(friendsBaseUrl + "/api/friends/get-number-of-blocked-users")
                 .then()
                 .statusCode(200)
                 .body(equalTo("1"));
@@ -1313,7 +1313,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getFriends/" + user1Id)
+                .get(friendsBaseUrl + "/api/friends/get-friends/" + user1Id)
                 .then()
                 .statusCode(200)
                 .body("content", hasSize(1)); // Only User3
@@ -1321,7 +1321,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/getBlockedUsers")
+                .get(friendsBaseUrl + "/api/friends/get-blocked-users")
                 .then()
                 .statusCode(200)
                 .body("content", hasSize(1))
@@ -1330,7 +1330,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/isFriend/" + user2Id)
+                .get(friendsBaseUrl + "/api/friends/is-friend/" + user2Id)
                 .then()
                 .statusCode(200)
                 .body(equalTo("false"));
@@ -1338,7 +1338,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/isBlockingExists/" + user2Id)
+                .get(friendsBaseUrl + "/api/friends/is-blocking-exists/" + user2Id)
                 .then()
                 .statusCode(200)
                 .body(equalTo("true"));
@@ -1346,7 +1346,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/isFollowing/" + user2Id)
+                .get(friendsBaseUrl + "/api/friends/is-following/" + user2Id)
                 .then()
                 .statusCode(200)
                 .body(equalTo("false"));
@@ -1379,7 +1379,7 @@ public class FriendsSystemTest extends BaseSystemTest {
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
-                .get(friendsBaseUrl + "/api/friends/isFriend/" + user3Id)
+                .get(friendsBaseUrl + "/api/friends/is-friend/" + user3Id)
                 .then()
                 .statusCode(200)
                 .body(equalTo("true"));

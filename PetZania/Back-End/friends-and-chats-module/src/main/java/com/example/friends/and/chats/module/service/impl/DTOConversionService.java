@@ -18,6 +18,8 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -38,6 +40,7 @@ public class DTOConversionService implements IDTOConversionService {
                 .user1Id(chat.getUser1().getUserId())
                 .user2Id(chat.getUser2().getUserId())
                 .createdAt(chat.getCreatedAt())
+                .lastMessageTimestamp(chat.getLastMessageTimestamp())
                 .build();
     }
 
@@ -56,6 +59,7 @@ public class DTOConversionService implements IDTOConversionService {
                 .user1(user1)
                 .user2(user2)
                 .createdAt(chatDTO.getCreatedAt())
+                .lastMessageTimestamp(chatDTO.getLastMessageTimestamp())
                 .build();
     }
 
@@ -79,9 +83,9 @@ public class DTOConversionService implements IDTOConversionService {
                 .userChatId(userChat.getUserChatId())
                 .chatId(userChat.getChat().getChatId())
                 .userId(userChat.getUser().getUserId())
-                .pinned(userChat.isPinned())
-                .unread(userChat.isUnread())
-                .muted(userChat.isMuted())
+                .pinned(userChat.getPinned())
+                .unread(userChat.getUnread())
+                .muted(userChat.getMuted())
 
                 .build();
     }
@@ -97,7 +101,9 @@ public class DTOConversionService implements IDTOConversionService {
     }
 
     public MessageDTO mapToMessageDTO(Message message) {
-        if (message == null) return null;
+        if (message == null) {
+            return null;
+        }
 
         return MessageDTO.builder()
                 .messageId(message.getMessageId())
@@ -105,14 +111,24 @@ public class DTOConversionService implements IDTOConversionService {
                 .senderId(message.getSender().getUserId())
                 .content(message.getContent())
                 .replyToMessageId(
-                        message.getReplyTo() != null ? message.getReplyTo().getMessageId() : null
+                        Optional.ofNullable(message.getReplyTo())
+                                .map(Message::getMessageId)
+                                .orElse(null)
                 )
                 .sentAt(message.getSentAt())
                 .status(message.getStatus())
                 .isFile(message.isFile())
                 .isEdited(message.isEdited())
+                .reactions(
+                        Optional.ofNullable(message.getReactions())
+                                .orElseGet(Collections::emptyList)
+                                .stream()
+                                .map(this::mapToMessageReactionDTO)
+                                .toList()
+                )
                 .build();
     }
+
 
     @Override
     public FriendDTO mapToFriendDTO(Friendship friendship, User user) {

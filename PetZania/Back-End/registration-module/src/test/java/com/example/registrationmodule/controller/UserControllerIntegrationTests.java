@@ -100,7 +100,7 @@ public class UserControllerIntegrationTests {
         changePasswordDTO.setEmail(testUserA.getEmail());
         changePasswordDTO.setNewPassword("NewSecurePassword123");
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/changePassword")
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(changePasswordDTO))
                         .header("Authorization", token))
@@ -116,7 +116,7 @@ public class UserControllerIntegrationTests {
         changePasswordDTO.setEmail(testUserA.getEmail());
         changePasswordDTO.setNewPassword("NewSecurePassword123");
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/changePassword")
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(changePasswordDTO))
                         .header("Authorization", adminToken))
@@ -164,7 +164,7 @@ public class UserControllerIntegrationTests {
         changePasswordDTO.setEmail(testUserB.getEmail()); // Targeting another user
         changePasswordDTO.setNewPassword("NewPassword123");
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/changePassword")
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(changePasswordDTO))
                         .header("Authorization", tokenA))
@@ -177,7 +177,7 @@ public class UserControllerIntegrationTests {
         String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
         String profilePictureURL = testUserA.getProfilePictureURL();
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/profilePictureURL/{id}", testUserA.getUserId())
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/profile-picture-url/{id}", testUserA.getUserId())
                 .header("Authorization", token))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.profilePictureURL").value(profilePictureURL));
@@ -190,7 +190,7 @@ public class UserControllerIntegrationTests {
         String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
         String profilePictureURL = testUserB.getProfilePictureURL();
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/profilePictureURL/{id}", testUserB.getUserId())
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/profile-picture-url/{id}", testUserB.getUserId())
                 .header("Authorization", token))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.profilePictureURL").value(profilePictureURL));
@@ -202,7 +202,7 @@ public class UserControllerIntegrationTests {
         String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
         String profilePictureURL = "random.com";
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/profilePictureURL/{id}", UUID.randomUUID())
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/profile-picture-url/{id}", UUID.randomUUID())
                 .header("Authorization", token))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
@@ -289,7 +289,7 @@ public class UserControllerIntegrationTests {
         changePasswordDTO.setEmail(testUserA.getEmail());
         changePasswordDTO.setNewPassword("NewPassword123");
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/changePassword")
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(changePasswordDTO)))
                 .andExpect(MockMvcResultMatchers.status().isUnauthorized());
@@ -394,14 +394,14 @@ public class UserControllerIntegrationTests {
         userService.saveUser(TestDataUtil.createTestUserA());
         userService.saveUser(TestDataUtil.createTestUserB());
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/api/user/auth/deleteAll")
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/user/auth/delete-all")
                         .header("Authorization", superAdminToken))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     @Test
     public void testDeleteAllUsers_AsRegularAdmin_ShouldSucceed() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.delete("/api/user/auth/deleteAll")
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/user/auth/delete-all")
                         .header("Authorization", adminToken))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
@@ -523,7 +523,7 @@ public class UserControllerIntegrationTests {
         changePasswordDTO.setEmail(testUserA.getEmail());
         changePasswordDTO.setNewPassword(newPassword);
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/changePassword")
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(changePasswordDTO))
                         .header("Authorization", token))
@@ -537,7 +537,7 @@ public class UserControllerIntegrationTests {
         EmailDTO emailDTO = new EmailDTO();
         emailDTO.setEmail(testUserA.getEmail());
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/sendResetPasswordOTP")
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/send-reset-password-otp")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(emailDTO)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
@@ -551,7 +551,7 @@ public class UserControllerIntegrationTests {
         EmailDTO emailDTO = new EmailDTO();
         emailDTO.setEmail(invalidEmail);
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/sendResetPasswordOTP")
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/send-reset-password-otp")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(emailDTO)))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
@@ -568,7 +568,7 @@ public class UserControllerIntegrationTests {
         otpValidationDTO.setEmail(testUserA.getEmail());
         otpValidationDTO.setOtp(testUserA.getResetCode());
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/verifyResetOTP")
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/verify-reset-otp")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(otpValidationDTO)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
@@ -586,7 +586,7 @@ public class UserControllerIntegrationTests {
         otpValidationDTO.setEmail(testUserA.getEmail());
         otpValidationDTO.setOtp(invalidCode);
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/verifyResetOTP")
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/verify-reset-otp")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(otpValidationDTO)))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
@@ -605,7 +605,7 @@ public class UserControllerIntegrationTests {
         resetPasswordDTO.setEmail(testUserA.getEmail());
         resetPasswordDTO.setOtp(otp);
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/resetPassword")
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/reset-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(resetPasswordDTO)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
@@ -625,7 +625,7 @@ public class UserControllerIntegrationTests {
         resetPasswordDTO.setEmail(invalidEmail);
         resetPasswordDTO.setOtp(otp);
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/resetPassword")
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/reset-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(resetPasswordDTO)))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
@@ -644,7 +644,7 @@ public class UserControllerIntegrationTests {
         resetPasswordDTO.setEmail(testUserA.getEmail());
         resetPasswordDTO.setOtp(otp);
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/resetPassword")
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/reset-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(resetPasswordDTO)))
                 .andExpect(MockMvcResultMatchers.status().isNotAcceptable());
@@ -665,7 +665,7 @@ public class UserControllerIntegrationTests {
         resetPasswordDTO.setEmail(testUserA.getEmail());
         resetPasswordDTO.setOtp(invalidOTP);
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/resetPassword")
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/user/auth/reset-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(resetPasswordDTO)))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());

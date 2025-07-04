@@ -18,11 +18,16 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-const UserPosts = () => {
+const UserPosts = ({ userId }) => {
   const { user } = useContext(UserContext);
   const deletePostMutation = useDeletePost();
   const updatePostMutation = useUpdatePost();
   const toggleLikeMutation = useToggleLike();
+  
+  // Use the passed userId or fall back to current user's ID
+  const targetUserId = userId || user?.userId;
+  const isOwnProfile = user?.userId === targetUserId;
+  
   const {
     data,
     isLoading,
@@ -32,7 +37,7 @@ const UserPosts = () => {
     refetch,
     isRefetching,
     error,
-  } = useUserPostsInfinite(user.userId);
+  } = useUserPostsInfinite(targetUserId);
 
   // Flatten pages and ensure only valid posts are mapped
   const posts = data?.pages.flatMap((page) => (Array.isArray(page.posts) ? page.posts : [])).filter(Boolean) || [];
@@ -95,7 +100,9 @@ const UserPosts = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Posts</Text>
+        <Text style={styles.headerTitle}>
+          {isOwnProfile ? 'My Posts' : 'Posts'}
+        </Text>
         <Text style={styles.headerSubtitle}>{posts.length} posts</Text>
       </View>
 
@@ -116,7 +123,10 @@ const UserPosts = () => {
             <Text style={styles.emptyIcon}>📋</Text>
             <Text style={styles.emptyText}>No posts yet</Text>
             <Text style={styles.emptySubtext}>
-              Start sharing your pets to find them loving homes!
+              {isOwnProfile 
+                ? 'Start sharing your pets to find them loving homes!'
+                : 'This user hasn\'t shared any posts yet.'
+              }
             </Text>
           </View>
         ) : (
@@ -124,10 +134,10 @@ const UserPosts = () => {
             {posts.map((post) => (
               <View key={post.postId} style={styles.cardContainer}>
                 <PostCard
-                  showAdvancedFeatures={true}
+                  showAdvancedFeatures={isOwnProfile}
                   post={post}
-                  onPostUpdate={handlePostUpdate}
-                  onPostDelete={handlePostDelete}
+                  onPostUpdate={isOwnProfile ? handlePostUpdate : undefined}
+                  onPostDelete={isOwnProfile ? handlePostDelete : undefined}
                   onPostLikeToggle={handlePostLike}
                   onPostDetails={() => {}} 
                 />
@@ -160,7 +170,7 @@ const UserPosts = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F7FD', // Light purple-tinted background
+    backgroundColor: '#FFF',
   },
   header: {
     paddingVertical: screenHeight < 700 ? 16 : 20,

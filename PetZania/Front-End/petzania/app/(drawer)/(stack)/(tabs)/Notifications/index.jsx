@@ -326,6 +326,8 @@ export default function index() {
                 });
                 break;
             case 'PET_POST_LIKED':
+                console.log('Post ID:', notification.attributes?.postId);
+                
             default:
                 // Generic fallback
                 Alert.alert(notification.title, notification.message);
@@ -352,41 +354,6 @@ export default function index() {
 
     return (
         <View style={styles.container}>
-            {/* Header with actions */}
-            <View style={styles.header}>
-                <View style={styles.headerContent}>
-                    <Text style={styles.headerTitle}>Notifications</Text>
-                    {localUnreadCount > 0 && (
-                        <TouchableOpacity onPress={markAllAsRead} style={styles.markAllButton}>
-                            <Ionicons name="checkmark-done" size={16} color="#fff" />
-                            <Text style={styles.markAllButtonText}>Mark all read</Text>
-                        </TouchableOpacity>
-                    )}
-                </View>
-            </View>
-
-            {/* Unread count indicator */}
-            {localUnreadCount > 0 && (
-                <View style={styles.unreadIndicator}>
-                    <View style={styles.unreadIndicatorContent}>
-                        <Ionicons name="notifications" size={16} color="#1976d2" />
-                        <Text style={styles.unreadIndicatorText}>
-                            {localUnreadCount} unread notification{localUnreadCount > 1 ? 's' : ''}
-                        </Text>
-                    </View>
-                </View>
-            )}
-
-            {/* Error message */}
-            {error && (
-                <View style={styles.errorContainer}>
-                    <Text style={styles.errorText}>{error}</Text>
-                    <TouchableOpacity onPress={() => fetchNotifications(0, true)} style={styles.retryButton}>
-                        <Text style={styles.retryButtonText}>Retry</Text>
-                    </TouchableOpacity>
-                </View>
-            )}
-
             <ScrollView
                 style={styles.notificationsList}
                 showsVerticalScrollIndicator={false}
@@ -408,6 +375,31 @@ export default function index() {
                 }}
                 scrollEventThrottle={400}
             >
+                {/* Content padding for floating header */}
+                <View style={styles.headerSpacer} />
+
+                {/* Unread count indicator */}
+                {localUnreadCount > 0 && (
+                    <View style={styles.unreadIndicator}>
+                        <View style={styles.unreadIndicatorContent}>
+                            <Ionicons name="notifications" size={16} color="#1976d2" />
+                            <Text style={styles.unreadIndicatorText}>
+                                {localUnreadCount} unread notification{localUnreadCount > 1 ? 's' : ''}
+                            </Text>
+                        </View>
+                    </View>
+                )}
+
+                {/* Error message */}
+                {error && (
+                    <View style={styles.errorContainer}>
+                        <Text style={styles.errorText}>{error}</Text>
+                        <TouchableOpacity onPress={() => fetchNotifications(0, true)} style={styles.retryButton}>
+                            <Text style={styles.retryButtonText}>Retry</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+
                 {notifications.map((notification) => (
                     <TouchableOpacity
                         key={notification.id}
@@ -479,6 +471,19 @@ export default function index() {
                     </View>
                 )}
             </ScrollView>
+
+            {/* Floating Header */}
+            <View style={styles.floatingHeader}>
+                <View style={styles.headerContent}>
+                    <Text style={styles.headerTitle}>Notifications</Text>
+                    {localUnreadCount > 0 && (
+                        <TouchableOpacity onPress={markAllAsRead} style={styles.markAllButton}>
+                            <Ionicons name="checkmark-done" size={16} color="#fff" />
+                            <Text style={styles.markAllButtonText}>Mark all read</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
+            </View>
         </View>
     )
 }
@@ -498,6 +503,24 @@ const styles = StyleSheet.create({
         shadowRadius: 2,
         elevation: 2,
     },
+    floatingHeader: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#fff',
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 5,
+        zIndex: 10,
+    },
+    headerSpacer: {
+        height: 80,
+    },
     headerContent: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -506,18 +529,18 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
     headerTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
+        fontSize: 24,
+        fontWeight: '700',
         color: '#333',
     },
     markAllButton: {
-        backgroundColor: '#9188E5',
+        backgroundColor: '#007AFF',
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
-        shadowColor: '#9188E5',
+        shadowColor: '#007AFF',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
         shadowRadius: 4,
@@ -562,7 +585,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     retryButton: {
-        backgroundColor: '#9188E5',
+        backgroundColor: '#007AFF',
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 6,

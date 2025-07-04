@@ -42,13 +42,13 @@ public class SecurityConfig {
         // make every request needs an authorization.
         http.authorizeHttpRequests(request ->
                 request.requestMatchers("/api/user/auth/signup",
-                                "/api/user/auth/sendResetPasswordOTP",
-                                "/api/user/auth/verifyResetOTP",
+                                "/api/user/auth/send-reset-password-otp",
+                                "/api/user/auth/verify-reset-otp",
                                 "/api/user/auth/login",
                                 "/api/user/auth/refresh-token",
                                 "/api/user/auth/verify",
-                                "/api/user/auth/resendOTP",
-                                "/api/user/auth/resetPassword",
+                                "/api/user/auth/resend-otp",
+                                "/api/user/auth/reset-password",
                                 "/api/admin/login",
                                 "/api/admin/refresh-token",
                                 "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
@@ -60,7 +60,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/payment/refund").hasAnyRole("ADMIN", "SUPER_ADMIN")
                         .requestMatchers("/api/user/auth/block",
                                 "/api/user/auth/unblock",
-                                "/api/user/auth/deleteAll").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                                "/api/user/auth/delete-all").hasAnyRole("ADMIN", "SUPER_ADMIN")
 
                         .requestMatchers("/api/user/auth/delete", "/api/user/auth/users").hasAnyRole("ADMIN", "USER", "SUPER_ADMIN")
                         .requestMatchers("/api/payment/**").authenticated()

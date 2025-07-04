@@ -33,7 +33,7 @@ public class UserController {
     }
 
     @Operation(summary = "Resend verification OTP")
-    @PostMapping("/resendOTP")
+    @PostMapping("/resend-otp")
     public ResponseEntity<String> resendOTP(@RequestBody @Valid EmailDTO emailDTO) {
         userService.sendVerificationCode(emailDTO.getEmail());
         return ResponseEntity.ok("A new OTP was sent");
@@ -101,7 +101,7 @@ public class UserController {
     }
 
     @Operation(summary = "Change user password")
-    @PutMapping("/changePassword")
+    @PutMapping("/change-password")
     public ResponseEntity<String> changePassword(@RequestBody ChangePasswordDTO changePasswordDTO) throws AccessDeniedException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Object principal = authentication.getPrincipal();
@@ -117,21 +117,21 @@ public class UserController {
     }
 
     @Operation(summary = "Send OTP for password reset")
-    @PutMapping("/sendResetPasswordOTP")
+    @PutMapping("/send-reset-password-otp")
     public ResponseEntity<String> sendResetOTP(@RequestBody EmailDTO emailDTO) {
         userService.sendResetPasswordOTP(emailDTO);
         return ResponseEntity.ok("OTP sent successfully");
     }
 
     @Operation(summary = "Verify OTP for password reset")
-    @PutMapping("/verifyResetOTP")
+    @PutMapping("/verify-reset-otp")
     public ResponseEntity<String> verifyResetOTP(@RequestBody OTPValidationDTO otpValidationDTO) {
         userService.verifyResetOTP(otpValidationDTO.getEmail(), otpValidationDTO.getOtp());
         return ResponseEntity.ok("OTP verification successful");
     }
 
     @Operation(summary = "Reset password using OTP")
-    @PutMapping("/resetPassword")
+    @PutMapping("/reset-password")
     public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordDTO resetPasswordDTO) {
         userService.resetPassword(resetPasswordDTO.getEmail(), resetPasswordDTO.getOtp(), resetPasswordDTO.getPassword());
         return ResponseEntity.ok("Password changed successfully");
@@ -154,7 +154,7 @@ public class UserController {
     }
 
     @Operation(summary = "Delete all users")
-    @DeleteMapping("/deleteAll")
+    @DeleteMapping("/delete-all")
     public ResponseEntity<String> deleteAllUsers() {
         userService.deleteAll();
         return ResponseEntity.ok("All users deleted successfully");
@@ -211,7 +211,7 @@ public class UserController {
     }
 
     @Operation(summary = "Get Profile Picture By UserID")
-    @GetMapping("/profilePictureURL/{id}")
+    @GetMapping("/profile-picture-url/{id}")
     public ResponseEntity<ProfilePictureDTO> getProfilePictureURLByUserId(@PathVariable("id") UUID userId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Object principal = authentication.getPrincipal();
