@@ -51,7 +51,7 @@ spring:
         86400000
 
   sendgrid:
-    key: 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
+    key: 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
 
 
   email:

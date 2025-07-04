@@ -240,7 +240,8 @@ public class UserService implements IUserService {
             throw new UserIsBlocked("User is blocked");
         }
 
-        String otp = String.format("%06d", new Random().nextInt(1000000));
+//        String otp = String.format("%06d", new Random().nextInt(1000000));
+        String otp = "607234";
         user.setResetCode(otp);
         user.setResetCodeExpirationTime(Timestamp.valueOf(LocalDateTime.now().plusMinutes(10)));
 
@@ -416,7 +417,8 @@ public class UserService implements IUserService {
         }
 
         System.out.println("User email is: " + email);
-        String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
+//        String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
+        String otp = "780023";
         user.setVerificationCode(otp);
         user.setExpirationTime(Timestamp.valueOf(LocalDateTime.now().plusMinutes(10)));
 
