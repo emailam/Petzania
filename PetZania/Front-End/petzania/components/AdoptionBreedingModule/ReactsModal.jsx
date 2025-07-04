@@ -70,7 +70,6 @@ const ReactsModal = ({
           </View>
 
           <View style={styles.content}>
-            <Text style={styles.postId}>Post ID: {post.postId}</Text>
             <Text style={styles.count}>
               {post.reactedUsersIds.length} reaction
               {post.reactedUsersIds.length !== 1 ? 's' : ''}
@@ -99,7 +98,7 @@ const ReactsModal = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(16, 18, 26, 0.50)', // slightly deeper overlay for modern look
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -107,58 +106,79 @@ const styles = StyleSheet.create({
     width: '90%',
     maxHeight: '80%',
     backgroundColor: '#fff',
-    borderRadius: 20,
+    borderRadius: 12, // match input/button/card system
     overflow: 'hidden',
-    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   header: {
     flexDirection: 'row',
     padding: 16,
     borderBottomWidth: 1,
-    borderColor: '#eee',
+    borderColor: '#E5E7EB', // match input card border
     justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: '#F9FAFB', // subtle off-white
   },
-  title: { fontSize: 18, fontWeight: '600', color: '#333' },
-  closeBtn: { padding: 4 },
-  content: { padding: 16 },
-  postId: {
-    fontSize: 12,
-    color: '#666',
-    fontFamily: 'monospace',
-    marginBottom: 8,
+  title: {
+    fontSize: 16, // match to input-style label
+    fontWeight: '500',
+    color: '#374151', // gray-700
+  },
+  closeBtn: {
+    padding: 4,
+    borderRadius: 8,
+    backgroundColor: '#F3F4F6', // subtle hover look on close
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  content: {
+    padding: 16,
+    backgroundColor: '#FFFFFF',
   },
   count: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
-    color: '#333',
+    color: '#374151',
     marginBottom: 12,
   },
-  list: { maxHeight: 300 },
+  list: { maxHeight: 320 }, // slight increase for better spacing
   userItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 10,
     paddingHorizontal: 12,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 8,
-    marginBottom: 8,
+    backgroundColor: '#F9FAFB', // subtle card background
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB', // match to input border
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 1,
+    elevation: 1,
   },
   avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#E5E7EB',
   },
   usernameText: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: '#333',
+    marginLeft: 12,
+    fontSize: 16,
+    color: '#111827', // gray-900
+    fontWeight: '500',
   },
   noReacts: {
     fontSize: 14,
-    color: '#999',
+    color: '#9CA3AF', // gray-400
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: 32,
   },
 });
 

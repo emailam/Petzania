@@ -26,7 +26,6 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 export default function PostScreen({ postType }) {
   // Responsive calculations
   const isSmallScreen = screenWidth < 380;
-  const isMediumScreen = screenWidth >= 380 && screenWidth < 768;
   const isLargeScreen = screenWidth >= 768;
 
   const [filters, setFilters] = useState({
@@ -107,6 +106,7 @@ export default function PostScreen({ postType }) {
     </View>
   ), [handlePostLike, handleGetUserById, isLargeScreen]);
 
+  // CHANGED BUTTON: solid purple, white text/icon
   const renderFooter = useCallback(() => {
     if (!hasNextPage) return null;
     
@@ -118,11 +118,11 @@ export default function PostScreen({ postType }) {
         activeOpacity={0.8}
       >
         {isFetchingNextPage ? (
-          <ActivityIndicator size="small" color="#7C3AED" />
+          <ActivityIndicator size="small" color="#FFFFFF" />
         ) : (
           <>
             <Text style={styles.loadMoreText}>Load More</Text>
-            <Ionicons name="chevron-down" size={20} color="#7C3AED" />
+            <Ionicons name="chevron-down" size={20} color="#FFFFFF" />
           </>
         )}
       </TouchableOpacity>
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   retryButton: {
-    backgroundColor: '#7C3AED',
+    backgroundColor: '#9188E5',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+       alignItems: 'center',
     paddingHorizontal: 32,
     paddingBottom: 100,
   },
@@ -433,22 +433,23 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#7C3AED',
   },
+  // CHANGED: solid purple, white text/icon for load more (no gradient)
   loadMoreButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#9188E5',
     marginHorizontal: 16,
     marginVertical: 8,
     paddingVertical: 12,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    // borderWidth: 1,
+    // borderColor: '#E5E7EB', // Remove border for strong solid
     gap: 8,
   },
   loadMoreText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#7C3AED',
+    color: '#FFFFFF',
   },
 });
