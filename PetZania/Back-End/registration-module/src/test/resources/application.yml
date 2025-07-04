@@ -49,17 +49,8 @@ spring:
       expiration:
         86400000
 
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: petzaniasystem@gmail.com
-    password: hhiyrxqgoamgbzuo
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
+  sendgrid:
+    key: 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
 
 
   email:
