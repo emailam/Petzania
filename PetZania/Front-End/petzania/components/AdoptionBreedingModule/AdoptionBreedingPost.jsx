@@ -20,7 +20,6 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useCreatePost} from "@/services/postService";
 import Toast from 'react-native-toast-message'; // Adjust the import path as needed
-import Ionicons from '@expo/vector-icons/Ionicons';
 import LottieView from "lottie-react-native";
 
 export default function AdoptionBreedingForm() {

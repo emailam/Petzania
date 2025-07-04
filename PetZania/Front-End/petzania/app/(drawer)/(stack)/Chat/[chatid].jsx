@@ -166,6 +166,28 @@ export default function ChatDetailScreen() {
     };
   }, [currentUser?.userId, chatid]);
 
+  // Re-subscribe to chat topic when message handler changes
+  useEffect(() => {
+    if (!chatid || !chatStompService.isClientConnected()) {
+      return;
+    }
+
+    const resubscribe = async () => {
+      try {
+        console.log('🔄 Re-subscribing to chat topic with updated handler:', chatid);
+        // Unsubscribe first
+        chatStompService.unsubscribeFromChatTopic(chatid);
+        // Subscribe with the updated handler
+        await chatStompService.subscribeToChatTopic(chatid, handleTopicMessage);
+        console.log('✅ Successfully re-subscribed to chat topic:', chatid);
+      } catch (error) {
+        console.error('❌ Failed to re-subscribe to chat topic:', error);
+      }
+    };
+
+    resubscribe();
+  }, [chatid, handleTopicMessage]);
+
   // Handle incoming STOMP messages
   const handleTopicMessage = useCallback((data) => {
     console.log('📡 Received STOMP message:', data);
@@ -193,9 +215,9 @@ export default function ChatDetailScreen() {
       default:
         console.log('⚠️ Unknown event type:', eventType);
     }
-  }, [currentUser?.userId, otherUser]);
+  }, [handleNewMessage, handleMessageEdit, handleMessageDelete, handleStatusUpdate]);
 
-  const handleNewMessage = (messageData) => {
+  const handleNewMessage = useCallback((messageData) => {
     console.log('📨 Handling new message from STOMP:', messageData);
     
     if (!messageData || !messageData.messageId) {
@@ -203,56 +225,74 @@ export default function ChatDetailScreen() {
       return;
     }
 
-    const avatar = messageData.senderId === currentUser?.userId 
-      ? currentUser?.profilePictureURL || defaultImage
-      : otherUser?.profilePictureURL || defaultImage;
-
-    const newMessage = {
-      _id: messageData.messageId,
-      text: messageData.file ? '' : messageData.content,
-      createdAt: new Date(messageData.sentAt),
-      user: {
-        _id: messageData.senderId,
-        name: messageData.senderId === currentUser?.userId 
-          ? currentUser?.name || 'You'
-          : otherUser?.name || 'Unknown',
-        avatar: avatar
-      },
-      edited: messageData.edited || false,
-      status: messageData.status || 'SENT',
-      replyToMessage: messageData.replyToMessage || null,
-      ...(messageData.file && {
-        ...(isImageFile(messageData.content) ? {
-          image: messageData.content,
-        } : {
-          file: {
-            url: messageData.content,
-            name: getFileNameFromUrl(messageData.content),
-            type: getFileTypeFromUrl(messageData.content)
-          }
-        })
-      })
-    };
-
-    // Prevent duplicate messages
+    // Use a function to access current state values
     setMessages(prev => {
+      // Get the current user from context
+      const currentUserFromContext = currentUser;
+      
+      // Check if message already exists to prevent duplicates
       const messageExists = prev.some(msg => msg._id === messageData.messageId);
       if (messageExists) {
         console.log('📝 Message already exists, skipping duplicate:', messageData.messageId);
         return prev;
       }
+
+      // Get other user data from the existing messages or use defaults
+      let otherUserData = null;
+      const existingMessage = prev.find(msg => msg.user._id !== currentUserFromContext?.userId);
+      if (existingMessage) {
+        otherUserData = {
+          name: existingMessage.user.name,
+          profilePictureURL: existingMessage.user.avatar === defaultImage ? null : existingMessage.user.avatar
+        };
+      }
+
+      const avatar = messageData.senderId === currentUserFromContext?.userId 
+        ? currentUserFromContext?.profilePictureURL || defaultImage
+        : otherUserData?.profilePictureURL || defaultImage;
+
+      const newMessage = {
+        _id: messageData.messageId,
+        text: messageData.file ? '' : messageData.content,
+        createdAt: new Date(messageData.sentAt),
+        user: {
+          _id: messageData.senderId,
+          name: messageData.senderId === currentUserFromContext?.userId 
+            ? currentUserFromContext?.name || 'You'
+            : otherUserData?.name || 'Unknown',
+          avatar: avatar
+        },
+        edited: messageData.edited || false,
+        status: messageData.status || 'SENT',
+        replyToMessage: messageData.replyToMessage || null,
+        ...(messageData.file && {
+          ...(isImageFile(messageData.content) ? {
+            image: messageData.content,
+          } : {
+            file: {
+              url: messageData.content,
+              name: getFileNameFromUrl(messageData.content),
+              type: getFileTypeFromUrl(messageData.content)
+            }
+          })
+        })
+      };
+
       console.log('✅ Adding new message to state:', messageData.messageId);
       return [newMessage, ...prev];
     });
 
     // Auto-mark messages as read if not from current user
     if (messageData.senderId !== currentUser?.userId) {
+      console.log('🔔 Auto-marking message as delivered/read for other user message:', messageData.messageId);
       setTimeout(() => markMessageAsDelivered(messageData.messageId), 100);
       setTimeout(() => markMessageAsRead(messageData.messageId), 300);
+    } else {
+      console.log('👤 Message from current user, not auto-marking as read:', messageData.messageId);
     }
-  };
+  }, [currentUser, isImageFile, getFileNameFromUrl, getFileTypeFromUrl, defaultImage]);
 
-  const handleMessageEdit = (updatedMessage) => {
+  const handleMessageEdit = useCallback((updatedMessage) => {
     setMessages(prev => 
       prev.map(msg => 
         msg._id === updatedMessage.messageId 
@@ -260,13 +300,13 @@ export default function ChatDetailScreen() {
           : msg
       )
     );
-  };
+  }, []);
 
-  const handleMessageDelete = (deletedMessage) => {
+  const handleMessageDelete = useCallback((deletedMessage) => {
     setMessages(prev => prev.filter(msg => msg._id !== deletedMessage.messageId));
-  };
+  }, []);
 
-  const handleStatusUpdate = (updatedMessage) => {
+  const handleStatusUpdate = useCallback((updatedMessage) => {
     setMessages(prev => 
       prev.map(msg => 
         msg._id === updatedMessage.messageId 
@@ -274,7 +314,7 @@ export default function ChatDetailScreen() {
           : msg
       )
     );
-  };
+  }, []);
 
   // Load chat data
   useEffect(() => {
@@ -366,7 +406,7 @@ export default function ChatDetailScreen() {
   };
 
   // Message status updates
-  const markMessageAsDelivered = async (messageId) => {
+  const markMessageAsDelivered = useCallback(async (messageId) => {
     try {
       await updateMessageStatus(messageId, 'DELIVERED');
       setMessages(prev => 
@@ -377,9 +417,9 @@ export default function ChatDetailScreen() {
     } catch (error) {
       console.error('Error marking message as delivered:', error);
     }
-  };
+  }, []);
 
-  const markMessageAsRead = async (messageId) => {
+  const markMessageAsRead = useCallback(async (messageId) => {
     try {
       await updateMessageStatus(messageId, 'READ');
       setMessages(prev =>
@@ -390,7 +430,7 @@ export default function ChatDetailScreen() {
     } catch (error) {
       console.error('Error marking message as read:', error);
     }
-  };
+  }, []);
 
   // Load earlier messages
   const loadEarlierMessages = useCallback(async () => {
@@ -467,7 +507,7 @@ export default function ChatDetailScreen() {
       const response = await sendMessage(chatid, messageText, replyToMessageId);
       
       if (response && response.messageId) {
-        console.log('Message sent:', response);
+        console.log('💬 Message sent successfully:', response);
         
         // Always add the message locally for immediate feedback
         const optimisticMessage = {
@@ -483,13 +523,17 @@ export default function ChatDetailScreen() {
           status: 'SENT'
         };
         
+        console.log('🚀 Adding optimistic message to local state:', optimisticMessage);
+        
         // Add message to local state immediately
         setMessages(prev => {
           // Check if message already exists to prevent duplicates
           const messageExists = prev.some(msg => msg._id === response.messageId);
           if (messageExists) {
+            console.log('📝 Optimistic message already exists, skipping:', response.messageId);
             return prev;
           }
+          console.log('✅ Adding optimistic message to state');
           return [optimisticMessage, ...prev];
         });
         

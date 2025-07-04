@@ -64,7 +64,7 @@ export default function LoginForm(){
 
             else if (status === 401) {
                 // Check if it's a verification issue vs authentication issue
-                if (errorMsg === "Unauthorized" && error.response?.data?.message === "There is no refresh token sent") {
+                if (errorMsg === "Unauthorized" && (error.response?.data?.message === "There is no refresh token sent" || error.response?.data?.message === "User is not verified")) {
                     try {
                         await resendOTP(data.email);
 

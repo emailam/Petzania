@@ -51,7 +51,6 @@ class GlobalMessageService {
 
             // Set the user ID after disconnect to avoid it being reset to null
             this.currentUserId = userId;
-            console.log('🔍 Set currentUserId to:', this.currentUserId);
 
             console.log('🌐 Connecting to global message service for user:', userId);
 
@@ -142,9 +141,6 @@ class GlobalMessageService {
      * @param {string} userId - The user ID to subscribe for
      */
     async subscribeToUserTopics(userId) {
-        console.log('🔍 subscribeToUserTopics called with userId:', userId);
-        console.log('🔍 this.currentUserId:', this.currentUserId);
-        
         if (!this.stompClient || !this.stompClient.active) {
             console.warn('⚠️ Cannot subscribe: STOMP client not connected');
             return;
@@ -332,7 +328,6 @@ class GlobalMessageService {
      */
     async disconnect() {
         console.log('🔌 Disconnecting from global message service');
-        console.log('🔍 Stack trace for disconnect:', new Error().stack);
 
         // Clear subscriptions
         this.subscriptions.forEach((subscription, key) => {

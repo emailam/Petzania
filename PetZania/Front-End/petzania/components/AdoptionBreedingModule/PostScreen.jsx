@@ -59,6 +59,8 @@ export default function PostScreen({ postType }) {
   } = useFetchPosts({ petPostType: postType, ...filters });
 
   const posts = data?.pages.flatMap(page => (Array.isArray(page.posts) ? page.posts : [])) || [];
+  
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // Handlers
   const handlePostLike = useCallback(
     async postId => {
@@ -155,6 +157,36 @@ export default function PostScreen({ postType }) {
     </View>
   ), [postType, title, handleRefresh]);
 
+  const renderHeader = useCallback(() => (
+    <View style={[styles.header, isLargeScreen && styles.headerLarge]}>
+      <View style={styles.headerContent}>
+        <Text style={[styles.headerTitle, isSmallScreen && styles.headerTitleSmall]}>
+          {title}
+        </Text>
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={handleFilterPress}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="filter" size={20} color="#7C3AED" />
+          <Text style={styles.filterButtonText}>Filter</Text>
+          {Object.keys(filters).some(key => 
+            (key === 'species' && filters[key] !== 'ALL') ||
+            (key === 'breed' && filters[key] !== 'ALL') ||
+            (key === 'minAge' && filters[key] !== 0) ||
+            (key === 'maxAge' && filters[key] !== 1000)
+          ) && <View style={styles.filterBadge} />}
+        </TouchableOpacity>
+      </View>
+      {posts.length > 0 && (
+        <Text style={styles.postCount}>
+          {posts.length} {posts.length === 1 ? 'pet' : 'pets'} available
+        </Text>
+      )}
+    </View>
+  ), [title, isLargeScreen, isSmallScreen, handleFilterPress, filters, posts.length]);
+
+  // CONDITIONAL RETURNS MUST COME AFTER ALL HOOKS
   // Loading state
   if (isLoading) {
     return (
@@ -184,35 +216,6 @@ export default function PostScreen({ postType }) {
       </View>
     );
   }
-
-  const renderHeader = useCallback(() => (
-    <View style={[styles.header, isLargeScreen && styles.headerLarge]}>
-      <View style={styles.headerContent}>
-        <Text style={[styles.headerTitle, isSmallScreen && styles.headerTitleSmall]}>
-          {title}
-        </Text>
-        <TouchableOpacity
-          style={styles.filterButton}
-          onPress={handleFilterPress}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="filter" size={20} color="#7C3AED" />
-          <Text style={styles.filterButtonText}>Filter</Text>
-          {Object.keys(filters).some(key => 
-            (key === 'species' && filters[key] !== 'ALL') ||
-            (key === 'breed' && filters[key] !== 'ALL') ||
-            (key === 'minAge' && filters[key] !== 0) ||
-            (key === 'maxAge' && filters[key] !== 1000)
-          ) && <View style={styles.filterBadge} />}
-        </TouchableOpacity>
-      </View>
-      {posts.length > 0 && (
-        <Text style={styles.postCount}>
-          {posts.length} {posts.length === 1 ? 'pet' : 'pets'} available
-        </Text>
-      )}
-    </View>
-  ), [title, isLargeScreen, isSmallScreen, handleFilterPress, filters, posts.length]);
 
   return (
     <View style={styles.container}>

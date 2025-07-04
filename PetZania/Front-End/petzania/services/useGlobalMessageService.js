@@ -12,64 +12,16 @@ export function useGlobalMessageService(user = null, token = null) {
     const isInitializedRef = useRef(false);
     const currentUserRef = useRef(null);
 
-    // Connect to global message service when user logs in
+    // Single useEffect to handle all user connection logic
     useEffect(() => {
-        const connectToService = async () => {
-            // Add additional checks to ensure user is fully authenticated
-            if (user && user.userId && !isInitializedRef.current) {
-                try {
-                    console.log('🌐 Initializing global message service for user:', user.userId);
-                    
-                    // Get token if not provided
-                    let authToken = token;
-                    if (!authToken) {
-                        authToken = await getToken('accessToken');
-                    }
-                    
-                    if (!authToken) {
-                        console.warn('⚠️ No authentication token available for global message service');
-                        return;
-                    }
-                    
-                    // Add a small delay to ensure the user context is fully loaded
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    
-                    await globalMessageService.connect(user.userId, authToken);
-                    isInitializedRef.current = true;
-                    currentUserRef.current = user;
-                    console.log('✅ Global message service initialized');
-                } catch (error) {
-                    console.error('❌ Failed to initialize global message service:', error);
-                    // Reset initialization flag to allow retry
-                    isInitializedRef.current = false;
-                }
-            }
-        };
-
-        // Only connect if user is properly authenticated
-        if (user && user.userId) {
-            connectToService();
-        }
-    }, [user?.userId]);
-
-    // Disconnect when user logs out or component unmounts
-    useEffect(() => {
-        return () => {
-            if (isInitializedRef.current) {
-                console.log('🔌 Cleaning up global message service');
-                globalMessageService.disconnect();
-                isInitializedRef.current = false;
-                currentUserRef.current = null;
-            }
-        };
-    }, []);
-
-    // Handle user changes (logout/login with different user)
-    useEffect(() => {
-        const handleUserChange = async () => {
-            
+        const handleUserConnection = async () => {
             const currentUserId = user?.userId;
             const previousUserId = currentUserRef.current?.userId;
+            
+            console.log('🔍 useGlobalMessageService - User state changed');
+            console.log('🔍 Current user ID:', currentUserId);
+            console.log('🔍 Previous user ID:', previousUserId);
+            console.log('� Is initialized:', isInitializedRef.current);
             
             // If user logged out (was logged in, now not)
             if (previousUserId && !currentUserId) {
@@ -88,8 +40,8 @@ export function useGlobalMessageService(user = null, token = null) {
                 currentUserRef.current = null;
             }
 
-            // If user logged in (wasn't logged in, now is) or user changed
-            if (currentUserId && (!previousUserId || previousUserId !== currentUserId)) {
+            // If user logged in (wasn't logged in, now is) or user changed, and not already initialized
+            if (currentUserId && (!previousUserId || previousUserId !== currentUserId) && !isInitializedRef.current) {
                 console.log('👤 User logged in/changed, connecting global message service');
                 try {
                     // Get token if not provided
@@ -103,6 +55,9 @@ export function useGlobalMessageService(user = null, token = null) {
                         return;
                     }
                     
+                    // Add a small delay to ensure everything is ready
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
                     await globalMessageService.connect(currentUserId, authToken);
                     isInitializedRef.current = true;
                     currentUserRef.current = user;
@@ -114,8 +69,23 @@ export function useGlobalMessageService(user = null, token = null) {
             }
         };
 
-        handleUserChange();
-    }, [user?.userId]); // Remove token dependency as it causes unnecessary re-runs
+        // Only run if we have a user or had a user previously
+        if (user?.userId || currentUserRef.current?.userId) {
+            handleUserConnection();
+        }
+    }, [user?.userId]); // Only depend on userId, not the full user object
+
+    // Disconnect when component unmounts
+    useEffect(() => {
+        return () => {
+            if (isInitializedRef.current) {
+                console.log('🔌 Cleaning up global message service on unmount');
+                globalMessageService.disconnect();
+                isInitializedRef.current = false;
+                currentUserRef.current = null;
+            }
+        };
+    }, []);
 
     /**
      * Set the currently open chat to prevent unread count increments
