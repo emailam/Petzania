@@ -18,7 +18,7 @@ public interface IMessageService {
 
     MessageDTO getMessageById(UUID messageId, UUID userId);
 
-    MessageDTO deleteMessage(UUID messageId, UUID userId);
+    void deleteMessage(UUID messageId, UUID userId);
 
     MessageDTO updateMessageContent(UUID messageId, UUID userId, String content);
 
@@ -28,7 +28,7 @@ public interface IMessageService {
 
     UUID getChatIdFromMessageId(UUID messageId);
 
-    MessageReactionDTO removeReaction(UUID messageId, UUID userId);
+    void removeReaction(UUID messageId, UUID userId);
 
     List<MessageReactionDTO> getReactionsForMessage(UUID messageId, UUID userId);
 }

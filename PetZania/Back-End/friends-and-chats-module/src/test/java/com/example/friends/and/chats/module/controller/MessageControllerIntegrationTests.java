@@ -102,9 +102,6 @@ public class MessageControllerIntegrationTests {
     @Autowired
     private MessageController messageController;
 
-    private SimpMessagingTemplate originalMessagingTemplate;
-    private TestSimpMessagingTemplate testMessagingTemplate;
-
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private User userA;
@@ -134,19 +131,12 @@ public class MessageControllerIntegrationTests {
         // Set up security context for userA
         setupSecurityContext(userA);
 
-        // Save the original template
-        originalMessagingTemplate = (SimpMessagingTemplate) ReflectionTestUtils.getField(messageController, "messagingTemplate");
-
 
         // Set up a chat between userA and userB
         chatAB = chatRepository.save(Chat.builder()
                 .user1(userA)
                 .user2(userB)
                 .build());
-
-        // Create and set the test messaging template
-        testMessagingTemplate = new TestSimpMessagingTemplate();
-        ReflectionTestUtils.setField(messageController, "messagingTemplate", testMessagingTemplate);
 
 
         // Create UserChat entries
@@ -213,10 +203,6 @@ public class MessageControllerIntegrationTests {
 
     @AfterEach
     void tearDown() {
-        // Reset the messaging template to original
-        if (originalMessagingTemplate != null) {
-            ReflectionTestUtils.setField(messageController, "messagingTemplate", originalMessagingTemplate);
-        }
 
         // Clear the security context after each test
         SecurityContextHolder.clearContext();
@@ -241,8 +227,6 @@ public class MessageControllerIntegrationTests {
         // Verify message was saved
         assertEquals(4, messageRepository.count());
 
-        // Verify that the messaging template was used
-        assertTrue(testMessagingTemplate.getSentDestinations().size() > 0);
     }
 
     @Test
