@@ -20,6 +20,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { UserContext } from '@/context/UserContext';
+import { useGlobalMessage } from '@/context/GlobalMessageContext';
 import {
   getMessagesByChatId,
   sendMessage,
@@ -27,7 +28,9 @@ import {
   updateMessageStatus,
   editMessage,
   deleteMessage,
-  reactToMessage
+  reactToMessage,
+  removeReactionFromMessage,
+  getReactionsForMessage
 } from '@/services/chatService';
 import { uploadFile } from '@/services/uploadService';
 import chatStompService from '@/services/chatStompService';
@@ -339,7 +342,7 @@ export default function ChatDetailScreen() {
       await updateMessageStatus(messageId, 'READ');
       setMessages(prev =>
         prev.map(msg =>
-          msg._id === messageId ? { ...msg, status: 'read' } : msg
+          msg._id === messageId ? { ...msg, status: 'READ' } : msg
         )
       );
     } catch (error) {
@@ -841,7 +844,7 @@ export default function ChatDetailScreen() {
                     <Ionicons name="checkmark" size={12} color="#007AFF" style={styles.secondCheck} />
                   </View>
                 )}
-                {message.status === 'read' && (
+                {message.status === 'READ' && (
                   <View style={styles.doubleCheck}>
                     <Ionicons name="checkmark" size={12} color="#4CAF50" />
                     <Ionicons name="checkmark" size={12} color="#4CAF50" style={styles.secondCheck} />

@@ -18,13 +18,12 @@ import { addPetToUser } from '@/services/petService';
 import { uploadFiles } from '@/services/uploadService';
 
 export default function AddPet5() {
-    const { pet, setPet, pets, setPets } = useContext(PetContext);
+    const { pet, setPet, setPets } = useContext(PetContext);
+    const { user } = useContext(UserContext);
     const [vaccineFiles, setVaccineFiles] = useState(pet.myVaccinesURLs || []);
     const { fromPage, setFromPage } = useContext(FlowContext);
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
-
-    const { user } = useContext(UserContext);
 
     const goToNextStep = async () => {
         try {
@@ -51,6 +50,7 @@ export default function AddPet5() {
             const newPet = await addPetToUser(updatedPet, user.userId);
 
             setPets(prevPets => [...prevPets, newPet]);
+            user.myPets = [...user.myPets, newPet];
             setPet({});
             router.dismissAll();
 
@@ -58,8 +58,12 @@ export default function AddPet5() {
             const currentFromPage = fromPage;
 
             if (currentFromPage === 'Home') {
-                // Keep fromPage as 'Home' so AllPets knows we came from Home
                 router.push('/PetModule/AllPets');
+                return;
+            }
+            if(currentFromPage === 'AdoptionBreedingPost') {
+                setFromPage(null);
+                router.push('/AddPost');
                 return;
             }
             if(currentFromPage !== 'EditProfile') {

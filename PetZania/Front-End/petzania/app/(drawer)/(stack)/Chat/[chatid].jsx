@@ -6,13 +6,17 @@ import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { UserContext } from '@/context/UserContext';
+import { useGlobalMessage } from '@/context/GlobalMessageContext';
 import {
   getMessagesByChatId,
   sendMessage,
   getChatById,
   updateMessageStatus,
   editMessage,
-  deleteMessage
+  deleteMessage,
+  reactToMessage,
+  removeReactionFromMessage,
+  getReactionsForMessage
 } from '@/services/chatService';
 import { uploadFile } from '@/services/uploadService';
 import chatStompService from '@/services/chatStompService';
@@ -24,6 +28,7 @@ export default function ChatDetailScreen() {
   const { chatid } = useLocalSearchParams();
   const router = useRouter();
   const { user: currentUser } = useContext(UserContext);
+  const { setCurrentOpenChat } = useGlobalMessage();
 
   // State management
   const [messages, setMessages] = useState([]);
@@ -47,6 +52,17 @@ export default function ChatDetailScreen() {
   const flatListRef = useRef(null);
   const inputRef = useRef(null);
   const slideAnim = useRef(new Animated.Value(0)).current;
+
+  // Set current open chat when component mounts and clear on unmount
+  useEffect(() => {
+    console.log('💬 Setting current open chat to:', chatid);
+    setCurrentOpenChat(chatid);
+    
+    return () => {
+      console.log('💬 Clearing current open chat');
+      setCurrentOpenChat(null);
+    };
+  }, [chatid, setCurrentOpenChat]);
 
   const defaultImage = require('@/assets/images/Defaults/default-user.png');
 
@@ -83,6 +99,7 @@ export default function ChatDetailScreen() {
     let connectionAttempts = 0;
     const maxRetries = 3;
     const retryDelay = 2000;
+    let retryTimeout = null;
 
     const connectToStomp = async () => {
       if (!currentUser?.userId || !chatid) {
@@ -110,11 +127,11 @@ export default function ChatDetailScreen() {
         try {
           await chatStompService.subscribeToChatTopic(chatid, handleTopicMessage);
           console.log('✅ Successfully subscribed to chat topic:', chatid);
+          connectionAttempts = 0; // Reset attempts on success
         } catch (subscriptionError) {
           console.error('❌ Failed to subscribe to chat topic:', subscriptionError);
           throw subscriptionError;
         }
-        connectionAttempts = 0;
 
       } catch (error) {
         console.error(`❌ STOMP connection attempt ${connectionAttempts} failed:`, error.message);
@@ -122,10 +139,10 @@ export default function ChatDetailScreen() {
         // Retry logic
         if (connectionAttempts < maxRetries) {
           console.log(`⏳ Retrying STOMP connection in ${retryDelay/1000} seconds...`);
-          setTimeout(connectToStomp, retryDelay);
+          retryTimeout = setTimeout(connectToStomp, retryDelay);
         } else {
           console.error('❌ STOMP connection failed after maximum retries');
-          showToast('error', 'Connection Error', 'Failed to connect to chat service');
+          showToast('error', 'Connection Error', 'Failed to connect to chat service. Messages may not update in real-time.');
         }
       }
     };
@@ -133,6 +150,11 @@ export default function ChatDetailScreen() {
     connectToStomp();
 
     return () => {
+      // Clear any pending retry timeout
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
+      
       try {
         if (chatStompService.isClientConnected()) {
           console.log('🔌 Disconnecting STOMP and unsubscribing from chat:', chatid);
@@ -146,7 +168,15 @@ export default function ChatDetailScreen() {
 
   // Handle incoming STOMP messages
   const handleTopicMessage = useCallback((data) => {
+    console.log('📡 Received STOMP message:', data);
+    
+    if (!data || !data.eventType || !data.messageDTO) {
+      console.warn('⚠️ Invalid STOMP message format:', data);
+      return;
+    }
+
     const { eventType, messageDTO } = data;
+    
     switch (eventType) {
       case 'SEND':
         handleNewMessage(messageDTO);
@@ -161,11 +191,18 @@ export default function ChatDetailScreen() {
         handleStatusUpdate(messageDTO);
         break;
       default:
-        console.log('Unknown event type:', eventType);
+        console.log('⚠️ Unknown event type:', eventType);
     }
   }, [currentUser?.userId, otherUser]);
 
   const handleNewMessage = (messageData) => {
+    console.log('📨 Handling new message from STOMP:', messageData);
+    
+    if (!messageData || !messageData.messageId) {
+      console.warn('⚠️ Invalid message data received:', messageData);
+      return;
+    }
+
     const avatar = messageData.senderId === currentUser?.userId 
       ? currentUser?.profilePictureURL || defaultImage
       : otherUser?.profilePictureURL || defaultImage;
@@ -201,13 +238,15 @@ export default function ChatDetailScreen() {
     setMessages(prev => {
       const messageExists = prev.some(msg => msg._id === messageData.messageId);
       if (messageExists) {
+        console.log('📝 Message already exists, skipping duplicate:', messageData.messageId);
         return prev;
       }
+      console.log('✅ Adding new message to state:', messageData.messageId);
       return [newMessage, ...prev];
     });
 
     // Auto-mark messages as read if not from current user
-    if (messageData.senderId !== currentUser.userId) {
+    if (messageData.senderId !== currentUser?.userId) {
       setTimeout(() => markMessageAsDelivered(messageData.messageId), 100);
       setTimeout(() => markMessageAsRead(messageData.messageId), 300);
     }
@@ -345,7 +384,7 @@ export default function ChatDetailScreen() {
       await updateMessageStatus(messageId, 'READ');
       setMessages(prev =>
         prev.map(msg =>
-          msg._id === messageId ? { ...msg, status: 'read' } : msg
+          msg._id === messageId ? { ...msg, status: 'READ' } : msg
         )
       );
     } catch (error) {
@@ -429,21 +468,30 @@ export default function ChatDetailScreen() {
       
       if (response && response.messageId) {
         console.log('Message sent:', response);
-        if (!chatStompService.isClientConnected()) {
-          const manualMessage = {
-            _id: response.messageId,
-            text: response.content,
-            createdAt: new Date(response.sentAt),
-            user: {
-              _id: response.senderId,
-              name: currentUser?.name || 'Unknown',
-              avatar: currentUser?.profilePictureURL || defaultImage
-            },
-            replyToMessage: replyToMessage,
-            status: 'SENT'
-          };
-          setMessages(prev => [manualMessage, ...prev]);
-        }
+        
+        // Always add the message locally for immediate feedback
+        const optimisticMessage = {
+          _id: response.messageId,
+          text: response.content,
+          createdAt: new Date(response.sentAt),
+          user: {
+            _id: response.senderId,
+            name: currentUser?.name || 'Unknown',
+            avatar: currentUser?.profilePictureURL || defaultImage
+          },
+          replyToMessage: replyToMessage,
+          status: 'SENT'
+        };
+        
+        // Add message to local state immediately
+        setMessages(prev => {
+          // Check if message already exists to prevent duplicates
+          const messageExists = prev.some(msg => msg._id === response.messageId);
+          if (messageExists) {
+            return prev;
+          }
+          return [optimisticMessage, ...prev];
+        });
         
         if (replyToMessage) {
           setReplyToMessage(null);
@@ -588,12 +636,11 @@ export default function ChatDetailScreen() {
       const replyToMessageId = replyToMessage ? replyToMessage._id : null;
       const result = await sendMessage(chatid, fileUrl, replyToMessageId, true);
 
-      if (replyToMessage) {
-        setReplyToMessage(null);
-      }
-
-      if (!chatStompService.isClientConnected()) {
-        const manualMessage = {
+      if (result && result.messageId) {
+        console.log('File message sent:', result);
+        
+        // Always add the file message locally for immediate feedback
+        const optimisticFileMessage = {
           _id: result.messageId,
           text: result.file ? '' : result.content,
           createdAt: new Date(result.sentAt),
@@ -602,6 +649,7 @@ export default function ChatDetailScreen() {
             name: currentUser?.name || 'Unknown',
             avatar: currentUser?.profilePictureURL || defaultImage
           },
+          status: 'SENT',
           ...(result.file && {
             ...(isImageFile(fileUrl) ? {
               image: fileUrl,
@@ -613,14 +661,27 @@ export default function ChatDetailScreen() {
               }
             })
           }),
-          ...(result.replyToMessageId && {
+          ...(replyToMessage && {
             replyToMessage: replyToMessage
           })
         };
-        setMessages(prev => [manualMessage, ...prev]);
+        
+        // Add file message to local state immediately
+        setMessages(prev => {
+          // Check if message already exists to prevent duplicates
+          const messageExists = prev.some(msg => msg._id === result.messageId);
+          if (messageExists) {
+            return prev;
+          }
+          return [optimisticFileMessage, ...prev];
+        });
+        
+        if (replyToMessage) {
+          setReplyToMessage(null);
+        }
+        
+        showToast('success', 'Success', 'File sent successfully');
       }
-
-      showToast('success', 'Success', 'File sent successfully');
     } catch (error) {
       console.error('Error uploading and sending file:', error);
       showToast('error', 'Error', 'Failed to send file');
@@ -793,7 +854,7 @@ export default function ChatDetailScreen() {
                     <Ionicons name="checkmark" size={12} color="#918CE5" style={styles.secondCheck} />
                   </View>
                 )}
-                {message.status === 'read' && (
+                {message.status === 'READ' && (
                   <View style={styles.doubleCheck}>
                     <Ionicons name="checkmark" size={12} color="#4CAF50" />
                     <Ionicons name="checkmark" size={12} color="#4CAF50" style={styles.secondCheck} />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import {
     View,
     Text,
@@ -7,12 +7,20 @@ import {
     TouchableOpacity,
     ActivityIndicator,
     RefreshControl,
+    Alert,
+    Vibration,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { UserContext } from '@/context/UserContext';
-import { getAllChats, getMessagesByChatId, updateMessageStatus } from '@/services/chatService';
+import { useGlobalMessage } from '@/context/GlobalMessageContext';
+import {
+    getAllChats,
+    getMessagesByChatId,
+    getUserChatByChatId,
+    partialUpdateUserChat,
+} from '@/services/chatService';
 import { getUserById } from '@/services/userService';
 import { getFriendsByUserId } from '@/services/friendsService';
 import Toast from 'react-native-toast-message';
@@ -21,7 +29,9 @@ import Toast from 'react-native-toast-message';
 export default function ChatIndex() {
     const router = useRouter();
     const { user: currentUser } = useContext(UserContext);
+    const { addMessageHandler, addReactionHandler, isConnected, getConnectionStatus } = useGlobalMessage();
     const [chats, setChats] = useState([]);
+    const [userChats, setUserChats] = useState(new Map());
     const [onlineUsers, setOnlineUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -29,48 +39,232 @@ export default function ChatIndex() {
     useEffect(() => {
         loadInitialChats();
         loadOnlineUsers();
-    }, []);
+        setupGlobalMessageHandlers();
+        // Debug: Log connection status periodically
+        const connectionStatusInterval = setInterval(() => {
+            const status = getConnectionStatus();
+            console.log('🔍 Global message service status:', status);
+        }, 10000); // Every 10 seconds
+
+        return () => {
+            clearInterval(connectionStatusInterval);
+        };
+    }, [currentUser]);
+
+    // Set up global message handlers for real-time updates
+    const setupGlobalMessageHandlers = useCallback(() => {
+        // Handle incoming messages
+        const removeMessageHandler = addMessageHandler((eventData) => {
+            const { messageDTO, eventType, isFromCurrentChat } = eventData;
+            console.log('📨 Chat list received message event:', eventType, messageDTO);
+            
+            switch (eventType) {
+                case 'SEND':
+                    // Update the chat list with new message (backend handles sorting)
+                    setChats(prevChats => {
+                        return prevChats.map(chat => {
+                            if (chat.chatId === messageDTO.chatId) {
+                                return {
+                                    ...chat,
+                                    lastMessage: messageDTO,
+                                };
+                            }
+                            return chat;
+                        });
+                    });
+
+                    // Update unread count if message is not from current chat and not from current user
+                    if (!isFromCurrentChat && messageDTO.senderId !== currentUser?.userId) {
+                        updateUnreadCount(messageDTO.chatId, 1); // Increment by 1
+                    }
+                    break;
+
+                case 'DELETE':
+                    // Handle message deletion - might need to update last message if it was the deleted one
+                    setChats(prevChats => {
+                        return prevChats.map(chat => {
+                            if (chat.chatId === messageDTO.chatId && 
+                                chat.lastMessage && 
+                                chat.lastMessage.messageId === messageDTO.messageId) {
+                                // The last message was deleted, we might need to fetch the new last message
+                                // For now, we'll keep the old one and let the next refresh handle it
+                                return {
+                                    ...chat,
+                                    lastMessage: null,
+                                };
+                            }
+                            return chat;
+                        });
+                    });
+                    break;
+
+                case 'EDIT':
+                    // Update the last message if it's the edited one
+                    setChats(prevChats => {
+                        return prevChats.map(chat => {
+                            if (chat.chatId === messageDTO.chatId && 
+                                chat.lastMessage && 
+                                chat.lastMessage.messageId === messageDTO.messageId) {
+                                return {
+                                    ...chat,
+                                    lastMessage: {
+                                        ...chat.lastMessage,
+                                        content: messageDTO.content,
+                                        edited: true
+                                    }
+                                };
+                            }
+                            return chat;
+                        });
+                    });
+                    break;
+
+                case 'UPDATE_STATUS':
+                    // Update message status if it's the last message
+                    setChats(prevChats => {
+                        return prevChats.map(chat => {
+                            if (chat.chatId === messageDTO.chatId && 
+                                chat.lastMessage && 
+                                chat.lastMessage.messageId === messageDTO.messageId) {
+                                return {
+                                    ...chat,
+                                    lastMessage: {
+                                        ...chat.lastMessage,
+                                        status: messageDTO.status
+                                    }
+                                };
+                            }
+                            return chat;
+                        });
+                    });
+                    break;
+
+                default:
+                    console.log('🚫 Unknown message event type:', eventType);
+            }
+        });
+
+        // Handle reactions
+        const removeReactionHandler = addReactionHandler((eventData) => {
+            const { messageReactionDTO, eventType } = eventData;
+
+            switch (eventType) {
+                case 'REACT':
+                case 'REMOVE_REACT':
+                    // Update message with reaction if it's the last message in any chat
+                    setChats(prevChats => {
+                        return prevChats.map(chat => {
+                            if (chat.lastMessage &&
+                                chat.lastMessage.messageId === messageReactionDTO.messageId) {
+                                return {
+                                    ...chat,
+                                    lastMessage: {
+                                        ...chat.lastMessage,
+                                        messageReact: eventType === 'REACT' ? messageReactionDTO : null
+                                    }
+                                };
+                            }
+                            return chat;
+                        });
+                    });
+                    break;
+
+                default:
+                    console.log('🚫 Unknown reaction event type:', eventType);
+            }
+        });
+
+        // Cleanup function
+        return () => {
+            removeMessageHandler();
+            removeReactionHandler();
+        };
+    }, [addMessageHandler, addReactionHandler, currentUser?.userId]);
+
+    // Update unread count helper
+    const updateUnreadCount = async (chatId, increment) => {
+        try {
+            const userChat = userChats.get(chatId);
+            if (userChat) {
+                const newUnreadCount = Math.max(0, (userChat.unread || 0) + increment);
+                console.log(`🔄 Updating unread count for chat ${chatId}: ${userChat.unread} -> ${newUnreadCount}`);
+                await partialUpdateUserChat(chatId, {
+                    unread: newUnreadCount
+                });
+
+                // Update local stateZ
+                setUserChats(prev => {
+                    const updated = new Map(prev);
+                    updated.set(chatId, {
+                        ...userChat,
+                        unread: newUnreadCount
+                    });
+                    return updated;
+                });
+            }
+        } catch (error) {
+            console.error('❌ Error updating unread count:', error);
+        }
+    };
 
     const loadInitialChats = async () => {
         try {
             setLoading(true);
-            const response = await getAllChats();
+            
+            // Fetch all chats first
+            const chatsResponse = await getAllChats();
+            const chatsData = Array.isArray(chatsResponse) ? chatsResponse : [];
+            
+            // Create a map to store userChat data
+            const userChatsMap = new Map();
 
-            // The response should be an array of chats
-            const chatsData = Array.isArray(response) ? response : [];
-            // Enrich each chat with user details and last message
+            // Enrich each chat with user details, last message, and userChat data
             const enrichedChats = await Promise.all(
                 chatsData.map(async (chat) => {
                     try {
                         // Get the other user's ID
                         const otherUserId = chat.user1Id === currentUser?.userId ? chat.user2Id : chat.user1Id;
 
-                        // Fetch the other user's details and last message in parallel
-                        const [otherUser, messagesResponse] = await Promise.all([
+                        // Fetch user details, last message, and userChat data in parallel
+                        const [otherUser, messagesResponse, userChatResponse] = await Promise.all([
                             getUserById(otherUserId),
-                            getMessagesByChatId(chat.chatId, 0, 10)
+                            getMessagesByChatId(chat.chatId, 0, 10),
+                            getUserChatByChatId(chat.chatId).catch(() => null) // Handle case where userChat doesn't exist
                         ]);
 
-                        // Extract the messages and check for unread ones
+                        // Extract the messages
                         const messages = Array.isArray(messagesResponse) ? messagesResponse : (messagesResponse?.content || []);
                         const lastMessage = messages.length > 0 ? messages[0] : null;
 
-                        // Check if there are unread messages from the other user
-                        const unreadMessages = messages.filter(msg =>
-                            msg.senderId !== currentUser?.userId && // Message from other user
-                            msg.status === 'SENT' // Message status is SENT (unread)
-                        );
-                        const hasUnreadMessages = unreadMessages.length > 0;
+                        // Store userChat data in map
+                        if (userChatResponse) {
+                            userChatsMap.set(chat.chatId, userChatResponse);
+                        } else {
+                            // Create default userChat entry if it doesn't exist
+                            userChatsMap.set(chat.chatId, {
+                                chatId: chat.chatId,
+                                userId: currentUser?.userId,
+                                unread: 0,
+                                pinned: false,
+                                muted: false
+                            });
+                        }
+
+                        // Get unread count from userChat data
+                        const userChat = userChatsMap.get(chat.chatId);
+                        console.log("SUIT", userChat);
+                        const unreadCount = userChat?.unread || 0;
 
                         return {
                             ...chat,
                             otherUser: otherUser,
                             lastMessage: lastMessage,
-                            hasUnreadMessages: hasUnreadMessages,
-                            unreadCount: unreadMessages.length
+                            hasUnreadMessages: unreadCount > 0,
+                            unreadCount: unreadCount
                         };
                     } catch (error) {
-                        console.warn('Failed to fetch user details for chat:', chat.chatId);
+                        console.warn('Failed to fetch details for chat:', chat.chatId, error);
+                        // Return a basic chat object with minimal data
                         return {
                             ...chat,
                             otherUser: null,
@@ -81,13 +275,16 @@ export default function ChatIndex() {
                     }
                 })
             );
+            
+            // No need to sort - backend already returns chats sorted
+            setUserChats(userChatsMap);
             setChats(enrichedChats);
         } catch (error) {
             console.error('Error loading chats:', error);
             Toast.show({
                 type: 'error',
                 text1: 'Error',
-                text2: 'Failed to load chats',
+                text2: 'Failed to load chats. Please try again.',
                 position: 'top',
                 visibilityTime: 3000,
             });
@@ -149,34 +346,28 @@ export default function ChatIndex() {
         } else {
             return date.toLocaleDateString();
         }
-    };    const handleChatPress = async (chat) => {
+    };
+    
+    const handleChatPress = async (chat) => {
         try {
-            // Mark unread messages as read before navigating
-            if (chat.hasUnreadMessages) {
-                // Get the last 10 messages to mark as read
-                const messagesResponse = await getMessagesByChatId(chat.chatId, 0, 10);
-                const messages = Array.isArray(messagesResponse) ? messagesResponse : (messagesResponse?.content || []);
-                
-                // Filter messages that are not from current user and are unread (SENT status)
-                const unreadMessages = messages.filter(msg => 
-                    msg.senderId !== currentUser?.userId && 
-                    msg.status === 'SENT'
-                );
-
-                // Mark each unread message as READ
-                const markAsReadPromises = unreadMessages.map(async (message) => {
-                    try {
-                        await updateMessageStatus(message.messageId, 'READ');
-                        console.log(`Marked message ${message.messageId} as READ`);
-                    } catch (error) {
-                        console.warn(`Failed to mark message ${message.messageId} as read:`, error);
-                    }
+            // Reset unread count in userChat
+            const userChat = userChats.get(chat.chatId);
+            if (userChat && userChat.unread > 0) {
+                await partialUpdateUserChat(chat.chatId, {
+                    unread: 0
                 });
 
-                // Wait for all messages to be marked as read
-                await Promise.all(markAsReadPromises);
+                // Update local state
+                setUserChats(prev => {
+                    const updated = new Map(prev);
+                    updated.set(chat.chatId, {
+                        ...userChat,
+                        unread: 0
+                    });
+                    return updated;
+                });
 
-                // Update the chat state to reflect the changes
+                // Update chat state to reflect no unread messages
                 setChats(prevChats => 
                     prevChats.map(c => 
                         c.chatId === chat.chatId 
@@ -186,12 +377,87 @@ export default function ChatIndex() {
                 );
             }
         } catch (error) {
-            console.error('Error marking messages as read:', error);
-            // Continue to navigation even if marking as read fails
+            console.error('Error resetting unread count:', error);
+            // Continue to navigation even if reset fails
         }
 
         // Navigate to the chat
         router.push(`/Chat/${chat.chatId}`);
+    };
+
+    const handleChatLongPress = async (chat) => {
+        // Add haptic feedback for better UX
+        Vibration.vibrate(50);
+        
+        const userChat = userChats.get(chat.chatId);
+        const isPinned = userChat?.pinned || false;
+        const otherUserName = chat.otherUser?.name || 'Unknown User';
+
+        Alert.alert(
+            isPinned ? 'Unpin Chat' : 'Pin Chat',
+            isPinned 
+                ? `Unpin chat with ${otherUserName}?` 
+                : `Pin chat with ${otherUserName} to the top?`,
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+                {
+                    text: isPinned ? 'Unpin' : 'Pin',
+                    onPress: async () => {
+                        try {
+                            const newPinnedStatus = !isPinned;
+                            
+                            // Update backend
+                            await partialUpdateUserChat(chat.chatId, {
+                                pinned: newPinnedStatus
+                            });
+
+                            // Update local userChats state
+                            setUserChats(prev => {
+                                const updated = new Map(prev);
+                                const currentUserChat = updated.get(chat.chatId) || {
+                                    chatId: chat.chatId,
+                                    userId: currentUser?.userId,
+                                    unread: 0,
+                                    pinned: false,
+                                    muted: false
+                                };
+                                updated.set(chat.chatId, {
+                                    ...currentUserChat,
+                                    pinned: newPinnedStatus
+                                });
+                                return updated;
+                            });
+
+                            // Refresh chat list to get updated order from backend
+                            loadInitialChats();
+
+                            Toast.show({
+                                type: 'success',
+                                text1: newPinnedStatus ? 'Chat Pinned' : 'Chat Unpinned',
+                                text2: newPinnedStatus 
+                                    ? `Chat with ${otherUserName} has been pinned to the top`
+                                    : `Chat with ${otherUserName} has been unpinned`,
+                                position: 'top',
+                                visibilityTime: 2000,
+                            });
+
+                        } catch (error) {
+                            console.error('Error updating pin status:', error);
+                            Toast.show({
+                                type: 'error',
+                                text1: 'Error',
+                                text2: 'Failed to update pin status. Please try again.',
+                                position: 'top',
+                                visibilityTime: 3000,
+                            });
+                        }
+                    },
+                },
+            ]
+        );
     };
 
     const handleOnlineUserPress = async (user) => {
@@ -215,14 +481,22 @@ export default function ChatIndex() {
     const renderChatItem = ({ item }) => {
         const otherUser = item.otherUser;
         const lastMessage = item.lastMessage;
+        
+        // Get real-time unread count and pinned status from userChats map
+        const userChat = userChats.get(item.chatId);
+        const realTimeUnreadCount = userChat?.unread || 0;
+        const hasUnreadMessages = realTimeUnreadCount > 0;
+        const isPinned = userChat?.pinned || false;
 
         return (
             <TouchableOpacity
                 style={[
                     styles.chatItem,
-                    item.hasUnreadMessages && styles.chatItemUnread
+                    hasUnreadMessages && styles.chatItemUnread,
                 ]}
                 onPress={() => handleChatPress(item)}
+                onLongPress={() => handleChatLongPress(item)}
+                delayLongPress={500}
             >
                 <View style={styles.avatarContainer}>
                     {otherUser?.profilePictureURL ? (
@@ -235,16 +509,26 @@ export default function ChatIndex() {
                             <Ionicons name="person" size={24} color="#9188E5" />
                         </View>
                     )}
-                    {item.hasUnreadMessages && (
+                    {hasUnreadMessages && (
                         <View style={styles.unreadDot} />
                     )}
                 </View>
 
                 <View style={styles.chatContent}>
                     <View style={styles.chatHeader}>
-                        <Text style={styles.userName} numberOfLines={1}>
-                            {otherUser?.name || 'Unknown User'}
-                        </Text>
+                        <View style={styles.userNameContainer}>
+                            {isPinned && (
+                                <Ionicons 
+                                    name="pin" 
+                                    size={14} 
+                                    color="#9188E5" 
+                                    style={styles.pinnedIcon} 
+                                />
+                            )}
+                            <Text style={styles.userName} numberOfLines={1}>
+                                {otherUser?.name || 'Unknown User'}
+                            </Text>
+                        </View>
                         <Text style={styles.timestamp}>
                             {lastMessage ? formatTime(lastMessage.sentAt) : formatTime(item.createdAt)}
                         </Text>
@@ -260,10 +544,10 @@ export default function ChatIndex() {
                                 'Start a conversation'
                             }
                         </Text>
-                        {item.hasUnreadMessages && item.unreadCount > 0 && (
+                        {hasUnreadMessages && (
                             <View style={styles.unreadBadge}>
                                 <Text style={styles.unreadCount}>
-                                    {item.unreadCount > 9 ? '10+' : item.unreadCount}
+                                    {realTimeUnreadCount > 99 ? '99+' : realTimeUnreadCount}
                                 </Text>
                             </View>
                         )}
@@ -418,6 +702,14 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 4,
+    },
+    userNameContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    pinnedIcon: {
+        marginRight: 4,
     },
     userName: {
         fontSize: 16,

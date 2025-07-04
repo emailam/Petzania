@@ -135,7 +135,7 @@ const handlePostLike = useCallback(async (postId) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
   },
   header: {
     backgroundColor: '#fff',

@@ -11,8 +11,13 @@ import {
   StatusBar,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
+import { useRouter } from 'expo-router';
+
 import { UserContext } from '@/context/UserContext';
+import { FlowContext } from '@/context/FlowContext';
+
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useCreatePost} from "@/services/postService";
 import Toast from 'react-native-toast-message'; // Adjust the import path as needed
 export default function AdoptionBreedingForm() {
@@ -35,9 +40,13 @@ export default function AdoptionBreedingForm() {
   const selectedPetId = watch('petId');
   const location = watch('location');
 
+  const router = useRouter();
+
   const { user } = useContext(UserContext);
-  
-  const userPets = user?.myPets
+  const { setFromPage } = useContext(FlowContext);
+  const defaultPetImage = require('@/assets/images/Defaults/default-pet.png');
+
+  const userPets = user?.myPets;
   const selectedPet = userPets?.find((pet) => pet.petId === selectedPetId);
   const isFormValid = postType && location && descriptionValue && selectedPetId;
   
@@ -49,21 +58,21 @@ export default function AdoptionBreedingForm() {
         text1: 'Post created successfully!',
       });
       //console.log('Post created:', res);
-      // Optional: reset form or navigate
+      router.push('/Home');
     },
     onError: (error) => {
-      console.error('Error creating post:', error.response?.data?.message || error.message);
       Toast.show({
         type: 'error',
         text1: 'Failed to create post',
-        text2: error?.message || 'Something went wrong',
+        text2: error.response?.data?.message[0].message || 'Something went wrong',
       });
     },
   });
 };
 
   const handleAddNewPet = () => {
-    // Function to add new pet - currently empty
+    setFromPage('AdoptionBreedingPost');
+    router.push("/PetModule/AddPet1");
     console.log('Add new pet button pressed');
   };
 
@@ -100,7 +109,11 @@ export default function AdoptionBreedingForm() {
                   ]}
                   onPress={() => onChange('ADOPTION')}
                 >
-                  <Text style={styles.typeButtonIcon}><FontAwesome5 name="baby-carriage" size={24} color="white" /></Text>
+                  <Ionicons
+                    name={value === 'ADOPTION' ? "home" : "home-outline"}
+                    size={28}
+                    color={value === 'ADOPTION' ? '#FFFFFF' : '#9188E5'}
+                  />
                   <Text style={[
                     styles.typeButtonText,
                     value === 'ADOPTION' && styles.typeButtonTextSelected
@@ -115,7 +128,11 @@ export default function AdoptionBreedingForm() {
                   ]}
                   onPress={() => onChange('BREEDING')}
                 >
-                  <Text style={styles.typeButtonIcon}>💜</Text>
+                  <Ionicons
+                    name={value === 'BREEDING' ? "heart" : "heart-outline"}
+                    size={28}
+                    color={value === 'BREEDING' ? '#FFFFFF' : '#9188E5'}
+                  />
                   <Text style={[
                     styles.typeButtonText,
                     value === 'BREEDING' && styles.typeButtonTextSelected
@@ -159,7 +176,10 @@ export default function AdoptionBreedingForm() {
                           style={styles.petImage}
                         />
                       ) : (
-                        <View style={styles.petPlaceholder} />
+                        <Image
+                          source={defaultPetImage}
+                          style={styles.petImage}
+                        />
                       )}
                       {value === pet.petId && (
                         <View style={styles.petSelectedOverlay}>
@@ -200,9 +220,11 @@ export default function AdoptionBreedingForm() {
           <View style={styles.selectedPetCard}>
             <View style={styles.selectedPetContent}>
               <Image
-                source={{ 
-                  uri: selectedPet.myPicturesURLs?.[0] || 'https://via.placeholder.com/100'
-                }}
+                source={
+                  selectedPet.myPicturesURLs?.[0] 
+                    ? { uri: selectedPet.myPicturesURLs[0] }
+                    : defaultPetImage
+                }
                 style={styles.selectedPetImage}
               />
               <View style={styles.selectedPetInfo}>
@@ -292,7 +314,11 @@ export default function AdoptionBreedingForm() {
           disabled={!isFormValid || isPending}
         >
         <Text style={styles.postButtonIcon}>
-          {isPending ? <FontAwesome5 name="spinner" size={24} color="white" spin /> : <FontAwesome5 name="telegram-plane" size={24} color="white" />}
+          {isPending ? (
+            <FontAwesome5 name="spinner" size={20} color="white" spin />
+          ) : (
+            <FontAwesome5 name="paper-plane" size={20} color="white" />
+          )}
         </Text>
         <Text style={styles.postButtonText}>
           {isPending ? 'Posting...' : 'Post'}
@@ -368,14 +394,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#fff',
+    gap: 8,
   },
   typeButtonSelected: {
     backgroundColor: '#9188E5',
     borderColor: '#9188E5',
-  },
-  typeButtonIcon: {
-    fontSize: 24,
-    marginBottom: 12,
   },
   typeButtonText: {
     fontSize: 14,

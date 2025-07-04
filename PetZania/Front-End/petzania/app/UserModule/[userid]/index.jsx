@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import ImageViewing from 'react-native-image-viewing';
+import UserPosts from '@/components/AdoptionBreedingModule/UserPosts';
 
 import { UserContext } from '@/context/UserContext';
 
@@ -427,6 +428,7 @@ export default function UserProfile() {
         }
 
         try {
+          console.log('Creating chat for user:', userid);
             const chat = await createChat(userid);
             router.push(`/Chat/${chat.chatId}`);
         } catch (error) {
@@ -897,15 +899,7 @@ export default function UserProfile() {
       {activeTab === 'posts' && (
         <View style={styles.tabContent}>
             {/* No posts message */}
-            {false && (
-              <View style={styles.noContentContainer}>
-                <Ionicons name="grid" size={40} color="#ccc" />
-                <Text style={styles.noContentText}>No posts yet</Text>
-                <Text style={styles.noContentSubText}>
-                  {isOwnProfile ? "Share your first post!" : `${user?.name || 'User'} hasn't posted yet`}
-                </Text>
-              </View>
-            )}
+            <UserPosts />
           </View>
       )}
 

@@ -42,6 +42,11 @@ api.interceptors.request.use(
     async (config) => {
         // Skip token attachment for public endpoints
         if (isPublicEndpoint(config.url)) {
+            console.log('📤 Public API Request:', {
+                method: config.method?.toUpperCase(),
+                url: config.url,
+                requiresAuth: false
+            });
             return config;
         }
 
@@ -71,13 +76,13 @@ api.interceptors.response.use(
             method: error.config?.method,
             message: error.message
         });
-        
+
         // Don't attempt token refresh for public endpoints
         if (isPublicEndpoint(originalRequest.url)) {
             console.log('🔓 Public endpoint failed, not attempting token refresh');
             return Promise.reject(error);
         }
-        
+
         if (error.response?.status === 401 && !originalRequest._retry) {
             console.log('🔄 Starting token refresh process...');
             originalRequest._retry = true;
@@ -87,8 +92,12 @@ api.interceptors.response.use(
                     failedQueue.push({ resolve, reject });
                 })
                 .then((token) => {
-                    originalRequest.headers.Authorization = 'Bearer ' + token;
-                    return api(originalRequest);
+                    if (token) {
+                        originalRequest.headers.Authorization = 'Bearer ' + token;
+                        return api(originalRequest);
+                    } else {
+                        return Promise.reject(new Error('Authentication failed. Please log in again.'));
+                    }
                 })
                 .catch((err) => Promise.reject(err));
             }
@@ -100,6 +109,7 @@ api.interceptors.response.use(
                 console.log('🔑 Fetched refresh token:', refreshToken ? 'Present' : 'Missing');
 
                 if (!refreshToken) {
+                    console.log('🚫 No refresh token available, cannot refresh');
                     throw new Error('No refresh token available');
                 }
 
@@ -127,10 +137,23 @@ api.interceptors.response.use(
                 console.log('🔄 Retrying original request with new token');
                 return api(originalRequest);
             } catch (err) {
-                console.log('❌ Token refresh failed:', err.message);
+                console.log('❌ Token refresh failed:', {
+                    status: err.response?.status,
+                    message: err.message,
+                    data: err.response?.data
+                });
+                
+                // Clear tokens and queue
                 processQueue(err, null);
                 await clearAllTokens();
                 console.log('🗑️ Cleared all tokens due to refresh failure');
+                
+                // If refresh token is invalid (400/401), don't retry the original request
+                if (err.response?.status === 400 || err.response?.status === 401) {
+                    console.log('🚫 Refresh token invalid, not retrying original request');
+                    return Promise.reject(new Error('Authentication failed. Please log in again.'));
+                }
+                
                 return Promise.reject(err);
             } finally {
                 isRefreshing = false;

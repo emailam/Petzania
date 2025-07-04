@@ -369,10 +369,7 @@ export default function PetDetails() {
                 return updatedPets;
             });
 
-            const hasImages = uploadedImageUrls.length > 0;
-            const successMessage = hasImages ?
-                'Pet updated successfully with photos!' :
-                'Pet updated successfully!';
+            const successMessage = 'Pet updated successfully!';
             showSuccessMessage(successMessage);
             router.back();
         } catch (error) {

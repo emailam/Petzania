@@ -1,9 +1,8 @@
-import { StyleSheet } from 'react-native'
 import React from 'react'
-import UserPosts from '@/components/AdoptionBreedingModule/UserPosts';
+import { Text } from 'react-native'
 
 export default function index() {
   return (
-    <UserPosts/>
+    <Text>Home</Text>
   )
 }

@@ -57,7 +57,6 @@ export default function OTPForm({ CELL_COUNT, isRegister, email }) {
 
       if (response) {
         showToastSuccess(response.message || "Account verified successfully!");
-        setSuccessMessage("Account verified successfully!");
         setErrorMessage(null);
         if(isRegister === "true"){
           router.replace("/RegisterModule/LoginScreen");
@@ -66,7 +65,6 @@ export default function OTPForm({ CELL_COUNT, isRegister, email }) {
         router.replace("/RegisterModule/ProfileSetUp1");
       } else {
         showToastError(response.message || "Verification failed.");
-        setErrorMessage(response.message || "Verification failed.");
         setSuccessMessage(null);
       }
     } catch (error) {
@@ -87,7 +85,6 @@ export default function OTPForm({ CELL_COUNT, isRegister, email }) {
 
       if (response) {
         showToastSuccess(response.message || "OTP verified successfully!");
-        setSuccessMessage("OTP verified successfully!");
         setErrorMessage(null);
         router.replace({
           pathname: "/RegisterModule/ResetPasswordScreen",
@@ -95,7 +92,6 @@ export default function OTPForm({ CELL_COUNT, isRegister, email }) {
         });
       } else {
         showToastError(response.message || "OTP verification failed.");
-        setErrorMessage(response.message || "OTP verification failed.");
         setSuccessMessage(null);
       }
     } catch (error) {

@@ -3,19 +3,14 @@ import { useMutation , useInfiniteQuery, useQueryClient } from '@tanstack/react-
 import { getPetById } from './petService';
 async function fetchPosts(filters, page = 0, pageSize = 10) {
   try {
-    console.log('Fetching posts for page:', page, 'with filters:', filters); // Debug log
-    
     // Put pagination parameters in the URL as query parameters
     // Put filters in the request body
     const response = await api.post(`/pet-posts/filtered?page=${page}&size=${pageSize}`, {
       ...filters,
     });
-    
-    console.log('Paginated user posts response:', response.data);
+
     const { content, last, number } = response.data;
-    
-    console.log(`Fetched page ${number}, hasNext: ${!last}, items: ${content?.length}`); // Debug log
-    
+
     return {
       posts: content,
       hasNext: !last,
@@ -29,7 +24,7 @@ async function fetchPosts(filters, page = 0, pageSize = 10) {
 
 export const useFetchPosts = (filters) => {
   const newfilters = { ...filters, petPostStatus: "PENDING" };
-  
+
   return useInfiniteQuery({
     queryKey: ['posts', newfilters],
     queryFn: ({ pageParam = 0 }) => {
@@ -82,7 +77,6 @@ async function getUserPostsPaginated({ pageParam = 0, userId }) {
         size: 20,
       },
     });
-    console.log('Paginated user posts response:', response.data);
     const { content, last } = response.data;
     return {
       posts: content,

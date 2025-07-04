@@ -59,6 +59,9 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
         tabBarPosition: 'bottom',
+        headerStyle: {
+          height: 80,
+        },
         tabBarItemStyle: {
           justifyContent: 'center',
           alignItems: 'center',
@@ -94,7 +97,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="Temp/index"
+        name="AddPost"
         options={{
           title: 'Post',
           tabBarIcon: ({ color, focused }) => (

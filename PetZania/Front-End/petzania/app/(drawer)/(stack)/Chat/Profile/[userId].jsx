@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Image, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
 import { getUserById } from '@/services/userService';
-import { deleteChatByChatId } from '@/services/chatService';
+import { getUserChatByChatId, deleteUserChat } from '@/services/chatService';
 
 const defaultImage = require('@/assets/images/Defaults/default-user.png');
 
@@ -13,23 +14,87 @@ export default function UserProfileScreen() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [deleting, setDeleting] = useState(false);
+
+    // Log parameters for debugging
+    console.log('📱 UserProfile params - userId:', userId, 'chatId:', chatId);
 
     // Messenger-style actions
     const handleDeleteChat = async () => {
+        if (!chatId) {
+            Alert.alert('Error', 'No conversation found to delete.');
+            return;
+        }
+
+        if (deleting) {
+            return; // Prevent multiple deletions
+        }
+
         Alert.alert(
             'Delete Conversation',
             'Are you sure you want to delete this conversation? This action cannot be undone.',
             [
                 { text: 'Cancel', style: 'cancel' },
                 { text: 'Delete', style: 'destructive', onPress: async () => {
+                    setDeleting(true);
                     try {
-                        console.log('Deleting chat with ID:', chatId);
-                        await deleteChatByChatId(chatId);
-                        router.back();
-                        console.log('Chat deleted successfully:', chatId);
+                        console.log('🗑️ Starting chat deletion process for chatId:', chatId);
+                        
+                        // First, get the userChat by chatId
+                        const userChat = await getUserChatByChatId(chatId);
+                        
+                        if (!userChat) {
+                            throw new Error('Conversation not found or already deleted');
+                        }
+
+                        if (!userChat.userChatId) {
+                            throw new Error('Invalid conversation data');
+                        }
+
+                        console.log('📋 Found userChat:', userChat.userChatId);
+
+                        // Then delete the userChat using userChatId
+                        await deleteUserChat(userChat.userChatId);
+                        
+                        console.log('✅ User chat deleted successfully:', userChat.userChatId);
+                        
+                        // Show success toast
+                        Toast.show({
+                            type: 'success',
+                            text1: 'Conversation Deleted',
+                            text2: 'The conversation has been removed from your chat list',
+                            position: 'top',
+                            visibilityTime: 3000,
+                        });
+                        
+                        // Navigate back to chat list
+                        router.replace('/Chat');
+                        
                     } catch (error) {
-                        console.error('Error deleting chat:', error);
-                        Alert.alert('Error', 'Failed to delete conversation. Please try again.');
+                        console.error('❌ Error deleting chat:', error);
+                        
+                        let errorMessage = 'Failed to delete conversation. Please try again.';
+                        
+                        // Handle specific error cases
+                        if (error.response?.status === 404) {
+                            errorMessage = 'Conversation not found or already deleted.';
+                        } else if (error.response?.status === 403) {
+                            errorMessage = 'You do not have permission to delete this conversation.';
+                        } else if (error.message) {
+                            errorMessage = error.message;
+                        }
+                        
+                        Alert.alert('Error', errorMessage);
+                        
+                        Toast.show({
+                            type: 'error',
+                            text1: 'Delete Failed',
+                            text2: errorMessage,
+                            position: 'top',
+                            visibilityTime: 4000,
+                        });
+                    } finally {
+                        setDeleting(false);
                     }
                 }}
             ]
@@ -119,15 +184,31 @@ export default function UserProfileScreen() {
                 </View>
             )}
 
-            {/* Danger zone */}
-            <View style={styles.dangerSection}>
-                <TouchableOpacity style={[styles.optionItem, styles.dangerItem]} onPress={handleDeleteChat}>
-                    <View style={styles.optionIcon}>
-                        <Ionicons name="trash-outline" size={24} color="#FF3B30" />
-                    </View>
-                    <Text style={[styles.optionText, styles.dangerText]}>Delete Conversation</Text>
-                </TouchableOpacity>
-            </View>
+            {/* Danger zone - only show if we have a chatId */}
+            {chatId && (
+                <View style={styles.dangerSection}>
+                    <TouchableOpacity 
+                        style={[
+                            styles.optionItem, 
+                            styles.dangerItem,
+                            deleting && styles.disabledItem
+                        ]} 
+                        onPress={handleDeleteChat}
+                        disabled={deleting}
+                    >
+                        <View style={styles.optionIcon}>
+                            {deleting ? (
+                                <ActivityIndicator size={24} color="#FF3B30" />
+                            ) : (
+                                <Ionicons name="trash-outline" size={24} color="#FF3B30" />
+                            )}
+                        </View>
+                        <Text style={[styles.optionText, styles.dangerText]}>
+                            {deleting ? 'Deleting...' : 'Delete Conversation'}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            )}
         </ScrollView>
     );
 }
@@ -252,6 +333,9 @@ const styles = StyleSheet.create({
     },
     dangerItem: {
         // Additional styling for danger items
+    },
+    disabledItem: {
+        opacity: 0.6,
     },
     dangerText: {
         color: '#FF3B30',

@@ -9,7 +9,6 @@ import {
   ActivityIndicator,
   RefreshControl,
   Platform,
-  SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import PostCard from './PostCard';
@@ -18,6 +17,7 @@ import {
   useFetchPosts,
   useToggleLike,
 } from '../../services/postService';
+import LandingImages from '@/components/AdoptionBreedingModule/LandingImages';
 import { getUserById } from '@/services/userService';
 import toast from 'react-native-toast-message';
 
@@ -185,46 +185,58 @@ export default function PostScreen({ postType }) {
     );
   }
 
-  return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={[styles.header, isLargeScreen && styles.headerLarge]}>
-        <View style={styles.headerContent}>
-          <Text style={[styles.headerTitle, isSmallScreen && styles.headerTitleSmall]}>
-            {title}
-          </Text>
-          <TouchableOpacity
-            style={styles.filterButton}
-            onPress={handleFilterPress}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="filter" size={20} color="#7C3AED" />
-            <Text style={styles.filterButtonText}>Filter</Text>
-            {Object.keys(filters).some(key => 
-              (key === 'species' && filters[key] !== 'ALL') ||
-              (key === 'breed' && filters[key] !== 'ALL') ||
-              (key === 'minAge' && filters[key] !== 0) ||
-              (key === 'maxAge' && filters[key] !== 1000)
-            ) && <View style={styles.filterBadge} />}
-          </TouchableOpacity>
-        </View>
-        {posts.length > 0 && (
-          <Text style={styles.postCount}>
-            {posts.length} {posts.length === 1 ? 'pet' : 'pets'} available
-          </Text>
-        )}
+  const renderHeader = useCallback(() => (
+    <View style={[styles.header, isLargeScreen && styles.headerLarge]}>
+      <View style={styles.headerContent}>
+        <Text style={[styles.headerTitle, isSmallScreen && styles.headerTitleSmall]}>
+          {title}
+        </Text>
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={handleFilterPress}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="filter" size={20} color="#7C3AED" />
+          <Text style={styles.filterButtonText}>Filter</Text>
+          {Object.keys(filters).some(key => 
+            (key === 'species' && filters[key] !== 'ALL') ||
+            (key === 'breed' && filters[key] !== 'ALL') ||
+            (key === 'minAge' && filters[key] !== 0) ||
+            (key === 'maxAge' && filters[key] !== 1000)
+          ) && <View style={styles.filterBadge} />}
+        </TouchableOpacity>
       </View>
+      {posts.length > 0 && (
+        <Text style={styles.postCount}>
+          {posts.length} {posts.length === 1 ? 'pet' : 'pets'} available
+        </Text>
+      )}
+    </View>
+  ), [title, isLargeScreen, isSmallScreen, handleFilterPress, filters, posts.length]);
 
-      {/* Posts List */}
+  return (
+    <View style={styles.container}>
       <FlatList
-        data={posts}
-        renderItem={renderPost}
-        keyExtractor={item => item.postId}
+        data={[{ type: 'landing' }, { type: 'header' }, ...posts]}
+        renderItem={({ item, index }) => {
+          if (item.type === 'landing') {
+            return <LandingImages />;
+          }
+          if (item.type === 'header') {
+            return renderHeader();
+          }
+          return renderPost({ item });
+        }}
+        keyExtractor={(item, index) => {
+          if (item.type === 'landing') return 'landing';
+          if (item.type === 'header') return 'header';
+          return item.postId;
+        }}
+        stickyHeaderIndices={[1]}
         contentContainerStyle={[
-          styles.listContent,
           posts.length === 0 && styles.listContentEmpty
         ]}
-        ListEmptyComponent={renderEmpty}
+        ListEmptyComponent={posts.length === 0 ? renderEmpty : null}
         ListFooterComponent={renderFooter}
         refreshControl={
           <RefreshControl
@@ -248,8 +260,7 @@ export default function PostScreen({ postType }) {
         onApply={handleApplyFilters}
         onClose={handleCloseFilters}
       />
-    </SafeAreaView>
-    
+    </View>
   );
 }
 
@@ -375,9 +386,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     marginTop: 8,
-  },
-  listContent: {
-    paddingVertical: 16,
   },
   listContentEmpty: {
     flex: 1,
