@@ -1,5 +1,7 @@
 package com.example.registrationmodule.config;
 
+import com.sendgrid.SendGrid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,34 +13,25 @@ import java.util.Properties;
 
 @Configuration
 @PropertySource("classpath:application.yml")
+@Slf4j
 public class EmailConfig {
-    
-    @Value("${spring.mail.username}")
-    private String username;
-    
-    @Value("${spring.mail.password}")
-    private String password;
-    
-    @Value("${spring.mail.host}")
-    private String host;
-    
-    @Value("${spring.mail.port}")
-    private int port;
+
+    @Value("${spring.sendgrid.key}")
+    private String key;
     
     @Bean
-    public JavaMailSender javaMailSender() {
-        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-        mailSender.setHost(host);
-        mailSender.setPort(port);
-        mailSender.setUsername(username);
-        mailSender.setPassword(password);
+    public SendGrid getSendgrid(){
+        if (key == null || key.trim().isEmpty()) {
+            log.error("SendGrid API key is null or empty!");
+            throw new IllegalArgumentException("SendGrid API key is required");
+        }
         
-        Properties props = mailSender.getJavaMailProperties();
-        props.put("mail.transport.protocol", "smtp");
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.debug", "false");
+        if (!key.startsWith("SG.")) {
+            log.error("SendGrid API key format is invalid. Should start with 'SG.'");
+            throw new IllegalArgumentException("Invalid SendGrid API key format");
+        }
         
-        return mailSender;
+        log.info("Initializing SendGrid with API key: {}", key.substring(0, 10) + "...");
+        return new SendGrid(key);
     }
 }

@@ -58,7 +58,7 @@ public class UserService implements IUserService {
     public UserProfileDTO registerUser(RegisterUserDTO registerUserDTO) {
         // convert to regular user.
         User user = converter.mapToUser(registerUserDTO);
-
+        System.out.println("Sending an email to the user...");
         if (userRepository.findByUsernameIgnoreCase(user.getUsername()).isPresent()) {
             throw new UsernameAlreadyExists("Username '" + user.getUsername() + "' already exists");
         } else if (userRepository.findByEmailIgnoreCase(user.getEmail()).isPresent()) {
@@ -75,7 +75,16 @@ public class UserService implements IUserService {
         }
 
         // send verification code.
-        sendVerificationCode(user.getEmail());
+        try {
+            System.out.println("About to send verification code to: " + user.getEmail());
+            sendVerificationCode(user.getEmail());
+            System.out.println("Verification code sent successfully");
+        } catch (Exception e) {
+            System.err.println("Failed to send verification code: " + e.getMessage());
+            e.printStackTrace();
+            // Don't throw the exception here to avoid breaking the registration flow
+            // The user is already saved, we just couldn't send the email
+        }
 
         return converter.mapToUserProfileDto(user);
     }
@@ -146,7 +155,7 @@ public class UserService implements IUserService {
         );
 
         // send the email
-        // emailService.sendEmail(emailRequestDTO);
+        emailService.sendEmail(emailRequestDTO);
 
     }
 
@@ -232,7 +241,7 @@ public class UserService implements IUserService {
         }
 
 //        String otp = String.format("%06d", new Random().nextInt(1000000));
-        String otp = "123456";
+        String otp = "607234";
         user.setResetCode(otp);
         user.setResetCodeExpirationTime(Timestamp.valueOf(LocalDateTime.now().plusMinutes(10)));
 
@@ -250,7 +259,7 @@ public class UserService implements IUserService {
                         "Petzania Team."
         );
 
-        // emailService.sendEmail(emailRequestDTO);
+        emailService.sendEmail(emailRequestDTO);
         userRepository.save(user);
     }
 
@@ -408,8 +417,8 @@ public class UserService implements IUserService {
         }
 
         System.out.println("User email is: " + email);
-        // String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
-        String otp = "123456";
+//        String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
+        String otp = "780023";
         user.setVerificationCode(otp);
         user.setExpirationTime(Timestamp.valueOf(LocalDateTime.now().plusMinutes(10)));
 
@@ -426,11 +435,15 @@ public class UserService implements IUserService {
                         "Petzania Team."
         );
 
+        System.out.println("Email sender configured as: " + emailSender);
+        System.out.println("About to send email with OTP: " + otp);
+
         // send the email.
-        // emailService.sendEmail(emailRequestDTO);
+        emailService.sendEmail(emailRequestDTO);
 
         // save the user in the database.
         userRepository.save(user);
+        System.out.println("User saved with verification code");
     }
 
     @Override
@@ -450,7 +463,7 @@ public class UserService implements IUserService {
                         "Petzania Team."
         );
 
-        // emailService.sendEmail(emailRequestDTO);
+        emailService.sendEmail(emailRequestDTO);
     }
 
     public void sendOtpFallback(String email, RequestNotPermitted t) {
