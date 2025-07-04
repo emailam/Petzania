@@ -148,18 +148,16 @@ export default function FilterModal({ visible, onClose, onApply, initialFilters 
               {sortOptions.map(opt => (
                 <TouchableOpacity
                   key={opt.value}
-                  style={[styles.option]}
+                  style={[
+                    styles.option,
+                    filters.sortBy === opt.value && styles.optionSelected
+                  ]}
                   onPress={() => handleFilterChange('sortBy', opt.value)}
                 >
-                  {filters.sortBy === opt.value ? (
-                    <LinearGradient
-                      colors={['#9188E5', '#7C3AED']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={StyleSheet.absoluteFillObject}
-                    />
-                  ) : null}
-                  <Text style={[styles.optionText, filters.sortBy === opt.value && styles.optionTextSelected]}>
+                  <Text style={[
+                    styles.optionText,
+                    filters.sortBy === opt.value && styles.optionTextSelected
+                  ]}>
                     {opt.label}
                   </Text>
                 </TouchableOpacity>
@@ -177,12 +175,6 @@ export default function FilterModal({ visible, onClose, onApply, initialFilters 
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.button, styles.applyBtn]} onPress={handleApply}>
-                <LinearGradient
-                  colors={['#9188E5', '#7C3AED']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={StyleSheet.absoluteFillObject}
-                />
                 <Text style={styles.applyText}>Apply</Text>
               </TouchableOpacity>
             </View>
@@ -194,6 +186,10 @@ export default function FilterModal({ visible, onClose, onApply, initialFilters 
 }
 
 const styles = StyleSheet.create({
+  optionSelected: { 
+  backgroundColor: '#9188E5',
+  borderColor: '#9188E5',
+},
   modalOverlay: { 
     flex: 1, 
     backgroundColor: 'rgba(0,0,0,0.6)', 
@@ -355,13 +351,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   applyBtn: { 
-    backgroundColor: '#9188E5',
-    shadowColor: '#9188E5',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
-  },
+  backgroundColor: '#9188E5',
+  shadowColor: '#9188E5',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.3,
+  shadowRadius: 8,
+  elevation: 5,
+},
   applyText: { 
     fontSize: 16, 
     color: '#fff', 

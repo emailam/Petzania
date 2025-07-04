@@ -11,11 +11,11 @@ import {
   Dimensions,
   Platform,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import PostCard from './PostCard';
 import { useUserPostsInfinite, useDeletePost, useUpdatePost, useToggleLike } from '../../services/postService';
 import { UserContext } from '@/context/UserContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const UserPosts = () => {
@@ -94,7 +94,6 @@ const UserPosts = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Removed LinearGradient - Header now has no background */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>My Posts</Text>
         <Text style={styles.headerSubtitle}>{posts.length} posts</Text>
@@ -142,18 +141,13 @@ const UserPosts = () => {
                 activeOpacity={0.8}
                 style={styles.loadMoreWrapper}
               >
-                <LinearGradient
-                  colors={['#9188E5', '#7C3AED']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.loadMoreButton}
-                >
+                <View style={styles.loadMoreButton}>
                   {isFetchingNextPage ? (
                     <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
                     <Text style={styles.loadMoreText}>Load More</Text>
                   )}
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
             )}
           </>
@@ -168,31 +162,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8F7FD', // Light purple-tinted background
   },
-  headerGradient: {
-    shadowColor: '#7C3AED',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
   header: {
     paddingVertical: screenHeight < 700 ? 16 : 20,
     paddingHorizontal: screenWidth < 380 ? 16 : 20,
     paddingTop: Platform.OS === 'android' ? 20 : 16,
-    // Removed background - header now transparent
   },
   headerTitle: {
     fontSize: screenWidth < 380 ? 22 : 26,
     fontWeight: '700',
-    color: '#4C1D95', // Changed to dark purple since no background
     letterSpacing: 0.5,
   },
   headerSubtitle: {
     fontSize: screenWidth < 380 ? 14 : 16,
-    color: '#6B46C1', // Changed to purple since no background
     marginTop: 4,
     fontWeight: '500',
   },
@@ -200,15 +181,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    // CARD WIDTH ADJUSTMENT - Reduce padding to give cards more width
-    // Original: padding: screenWidth < 380 ? 12 : 16,
     padding: screenWidth < 380 ? 3 : 2, // Reduced padding for more card width
     paddingBottom: 32,
   },
   cardContainer: {
     marginBottom: screenWidth < 380 ? 8 : 12,
-    // Add horizontal margin if you want some spacing from edges
-    // marginHorizontal: 4, // Uncomment this line to add small side margins
   },
   loadingContainer: {
     flex: 1,
@@ -232,9 +209,6 @@ const styles = StyleSheet.create({
   errorIconContainer: {
     marginBottom: 16,
   },
-  errorIcon: {
-    fontSize: 48,
-  },
   errorText: {
     fontSize: 20,
     fontWeight: '600',
@@ -248,7 +222,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   retryButton: {
-    backgroundColor: '#7C3AED',
+    backgroundColor: '#9188E5',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
@@ -305,6 +279,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 52,
+    backgroundColor: '#9188E5', // Solid color replaces gradient
   },
   loadMoreText: {
     color: '#FFFFFF',

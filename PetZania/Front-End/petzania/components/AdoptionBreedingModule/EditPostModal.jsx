@@ -344,23 +344,16 @@ const EditPostModal = memo(({visible ,onClose, post, onUpdate, onDelete}) => {
             onPress={handleSave}
             disabled={isSaving || isDeleting || !hasChanges() || !formValid}
             activeOpacity={0.8}
-            style={styles.saveButtonWrapper}
+            style={[
+              styles.saveButton,
+              (isSaving || isDeleting || !hasChanges() || !formValid) && styles.saveButtonDisabled,
+            ]}
           >
-            <LinearGradient
-              colors={['#9188E5', '#7C3AED']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={[
-                styles.saveButton,
-                (isSaving || isDeleting || !hasChanges() || !formValid) && styles.saveButtonDisabled,
-              ]}
-            >
-              {isSaving ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.saveButtonText}>Save Changes</Text>
-              )}
-            </LinearGradient>
+            {isSaving ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.saveButtonText}>Save Changes</Text>
+            )}
           </TouchableOpacity>
 
             {/* Delete Button */}
@@ -391,13 +384,6 @@ const styles = StyleSheet.create({
   flex: 2,
   borderRadius: 8,
   overflow: 'hidden',
-},
-saveButton: {
-  // Remove backgroundColor: '#9188E5',
-  paddingVertical: 14,
-  borderRadius: 8,
-  alignItems: 'center',
-  justifyContent: 'center',
 },
 saveButtonDisabled: {
   // Change from backgroundColor to opacity only

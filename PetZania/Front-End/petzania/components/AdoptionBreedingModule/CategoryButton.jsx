@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet, Dimensions, Platform } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
@@ -8,29 +7,21 @@ export default function CategoryButton({
   icon,
   title,
   onPress,
-  style, // Add style prop to accept custom styles
+  style,
 }) {
-  // Check if the button is selected based on the style
+  // "isSelected" pattern: expects 'categorySelected' from your modal styles as an object with backgroundColor: '#9188E5'
   const isSelected = style && style.some && style.some(s => s?.backgroundColor === '#9188E5');
-  
+
   return (
-    <Pressable style={[styles.container, style]} onPress={onPress}>
-      {isSelected && (
-        <LinearGradient
-          colors={['#9188E5', '#7C3AED']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFillObject}
-        />
-      )}
+    <Pressable style={[styles.container, isSelected && styles.selected, style]} onPress={onPress}>
       <View style={styles.content}>
-        {icon && React.cloneElement(icon, { 
-          color: isSelected ? '#ffffff' : '#495057' 
+        {icon && React.cloneElement(icon, {
+          color: isSelected ? '#ffffff' : '#495057'
         })}
         <Text style={[
-          styles.title, 
-          isSelected && styles.titleSelected,
-          icon && styles.titleWithIcon
+          styles.title,
+          icon && styles.titleWithIcon,
+          isSelected && styles.titleSelected
         ]}>
           {title}
         </Text>
@@ -50,7 +41,7 @@ const styles = StyleSheet.create({
     borderColor: '#e9ecef',
     marginVertical: 4,
     marginHorizontal: 4,
-    overflow: 'hidden', // Add this for gradient to respect border radius
+    overflow: 'hidden',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -62,6 +53,10 @@ const styles = StyleSheet.create({
         elevation: 2,
       },
     }),
+  },
+  selected: {
+    backgroundColor: '#9188E5',
+    borderColor: '#9188E5',
   },
   content: {
     flexDirection: 'row',
