@@ -565,6 +565,37 @@ export default function ChatIndex() {
         }
     };
 
+    const renderLastMessageContent = (lastMessage, isFromCurrentUser) => {
+        if (!lastMessage) return 'Start a conversation';
+
+        const content = lastMessage.content || '';
+        const prefix = isFromCurrentUser ? 'You: ' : '';
+
+        // Check if the content is a URL (image or file)
+        if (content.startsWith('http') && (content.includes('.jpg') || content.includes('.jpeg') || 
+            content.includes('.png') || content.includes('.gif') || content.includes('.webp'))) {
+            return (
+                <View style={styles.mediaMessagePreview}>
+                    <Ionicons name="image" size={14} color="#9188E5" style={styles.mediaIcon} />
+                    <Text style={styles.mediaText}>{prefix}Image</Text>
+                </View>
+            );
+        }
+        
+        // Check if it's a file URL (anything else that starts with http)
+        if (content.startsWith('http')) {
+            return (
+                <View style={styles.mediaMessagePreview}>
+                    <Ionicons name="document" size={14} color="#9188E5" style={styles.mediaIcon} />
+                    <Text style={styles.mediaText}>{prefix}File</Text>
+                </View>
+            );
+        }
+
+        // Regular text message
+        return `${prefix}${content}`;
+    };
+
     const renderChatItem = ({ item }) => {
         const otherUser = item.otherUser;
         const lastMessage = item.lastMessage;
@@ -584,6 +615,9 @@ export default function ChatIndex() {
             realTimeHasUnread,
             isPinned
         });
+
+        const isFromCurrentUser = lastMessage?.senderId === currentUser?.userId;
+        const lastMessageContent = renderLastMessageContent(lastMessage, isFromCurrentUser);
 
         return (
             <TouchableOpacity
@@ -632,15 +666,13 @@ export default function ChatIndex() {
                     </View>
 
                     <View style={styles.messagePreview}>
-                        <Text style={styles.lastMessage} numberOfLines={1}>
-                            {lastMessage ? 
-                                (lastMessage.senderId === currentUser?.userId ? 
-                                    `You: ${lastMessage.content}` : 
-                                    lastMessage.content
-                                ) : 
-                                'Start a conversation'
-                            }
-                        </Text>
+                        {typeof lastMessageContent === 'string' ? (
+                            <Text style={styles.lastMessage} numberOfLines={1}>
+                                {lastMessageContent}
+                            </Text>
+                        ) : (
+                            lastMessageContent
+                        )}
                         {/* Removed unread badge - now only using dot indicator */}
                     </View>
                 </View>
@@ -827,6 +859,19 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     lastMessage: {
+        fontSize: 14,
+        color: '#666',
+        flex: 1,
+    },
+    mediaMessagePreview: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    mediaIcon: {
+        marginRight: 4,
+    },
+    mediaText: {
         fontSize: 14,
         color: '#666',
         flex: 1,

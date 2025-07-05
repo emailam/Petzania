@@ -17,6 +17,8 @@ import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
 import { getUserById } from '@/services/userService';
 import { UserContext } from '@/context/UserContext';
+import LottieView from 'lottie-react-native';
+import ImageViewing from 'react-native-image-viewing';
 
 const { width, height } = Dimensions.get('window');
 
@@ -29,6 +31,8 @@ const PostDetailsModal = memo(({
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [chatLoading, setChatLoading] = useState(false);
+  const [imageViewerVisible, setImageViewerVisible] = useState(false);
+  const [imageViewerIndex, setImageViewerIndex] = useState(0);
 
   const router = useRouter();
   const { user } = useContext(UserContext);
@@ -86,6 +90,11 @@ const PostDetailsModal = memo(({
     setCurrentImageIndex(index);
   }, []);
 
+  const handleImagePress = useCallback((index) => {
+    setImageViewerIndex(index);
+    setImageViewerVisible(true);
+  }, []);
+
   const handleChatPress = useCallback(async () => {
     if (!post?.ownerId) {
       Toast.show({
@@ -122,55 +131,14 @@ const PostDetailsModal = memo(({
     }
   }, [post?.ownerId, onClose, router]);
 
-  const handleAdopt = useCallback(async () => {
-    if (!post?.ownerId) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Owner information not available',
-        position: 'top',
-        visibilityTime: 3000,
-      });
-      return;
-    }
-
-    try {
-      setChatLoading(true);
-      console.log('Starting adoption conversation with owner:', post.ownerId);
-      const chat = await createChat(post.ownerId);
-      
-      // Close the modal first
-      onClose();
-       
-      // Navigate to chat
-      router.push(`/Chat/${chat.chatId}`);
-      
-      Toast.show({
-        type: 'success',
-        text1: 'Adoption Chat Started',
-        text2: `You can now discuss adopting ${post.petDTO?.name || 'this pet'}`,
-        position: 'top',
-        visibilityTime: 3000,
-      });
-    } catch (error) {
-      console.error('Error creating adoption chat:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Failed to start adoption conversation. Please try again.',
-        position: 'top',
-        visibilityTime: 3000,
-      });
-    } finally {
-      setChatLoading(false);
-    }
-  }, [post?.ownerId, post?.petDTO?.name, onClose, router]);
-
   if (!visible || !post) return null;
 
   const petData = post.petDTO;
   const images = petData?.myPicturesURLs || [];
   const hasImages = images.length > 0;
+
+  // Prepare images for ImageViewing component
+  const imageViewerImages = images.map(uri => ({ uri }));
 
   const renderImagePagination = () => {
     if (images.length <= 1) return null;
@@ -220,22 +188,32 @@ const PostDetailsModal = memo(({
                         style={styles.imageScrollView}
                       >
                         {images.map((imageUrl, index) => (
-                          <Image
+                          <TouchableOpacity
                             key={index}
-                            source={{ uri: imageUrl }}
-                            style={styles.petImage}
-                            resizeMode="cover"
-                          />
+                            activeOpacity={0.9}
+                            onPress={() => handleImagePress(index)}
+                          >
+                            <Image
+                              source={{ uri: imageUrl }}
+                              style={styles.petImage}
+                              resizeMode="cover"
+                            />
+                          </TouchableOpacity>
                         ))}
                       </ScrollView>
                       {renderImagePagination()}
                     </>
                   ) : (
-                    <Image
-                      source={require('@/assets/images/Defaults/default-pet.png')}
-                      style={styles.petImage}
-                      resizeMode="cover"
-                    />
+                    <TouchableOpacity
+                      activeOpacity={0.9}
+                      onPress={() => handleImagePress(0)}
+                    >
+                      <Image
+                        source={require('@/assets/images/Defaults/default-pet.png')}
+                        style={styles.petImage}
+                        resizeMode="cover"
+                      />
+                    </TouchableOpacity>
                   )}
             </View>
 
@@ -310,46 +288,40 @@ const PostDetailsModal = memo(({
                       }
                     </Text>
                   </TouchableOpacity>
-                  {!isOwner && (
-                    <TouchableOpacity 
-                      style={[styles.chatButton, chatLoading && styles.chatButtonLoading]} 
-                      onPress={handleChatPress}
-                      activeOpacity={0.7}
-                      disabled={chatLoading}
-                    >
-                      {chatLoading ? (
-                        <ActivityIndicator size="small" color="#9188E5" />
-                      ) : (
-                        <Ionicons name="chatbubble-outline" size={20} color="#9188E5" />
-                      )}
-                    </TouchableOpacity>
-                  )}
                 </View>
               ) : null}
 
               {/* Description Section */}
               <Text style={styles.sectionLabel}>Description</Text>
               <Text style={styles.description}>
-                {petData?.description || post.description || 'No description available.'}
+                { post.description || 'No description available.'}
               </Text>
 
-              {/* Adopt Button - Only show if not owner */}
+              {/* Chat Button - Only show if not owner */}
               {!isOwner && (
                 <TouchableOpacity 
-                  style={[styles.adoptButton, chatLoading && styles.adoptButtonLoading]} 
-                  onPress={handleAdopt}
+                  style={[styles.adoptButton, chatLoading && styles.adoptButtonLoading]}
+                  onPress={handleChatPress}
                   activeOpacity={0.8}
                   disabled={chatLoading}
                 >
                   {chatLoading ? (
                     <View style={styles.adoptButtonContent}>
-                      <ActivityIndicator size="small" color="white" style={styles.adoptButtonLoader} />
+                      <LottieView
+                        source={require("@/assets/lottie/loading.json")}
+                        autoPlay
+                        loop
+                        style={styles.lottieLoader}
+                      />
                       <Text style={styles.adoptButtonText}>Starting chat...</Text>
                     </View>
                   ) : (
-                    <Text style={styles.adoptButtonText}>
-                      Adopt {petData?.name || 'this pet'}
-                    </Text>
+                    <View style={styles.adoptButtonContent}>
+                      <Ionicons name="chatbubble-outline" size={20} color="white" style={styles.adoptButtonLoader} />
+                      <Text style={styles.adoptButtonText}>
+                        Chat with Owner
+                      </Text>
+                    </View>
                   )}
                 </TouchableOpacity>
               )}
@@ -357,6 +329,17 @@ const PostDetailsModal = memo(({
           </ScrollView>
         </View>
       </View>
+
+      {/* Image Viewer Modal */}
+      <ImageViewing
+        images={hasImages ? imageViewerImages : [{ uri: Image.resolveAssetSource(require('@/assets/images/Defaults/default-pet.png')).uri }]}
+        imageIndex={imageViewerIndex}
+        visible={imageViewerVisible}
+        onRequestClose={() => setImageViewerVisible(false)}
+        animationType="fade"
+        backgroundColor="rgba(0, 0, 0, 0.9)"
+        presentationStyle="overFullScreen"
+      />
     </Modal>
   );
 });
@@ -521,19 +504,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#333',
   },
-  chatButton: {
-    padding: 8,
-    backgroundColor: '#f8f6ff',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#e8e5ff',
-    minWidth: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chatButtonLoading: {
-    opacity: 0.7,
-  },
   description: {
     fontSize: 14,
     color: '#666',
@@ -560,6 +530,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   adoptButtonLoader: {
+    marginRight: 8,
+  },
+  lottieLoader: {
+    width: 24,
+    height: 24,
     marginRight: 8,
   },
   adoptButtonText: {

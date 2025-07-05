@@ -9,7 +9,7 @@ export default function ResetPasswordScreen(){
     return(
       <SafeAreaView style={styles.safeArea}>
         <Text style={styles.title}>Reset Password</Text>
-        <Text style = {styles.text}>Create a new password. Ensure it differs from previous ones for security</Text>
+        <Text style = {styles.text}>Create a new password</Text>
         <ResetPasswordForm otp={otp} />
       </SafeAreaView>
     )

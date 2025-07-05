@@ -23,8 +23,8 @@ export default function TermsInput({ control, name, errors}) {
                 />
                 <Text style={styles.termsText}>
                   I agree to the{' '}
-                  <Link href="" style={styles.link}>Terms & Conditions</Link> and{' '}
-                  <Link href="" style={styles.link}>Privacy Policy</Link>
+                  <Link href="/(drawer)/(stack)/Legal/TermsOfService" style={styles.link}>Terms & Conditions</Link> and{' '}
+                  <Link href="/(drawer)/(stack)/Legal/PrivacyPolicy" style={styles.link}>Privacy Policy</Link>
                 </Text>
               </Pressable>
             )}

@@ -49,6 +49,7 @@ export default function UserProfile() {
     const [incomingRequestId, setIncomingRequestId] = useState(null); // For received requests
     const [actionLoading, setActionLoading] = useState(false);
     const [showImageViewer, setShowImageViewer] = useState(false);
+    const [blockLoading, setBlockLoading] = useState(false);
 
     const defaultImage = require('@/assets/images/Defaults/default-user.png');
 
@@ -542,7 +543,8 @@ export default function UserProfile() {
                     text: 'Block',
                     style: 'destructive',
                     onPress: async () => {
-                      try {
+                        setBlockLoading(true);
+                        try {
                             await blockUser(userid);
                             setIsBlocked(true);
                             setFriendshipStatus('blocked');
@@ -553,13 +555,8 @@ export default function UserProfile() {
                                 loadUserCounts()
                             ]);
                             
-                            Toast.show({
-                                type: 'success',
-                                text1: 'User Blocked',
-                                text2: `${user?.name || 'User'} has been blocked`,
-                                position: 'top',
-                                visibilityTime: 3000,
-                            });
+                            // Navigate back to Home after blocking
+                            router.replace('/(tabs)/Home');
                         } catch (error) {
                             console.error('Error blocking user:', error);
                             Toast.show({
@@ -569,6 +566,8 @@ export default function UserProfile() {
                                 position: 'top',
                                 visibilityTime: 3000,
                             });
+                        } finally {
+                            setBlockLoading(false);
                         }
                     },
                 },
@@ -682,6 +681,23 @@ export default function UserProfile() {
                 <Text style={styles.loadingText}>Loading profile...</Text>
                 <Text style={styles.loadingSubText}>
                     Getting user information and status
+                </Text>
+            </View>
+        );
+    }
+
+    if (blockLoading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <LottieView
+                    source={require("@/assets/lottie/loading.json")}
+                    autoPlay
+                    loop
+                    style={styles.lottie}
+                />
+                <Text style={styles.loadingText}>Blocking user...</Text>
+                <Text style={styles.loadingSubText}>
+                    Please wait while we block this user
                 </Text>
             </View>
         );

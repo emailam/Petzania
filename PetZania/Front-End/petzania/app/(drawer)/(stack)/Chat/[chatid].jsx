@@ -1261,8 +1261,6 @@ export default function ChatDetailScreen() {
   }, [currentUser?.userId, selectedMessage?._id, otherUser?.profilePictureURL, handleLongPress, handleImagePress, handleFilePress]);
 
   const renderHeader = () => {
-    console.log('🎨 Rendering header, selectedMessage:', selectedMessage?._id, 'showMessageActions:', showMessageActions);
-    
     return (
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -1515,22 +1513,25 @@ export default function ChatDetailScreen() {
             
             <View style={styles.actionsList}>
               {/* Reply Action */}
-              <TouchableOpacity style={styles.actionItem} onPress={handleReplyMessage}>
+              {/* <TouchableOpacity style={styles.actionItem} onPress={handleReplyMessage}>
                 <View style={styles.actionIconContainer}>
                   <Ionicons name="arrow-undo" size={24} color="#918CE5" />
                 </View>
                 <Text style={styles.actionText}>Reply</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
 
               {/* Edit and Delete actions only for current user's messages */}
               {selectedMessage?.user._id === currentUser?.userId && (
                 <>
-                  <TouchableOpacity style={styles.actionItem} onPress={handleEditMessage}>
-                    <View style={styles.actionIconContainer}>
-                      <Ionicons name="create-outline" size={24} color="#918CE5" />
-                    </View>
-                    <Text style={styles.actionText}>Edit</Text>
-                  </TouchableOpacity>
+                  {/* Hide Edit button for image and file messages */}
+                  {!selectedMessage?.image && !selectedMessage?.file && (
+                    <TouchableOpacity style={styles.actionItem} onPress={handleEditMessage}>
+                      <View style={styles.actionIconContainer}>
+                        <Ionicons name="create-outline" size={24} color="#918CE5" />
+                      </View>
+                      <Text style={styles.actionText}>Edit</Text>
+                    </TouchableOpacity>
+                  )}
 
                   <TouchableOpacity style={styles.actionItem} onPress={handleDeleteMessage}>
                     <View style={styles.actionIconContainer}>

@@ -159,7 +159,7 @@ export default function Settings() { const router = useRouter();
                 <SettingItem
                     icon="ban-outline"
                     title="Blocked Users"
-                    onPress={() => router.push(`/UserModule/${user?.userId}/Blocked`)}
+                    onPress={() => router.push(`/Settings/Blocked`)}
                 />
             </SettingSection>
 

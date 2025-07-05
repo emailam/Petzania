@@ -32,18 +32,43 @@ export default function index() {
             const response = await getAllNotifications(pageNum, 10);
 
             if (response && response?.content) {
-                const senderIds = response.content.map(n => n.attributes?.senderId).filter(Boolean);
-                const uniqueSenderIds = [...new Set(senderIds)];
+                // Collect user IDs we need to fetch
+                const userIdsToFetch = new Set();
 
-                const userResults = await Promise.all(uniqueSenderIds.map(id => getUserById(id)));
+                response.content.forEach(notification => {
+                    if (notification.type === 'FRIEND_REQUEST_ACCEPTED') {
+                        // For friend request accepted, we want the accepter's info (receiverId)
+                        if (notification.attributes?.receiverId) {
+                            userIdsToFetch.add(notification.attributes.receiverId);
+                        }
+                    } else {
+                        // For other notifications, use senderId
+                        if (notification.attributes?.senderId) {
+                            userIdsToFetch.add(notification.attributes.senderId);
+                        }
+                    }
+                });
+
+                const uniqueUserIds = [...userIdsToFetch];
+                const userResults = await Promise.all(uniqueUserIds.map(id => getUserById(id)));
                 const userMap = {};
-                uniqueSenderIds.forEach((id, idx) => {
+                uniqueUserIds.forEach((id, idx) => {
                     userMap[id] = userResults[idx];
                 });
 
                 const formattedNotifications = response.content.map((notification) => {
-                    const senderId = notification.attributes?.senderId;
-                    const senderUser = senderId ? userMap[senderId] : null;
+                    let relevantUserId;
+                    let senderUser;
+
+                    if (notification.type === 'FRIEND_REQUEST_ACCEPTED') {
+                        // Show the person who accepted the request (receiverId)
+                        relevantUserId = notification.attributes?.receiverId;
+                        senderUser = relevantUserId ? userMap[relevantUserId] : null;
+                    } else {
+                        // For other notifications, show the sender
+                        relevantUserId = notification.attributes?.senderId;
+                        senderUser = relevantUserId ? userMap[relevantUserId] : null;
+                    }
 
                     return {
                         id: notification.notificationId,
@@ -135,9 +160,19 @@ export default function index() {
         if (notifications.some(n => n.id === newNotification.notificationId)) return;
         (async () => {
             let senderUser = null;
-            if (newNotification.attributes?.senderId) {
+            let relevantUserId;
+
+            if (newNotification.type === 'FRIEND_REQUEST_ACCEPTED') {
+                // For friend request accepted, get the accepter's info (receiverId)
+                relevantUserId = newNotification.attributes?.receiverId;
+            } else {
+                // For other notifications, get the sender's info
+                relevantUserId = newNotification.attributes?.senderId;
+            }
+
+            if (relevantUserId) {
                 try {
-                    senderUser = await getUserById(newNotification.attributes.senderId);
+                    senderUser = await getUserById(relevantUserId);
                 } catch (e) {
                     senderUser = null;
                 }
@@ -376,13 +411,25 @@ export default function index() {
                 scrollEventThrottle={400}
             >
                 {/* Content padding for floating header */}
+                {/* Floating Header */}
+                <View style={styles.floatingHeader}>
+                    <View style={styles.headerContent}>
+                        <Text style={styles.headerTitle}>Notifications</Text>
+                        {localUnreadCount > 0 && (
+                            <TouchableOpacity onPress={markAllAsRead} style={styles.markAllButton}>
+                                <Ionicons name="checkmark-done" size={16} color="#fff" />
+                                <Text style={styles.markAllButtonText}>Mark all read</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                </View>
                 <View style={styles.headerSpacer} />
 
                 {/* Unread count indicator */}
                 {localUnreadCount > 0 && (
                     <View style={styles.unreadIndicator}>
                         <View style={styles.unreadIndicatorContent}>
-                            <Ionicons name="notifications" size={16} color="#1976d2" />
+                            <Ionicons name="notifications" size={16} color="#9188E5" />
                             <Text style={styles.unreadIndicatorText}>
                                 {localUnreadCount} unread notification{localUnreadCount > 1 ? 's' : ''}
                             </Text>
@@ -471,19 +518,6 @@ export default function index() {
                     </View>
                 )}
             </ScrollView>
-
-            {/* Floating Header */}
-            <View style={styles.floatingHeader}>
-                <View style={styles.headerContent}>
-                    <Text style={styles.headerTitle}>Notifications</Text>
-                    {localUnreadCount > 0 && (
-                        <TouchableOpacity onPress={markAllAsRead} style={styles.markAllButton}>
-                            <Ionicons name="checkmark-done" size={16} color="#fff" />
-                            <Text style={styles.markAllButtonText}>Mark all read</Text>
-                        </TouchableOpacity>
-                    )}
-                </View>
-            </View>
         </View>
     )
 }
@@ -504,10 +538,8 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     floatingHeader: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
+        flex: 1,
+        justifyContent: 'flex-end',
         backgroundColor: '#fff',
         borderBottomWidth: 1,
         borderBottomColor: '#f0f0f0',
@@ -517,9 +549,6 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 5,
         zIndex: 10,
-    },
-    headerSpacer: {
-        height: 80,
     },
     headerContent: {
         flexDirection: 'row',
@@ -534,13 +563,13 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     markAllButton: {
-        backgroundColor: '#007AFF',
+        backgroundColor: '#9188E5',
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
-        shadowColor: '#007AFF',
+        shadowColor: '#9188E5',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
         shadowRadius: 4,
@@ -553,7 +582,7 @@ const styles = StyleSheet.create({
         marginLeft: 6,
     },
     unreadIndicator: {
-        backgroundColor: '#e3f2fd',
+        backgroundColor: 'rgba(145, 136, 229, 0.1)',
         borderBottomWidth: 1,
         borderBottomColor: '#e0e0e0',
     },
@@ -566,7 +595,7 @@ const styles = StyleSheet.create({
     },
     unreadIndicatorText: {
         fontSize: 14,
-        color: '#1976d2',
+        color: '#9188E5',
         fontWeight: '500',
         marginLeft: 8,
     },
@@ -585,7 +614,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     retryButton: {
-        backgroundColor: '#007AFF',
+        backgroundColor: '#9188E5',
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 6,
@@ -686,7 +715,7 @@ const styles = StyleSheet.create({
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: '#007AFF',
+        backgroundColor: '#9188E5',
     },
     loadingMore: {
         padding: 16,

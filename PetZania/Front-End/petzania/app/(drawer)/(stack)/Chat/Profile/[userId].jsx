@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Image, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import ImageViewing from 'react-native-image-viewing';
 import Toast from 'react-native-toast-message';
 import { getUserById } from '@/services/userService';
 import { getUserChatByChatId, deleteUserChat } from '@/services/chatService';
@@ -15,9 +17,15 @@ export default function UserProfileScreen() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [deleting, setDeleting] = useState(false);
+    const [showImageViewer, setShowImageViewer] = useState(false);
 
     // Log parameters for debugging
     console.log('📱 UserProfile params - userId:', userId, 'chatId:', chatId);
+
+    const handleImagePress = () => {
+        if (!user?.profilePictureURL) return;
+        setShowImageViewer(true);
+    };
 
     // Messenger-style actions
     const handleDeleteChat = async () => {
@@ -137,10 +145,17 @@ export default function UserProfileScreen() {
         <ScrollView style={styles.container}>
             {/* User profile section */}
             <View style={styles.profileSection}>
-                <Image
-                    source={user.profilePictureURL ? { uri: user.profilePictureURL } : defaultImage}
-                    style={styles.profileAvatar}
-                />
+                <TouchableOpacity
+                    style={styles.profileImageContainer}
+                    onPress={handleImagePress}
+                    activeOpacity={user?.profilePictureURL ? 0.7 : 1}
+                >
+                    <Image
+                        source={user.profilePictureURL ? { uri: user.profilePictureURL } : defaultImage}
+                        style={styles.profileAvatar}
+                        contentFit="cover"
+                    />
+                </TouchableOpacity>
                 <Text style={styles.profileName}>{user.name || 'Unknown User'}</Text>
                 <Text style={styles.profileStatus}>
                     {user.online ? 'Online' : 'Offline'}
@@ -209,6 +224,16 @@ export default function UserProfileScreen() {
                     </TouchableOpacity>
                 </View>
             )}
+            
+            <ImageViewing
+                images={[{ uri: user?.profilePictureURL || '' }]}
+                imageIndex={0}
+                visible={showImageViewer}
+                onRequestClose={() => setShowImageViewer(false)}
+                backgroundColor="black"
+                swipeToCloseEnabled
+                doubleTapToZoomEnabled
+            />
         </ScrollView>
     );
 }
@@ -242,12 +267,15 @@ const styles = StyleSheet.create({
         paddingVertical: 30,
         marginBottom: 20,
     },
-    profileAvatar: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
+    profileImageContainer: {
+        borderRadius: 75,
         marginBottom: 15,
-        borderWidth: 2,
+    },
+    profileAvatar: {
+        width: 150,
+        height: 150,
+        borderRadius: 75,
+        borderWidth: 3,
         borderColor: '#9188E5',
     },
     profileName: {

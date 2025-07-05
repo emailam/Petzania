@@ -28,6 +28,13 @@ api.interceptors.request.use(
         const token = await getToken('accessToken');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
+            console.log('📤 Authenticated API Request (Service 8081):', {
+                method: config.method?.toUpperCase(),
+                url: config.url,
+                hasToken: !!token
+            });
+        } else {
+            console.log('⚠️ No access token found for request (Service 8081):', config.url);
         }
         return config;
     },
@@ -38,7 +45,27 @@ api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
+        console.log('🔴 HTTP Error (Service 8081):', {
+            status: error.response?.status,
+            url: error.config?.url,
+            method: error.config?.method,
+            message: error.message
+        });
+
+        // Handle other client errors that shouldn't trigger token refresh
+        if (error.response?.status >= 400 && error.response?.status < 500 && error.response?.status !== 401 && error.response?.status !== 403) {
+            console.log(`🔴 Client error (${error.response.status}) (Service 8081):`, {
+                url: originalRequest.url,
+                method: originalRequest.method,
+                status: error.response.status,
+                message: error.response?.data?.message || error.message
+            });
+            return Promise.reject(error);
+        }
+
+        // Treat 401 and 403 as triggers for token refresh
         if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
+            console.log('🔄 Starting token refresh process (Service 8081)...');
             originalRequest._retry = true;
 
             if (isRefreshing) {
@@ -46,8 +73,12 @@ api.interceptors.response.use(
                     failedQueue.push({ resolve, reject });
                 })
                 .then((token) => {
-                    originalRequest.headers.Authorization = 'Bearer ' + token;
-                    return api(originalRequest);
+                    if (token) {
+                        originalRequest.headers.Authorization = 'Bearer ' + token;
+                        return api(originalRequest);
+                    } else {
+                        return Promise.reject(new Error('Authentication failed. Please log in again.'));
+                    }
                 })
                 .catch((err) => Promise.reject(err));
             }
@@ -56,9 +87,21 @@ api.interceptors.response.use(
 
             try {
                 const refreshToken = await getToken('refreshToken');
+                console.log('🔑 Fetched refresh token (Service 8081):', refreshToken ? 'Present' : 'Missing');
 
+                if (!refreshToken) {
+                    console.log('🚫 No refresh token available, cannot refresh (Service 8081)');
+                    throw new Error('No refresh token available');
+                }
+
+                console.log('📡 Calling refresh endpoint (Service 8081):', REFRESH_URL);
                 const response = await axios.post(REFRESH_URL, {
                     refreshToken,
+                });
+
+                console.log('✅ Token refresh successful (Service 8081):', {
+                    hasNewAccessToken: !!response.data.accessToken,
+                    hasNewRefreshToken: !!response.data.refreshToken
                 });
 
                 const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data;
@@ -72,10 +115,24 @@ api.interceptors.response.use(
                 processQueue(null, newAccessToken);
 
                 originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+                console.log('🔄 Retrying original request with new token (Service 8081)');
                 return api(originalRequest);
             } catch (err) {
+                console.log('❌ Token refresh failed (Service 8081):', {
+                    status: err.response?.status,
+                    message: err.message,
+                    data: err.response?.data
+                });
+                // Clear tokens and queue
                 processQueue(err, null);
                 await clearAllTokens();
+                console.log('🗑️ Cleared all tokens due to refresh failure (Service 8081)');
+                // If refresh token is invalid (400/401), don't retry the original request
+                if (err.response?.status === 400 || err.response?.status === 401) {
+                    console.log('🚫 Refresh token invalid, not retrying original request (Service 8081)');
+                    return Promise.reject(new Error('Authentication failed. Please log in again.'));
+                }
+                // Catch-all: reject all failed requests
                 return Promise.reject(err);
             } finally {
                 isRefreshing = false;

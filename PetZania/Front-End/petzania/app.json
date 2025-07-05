@@ -72,8 +72,8 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/petzania-icon.png",
-          "imageWidth": 200,
+          "image": "./assets/images/splash.png",
+          "imageWidth": 300,
           "resizeMode": "contain",
           "backgroundColor": "#9188E5"
         }
@@ -91,7 +91,6 @@
     ],
     "experiments": {
       "typedRoutes": true
-    },
-    
+    }
   }
 }

@@ -125,11 +125,10 @@ export default function PetModuleLayout() {
             <Stack.Screen
                 name="[petId]"
                 options={{
-                    headerTitle: () => (
-                        <CustomHeader title="Pet Details" subtitle="Edit Pet Details" alignment="center"/>
-                    ),
+                    headerTitle: "Pet Details",
                     headerRight: () => null,
                     headerTitleAlign: "center",
+                    headerTitleStyle: { color: "#000" },
                     headerBackTitle: "",
                     headerTintColor: "#9188E5",
                     headerStyle: { backgroundColor: "#FFF" },

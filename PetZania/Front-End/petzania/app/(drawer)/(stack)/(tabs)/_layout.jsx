@@ -62,7 +62,10 @@ export default function TabLayout() {
       <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())} style={{ marginRight: 6 }}>
         <Ionicons name="menu" size={24} color="#9188E8" />
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => { /* navigate to profile */ }} >
+      <TouchableOpacity onPress={() => router.push({
+          pathname: `/UserModule/${user.userId}`,
+          params: { username: user.username }
+      })}>
         <View style={styles.imageContainer}>
           <Image source={user?.profilePictureURL ? { uri: user.profilePictureURL } : defaultImage} style={styles.image} />
         </View>

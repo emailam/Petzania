@@ -1,6 +1,7 @@
-import React, { useContext } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import React, { useContext, useState } from 'react';
+import { View, StyleSheet, Text, TouchableOpacity, Modal } from 'react-native';
 import { Image } from 'expo-image';
+import LottieView from 'lottie-react-native';
 
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { FontAwesome, Ionicons, MaterialIcons, Feather, FontAwesome5 } from '@expo/vector-icons';
@@ -12,12 +13,14 @@ import { FlowContext } from '@/context/FlowContext';
 
 import { logout } from '@/services/userService'
 import Toast from 'react-native-toast-message';
+import { clearAllTokens } from '@/storage/tokenStorage';
 
 export default function CustomDrawer(props) {
   const router = useRouter();
   const { user } = useContext(UserContext);
   const { pets } = useContext(PetContext);
   const { setFromPage } = useContext(FlowContext);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const pathname = usePathname();
   const isActive = (path) => pathname === path;
@@ -27,9 +30,12 @@ export default function CustomDrawer(props) {
   };
 
   const handleLogout = async () => {
+    setIsLoggingOut(true);
+    
     try {
+      // Try to logout from server
       await logout(user?.email);
-
+      
       Toast.show({
         type: 'success',
         text1: 'Logged out successfully',
@@ -37,13 +43,31 @@ export default function CustomDrawer(props) {
         visibilityTime: 2000,
       });
 
+    } catch (error) {
+      console.error('Logout error:', error);
+      
+      // Even if server logout fails, show info message
+      Toast.show({
+        type: 'info',
+        text1: 'Logged out locally',
+        text2: 'Unable to reach server, but you have been logged out',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+    } finally {
+      // Always clear local storage and navigate to login, regardless of server response
+      try {
+        await clearAllTokens();
+      } catch (storageError) {
+        console.error('Error clearing storage:', storageError);
+      }
+
+      setIsLoggingOut(false);
+
       if(router.canDismiss()) {
         router.dismissAll();
       }
       router.replace('/RegisterModule/LoginScreen');
-
-    } catch (error) {
-      console.error('Logout error:', error);
     }
   }
 
@@ -184,8 +208,35 @@ export default function CustomDrawer(props) {
         <View>
           <DrawerItem label="Settings" icon={() => <Ionicons name="settings-outline" size={28} />} onPress = { () => { props.navigation.closeDrawer(); router.push('/Settings'); } } />
           <DrawerItem label="Help & Support" icon={() => <Ionicons name="help-circle-outline" size={28} />} onPress = { () => { props.navigation.closeDrawer(); router.push('/Help') } } />
-          <DrawerItem label="Log out" icon={() => <MaterialIcons name="logout" size={28} />} onPress = { handleLogout } />
+          <DrawerItem 
+            label="Log out" 
+            icon={() => <MaterialIcons name="logout" size={28} />} 
+            onPress={handleLogout} 
+          />
         </View>
+
+        {/* Logout Loading Modal */}
+        <Modal
+          visible={isLoggingOut}
+          transparent={true}
+          animationType="fade"
+          statusBarTranslucent={true}
+        >
+          <View style={styles.logoutModalOverlay}>
+            <View style={styles.logoutModalContent}>
+              <LottieView
+                source={require("@/assets/lottie/loading.json")}
+                autoPlay
+                loop
+                style={styles.logoutLottie}
+              />
+              <Text style={styles.logoutModalTitle}>Logging out...</Text>
+              <Text style={styles.logoutModalSubtitle}>
+                Please wait while we securely log you out
+              </Text>
+            </View>
+          </View>
+        </Modal>
       </View>
     </DrawerContentScrollView>
   );
@@ -383,5 +434,51 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E0E0E0',
     borderBottomWidth: StyleSheet.hairlineWidth,
     marginVertical: 12,
+  },
+
+  // Logout Modal Styles
+  logoutModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  logoutModalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 30,
+    alignItems: 'center',
+    minWidth: 280,
+    maxWidth: 320,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+
+  logoutLottie: {
+    width: 80,
+    height: 80,
+    marginBottom: 20,
+  },
+
+  logoutModalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+
+  logoutModalSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 })

@@ -17,6 +17,7 @@ import { AntDesign } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ActivityIndicator } from 'react-native-paper';
 import { useActionSheet } from '@expo/react-native-action-sheet';
+import ImageViewing from 'react-native-image-viewing';
 
 import { uploadFiles } from '@/services/uploadService';
 
@@ -63,10 +64,33 @@ const AddPet1 = () => {
     };
 
     const deleteImage = (uriToDelete) => {
+        const indexToDelete = images.findIndex(uri => uri === uriToDelete);
         const updatedImages = images.filter(uri => uri !== uriToDelete);
         setImages(updatedImages);
-        if (currentIndex >= updatedImages.length) {
-            setCurrentIndex(Math.max(0, updatedImages.length - 1));
+        // Handle currentIndex adjustment based on which image was deleted
+        if (updatedImages.length === 0) {
+            setCurrentIndex(0);
+        } else if (indexToDelete <= currentIndex) {
+            // If we deleted an image at or before the current index, adjust accordingly
+            const newIndex = Math.max(0, currentIndex - 1);
+            setCurrentIndex(newIndex);
+            // Force the FlatList to scroll to the correct position
+            setTimeout(() => {
+                flatListRef.current?.scrollToIndex({ 
+                    index: newIndex, 
+                    animated: false 
+                });
+            }, 100);
+        } else if (currentIndex >= updatedImages.length) {
+            // If current index is out of bounds, set to last image
+            const newIndex = updatedImages.length - 1;
+            setCurrentIndex(newIndex);
+            setTimeout(() => {
+                flatListRef.current?.scrollToIndex({ 
+                    index: newIndex, 
+                    animated: false 
+                });
+            }, 100);
         }
     };
 
@@ -180,18 +204,25 @@ const AddPet1 = () => {
                                 showsHorizontalScrollIndicator={false}
                                 onMomentumScrollEnd={(e) => {
                                     const index = Math.round(e.nativeEvent.contentOffset.x / width);
-                                    setCurrentIndex(index);
+                                    setCurrentIndex(Math.min(index, images.length - 1));
                                 }}
-                                keyExtractor={(item, index) => index.toString()}
+                                keyExtractor={(item, index) => `${item}-${index}`}
                                 renderItem={renderItem}
+                                getItemLayout={(data, index) => ({
+                                    length: width,
+                                    offset: width * index,
+                                    index,
+                                })}
                             />
                             <View style={styles.thumbnailRow}>
                                 {images.map((uri, index) => (
                                     <TouchableOpacity
                                         disabled={loading}
                                         onPress={() => {
-                                            flatListRef.current?.scrollToIndex({ index, animated: true });
-                                            setCurrentIndex(index);
+                                            if (index < images.length) {
+                                                flatListRef.current?.scrollToIndex({ index, animated: true });
+                                                setCurrentIndex(index);
+                                            }
                                         }}
                                         key={index}
                                         style={[
@@ -255,6 +286,17 @@ const AddPet1 = () => {
             <View style={styles.buttonContainer}>
                 <Button title="Next" borderRadius={10} fontSize={16} onPress={goToNextStep} loading={loading} />
             </View>
+
+            {/* Image Viewer Modal */}
+            <ImageViewing
+                images={images.map(uri => ({ uri }))}
+                imageIndex={viewerIndex}
+                visible={showImageViewer}
+                onRequestClose={() => setShowImageViewer(false)}
+                backgroundColor="black"
+                swipeToCloseEnabled
+                doubleTapToZoomEnabled
+            />
         </KeyboardAvoidingView>
     );
 };

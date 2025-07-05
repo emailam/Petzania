@@ -82,7 +82,7 @@ export default function App() {
             // Add 3-second delay before setting app as ready
             const timer = setTimeout(() => {
                 setAppIsReady(true);
-            }, 3000);
+            }, 30);
 
             return () => clearTimeout(timer);
         }

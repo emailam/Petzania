@@ -5,20 +5,6 @@ import { Header } from "@react-navigation/elements";
 
 export default function UserLayout() {
     const router = useRouter();
-    const CustomBackButton = () => (
-        <TouchableOpacity
-            onPress={() => {
-                if (router.canGoBack()) {
-                    router.back();
-                } else {
-                    router.push('/Home');
-                }
-            }}
-            style={{ paddingRight: 12 }}
-        >
-            <Ionicons name="arrow-back" size={24} color="#9188E5" />
-        </TouchableOpacity>
-    );
 
     const CustomHeader = ({ title, onBack }) => (
         <View style={styles.customHeader}>
@@ -56,6 +42,7 @@ export default function UserLayout() {
             <Stack.Screen
                 name="Blocked"
                 options={{
+                    headerShown: true,
                     headerTitle: 'Blocked Users',
                 }}
             />

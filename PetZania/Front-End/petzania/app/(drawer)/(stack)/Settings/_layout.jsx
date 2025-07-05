@@ -22,6 +22,15 @@ export default function SettingsLayout() {
                     headerTitleStyle: { color: '#000' }
                 }}
             />
+            <Stack.Screen name="Blocked"
+                options={{
+                    headerShown: true,
+                    headerTitle: "Blocked Users",
+                    headerTitleAlign: "center",
+                    headerTintColor: "#9188E5",
+                    headerTitleStyle: { color: '#000' }
+                }}
+            />
             <Stack.Screen name="ContactSupport"
                 options={{
                     headerShown: true,
