@@ -26,8 +26,22 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.alivetube.petzania",
+      "buildNumber": "1",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "This app uses the camera to let you take photos of your pets.",
+        "NSPhotoLibraryUsageDescription": "This app accesses your photo library to let you select pet photos.",
+        "NSMicrophoneUsageDescription": "This app uses the microphone for voice messages in chat.",
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true,
+          "NSExceptionDomains": {
+            "157.230.114.107": {
+              "NSExceptionAllowsInsecureHTTPLoads": true,
+              "NSExceptionMinimumTLSVersion": "TLSv1.0",
+              "NSIncludesSubdomains": true
+            }
+          }
+        }
       }
     },
     "android": {
@@ -36,9 +50,17 @@
         "backgroundColor": "#9188E5"
       },
       "permissions": [
-        "android.permission.RECORD_AUDIO"
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.ACCESS_WIFI_STATE"
       ],
-      "package": "com.alivetube.petzania"
+      "package": "com.alivetube.petzania",
+      "versionCode": 1,
+      "usesCleartextTraffic": true
     },
     "web": {
       "bundler": "metro",
@@ -64,7 +86,8 @@
       ],
       "expo-secure-store",
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      "./plugins/with-network-security-config.js"
     ],
     "experiments": {
       "typedRoutes": true
