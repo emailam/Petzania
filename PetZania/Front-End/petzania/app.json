@@ -8,6 +8,11 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#9188E5"
+    },
     "extra": {
       "API_BASE_URL_8080": "http://157.230.114.107:8080/api",
       "API_BASE_URL_8081": "http://157.230.114.107:8081/api",
@@ -63,6 +68,7 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    
   }
 }

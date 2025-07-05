@@ -6,35 +6,35 @@ export const PET_BREEDS = {
         },
         {
             name: "German Shepherd",
-            image: require('../assets/images/Breeds/Dog/Labrador.png'),
+            image: require('../assets/images/Breeds/Dog/german.png'),
         },
         {
             name: "Golden Retriever",
-            image: require('../assets/images/Breeds/Dog/Labrador.png'),
+            image: require('../assets/images/Breeds/Dog/golden.png'),
         },
         {
             name: "Bulldog",
-            image: require('../assets/images/Breeds/Dog/Labrador.png'),
+            image: require('../assets/images/Breeds/Dog/bulldog.png'),
         },
     ],
-    // CAT: [
-    //     {
-    //         name: "Persian",
-    //         image: require('../assets/images/Breeds/Cat/Persian.png'),
-    //     },
-    //     {
-    //         name: "Siamese",
-    //         image: require('../assets/images/Breeds/Cat/Siamese.png'),
-    //     },
-    //     {
-    //         name: "Maine Coon",
-    //         image: require('../assets/images/Breeds/Cat/MaineCoon.png'),
-    //     },
-    //     {
-    //         name: "Bengal",
-    //         image: require('../assets/images/Breeds/Cat/Bengal.png'),
-    //     },
-    // ],
+    CAT: [
+        {
+            name: "Persian",
+            image: require('../assets/images/Breeds/Cat/Persian.png'),
+        },
+        {
+            name: "Ragdoll",
+            image: require('../assets/images/Breeds/Cat/Ragdoll.png'),
+        },
+        {
+            name: "Maine Coon",
+            image: require('../assets/images/Breeds/Cat/MaineCoon.png'),
+        },
+        {
+            name: "Bengal",
+            image: require('../assets/images/Breeds/Cat/Bengal.png'),
+        },
+    ],
     // Bird: [
     //     {
     //         name: "Parakeet",
