@@ -5,21 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="aeca1ffb-0884-4a26-9d15-e67eb5c2d7c7" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/api/axiosInstance8080.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/api/axiosInstance8080.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Front-End/petzania/api/axiosInstance8081.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/api/axiosInstance8081.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Front-End/petzania/api/axiosInstance8082.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/api/axiosInstance8082.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Front-End/petzania/api/axiosInstance8083.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/api/axiosInstance8083.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/app/(drawer)/(stack)/(tabs)/Home/index.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/app/(drawer)/(stack)/(tabs)/Home/index.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/app/(drawer)/(stack)/(tabs)/_layout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/app/(drawer)/(stack)/(tabs)/_layout.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/app.json" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/app.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Front-End/petzania/app/(drawer)/(stack)/Chat/[chatid].jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/app/(drawer)/(stack)/Chat/[chatid].jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/app/(drawer)/(stack)/Chat/[chatid]REACTS.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/app/(drawer)/(stack)/Chat/[chatid]REACTS.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/app/(drawer)/(stack)/Friends/index.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/app/(drawer)/(stack)/Friends/index.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/app/(drawer)/(stack)/Settings/ContactSupport.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/app/(drawer)/(stack)/Settings/ContactSupport.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/app/(drawer)/(stack)/Settings/_layout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/app/(drawer)/(stack)/Settings/_layout.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/app/(drawer)/(stack)/Settings/index.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/app/(drawer)/(stack)/Settings/index.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/constants/PETBREEDS.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/constants/PETBREEDS.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Front-End/petzania/services/userService.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/services/userService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../package-lock.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../package.json" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -157,6 +152,7 @@
       <workItem from="1751461617349" duration="1049000" />
       <workItem from="1751466666850" duration="1873000" />
       <workItem from="1751505589066" duration="55000" />
+      <workItem from="1751743686245" duration="1826000" />
     </task>
     <servers />
   </component>
