@@ -15,4 +15,5 @@ export const deleteToken = async (key) => {
 export const clearAllTokens = async () => {
     await SecureStore.deleteItemAsync('accessToken');
     await SecureStore.deleteItemAsync('refreshToken');
+    await SecureStore.deleteItemAsync('userId');
 };

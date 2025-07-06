@@ -1,11 +1,15 @@
 import { ScrollView, StyleSheet } from "react-native";
 import PasswordInput from "@/components/PasswordInput";
-import axios from "axios";
+
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Button from "@/components/Button";
 import { useAuthForm } from "@/components/useForm";
 import { responsive } from "@/utilities/responsive";
 import React from "react";
+
+import Toast from "react-native-toast-message";
+
+import { resetPassword } from "@/services/userService";
 
 export default function ResetPasswordForm() {
     const { control, handleSubmit, formState: { errors, isSubmitting }, setError, getValues } = useAuthForm("resetPassword");
@@ -14,6 +18,28 @@ export default function ResetPasswordForm() {
     const [displayConfirmPassword, setDisplayConfirmPassword] = React.useState(false);
     const { email, otp } = useLocalSearchParams();
     const router = useRouter();
+
+    const showSuccessMessage = (message, description = '') => {
+        Toast.show({
+            type: 'success',
+            text1: message,
+            text2: description,
+            position: 'top',
+            visibilityTime: 3000,
+            swipeable: true,
+        });
+    }
+
+    const showErrorMessage = (message, description = '') => {
+        Toast.show({
+            type: 'error',
+            text1: message,
+            text2: description,
+            position: 'top',
+            visibilityTime: 3000,
+            swipeable: true,
+        });
+    }
 
     const setNewPassword = async (data) => {
         const { password, confirmPassword } = data;
@@ -25,20 +51,21 @@ export default function ResetPasswordForm() {
         }
 
         try {
-            const response = await axios.put("http://192.168.1.4:8080/api/user/auth/resetPassword", {
-                email,
-                password,
-                otp
-            });
+            const response = await resetPassword(email, password, otp);
 
-            if (response.status === 200) {
-                router.replace("/RegisterModule/LoginScreen");
-            } else {
-                console.error("Unexpected response status:", response.status);
+            if (response) {
+                showSuccessMessage("Password Reset Successful", "You can now log in with your new password.");
+                router.dismissAll();
+                router.push("/RegisterModule/LoginScreen");
+            }
+            else {
+                showErrorMessage("Password Reset Failed", "Please try again later.");
             }
         } catch (error) {
+
             const errorMsg = error.response?.data?.message || error.message;
             const field = errorMsg.toLowerCase().includes("password") ? "password" : null;
+            showErrorMessage("Error", errorMsg);
 
             if (field) {
                 setError(field, { type: "manual", message: errorMsg });
@@ -64,7 +91,7 @@ export default function ResetPasswordForm() {
                 errors={errors}
                 placeholder="Confirm your new password"
                 showPassword={displayConfirmPassword}
-                toggleShow={() => setDisplayConfirmPassword(!displayConfirmPassword)} // 🔥 Fixed this line
+                toggleShow={() => setDisplayConfirmPassword(!displayConfirmPassword)} 
             />
             <Button
                 title="Reset Password"
@@ -79,8 +106,9 @@ export default function ResetPasswordForm() {
 
 const styles = StyleSheet.create({
     container: {
-        width: "80%",
-        alignSelf: "center",
-        gap: responsive.hp("2%"),
-    },
+        alignSelf: 'center',
+        width: '100%',
+        gap: 16,
+        paddingHorizontal: 20
+    }
 });

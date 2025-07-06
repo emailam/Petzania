@@ -1,33 +1,41 @@
-import React from "react";
+import React, { useContext, useEffect }from "react";
 import { ScrollView, Text , StyleSheet, View } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Link } from "expo-router";
+import { useRouter } from "expo-router";
 import { responsive } from "@/utilities/responsive";
-import ExternalSignIn from "@/components/ExternalSignIn";
 import LoginForm from "@/components/LoginForm";
 
+import { UserContext } from "@/context/UserContext";
+import { PetContext } from "@/context/PetContext";
+
 export default function LoginScreen() {
-    return (
-      <SafeAreaView style={styles.safeArea}>
+  const { setUser, user } = useContext(UserContext);
+  const { setPets } = useContext(PetContext);
+  const router = useRouter();
 
-        <Text style={styles.title}>PetZania</Text>
-  
-        <ScrollView contentContainerStyle={styles.container}>
-          
-            <LoginForm/>
-            
-            <Text style={styles.text}> Don't have an account?{" "}
-              <Link href={""} style={styles.link}> Sign up now </Link>
-            </Text>
+  useEffect(() => {
+    setUser(null);
+    setPets([]);
+  }
+  ,[]);
 
-            <View style = {styles.button}>
-              <ExternalSignIn/>
-            </View>
-  
-        </ScrollView>
-        
-      </SafeAreaView>
-    );
+  return (
+    <SafeAreaView style={styles.safeArea}>
+
+      <Text style={styles.title}>Petzania</Text>
+
+      <ScrollView contentContainerStyle={styles.container}>
+
+          <LoginForm/>
+          <View style={styles.textContainer}>
+            <Text style={styles.text}> Don't have an account?{" "}</Text>
+            <Text style={styles.link} onPress={() => router.replace("/RegisterModule/RegisterScreen")}> Sign up now </Text>
+          </View>
+
+      </ScrollView>
+
+    </SafeAreaView>
+  );
 }
 
 
@@ -37,29 +45,33 @@ const styles = StyleSheet.create({
     gap: responsive.hp('2%'),
     paddingTop: responsive.hp('10%'),
     height: responsive.hp('100%'),
+    width: responsive.wp('100%'),
+    paddingHorizontal: '5%',
   },
   title: {
     fontSize: responsive.fonts.title,
     color: '#9188E5',
     fontWeight: 'bold',
-    marginLeft: responsive.margins.screenEdge + 20,
+    paddingHorizontal: '5%',
   },
   container: {
     alignItems: 'center',
-    gap: responsive.hp('2%'),     
+    gap: responsive.hp('2%'),
   },
   link: {
     color: '#9188E5',
     fontWeight: 'bold',
-    alignSelf: 'flex-end',
-    marginRight: responsive.margins.screenEdge,
-    fontSize: responsive.fonts.small,
   },
   text: {
     color: "gray",
-    fontSize: 18,
-    padding: 5,
+    fontSize: 14,
     marginBottom: "2%",
+  },
+  textContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
   },
   button: {
     flex:1,

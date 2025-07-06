@@ -8,8 +8,10 @@ import Button from "@/components/Button";
 import { useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { responsive } from "@/utilities/responsive";
-import axios from "axios";
+
 import { useRouter } from "expo-router";
+
+import { verifyOTP, verifyResetOTP } from "@/services/userService";
 
 import Toast from 'react-native-toast-message';
 
@@ -51,14 +53,10 @@ export default function OTPForm({ CELL_COUNT, isRegister, email }) {
   const handleVerifyAccount = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.put("http://192.168.1.4:8080/api/user/auth/verify", {
-        otp: value,
-        email,
-      });
+      const response = await verifyOTP(email, value);
 
-      if (response.status === 200) {
-        showToastSuccess(response.data.message || "Account verified successfully!");
-        setSuccessMessage("Account verified successfully!");
+      if (response) {
+        showToastSuccess(response.message || "Account verified successfully!");
         setErrorMessage(null);
         if(isRegister === "true"){
           router.replace("/RegisterModule/LoginScreen");
@@ -66,8 +64,7 @@ export default function OTPForm({ CELL_COUNT, isRegister, email }) {
         }
         router.replace("/RegisterModule/ProfileSetUp1");
       } else {
-        showToastError(response.data.message || "Verification failed.");
-        setErrorMessage(response.data.message || "Verification failed.");
+        showToastError(response.message || "Verification failed.");
         setSuccessMessage(null);
       }
     } catch (error) {
@@ -80,24 +77,21 @@ export default function OTPForm({ CELL_COUNT, isRegister, email }) {
     }
   };
 
+  // ✅ Case 2: Reset Password - verify OTP and go to Reset Password Screen
   const handleVerifyResetPassword = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.put("http://192.168.1.4:8080/api/user/auth/verifyResetOTP", {
-        otp: value,
-        email,
-      });
-      if (response.status === 200) {
-        showToastSuccess(response.data.message || "OTP verified successfully!");
-        setSuccessMessage("OTP verified successfully!");
+      const response = await verifyResetOTP(email, value);
+
+      if (response) {
+        showToastSuccess(response.message || "OTP verified successfully!");
         setErrorMessage(null);
         router.replace({
           pathname: "/RegisterModule/ResetPasswordScreen",
           params: { email, otp: value },
         });
       } else {
-        showToastError(response.data.message || "OTP verification failed.");
-        setErrorMessage(response.data.message || "OTP verification failed.");
+        showToastError(response.message || "OTP verification failed.");
         setSuccessMessage(null);
       }
     } catch (error) {

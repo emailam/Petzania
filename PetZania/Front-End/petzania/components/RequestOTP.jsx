@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
-import axios from "axios";
 import { responsive } from '@/utilities/responsive';
 
+import { resendOTP, sendResetPasswordOTP } from '@/services/userService';
+import Toast from 'react-native-toast-message';
 
 export default function RequestOTP({ RESEND_COOLDOWN, email, isRegister }) {
   const [resendActive, setResendActive] = useState(false);
   const [remainingTime, setRemainingTime] = useState(RESEND_COOLDOWN);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     let timer;
+
     if (!resendActive && remainingTime > 0) {
       timer = setInterval(() => {
         setRemainingTime((prev) => prev - 1);
@@ -18,34 +21,38 @@ export default function RequestOTP({ RESEND_COOLDOWN, email, isRegister }) {
       setResendActive(true);
       setRemainingTime(RESEND_COOLDOWN);
     }
+
     return () => clearInterval(timer);
   }, [resendActive, remainingTime, RESEND_COOLDOWN]);
 
+  const showToast = (type, message) => {
+    Toast.show({
+      type,
+      text1: message,
+      position: 'top',
+      visibilityTime: 3000,
+      autoHide: true,
+      topOffset: 30,
+    });
+  };
   const handleRequestNewCode = async () => {
-    if (!resendActive) return;
+    if (!resendActive || isLoading) return;
+    setIsLoading(true);
     try {
+      let response;
       if (isRegister === "true") {
-        const response = await axios.put("http://192.168.1.4:8080/api/user/auth/resendOTP", {
-          email: email,
-        });
-        if (response.status === 200) {
-          console.log("New OTP requested successfully:", response.data);
-        } else {
-          console.error("Failed to request new OTP. Status:", response.status);
-        }
+        response = await resendOTP(email);
+      } else {
+        response = await sendResetPasswordOTP(email);
       }
-      else {
-        const response = await axios.put("http://192.168.1.4:8080/api/user/auth/sendResetPasswordOTP", {
-          email: email,
-        });
-        if (response.status === 200) {
-          console.log("Reset password OTP requested successfully:", response.data);
-        } else {
-          console.error("Failed to request reset password OTP. Status:", response.status);
-        }
-      }
+
+      showToast('success', response);
     } catch (error) {
-      console.error("Error requesting OTP:", error.response?.data?.message || error.message);
+      console.error("Error sending OTP:", error);
+      const errorMsg = error.response?.data?.message || error.message;
+      showToast('error', errorMsg || 'Failed to send OTP. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
 
     setResendActive(false);
@@ -56,11 +63,15 @@ export default function RequestOTP({ RESEND_COOLDOWN, email, isRegister }) {
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
-
   return (
-    <Pressable onPress={handleRequestNewCode} disabled={!resendActive}>
-      <Text style={[styles.footerLink, !resendActive && styles.disabledLink]}>
-        {resendActive ? 'Request new code' : `Request new code in ${formatTime(remainingTime)}`}
+    <Pressable onPress={handleRequestNewCode} disabled={!resendActive || isLoading}>
+      <Text style={[styles.footerLink, (!resendActive || isLoading) && styles.disabledLink]}>
+        {isLoading 
+          ? 'Sending...' 
+          : resendActive 
+            ? 'Request new code' 
+            : `Request new code in ${formatTime(remainingTime)}`
+        }
       </Text>
     </Pressable>
   );

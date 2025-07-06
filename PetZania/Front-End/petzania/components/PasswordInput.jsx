@@ -26,7 +26,7 @@ export default function PasswordInput({
               placeholder={placeholder}
               secureTextEntry={!showPassword}
               style={styles.input}
-              placeholderTextColor="#989898"
+              placeholderTextColor="#999"
               onChangeText={field.onChange}
             />
             <TouchableOpacity onPress={toggleShow}>

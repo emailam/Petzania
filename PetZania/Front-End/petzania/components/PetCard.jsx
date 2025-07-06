@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { Image } from 'expo-image';
 import Foundation from '@expo/vector-icons/Foundation';
 import { useRouter } from "expo-router";
 
@@ -7,19 +8,29 @@ export default function PetCard({ pet }) {
     const router = useRouter();
 
     const showPetInfo = (pet) => {
-        router.push({ pathname: '/RegisterModule/PetDetails', params: { petId: pet.petId } });
+        router.push({ pathname: `/PetModule/${pet.petId}` });
+    };
+
+    const formatSpecies = (species) => {
+        if (!species) return '';
+        return species
+            .replace(/_/g, ' ') // Replace underscores with spaces
+            .toLowerCase() // Convert to lowercase first
+            .split(' ') // Split into words
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize each word
+            .join(' '); // Join words back together
     };
 
     return (
         <TouchableOpacity style={styles.container} onPress={() => {showPetInfo(pet)}} >
             <View style={styles.leftContainer}>
-                <Image style={styles.imageContainer} source={pet.image ? { uri: pet.image } : require('@/assets/images/AddPet/Pet Default Pic.png')}  />
+                <Image style={styles.imageContainer} source={pet?.myPicturesURLs?.length ? { uri: pet.myPicturesURLs[0] } : require('@/assets/images/AddPet/Pet Default Pic.png')}  />
                 <View>
                     <Text style={styles.header}>
                         {pet.name}
                     </Text>
                     <Text style={styles.subHeader}>
-                        {pet.species.charAt(0).toUpperCase() + pet.species.slice(1).toLowerCase()} | {pet.breed}
+                        {formatSpecies(pet.species)} | {pet.breed}
                     </Text>
                 </View>
             </View>

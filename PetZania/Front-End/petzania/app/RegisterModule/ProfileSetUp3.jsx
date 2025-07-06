@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image } from 'react-native'
+import { StyleSheet, Text, View, FlatList, TouchableOpacity } from 'react-native'
+import { Image } from 'expo-image';
 import React, { useContext, useEffect } from 'react'
 import { PetContext } from '@/context/PetContext';
 import PetCard from '@/components/PetCard'
@@ -6,6 +7,7 @@ import { useRouter } from 'expo-router';
 import Button from '@/components/Button';
 
 import { UserContext } from '@/context/UserContext';
+import { FlowContext } from '@/context/FlowContext';
 
 import { getAllPetsByUserId } from '@/services/petService';
 
@@ -32,20 +34,20 @@ export default function ProfileSetUp3() {
     }, []);
 
     const goToNextStep = () => {
-        router.push('/(tabs)');
+        router.push('/Home');
     }
     return (
         <View style={styles.container}>
-            <View style={styles.userContainer}>
+            <TouchableOpacity style={styles.userContainer} onPress={ () => router.push('/UserModule/EditProfile')}>
                 <Image
-                    source={defaultUserImage}
+                    source={user?.profilePictureURL ? {uri: user.profilePictureURL} : defaultUserImage}
                     style={styles.userImage}
                 />
                 <View style={styles.userInfo}>
-                    <Text style={styles.userName}>{user.name}</Text>
-                    <Text style={styles.userHandle}>@{user.username}</Text>
+                    <Text style={styles.userName}>{user ? user.name : "Name"}</Text>
+                    <Text style={styles.userHandle}>@{user ? user.username : "username"}</Text>
                 </View>
-            </View>
+            </TouchableOpacity>
 
             <View style={styles.petsContainer}>
                 <View style={styles.petHeaderContainer}>

@@ -1,10 +1,12 @@
-import { ScrollView, Text, StyleSheet } from 'react-native';
+import { ScrollView, Text, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { responsive } from '@/utilities/responsive';
 import RegisterForm from '@/components/RegisterForm';
 
 export default function RegisterScreen() {
+  const router = useRouter();
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <Text style={styles.title}>Create account</Text>
@@ -12,10 +14,10 @@ export default function RegisterScreen() {
       <ScrollView contentContainerStyle={styles.container}>
         <RegisterForm />
 
-        <Text style={styles.footerText}>
-          Already have an account?{' '}
-          <Link href="/RegisterModule/LoginScreen" style={styles.link}>Login now</Link>
-        </Text>
+        <View style={styles.textContainer}>
+          <Text style={styles.footerText}>Already have an account?{' '}</Text>
+          <Text style={styles.link} onPress={() => router.replace("/RegisterModule/LoginScreen")}>Login now</Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -47,7 +49,13 @@ const styles = StyleSheet.create({
   },
   footerText: {
     textAlign: 'center',
-    fontSize: responsive.fonts.small,
+    fontSize: 14,
     color: '#666',
+  },
+  textContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
   },
 });

@@ -12,9 +12,16 @@ export default function FormInput({ control, name, errors, icon, ...props }) {
             {icon && <View style={styles.iconContainer}>{icon}</View>}
             <TextInput
               {...props}
-              placeholderTextColor="#989898"
+              placeholderTextColor="#999"
               style={styles.input}
               onChangeText={field.onChange}
+              onBlur={() => {
+                // Trim whitespace for email fields when user finishes typing
+                if (name === 'email' && field.value) {
+                  field.onChange(field.value.trim());
+                }
+                field.onBlur();
+              }}
               value={field.value}
             />
           </View>

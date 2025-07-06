@@ -3,13 +3,17 @@ import FormInput from '@/components/FormInput';
 import PasswordInput from '@/components/PasswordInput';
 import TermsInput from '@/components/TermsInput';
 import { useAuthForm } from '@/components/useForm';
-import axios from 'axios';
+
 import { Alert, View } from 'react-native';
 import React, {useContext, useState} from 'react';
 import { responsive } from '@/utilities/responsive';
 import { useRouter } from 'expo-router';
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 import { UserContext } from '@/context/UserContext';
+
+import { signup } from '@/services/userService';
 
 
 export default function RegisterForm(){
@@ -22,45 +26,40 @@ export default function RegisterForm(){
     const {setUser} = useContext(UserContext);
 
     const Register = async (data) => {
-        try {
-          // Send a POST request with the registration data.
-          const response = await axios.post("http://192.168.1.4:8080/api/user/auth/signup", data);
+      try {
+        const response = await signup(data);
 
-          // On success, display a success alert.
-          if(response.status === 201) {
-            setUser({
-              ...response.data.userProfileDTO,
-              email: data.email
-            });
-            router.push({
-              pathname: "/RegisterModule/OTPVerificationScreen",
-              params: { isRegister: true, email: data.email },
-            });
-          }
-        } catch (error) {
-          // Extract error message from the API response or fallback to error.message.
-          const errorMsg = error.response?.data?.message || error.message;
-
-          // Determine which field the error message relates to.
-          const field = errorMsg.toLowerCase().includes("email")
-            ? "email"
-            : errorMsg.toLowerCase().includes("username")
-            ? "username"
-            : errorMsg.toLowerCase().includes("password")
-            ? "password"
-            : errorMsg.toLowerCase().includes("terms")
-            ? "termsAccepted"
-            : null;
-
-          // If a specific field is identified, set an error on that field.
-          if (field) {
-            setError(field, { type: "manual", message: errorMsg });
-          } else {
-            // Otherwise, display a general error alert.
-            Alert.alert("Error", errorMsg);
-          }
+        if (response) {
+          setUser({
+            ...response.userProfileDTO,
+            email: data.email
+          });
+          router.push({
+            pathname: "/RegisterModule/OTPVerificationScreen",
+            params: { isRegister: true, email: data.email },
+          });
         }
-      };
+      } catch (error) {
+        const errorMsg = error.response?.data?.message || error.message;
+
+        const field = errorMsg.toLowerCase().includes("email")
+          ? "email"
+          : errorMsg.toLowerCase().includes("username")
+          ? "username"
+          : errorMsg.toLowerCase().includes("password")
+          ? "password"
+          : errorMsg.toLowerCase().includes("terms")
+          ? "termsAccepted"
+          : null;
+
+        if (field) {
+          setError(field, { type: "manual", message: errorMsg });
+        } else {
+          Alert.alert("Error", errorMsg);
+        }
+      }
+    };
+
     return(
       <View style = {{width: '100%', gap: 16, paddingHorizontal: 20}}>
         <FormInput
@@ -69,6 +68,7 @@ export default function RegisterForm(){
             errors={errors}
             placeholder="Username"
             autoCapitalize="none"
+            icon={<FontAwesome name="user" size={24} color="#9188E5" />}
         />
 
         <FormInput
@@ -78,6 +78,7 @@ export default function RegisterForm(){
           placeholder="Email"
           keyboardType="email-address"
           autoCapitalize="none"
+          icon={<MaterialIcons name="email" size={24} color="#9188E5" />}
         />
 
         <PasswordInput
@@ -87,6 +88,7 @@ export default function RegisterForm(){
           placeholder="Password"
           showPassword={displayPassword}
           toggleShow={() => setDisplayPassword(!displayPassword)}
+          icon={<FontAwesome name="lock" size={24} color="#9188E5"/>}
         />
 
         <PasswordInput
@@ -96,6 +98,7 @@ export default function RegisterForm(){
           errors={errors}
           showPassword={displayConfirmPassword}
           toggleShow={() => setDisplayConfirmPassword(!displayConfirmPassword)}
+          icon={<FontAwesome name="lock" size={24} color="#9188E5"/>}
         />
 
         <TermsInput

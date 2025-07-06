@@ -12,11 +12,10 @@ export const PetProvider = ({ children }) => {
         dateOfBirth : "",
         description: "",
         myVaccinesURLs: [],
-        myPicturesURLs: null,
+        myPicturesURLs: [],
     };
 
     const [pet, setPet] = useState(initialPet);
-
     const [pets, setPets] = useState([]);
 
     const createNewPet = () => {

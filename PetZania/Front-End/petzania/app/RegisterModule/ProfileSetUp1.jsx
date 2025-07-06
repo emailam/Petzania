@@ -1,62 +1,41 @@
-import {
-    StyleSheet,
-    View,
-    Image,
-    TouchableOpacity,
-    Text,
-    TextInput,
-    Dimensions,
-    KeyboardAvoidingView,
-    ScrollView,
-    Platform,
-} from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, TextInput, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
+import { Image } from 'expo-image';
 import React, { useState, useContext } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { AntDesign } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Button from '@/components/Button';
 import { isValidPhoneNumber } from 'libphonenumber-js';
+import { useActionSheet } from '@expo/react-native-action-sheet';
+import ImageViewing from 'react-native-image-viewing';
+
+import { uploadFile } from '@/services/uploadService';
+import { updateUserData } from '@/services/userService';
 
 import { UserContext } from '@/context/UserContext';
-
-import api from '@/api/axiosInstance';
 
 const ProfileSetUp1 = () => {
     const defaultImage = require('@/assets/images/Defaults/default-user.png');
     const router = useRouter();
 
-    const [image, setImage] = useState(null);
-    const [name, setName] = useState('');
-    const [bio, setBio] = useState('');
-    const [phoneNumber, setPhoneNumber] = useState('');
-    const [error, setError] = useState('');
-    const [phoneError, setPhoneError] = useState('');
-
     const { user, setUser } = useContext(UserContext);
 
-    const updateUserData = async (userData) => {
-        console.log('Updating user data:', user);
-        try {
-            const response = await api.patch(`/user/auth/${user.userId}`, userData);
-            if (response.status === 200) {
-                setUser((prevUser) => ({ ...prevUser, ...userData }));
-                console.log('User data updated successfully:', response.data);
-            } else {
-                console.error('Failed to update user data. Status:', response.status);
-            }
-        } catch (error) {
-            console.error('Error updating user data:', error.response?.data?.message || error.message);
-        }
-        finally {
-            
-        }
-    };
+    const [image, setImage] = useState(user?.profilePictureURL || null);
+    const [name, setName] = useState(user?.name || '');
+    const [bio, setBio] = useState(user?.bio || '');
+    const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || '');
+    const [error, setError] = useState('');
+    const [phoneError, setPhoneError] = useState('');
+    const [showImageViewer, setShowImageViewer] = useState(false);
+
+    const [isLoading, setIsLoading] = useState(false);
+    const { showActionSheetWithOptions } = useActionSheet();
 
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
             aspect: [1, 1],
-            quality: 1,
+            quality: 0.7,
             allowsEditing: true,
         });
 
@@ -67,6 +46,8 @@ const ProfileSetUp1 = () => {
 
     const deleteImage = () => {
         setImage(null);
+        user.profilePictureURL = null;
+        setUser((prevUser) => ({ ...prevUser, profilePictureURL: null }));
     };
 
     const goToNextStep = async () => {
@@ -83,85 +64,142 @@ const ProfileSetUp1 = () => {
             return;
         }
 
+        let uploadedImageUrl = user?.profilePictureURL;
+        if(image && image !== user?.profilePictureURL) {
+            try {
+                const file = {
+                    uri: image,
+                    type: 'image/jpeg',
+                    name: 'profile.jpg',
+                };
+                setIsLoading(true);
+                uploadedImageUrl = await uploadFile(file);
+            } catch (err) {
+                console.error('Failed to upload profile picture:', err.message);
+                return;
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
         const userData = {
             name,
             phoneNumber,
             bio,
-            profilePictureURL: image || '',
+            profilePictureURL: uploadedImageUrl || "",
         };
 
-        await updateUserData(userData);
+        try {
+            setIsLoading(true);
+            const updatedUser = await updateUserData(user.userId, userData);
+            setUser((prevUser) => ({ ...prevUser, ...updatedUser }));
+            setError('');
+            setPhoneError('');
+            router.push('/RegisterModule/ProfileSetUp2');
+        } catch (err) {
+            console.error('Error updating user profile:', err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-        setError('');
-        setPhoneError('');
-
-        router.push('/RegisterModule/ProfileSetUp2');
+    const handleImagePress = () => {
+        const options = [
+            ...(image ? ['View Profile Picture'] : []),
+            'Change Profile Picture',
+            ...(image ? ['Remove Profile Picture'] : []),
+            'Cancel',
+        ];
+        const cancelButtonIndex = options.length - 1;
+        const destructiveButtonIndex = image ? options.indexOf('Remove Profile Picture') : undefined;
+        showActionSheetWithOptions(
+            {
+                options,
+                cancelButtonIndex,
+                destructiveButtonIndex,
+            },
+            (buttonIndex) => {
+                if (image && buttonIndex === 0) setShowImageViewer(true);
+                else if ((image && buttonIndex === 1) || (!image && buttonIndex === 0)) pickImage();
+                else if (image && buttonIndex === options.indexOf('Remove Profile Picture')) deleteImage();
+            }
+        );
     };
 
     return (
-    <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
-    >
-        <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
-        <View style={styles.imageContainer}>
-            <TouchableOpacity onPress={pickImage} style={styles.imageWrapper}>
-            <Image source={image ? { uri: image } : defaultImage} style={styles.image} />
-            {image && (
-                <TouchableOpacity onPress={deleteImage} style={styles.trashIcon}>
-                <AntDesign name="delete" size={20} style={styles.icon} />
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.container}
+        >
+            <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+            <View style={styles.imageContainer}>
+                <TouchableOpacity onPress={handleImagePress} style={styles.imageWrapper}>
+                <Image source={image ? { uri: image } : defaultImage} style={styles.image} />
+                {image && (
+                    <TouchableOpacity onPress={deleteImage} style={styles.trashIcon}>
+                    <AntDesign name="delete" size={20} style={styles.icon} />
+                    </TouchableOpacity>
+                )}
                 </TouchableOpacity>
-            )}
-            </TouchableOpacity>
-        </View>
+            </View>
 
-        <View style={styles.inputContainer}>
-            <Text style={styles.label}>
-                Full Name <Text style={{ color: 'red' }}>*</Text>
-            </Text>
-            <TextInput
-                style={[styles.input, error ? styles.inputError : null]}
-                placeholder="Tyler Gregory Okonma"
-                value={name}
-                onChangeText={(text) => {
-                    setName(text);
-                    setError('');
-                }}
+            <ImageViewing
+                images={[{ uri: image || '' }]}
+                imageIndex={0}
+                visible={showImageViewer}
+                onRequestClose={() => setShowImageViewer(false)}
+                backgroundColor="black"
+                swipeToCloseEnabled
+                doubleTapToZoomEnabled
             />
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>
+                    Full Name <Text style={{ color: 'red' }}>*</Text>
+                </Text>
+                <TextInput
+                    style={[styles.input, error ? styles.inputError : null]}
+                    placeholder="Tyler Gregory Okonma"
+                    placeholderTextColor="#999"
+                    value={name}
+                    onChangeText={(text) => {
+                        setName(text);
+                        setError('');
+                    }}
+                />
+                {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-            <Text style={[styles.label, { marginTop: 12 }]}>Phone Number</Text>
-            <TextInput
-                style={[styles.input, phoneError ? styles.inputError : null]}
-                placeholder="+20 101 234 5678"
-                keyboardType="phone-pad"
-                value={phoneNumber}
-                onChangeText={(text) => {
-                    setPhoneNumber(text);
-                    setPhoneError('');
-                }}
-            />
-            {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
+                <Text style={[styles.label, { marginTop: 12 }]}>Phone Number</Text>
+                <TextInput
+                    style={[styles.input, phoneError ? styles.inputError : null]}
+                    placeholder="+20 101 234 5678"
+                    placeholderTextColor="#999"
+                    keyboardType="phone-pad"
+                    value={phoneNumber}
+                    onChangeText={(text) => {
+                        setPhoneNumber(text);
+                        setPhoneError('');
+                    }}
+                />
+                {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
 
-            <Text style={[styles.label, { marginTop: 12 }]}>Bio</Text>
-            <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="About"
-                multiline
-                value={bio}
-                onChangeText={setBio}
-            />
-        </View>
-        </ScrollView>
+                <Text style={[styles.label, { marginTop: 12 }]}>Bio</Text>
+                <TextInput
+                    style={[styles.input, styles.textArea]}
+                    placeholder="About"
+                    placeholderTextColor="#999"
+                    multiline
+                    value={bio}
+                    onChangeText={setBio}
+                />
+            </View>
+            </ScrollView>
 
-        <View style={styles.buttonContainer}>
-            <Button title="Next" borderRadius={10} fontSize={16} onPress={goToNextStep} />
-        </View>
-    </KeyboardAvoidingView>
+            <View style={styles.buttonContainer}>
+                <Button title="Next" borderRadius={10} fontSize={16} onPress={goToNextStep} loading={isLoading}/>
+            </View>
+        </KeyboardAvoidingView>
     );
 };
-
-export default ProfileSetUp1;
 
 const styles = StyleSheet.create({
     container: {
@@ -170,6 +208,7 @@ const styles = StyleSheet.create({
     },
     scrollContainer: {
         paddingVertical: 20,
+        paddingBottom: 50,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -257,3 +296,5 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
 });
+
+export default ProfileSetUp1;

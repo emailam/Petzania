@@ -3,19 +3,21 @@ import { View , StyleSheet } from 'react-native';
 import { Link } from "expo-router";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import Toast from 'react-native-toast-message';
 
 import Button from "@/components/Button";
 import FormInput from "@/components/FormInput";
 import PasswordInput from "@/components/PasswordInput";
 import { responsive } from "@/utilities/responsive";
 import { useAuthForm } from "@/components/useForm";
-import axios from "axios";
 
-import { saveToken } from '@/storage/tokenStorage';
 
 const { useRouter } = require("expo-router");
 
 import { UserContext } from "@/context/UserContext";
+import { PetContext } from "@/context/PetContext";
+
+import { getUserById, loginUser, resendOTP } from "@/services/userService";
 
 export default function LoginForm(){
     const {control , handleSubmit , formState:{errors , isSubmitting} , setError} = useAuthForm("login");
@@ -25,127 +27,85 @@ export default function LoginForm(){
     const router = useRouter();
 
     const { setUser } = useContext(UserContext);
-
-    const getUserDataById = async (userId, token) => {
-        try {
-            const response = await axios.get(`http://192.168.1.4:8080/api/user/auth/${userId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            if (response.status === 200) {
-                setUser(response.data);
-                console.log("User data retrieved successfully:", response.data);
-                return response.data;
-            } else {
-                console.error("Failed to retrieve user data. Status:", response.status);
-                return null;
-            }
-        } catch (error) {
-            console.error("Error retrieving user data:", error.response?.data?.message || error.message);
-            return null;
-        }
-    };
+    const { setPets } = useContext(PetContext);
 
     const Login = async (data) => {
-        data.email = data.email.toLowerCase();
-        data.email = data.email.trim();
         try {
-            const response = await axios.post("http://192.168.1.4:8080/api/user/auth/login", data);
+            const response = await loginUser(data);
+            console.log("Login response:", response);
 
-            if (response.status === 200) {
-                const { accessToken, refreshToken } = response.data.tokenDTO;
-
-                // Save the tokens
-                await saveToken('accessToken', accessToken);
-                await saveToken('refreshToken', refreshToken);
-
-                const userData = await getUserDataById(response.data.userId, accessToken);
-
-                // To Be Removed after testing
-                router.push('/RegisterModule/ProfileSetUp1');
-                return ;
-
-                if (userData?.name === null) {
-                    router.push('/RegisterModule/ProfileSetUp1');
+            if (response) {
+                const userData = await getUserById(response.userId);
+                setUser(userData);
+                setPets(userData.myPets || []);
+                if (userData.name === null) {
+                    router.push("/RegisterModule/ProfileSetUp1");
                 } else {
-                    router.dismissAll();
-                    router.replace('(tabs)');
+                    router.replace("/Home");
                 }
             }
-        }
-        catch (error) {
+        } catch (error) {
             const status = error.response?.status;
-            const errorMsg = error.response?.data?.message || error.message;
+            console.log("Error status code:", status);
+            console.log("Error response data:", error.response?.data);
+            const errorMsg = error.response?.data?.error || error.message;
 
             console.log("Login error:", errorMsg);
             console.log("Status code:", status);
 
             const showBothFieldsError = (message) => {
-                setError("email", {
-                    type: "manual",
-                    message,
-                });
-                setError("password", {
-                    type: "manual",
-                    message,
-                });
+                setError("email", { type: "manual", message });
+                setError("password", { type: "manual", message });
             };
 
             if (status === 400 || errorMsg === "Email is incorrect") {
                 showBothFieldsError("Invalid email or password.");
-                return;
             }
 
-            else if (status === 401 && errorMsg === "User is not verified") {
-                try {
-                    const response = await axios.post("http://192.168.1.4:8080/api/user/auth/resendOTP", {
-                        email: data.email,
-                    });
-                    if (response.status === 200) {
-                        console.log("New OTP requested successfully:", response.data);
-                    } else {
-                        console.error("Failed to request new OTP. Status:", response.status);
+            else if (status === 401) {
+                // Check if it's a verification issue vs authentication issue
+                if (errorMsg === "Unauthorized" && (error.response?.data?.message === "There is no refresh token sent" || error.response?.data?.message === "User is not verified")) {
+                    try {
+                        await resendOTP(data.email);
+
+                        Toast.show({
+                            type: "success",
+                            text1: "OTP sent",
+                            text2: `A verification code has been sent to ${data.email}`,
+                        });
+
+                        router.push({
+                            pathname: "/RegisterModule/OTPVerificationScreen",
+                            params: { isRegister: true, email: data.email },
+                        });
+                    } catch (otpError) {
+                        setError("email", {
+                            type: "manual",
+                            message: otpError.response?.data?.message || "Failed to send OTP. Please try again later.",
+                        });
                     }
+                } else {
+                    // General unauthorized error
+                    showBothFieldsError("Invalid email or password.");
                 }
-                catch (error) {
-                    console.error("Error requesting new OTP:", error.response?.data?.message || error.message);
-                }
-                router.push({
-                    pathname: "/RegisterModule/OTPVerificationScreen",
-                    params: { isRegister: true, email: data.email },
-                });
-                return;
-            }
-
-            if (status === 429) {
-                setError("email", {
-                    type: "manual",
-                    message: "Too many login attempts. Please try again later.",
-                });
-                setError("password", {
-                    type: "manual",
-                    message: "Too many login attempts. Please try again later.",
-                });
-                return;
-            }
-
-            // Fallback error handling
-            const field = errorMsg.toLowerCase().includes("email")
-                ? "email"
-                : errorMsg.toLowerCase().includes("password")
-                ? "password"
-                : null;
-
-            if (field) {
-                setError(field, { type: "manual", message: errorMsg });
+            } else if (status === 429) {
+                showBothFieldsError("Too many login attempts. Please try again later.");
             } else {
-                // For general error with unknown field, show on both
-                showBothFieldsError(errorMsg);
+                const field = errorMsg.toLowerCase().includes("email")
+                    ? "email"
+                    : errorMsg.toLowerCase().includes("password")
+                    ? "password"
+                    : null;
+
+                if (field) {
+                    setError(field, { type: "manual", message: errorMsg });
+                } else {
+                    showBothFieldsError(errorMsg);
+                }
             }
         }
+    };
 
-    }
     return(
         <View style = {styles.container}>
             <FormInput
@@ -170,7 +130,6 @@ export default function LoginForm(){
             <Button
                 title="Login"
                 onPress={handleSubmit(Login)}
-                width={styles.button.width}
                 borderRadius={12}
                 fontSize={responsive.fonts.body}
                 loading={isSubmitting}
@@ -180,8 +139,9 @@ export default function LoginForm(){
 }
 const styles = StyleSheet.create({
     container: {
-      gap: responsive.hp('2%'),
-      width: responsive.wp('80%'),
+        gap: responsive.hp('2%'),
+        width: responsive.wp('100%'),
+        paddingHorizontal: '5%',
     },
     link: {
       color: '#9188E5',
@@ -190,7 +150,6 @@ const styles = StyleSheet.create({
       fontSize: responsive.fonts.small,
     },
     button: {
-      width: responsive.buttons.width.primary,
       borderRadius: responsive.buttons.radius,
     },
   });
