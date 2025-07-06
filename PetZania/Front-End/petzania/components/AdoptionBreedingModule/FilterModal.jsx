@@ -28,7 +28,7 @@ export default function FilterModal({ visible, onClose, onApply, initialFilters 
     breed: initialFilters.breed || 'ALL',
     minAge: initialFilters.minAge != null ? initialFilters.minAge : 0,
     maxAge: initialFilters.maxAge != null ? initialFilters.maxAge : 100,
-    sortBy: initialFilters.sortBy || 'CREATED_DATE',
+    sortBy: initialFilters.sortBy || 'SCORE',
     sortDesc: initialFilters.sortDesc != null ? initialFilters.sortDesc : true,
   });
 
@@ -136,7 +136,7 @@ export default function FilterModal({ visible, onClose, onApply, initialFilters 
       breed: 'ALL',
       minAge: 0,
       maxAge: 100,
-      sortBy: 'CREATED_DATE',
+      sortBy: 'SCORE',
       sortDesc: true,
     });
   }, []);

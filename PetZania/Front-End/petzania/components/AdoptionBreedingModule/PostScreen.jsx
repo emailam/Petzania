@@ -33,7 +33,7 @@ export default function PostScreen({ postType }) {
     breed: 'ALL',
     minAge: 0,
     maxAge: 1000,
-    sortBy: 'CREATED_DATE',
+    sortBy: 'SCORE',
     sortDesc: true,
   });
 
