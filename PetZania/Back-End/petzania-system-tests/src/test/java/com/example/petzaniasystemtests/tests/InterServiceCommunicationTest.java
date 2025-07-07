@@ -498,7 +498,7 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
         given()
                 .header("Authorization", "Bearer " + deleteUserToken)
                 .when()
-                .get(friendsBaseUrl + "/api/friends/get-number-of-friends")
+                .get(friendsBaseUrl + "/api/friends/get-number-of-friends" + deleteUserId)
                 .then()
                 .statusCode(anyOf(is(401), is(403)));
 

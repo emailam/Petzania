@@ -5,26 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ea048906-7657-4d6f-95bf-3cfefcfdfc3b" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/event/NotificationEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/event/NotificationEvent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/NotificationPublisher.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/NotificationPublisher.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/model/event/NotificationEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/model/event/NotificationEvent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/service/impl/NotificationPublisher.java" beforeDir="false" afterPath="$PROJECT_DIR$/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/service/impl/NotificationPublisher.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notification-module/src/main/java/com/example/notificationmodule/model/dto/NotificationDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/notification-module/src/main/java/com/example/notificationmodule/model/dto/NotificationDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notification-module/src/main/java/com/example/notificationmodule/model/entity/Notification.java" beforeDir="false" afterPath="$PROJECT_DIR$/notification-module/src/main/java/com/example/notificationmodule/model/entity/Notification.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notification-module/src/main/java/com/example/notificationmodule/model/event/NotificationEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/notification-module/src/main/java/com/example/notificationmodule/model/event/NotificationEvent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notification-module/src/main/java/com/example/notificationmodule/repository/NotificationRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/notification-module/src/main/java/com/example/notificationmodule/repository/NotificationRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notification-module/src/main/java/com/example/notificationmodule/service/impl/DTOConversionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/notification-module/src/main/java/com/example/notificationmodule/service/impl/DTOConversionService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notification-module/src/main/java/com/example/notificationmodule/service/impl/NotificationEventListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/notification-module/src/main/java/com/example/notificationmodule/service/impl/NotificationEventListener.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notification-module/src/main/java/com/example/notificationmodule/service/impl/UserEventListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/notification-module/src/main/java/com/example/notificationmodule/service/impl/UserEventListener.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notification-module/src/test/java/com/example/notificationmodule/TestDataUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/notification-module/src/test/java/com/example/notificationmodule/TestDataUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notification-module/src/test/java/com/example/notificationmodule/controller/NotificationControllerIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/notification-module/src/test/java/com/example/notificationmodule/controller/NotificationControllerIntegrationTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notification-module/src/test/java/com/example/notificationmodule/service/DTOConversionServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/notification-module/src/test/java/com/example/notificationmodule/service/DTOConversionServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notification-module/src/test/java/com/example/notificationmodule/service/NotificationEventListenerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/notification-module/src/test/java/com/example/notificationmodule/service/NotificationEventListenerTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notification-module/src/test/java/com/example/notificationmodule/service/NotificationServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/notification-module/src/test/java/com/example/notificationmodule/service/NotificationServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/petzania-system-tests/src/test/java/com/example/petzaniasystemtests/builders/TestDataBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/petzania-system-tests/src/test/java/com/example/petzaniasystemtests/builders/TestDataBuilder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/registration-module/src/main/java/com/example/registrationmodule/service/impl/EmailService.java" beforeDir="false" afterPath="$PROJECT_DIR$/registration-module/src/main/java/com/example/registrationmodule/service/impl/EmailService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/registration-module/src/test/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/registration-module/src/test/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/petzania-system-tests/src/test/java/com/example/petzaniasystemtests/tests/InterServiceCommunicationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/petzania-system-tests/src/test/java/com/example/petzaniasystemtests/tests/InterServiceCommunicationTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -61,33 +44,36 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
-    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
-    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
-    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;Spring Boot.AdoptionAndBreedingModuleApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.FriendsAndChatsModuleApplication.executor&quot;: &quot;Run&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;#46 on merge/front-and-back-registration…ation&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/AliveTube/Documents/Projects CS50/Petzania/PetZania/Back-End&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;run.configurations.included.in.services&quot;: &quot;true&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "Spring Boot.AdoptionAndBreedingModuleApplication.executor": "Run",
+    "Spring Boot.FriendsAndChatsModuleApplication.executor": "Run",
+    "git-widget-placeholder": "#46 on merge/front-and-back-registration…ation",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/AliveTube/Documents/Projects CS50/Petzania/PetZania/Back-End",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "run.configurations.included.in.services": "true",
+    "vue.rearranger.settings.migration": "true"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;DatabaseDriversLRU&quot;: [
-      &quot;postgresql&quot;
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "postgresql"
     ]
   }
-}</component>
+}]]></component>
   <component name="RunDashboard">
     <option name="configurationTypes">
       <set>
@@ -98,19 +84,7 @@
       </set>
     </option>
   </component>
-  <component name="RunManager" selected="JUnit.PetPostControllerIntegrationTests">
-    <configuration name="AdminControllerIntegrationTests and 2 more" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="registration-module" />
-      <option name="TEST_OBJECT" value="pattern" />
-      <patterns>
-        <pattern testClass="com.example.registrationmodule.controller.AdminControllerIntegrationTests" />
-        <pattern testClass="com.example.registrationmodule.controller.PetControllerIntegrationTests" />
-        <pattern testClass="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
-      </patterns>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
+  <component name="RunManager" selected="JUnit.RegistrationSystemTest.testUserDeletionEventPropagation">
     <configuration name="ChatControllerIntegrationTests and 2 more" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="friends-and-chats-module" />
       <option name="TEST_OBJECT" value="pattern" />
@@ -123,16 +97,32 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="DTOConversionServiceTest and 4 more" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="notification-module" />
+    <configuration name="CrossServiceSecurityTest and 4 more" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="petzania-system-tests" />
       <option name="TEST_OBJECT" value="pattern" />
       <patterns>
-        <pattern testClass="com.example.notificationmodule.service.DTOConversionServiceTest" />
-        <pattern testClass="com.example.notificationmodule.service.NotificationEventListenerTest" />
-        <pattern testClass="com.example.notificationmodule.service.NotificationServiceTest" />
-        <pattern testClass="com.example.notificationmodule.service.WebSocketServiceTest" />
-        <pattern testClass="com.example.notificationmodule.controller.NotificationControllerIntegrationTests" />
+        <pattern testClass="com.example.petzaniasystemtests.tests.CrossServiceSecurityTest" />
+        <pattern testClass="com.example.petzaniasystemtests.tests.FriendsSystemTest" />
+        <pattern testClass="com.example.petzaniasystemtests.tests.InterServiceCommunicationTest" />
+        <pattern testClass="com.example.petzaniasystemtests.tests.RabbitMQEventIntegrationTest" />
+        <pattern testClass="com.example.petzaniasystemtests.tests.RegistrationSystemTest" />
       </patterns>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="InterServiceCommunicationTest.testUserDeletionPropagation" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="petzania-system-tests" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.example.petzaniasystemtests.tests.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.example.petzaniasystemtests.tests" />
+      <option name="MAIN_CLASS_NAME" value="com.example.petzaniasystemtests.tests.InterServiceCommunicationTest" />
+      <option name="METHOD_NAME" value="testUserDeletionPropagation" />
+      <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -148,6 +138,22 @@
       <option name="PACKAGE_NAME" value="com.example.adoption_and_breeding_module.controller" />
       <option name="MAIN_CLASS_NAME" value="com.example.adoption_and_breeding_module.controller.PetPostControllerIntegrationTests" />
       <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="RegistrationSystemTest.testUserDeletionEventPropagation" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="petzania-system-tests" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.example.petzaniasystemtests.tests.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.example.petzaniasystemtests.tests" />
+      <option name="MAIN_CLASS_NAME" value="com.example.petzaniasystemtests.tests.RegistrationSystemTest" />
+      <option name="METHOD_NAME" value="testUserDeletionEventPropagation" />
+      <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -185,10 +191,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="JUnit.RegistrationSystemTest.testUserDeletionEventPropagation" />
+        <item itemvalue="JUnit.InterServiceCommunicationTest.testUserDeletionPropagation" />
+        <item itemvalue="JUnit.CrossServiceSecurityTest and 4 more" />
         <item itemvalue="JUnit.PetPostControllerIntegrationTests" />
         <item itemvalue="JUnit.ChatControllerIntegrationTests and 2 more" />
-        <item itemvalue="JUnit.DTOConversionServiceTest and 4 more" />
-        <item itemvalue="JUnit.AdminControllerIntegrationTests and 2 more" />
       </list>
     </recent_temporary>
   </component>
