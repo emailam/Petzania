@@ -31,6 +31,7 @@ public class NotificationPublisher {
         attributes.put("requestId", requestId.toString());
 
         NotificationEvent event = NotificationEvent.builder()
+                .initiatorId(senderId)
                 .recipientId(receiverId)
                 .type(NotificationType.FRIEND_REQUEST_RECEIVED)
                 .attributes(attributes)
@@ -51,6 +52,7 @@ public class NotificationPublisher {
         attributes.put("receiverId", receiverId.toString());
 
         NotificationEvent event = NotificationEvent.builder()
+                .initiatorId(receiverId)
                 .recipientId(senderId)
                 .type(NotificationType.FRIEND_REQUEST_ACCEPTED)
                 .attributes(attributes)
@@ -71,6 +73,7 @@ public class NotificationPublisher {
         attributes.put("receiverId", followedId.toString());
 
         NotificationEvent event = NotificationEvent.builder()
+                .initiatorId(followerId)
                 .recipientId(followedId)
                 .type(NotificationType.NEW_FOLLOWER)
                 .attributes(attributes)

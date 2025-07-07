@@ -59,6 +59,7 @@ class NotificationServiceTest {
         notification = Notification.builder()
                 .notificationId(notificationId)
                 .recipientId(userId)
+                .initiatorId(userId)
                 .type(NotificationType.FRIEND_REQUEST_ACCEPTED)
                 .message("Test notification")
                 .status(NotificationStatus.UNREAD)

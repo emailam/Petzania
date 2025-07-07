@@ -31,4 +31,6 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     void deleteByNotificationId(UUID notificationId);
 
     void deleteByRecipientId(UUID recipientId);
+
+    void deleteByInitiatorId(UUID initiatorId);
 }

@@ -17,6 +17,7 @@ public class DTOConversionService implements IDTOConversionService {
                 .status(notification.getStatus())
                 .attributes(notification.getAttributes())
                 .createdAt(notification.getCreatedAt())
+                .initiatorId(notification.getInitiatorId())
                 .build();
     }
 }

@@ -12,6 +12,7 @@ import java.util.UUID;
 @Builder
 public class NotificationDTO {
     private UUID notificationId;
+    private UUID initiatorId;
     private UUID recipientId;
     private NotificationType type;
     private String message;

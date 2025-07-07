@@ -27,6 +27,7 @@ public class NotificationEventListener {
         try {
             Notification notification = Notification.builder()
                     .recipientId(event.getRecipientId())
+                    .initiatorId(event.getInitiatorId())
                     .type(event.getType())
                     .message(event.getMessage())
                     .attributes(event.getAttributes())

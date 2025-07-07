@@ -31,6 +31,7 @@ public class NotificationPublisher {
         attributes.put("postOwnerId", postOwnerId.toString());
 
         NotificationEvent event = NotificationEvent.builder()
+                .initiatorId(likerId)
                 .recipientId(postOwnerId)
                 .type(NotificationType.PET_POST_LIKED)
                 .attributes(attributes)

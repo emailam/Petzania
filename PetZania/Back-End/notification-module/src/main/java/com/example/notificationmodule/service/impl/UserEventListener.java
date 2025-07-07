@@ -33,6 +33,7 @@ public class UserEventListener {
         if (userRepository.existsById(user.getUserId())) {
             userRepository.deleteById(user.getUserId());
             notificationRepository.deleteByRecipientId(user.getUserId());
+            notificationRepository.deleteByInitiatorId(user.getUserId());
             System.out.println("received deleted user: " + user);
         }
     }

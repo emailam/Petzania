@@ -249,6 +249,7 @@ public class NotificationControllerIntegrationTests {
 
         Notification anotherNotification = Notification.builder()
                 .recipientId(anotherUser.getUserId())
+                .initiatorId(anotherUser.getUserId())
                 .type(NotificationType.FRIEND_REQUEST_RECEIVED)
                 .message("Another user's notification")
                 .status(NotificationStatus.UNREAD)
@@ -321,6 +322,7 @@ public class NotificationControllerIntegrationTests {
 
         Notification anotherNotification = Notification.builder()
                 .recipientId(anotherUser.getUserId())
+                .initiatorId(anotherUser.getUserId())
                 .type(NotificationType.NEW_FOLLOWER)
                 .message("Another user's notification for deletion test")
                 .status(NotificationStatus.UNREAD)

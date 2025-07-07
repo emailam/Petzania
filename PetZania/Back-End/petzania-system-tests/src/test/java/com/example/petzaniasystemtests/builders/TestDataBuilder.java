@@ -123,7 +123,7 @@ public class TestDataBuilder {
                     {
                         "pinned": %b,
                         "muted": %b,
-                        "unread": false
+                        "unread": 0
                     }
                     """, pinned, muted);
         }

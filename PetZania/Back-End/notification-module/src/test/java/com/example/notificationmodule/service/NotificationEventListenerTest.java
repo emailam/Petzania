@@ -56,11 +56,13 @@ class NotificationEventListenerTest {
                 .type(NotificationType.FRIEND_REQUEST_ACCEPTED)
                 .message("John Doe accepted your friend request")
                 .attributes(attributes)
+                .initiatorId(recipientId)
                 .build();
 
         savedNotification = Notification.builder()
                 .notificationId(UUID.randomUUID())
                 .recipientId(recipientId)
+                .initiatorId(recipientId)
                 .type(NotificationType.FRIEND_REQUEST_ACCEPTED)
                 .message("John Doe accepted your friend request")
                 .status(NotificationStatus.UNREAD)
@@ -144,6 +146,7 @@ class NotificationEventListenerTest {
                 .type(NotificationType.NEW_FOLLOWER)
                 .message("You have a new follower")
                 .attributes(null)
+                .initiatorId(recipientId)
                 .build();
 
         when(notificationRepository.save(any(Notification.class))).thenReturn(savedNotification);
@@ -170,6 +173,7 @@ class NotificationEventListenerTest {
                     .recipientId(recipientId)
                     .type(type)
                     .message("Test message for " + type)
+                    .initiatorId(recipientId)
                     .build();
 
             when(notificationRepository.save(any(Notification.class))).thenReturn(savedNotification);

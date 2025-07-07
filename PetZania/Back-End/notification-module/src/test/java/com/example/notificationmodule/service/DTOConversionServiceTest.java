@@ -39,6 +39,7 @@ class DTOConversionServiceTest {
         Notification notification = Notification.builder()
                 .notificationId(notificationId)
                 .recipientId(recipientId)
+                .initiatorId(recipientId)
                 .type(NotificationType.FRIEND_REQUEST_ACCEPTED)
                 .message("John Doe accepted your friend request")
                 .status(NotificationStatus.UNREAD)

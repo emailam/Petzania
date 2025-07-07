@@ -53,6 +53,9 @@ public class Notification {
     @Builder.Default
     private Instant createdAt = Instant.now();
 
+    @Column(name = "initiator_id", nullable = false)
+    private UUID initiatorId;
+
     @PrePersist
     public void onCreate() {
         if (createdAt == null) {

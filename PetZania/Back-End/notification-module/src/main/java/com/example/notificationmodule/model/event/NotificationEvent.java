@@ -15,6 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class NotificationEvent {
+    private UUID initiatorId;
     private UUID recipientId;
     private NotificationType type;
     private String message;

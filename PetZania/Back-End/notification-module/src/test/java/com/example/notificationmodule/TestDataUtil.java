@@ -22,6 +22,7 @@ public class TestDataUtil {
     public static Notification createTestNotification(UUID recipientId, NotificationType notificationType, String message, NotificationStatus notificationStatus, Instant instant){
         return Notification.builder()
                 .recipientId(recipientId)
+                .initiatorId(recipientId)
                 .type(notificationType)
                 .message(message)
                 .status(notificationStatus)
