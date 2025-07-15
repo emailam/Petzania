@@ -26,13 +26,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.MediaType;
+import com.example.adoption_and_breeding_module.repository.PetRepository;
+import jakarta.persistence.EntityManager;
 
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -64,10 +65,16 @@ public class PetPostControllerIntegrationTests {
     private PetPostRepository petPostRepository;
 
     @Autowired
+    private PetRepository petRepository;
+
+    @Autowired
     private BlockRepository blockRepository;
 
     @Autowired
     private FeedScorer feedScorer;
+
+    @Autowired
+    private EntityManager entityManager;
 
     double EPSILON = 1e-6;
 
@@ -106,7 +113,7 @@ public class PetPostControllerIntegrationTests {
 
         // Create test pet
         testPet = TestDataUtil.createTestPet("Buddy", PetSpecies.DOG, Gender.MALE, 24); // 2 years old
-
+        petRepository.save(testPet);
         // Create test posts
         adoptionPost = petPostRepository.save(PetPost.builder()
                 .owner(userA)
@@ -119,9 +126,11 @@ public class PetPostControllerIntegrationTests {
                 .reactedUsers(new HashSet<>())
                 .build());
 
+        Pet testPet2 = TestDataUtil.createTestPet("Luna", PetSpecies.CAT, Gender.FEMALE, 36);
+        petRepository.save(testPet2);
         breedingPost = petPostRepository.save(PetPost.builder()
                 .owner(userB)
-                .pet(TestDataUtil.createTestPet("Luna", PetSpecies.CAT, Gender.FEMALE, 36)) // 3 years old
+                .pet(testPet2)
                 .postType(PetPostType.BREEDING)
                 .postStatus(PetPostStatus.PENDING)
                 .description("Purebred Persian cat for breeding")
@@ -890,6 +899,47 @@ public class PetPostControllerIntegrationTests {
             );
         }
 
+    }
+
+    @Test
+    void userDeletionShouldCascadeToPetPosts() {
+        User user = userRepository.save(TestDataUtil.createTestUser("cascadeUser"));
+        Pet pet1 = petRepository.save(TestDataUtil.createTestPet("CascadePet1", PetSpecies.DOG, Gender.MALE, 12));
+        Pet pet2 = petRepository.save(TestDataUtil.createTestPet("CascadePet2", PetSpecies.CAT, Gender.FEMALE, 24));
+        PetPost post1 = petPostRepository.save(PetPost.builder()
+                .owner(user)
+                .pet(pet1)
+                .postType(PetPostType.ADOPTION)
+                .postStatus(PetPostStatus.PENDING)
+                .description("Cascade test post 1")
+                .location("Test City 1")
+                .reacts(0)
+                .reactedUsers(new HashSet<>())
+                .build());
+        PetPost post2 = petPostRepository.save(PetPost.builder()
+                .owner(user)
+                .pet(pet2)
+                .postType(PetPostType.BREEDING)
+                .postStatus(PetPostStatus.PENDING)
+                .description("Cascade test post 2")
+                .location("Test City 2")
+                .reacts(0)
+                .reactedUsers(new HashSet<>())
+                .build());
+        UUID post1Id = post1.getPostId();
+        UUID post2Id = post2.getPostId();
+
+        entityManager.flush();
+        entityManager.clear();
+        
+        assertTrue(petPostRepository.existsById(post1Id));
+        assertTrue(petPostRepository.existsById(post2Id));
+
+        userRepository.deleteById(user.getUserId());
+        entityManager.flush();
+
+        assertFalse(petPostRepository.existsById(post1Id));
+        assertFalse(petPostRepository.existsById(post2Id));
     }
 
 }

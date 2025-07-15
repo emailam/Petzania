@@ -13,10 +13,8 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor @Builder
 @Table(name = "pet_posts", indexes = {
         @Index(name = "idx_post_owner", columnList = "owner_id"),
         @Index(name = "idx_post_pet", columnList = "pet_id"),
@@ -24,22 +22,22 @@ import java.util.UUID;
         @Index(name = "idx_post_type", columnList = "post_type"),
         @Index(name = "idx_post_created", columnList = "created_at")
 })
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class PetPost {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @EqualsAndHashCode.Include
     @Column(name = "post_id", nullable = false)
     private UUID postId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     private User owner;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false, cascade = CascadeType.ALL)
     @JoinColumn(name = "pet_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Pet pet;
-
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
