@@ -50,8 +50,8 @@ spring:
       expiration:
         86400000
 
-  sendgrid:
-    key: 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
+  # sendgrid:
+  #   key: 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
 
 
   email:
@@ -169,4 +169,4 @@ logging:
     com.example.registrationmodule.service.impl.EmailService: DEBUG
     com.example.registrationmodule.service.impl.UserService: DEBUG
     com.example.registrationmodule.config.EmailConfig: DEBUG
-    com.sendgrid: DEBUG
+    # com.sendgrid: DEBUG

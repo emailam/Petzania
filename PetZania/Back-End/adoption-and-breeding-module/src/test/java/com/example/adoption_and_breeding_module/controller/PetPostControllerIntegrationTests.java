@@ -926,20 +926,18 @@ public class PetPostControllerIntegrationTests {
                 .reacts(0)
                 .reactedUsers(new HashSet<>())
                 .build());
-        UUID post1Id = post1.getPostId();
-        UUID post2Id = post2.getPostId();
 
         entityManager.flush();
         entityManager.clear();
         
-        assertTrue(petPostRepository.existsById(post1Id));
-        assertTrue(petPostRepository.existsById(post2Id));
+        assertTrue(petPostRepository.existsById(post1.getPostId()));
+        assertTrue(petPostRepository.existsById(post2.getPostId()));
 
         userRepository.deleteById(user.getUserId());
         entityManager.flush();
 
-        assertFalse(petPostRepository.existsById(post1Id));
-        assertFalse(petPostRepository.existsById(post2Id));
+        assertFalse(petPostRepository.existsById(post1.getPostId()));
+        assertFalse(petPostRepository.existsById(post2.getPostId()));
     }
 
 }
