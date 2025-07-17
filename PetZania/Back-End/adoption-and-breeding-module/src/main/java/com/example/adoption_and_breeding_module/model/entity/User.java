@@ -27,5 +27,11 @@ public class User {
     @OneToMany(mappedBy = "owner", cascade = CascadeType.REMOVE, orphanRemoval = true)
     @Builder.Default
     private Set<PetPost> petPosts = new HashSet<>();
+
+    @Column(name = "latitude", nullable = false)
+    private Double latitude;
+
+    @Column(name = "longitude", nullable = false)
+    private Double longitude;
 }
 

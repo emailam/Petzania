@@ -3,6 +3,7 @@ package com.example.adoption_and_breeding_module.model.dto;
 import com.example.adoption_and_breeding_module.model.enumeration.PetPostType;
 import com.example.adoption_and_breeding_module.validator.NotToxicText;
 import com.example.adoption_and_breeding_module.validator.ValidEnum;
+import jakarta.persistence.Column;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -23,9 +24,11 @@ public class CreatePetPostDTO {
     @NotToxicText
     private String description;
 
-    @NotBlank(message = "Pet DTO is required.")
-    @NotToxicText
-    private String location;
+    @NotNull(message = "Latitude is required")
+    private Double latitude;
+
+    @NotNull(message = "Longitude is required")
+    private Double longitude;
 
     @NotNull(message = "Post type is required.")
     @ValidEnum(enumClass = PetPostType.class, message = "Invalid post type.")

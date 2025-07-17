@@ -18,6 +18,8 @@ public class TestDataUtil {
                 .userId(UUID.randomUUID())
                 .username(username)
                 .email(username + "@gmail.com")
+                .latitude(35.8617)
+                .longitude(104.1954)
                 .build();
     }
 

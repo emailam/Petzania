@@ -62,8 +62,11 @@ public class PetPost {
     @Column(name = "description", length = 2000)
     private String description;
 
-    @Column(name = "location", nullable = false)
-    private String location;
+    @Column(name = "latitude", nullable = false)
+    private Double latitude;
+
+    @Column(name = "longitude", nullable = false)
+    private Double longitude;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "post_type", nullable = false)

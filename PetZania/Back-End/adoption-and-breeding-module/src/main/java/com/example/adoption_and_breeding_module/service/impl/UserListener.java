@@ -22,6 +22,8 @@ public class UserListener {
             newUser.setUserId(user.getUserId());
             newUser.setUsername(user.getUsername());
             newUser.setEmail(user.getEmail());
+            newUser.setLatitude(user.getLatitude());
+            newUser.setLongitude(user.getLongitude());
             userRepository.save(newUser);
             System.out.println("Received registered user: " + user);
         }

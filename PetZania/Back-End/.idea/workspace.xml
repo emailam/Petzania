@@ -5,20 +5,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ea048906-7657-4d6f-95bf-3cfefcfdfc3b" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/config/DummyDataConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/config/DummyDataConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/dto/CreatePetPostDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/dto/CreatePetPostDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/dto/PetPostDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/dto/PetPostDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/dto/UpdatePetPostDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/dto/UpdatePetPostDTO.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/entity/PetPost.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/entity/PetPost.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/entity/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/entity/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/event/UserEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/event/UserEvent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/BlockListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/BlockListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/DTOConversionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/DTOConversionService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/PetPostService.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/PetPostService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/UserListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/UserListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/test/java/com/example/adoption_and_breeding_module/TestDataUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/test/java/com/example/adoption_and_breeding_module/TestDataUtil.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/test/java/com/example/adoption_and_breeding_module/controller/PetPostControllerIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/test/java/com/example/adoption_and_breeding_module/controller/PetPostControllerIntegrationTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/registration-module/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/registration-module/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/registration-module/src/main/java/com/example/registrationmodule/config/EmailConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/registration-module/src/main/java/com/example/registrationmodule/config/EmailConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/registration-module/src/main/java/com/example/registrationmodule/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/registration-module/src/main/java/com/example/registrationmodule/controller/UserController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/registration-module/src/main/java/com/example/registrationmodule/service/impl/EmailService.java" beforeDir="false" afterPath="$PROJECT_DIR$/registration-module/src/main/java/com/example/registrationmodule/service/impl/EmailService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/registration-module/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/registration-module/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/registration-module/src/test/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/registration-module/src/test/resources/application.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -99,17 +99,18 @@
       </set>
     </option>
   </component>
-  <component name="RunManager" selected="JUnit.PetPostControllerIntegrationTests.userDeletionShouldCascadeToPetPosts">
-    <configuration name="CrossServiceSecurityTest and 4 more" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="petzania-system-tests" />
-      <option name="TEST_OBJECT" value="pattern" />
-      <patterns>
-        <pattern testClass="com.example.petzaniasystemtests.tests.CrossServiceSecurityTest" />
-        <pattern testClass="com.example.petzaniasystemtests.tests.FriendsSystemTest" />
-        <pattern testClass="com.example.petzaniasystemtests.tests.InterServiceCommunicationTest" />
-        <pattern testClass="com.example.petzaniasystemtests.tests.RabbitMQEventIntegrationTest" />
-        <pattern testClass="com.example.petzaniasystemtests.tests.RegistrationSystemTest" />
-      </patterns>
+  <component name="RunManager" selected="JUnit.PetPostControllerIntegrationTests">
+    <configuration name="AdoptionAndBreedingModuleApplicationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="adoption-and-breeding-module" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.example.adoption_and_breeding_module.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.example.adoption_and_breeding_module" />
+      <option name="MAIN_CLASS_NAME" value="com.example.adoption_and_breeding_module.AdoptionAndBreedingModuleApplicationTests" />
+      <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -210,11 +211,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="JUnit.PetPostControllerIntegrationTests" />
+        <item itemvalue="JUnit.AdoptionAndBreedingModuleApplicationTests" />
         <item itemvalue="JUnit.PetPostControllerIntegrationTests.userDeletionShouldCascadeToPetPosts" />
         <item itemvalue="JUnit.RegistrationSystemTest.testUserDeletionEventPropagation" />
         <item itemvalue="JUnit.InterServiceCommunicationTest.testUserDeletionPropagation" />
-        <item itemvalue="JUnit.CrossServiceSecurityTest and 4 more" />
-        <item itemvalue="JUnit.PetPostControllerIntegrationTests" />
       </list>
     </recent_temporary>
   </component>
@@ -256,7 +257,8 @@
       <workItem from="1752585503235" duration="164000" />
       <workItem from="1752585825795" duration="41000" />
       <workItem from="1752667841700" duration="1275000" />
-      <workItem from="1752669185859" duration="6896000" />
+      <workItem from="1752669185859" duration="7718000" />
+      <workItem from="1752759057844" duration="2649000" />
     </task>
     <servers />
   </component>

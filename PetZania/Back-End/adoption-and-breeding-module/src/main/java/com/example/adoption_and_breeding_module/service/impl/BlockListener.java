@@ -27,19 +27,18 @@ public class BlockListener {
 
     @RabbitListener(queues = "userBlockedQueueAdoptionModule")
     public void onUserBlocked(BlockEvent blockEvent) {
-        return;
-        // if(!blockRepository.existsByBlocker_UserIdAndBlocked_UserId(blockEvent.getBlockerId(), blockEvent.getBlockedId())) {
-        //     User blocker = getUser(blockEvent.getBlockerId());
-        //     User blocked = getUser(blockEvent.getBlockedId());
-        //     Block block = Block.builder()
-        //             .blockId(blockEvent.getBlockId())
-        //             .blocker(blocker)
-        //             .blocked(blocked)
-        //             .createdAt(blockEvent.getCreatedAt())
-        //             .build();
-        //     blockRepository.save(block);
-        //     System.out.println("Received blocked user with IDs:\nBlockerId: " + blockEvent.getBlockerId() + "\nBlockedId: " + blockEvent.getBlockedId());
-        // }
+         if(!blockRepository.existsByBlocker_UserIdAndBlocked_UserId(blockEvent.getBlockerId(), blockEvent.getBlockedId())) {
+             User blocker = getUser(blockEvent.getBlockerId());
+             User blocked = getUser(blockEvent.getBlockedId());
+             Block block = Block.builder()
+                     .blockId(blockEvent.getBlockId())
+                     .blocker(blocker)
+                     .blocked(blocked)
+                     .createdAt(blockEvent.getCreatedAt())
+                     .build();
+             blockRepository.save(block);
+             System.out.println("Received blocked user with IDs:\nBlockerId: " + blockEvent.getBlockerId() + "\nBlockedId: " + blockEvent.getBlockedId());
+         }
     }
 
     @RabbitListener(queues = "userUnBlockedQueueAdoptionModule")

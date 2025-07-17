@@ -20,6 +20,8 @@ public class DummyDataConfig {
                 .userId(UUID.randomUUID())
                 .username(username)
                 .email(username + "@gmail.com")
+                .latitude(10.0)
+                .longitude(10.0)
                 .build();
     }
 

@@ -121,20 +121,23 @@ public class PetPostControllerIntegrationTests {
                 .postType(PetPostType.ADOPTION)
                 .postStatus(PetPostStatus.PENDING)
                 .description("Looking for a loving home")
-                .location("New York")
+                .latitude(40.7128)
+                .longitude(-74.0060)
                 .reacts(0)
                 .reactedUsers(new HashSet<>())
                 .build());
 
         Pet testPet2 = TestDataUtil.createTestPet("Luna", PetSpecies.CAT, Gender.FEMALE, 36);
         petRepository.save(testPet2);
+
         breedingPost = petPostRepository.save(PetPost.builder()
                 .owner(userB)
                 .pet(testPet2)
                 .postType(PetPostType.BREEDING)
                 .postStatus(PetPostStatus.PENDING)
                 .description("Purebred Persian cat for breeding")
-                .location("Los Angeles")
+                .latitude(34.0522)
+                .longitude(-118.2437)
                 .reacts(1)
                 .reactedUsers(new HashSet<>(Set.of(userA)))
                 .build());
@@ -155,7 +158,8 @@ public class PetPostControllerIntegrationTests {
         createDTO.setPetDTO(petDTO);
         createDTO.setDescription("Friendly dog needs home");
         createDTO.setPostType(PetPostType.ADOPTION);
-        createDTO.setLocation("Brazil");
+        createDTO.setLatitude(-14.2350);
+        createDTO.setLongitude(-51.9253);
 
         mockMvc.perform(post("/api/pet-posts")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -169,7 +173,8 @@ public class PetPostControllerIntegrationTests {
                 .andExpect(jsonPath("$.postStatus").value("PENDING"))
                 .andExpect(jsonPath("$.reacts").value(0))
                 .andExpect(jsonPath("$.createdAt").exists())
-                .andExpect(jsonPath("$.location").exists()); // Location should be set by service
+                .andExpect(jsonPath("$.latitude").exists())
+                .andExpect(jsonPath("$.longitude").exists());
 
         // Verify post was saved
         assertEquals(3, petPostRepository.count());
@@ -220,7 +225,8 @@ public class PetPostControllerIntegrationTests {
         CreatePetPostDTO createDTO = new CreatePetPostDTO();
         createDTO.setPetDTO(petDTO);
         createDTO.setPostType(PetPostType.ADOPTION);
-        createDTO.setLocation("China");
+        createDTO.setLatitude(35.8617);
+        createDTO.setLongitude(104.1954);
 
         mockMvc.perform(post("/api/pet-posts")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -236,8 +242,7 @@ public class PetPostControllerIntegrationTests {
                 .andExpect(jsonPath("$.petDTO.name").value("Buddy"))
                 .andExpect(jsonPath("$.petDTO.petId").value(testPet.getPetId().toString()))
                 .andExpect(jsonPath("$.petDTO.age").value("2 years"))
-                .andExpect(jsonPath("$.postType").value("ADOPTION"))
-                .andExpect(jsonPath("$.location").value("New York"));
+                .andExpect(jsonPath("$.postType").value("ADOPTION"));
     }
 
     @Test
@@ -291,7 +296,8 @@ public class PetPostControllerIntegrationTests {
                         .pet(TestDataUtil.createTestPet("Young Dog", PetSpecies.DOG, Gender.MALE, 6)) // 6 months
                         .postType(PetPostType.ADOPTION)
                         .postStatus(PetPostStatus.PENDING)
-                        .location("Chicago")
+                        .latitude(35.8617)
+                        .longitude(104.1954)
                         .reacts(5)
                         .build(),
                 PetPost.builder()
@@ -299,7 +305,8 @@ public class PetPostControllerIntegrationTests {
                         .pet(TestDataUtil.createTestPet("Old Cat", PetSpecies.CAT, Gender.FEMALE, 120)) // 10 years
                         .postType(PetPostType.BREEDING)
                         .postStatus(PetPostStatus.PENDING)
-                        .location("Miami")
+                        .latitude(35.8617)
+                        .longitude(104.1954)
                         .reacts(10)
                         .build(),
                 PetPost.builder()
@@ -307,7 +314,8 @@ public class PetPostControllerIntegrationTests {
                         .pet(TestDataUtil.createTestPet("Luna", PetSpecies.RABBIT, Gender.FEMALE, 18)) // 1.5 years
                         .postType(PetPostType.BREEDING)
                         .postStatus(PetPostStatus.COMPLETED)
-                        .location("Tampa")
+                        .latitude(35.8617)
+                        .longitude(104.1954)
                         .reacts(7)
                         .build()
         ));
@@ -387,7 +395,8 @@ public class PetPostControllerIntegrationTests {
         UpdatePetPostDTO updateDTO = new UpdatePetPostDTO();
         updateDTO.setUpdatePetDTO(updatePetDTO);
         updateDTO.setDescription("Updated post description");
-        updateDTO.setLocation("China");
+        updateDTO.setLatitude(35.8617);
+        updateDTO.setLongitude(104.1954);
         updateDTO.setPostStatus(PetPostStatus.COMPLETED);
 
         mockMvc.perform(patch("/api/pet-posts/{petPostId}", adoptionPost.getPostId())
@@ -399,7 +408,6 @@ public class PetPostControllerIntegrationTests {
                 .andExpect(jsonPath("$.petDTO.breed").value("Golden Retriever"))
                 .andExpect(jsonPath("$.petDTO.myVaccinesURLs", hasSize(2)))
                 .andExpect(jsonPath("$.description").value("Updated post description"))
-                .andExpect(jsonPath("$.location").value("China"))
                 .andExpect(jsonPath("$.postStatus").value("COMPLETED"))
                 .andExpect(jsonPath("$.updatedAt").exists());
     }
@@ -564,7 +572,8 @@ public class PetPostControllerIntegrationTests {
                     .postType(PetPostType.ADOPTION)
                     .postStatus(PetPostStatus.PENDING)
                     .description("Test post " + i)
-                    .location("Test Location " + i)
+                    .latitude(10.0)
+                    .longitude(20.0)
                     .reacts(i % 5) // Different react counts for sorting
                     .reactedUsers(new HashSet<>())
                     .score(0).build()));
@@ -638,7 +647,8 @@ public class PetPostControllerIntegrationTests {
         createDTO.setPetDTO(petDTO);
         createDTO.setDescription("Test with émojis 🐕 and special chars: <script>alert('test')</script>");
         createDTO.setPostType(PetPostType.ADOPTION);
-        createDTO.setLocation("China");
+        createDTO.setLatitude(35.8617);
+        createDTO.setLongitude(104.1954);
 
         mockMvc.perform(post("/api/pet-posts")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -674,7 +684,8 @@ public class PetPostControllerIntegrationTests {
 
         CreatePetPostDTO dto = CreatePetPostDTO.builder()
                 .petDTO(petDTO)
-                .location("Cairo")
+                .latitude(35.8617)
+                .longitude(104.1954)
                 .description("Nice post")
                 .postType(PetPostType.ADOPTION)
                 .build();
@@ -701,7 +712,8 @@ public class PetPostControllerIntegrationTests {
 
         CreatePetPostDTO dto = CreatePetPostDTO.builder()
                 .petDTO(petDTO)
-                .location("Alexandria")
+                .latitude(35.8617)
+                .longitude(104.1954)
                 .description("Great pet")
                 .postType(PetPostType.ADOPTION)
                 .build();
@@ -779,7 +791,8 @@ public class PetPostControllerIntegrationTests {
 
         CreatePetPostDTO dto = CreatePetPostDTO.builder()
                 .petDTO(petDTO)
-                .location("Alexandria")
+                .latitude(35.8617)
+                .longitude(104.1954)
                 .description("My dog had a horrible accident and needs adoption.")
                 .postType(PetPostType.ADOPTION)
                 .build();
@@ -808,7 +821,8 @@ public class PetPostControllerIntegrationTests {
                 .postType(PetPostType.ADOPTION)
                 .postStatus(PetPostStatus.PENDING)
                 .description("Recent post, 0 reacts")
-                .location("Cairo")
+                .latitude(35.8617)
+                .longitude(104.1954)
                 .reacts(0)
                 .reactedUsers(new HashSet<>())
                 .createdAt(Instant.now())
@@ -820,7 +834,8 @@ public class PetPostControllerIntegrationTests {
                 .postType(PetPostType.ADOPTION)
                 .postStatus(PetPostStatus.PENDING)
                 .description("12h old, 2 reacts")
-                .location("Cairo")
+                .latitude(35.8617)
+                .longitude(104.1954)
                 .reacts(2)
                 .reactedUsers(new HashSet<>(Arrays.asList(userA, userB)))
                 .createdAt(Instant.now().minus(Duration.ofHours(12)))
@@ -832,7 +847,8 @@ public class PetPostControllerIntegrationTests {
                 .postType(PetPostType.BREEDING)
                 .postStatus(PetPostStatus.PENDING)
                 .description("3d old, 5 reacts")
-                .location("Giza")
+                .latitude(35.8617)
+                .longitude(104.1954)
                 .reacts(5)
                 .reactedUsers(new HashSet<>(Arrays.asList(userA, userB, userC, userD, userE)))
                 .createdAt(Instant.now().minus(Duration.ofDays(3)))
@@ -844,7 +860,8 @@ public class PetPostControllerIntegrationTests {
                 .postType(PetPostType.BREEDING)
                 .postStatus(PetPostStatus.PENDING)
                 .description("36h old, 1 react")
-                .location("Giza")
+                .latitude(35.8617)
+                .longitude(104.1954)
                 .reacts(1)
                 .reactedUsers(new HashSet<>(Collections.singletonList(userA)))
                 .createdAt(Instant.now().minus(Duration.ofHours(36)))
@@ -912,7 +929,8 @@ public class PetPostControllerIntegrationTests {
                 .postType(PetPostType.ADOPTION)
                 .postStatus(PetPostStatus.PENDING)
                 .description("Cascade test post 1")
-                .location("Test City 1")
+                .latitude(35.8617)
+                .longitude(104.1954)
                 .reacts(0)
                 .reactedUsers(new HashSet<>())
                 .build());
@@ -922,7 +940,8 @@ public class PetPostControllerIntegrationTests {
                 .postType(PetPostType.BREEDING)
                 .postStatus(PetPostStatus.PENDING)
                 .description("Cascade test post 2")
-                .location("Test City 2")
+                .latitude(35.8617)
+                .longitude(104.1954)
                 .reacts(0)
                 .reactedUsers(new HashSet<>())
                 .build());

@@ -45,10 +45,11 @@ public class PetPostDTO {
     @NotToxicText
     private String description;
 
-    @NotBlank(message = "Location must not be blank.")
-    @Size(max = 255, message = "Location must be at most 255 characters.")
-    @NotToxicText
-    private String location;
+    @NotNull(message = "Latitude is required")
+    private Double latitude;
+
+    @NotNull(message = "Longitude is required")
+    private Double longitude;
 
     @NotNull(message = "Post type is required.")
     @ValidEnum(enumClass = PetPostType.class, message = "Invalid post type")
