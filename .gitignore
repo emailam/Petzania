@@ -24,3 +24,6 @@ yarn-debug.log*
 yarn-error.log*
 # Expo web build
 web-build/
+.idea/
+/PetZania/.idea
+/PetZania/Back-End/.idea/

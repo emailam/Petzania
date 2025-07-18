@@ -5,9 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ea048906-7657-4d6f-95bf-3cfefcfdfc3b" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../../.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/../../.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/petzania-system-tests/src/test/java/com/example/petzaniasystemtests/tests/InterServiceCommunicationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/petzania-system-tests/src/test/java/com/example/petzaniasystemtests/tests/InterServiceCommunicationTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,9 +56,10 @@
     "RunOnceActivity.git.unshallow": "true",
     "Spring Boot.AdoptionAndBreedingModuleApplication.executor": "Run",
     "Spring Boot.FriendsAndChatsModuleApplication.executor": "Run",
+    "WebServerToolWindowFactoryState": "false",
     "git-widget-placeholder": "#46 on merge/front-and-back-registration…ation",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/AliveTube/Documents/Projects CS50/Petzania/PetZania/Back-End",
+    "last_opened_file_path": "C:/Users/PC/Documents/GitHub/Petzania",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -66,6 +69,8 @@
     "project.structure.proportion": "0.0",
     "project.structure.side.proportion": "0.0",
     "run.configurations.included.in.services": "true",
+    "settings.editor.selected.configurable": "reference.projectsettings.compiler.annotationProcessors",
+    "spring.configuration.checksum": "1484c2aee8ca89823006950117ba3fd6",
     "vue.rearranger.settings.migration": "true"
   },
   "keyToStringList": {
@@ -84,7 +89,19 @@
       </set>
     </option>
   </component>
-  <component name="RunManager" selected="JUnit.RegistrationSystemTest.testUserDeletionEventPropagation">
+  <component name="RunManager" selected="JUnit.CrossServiceSecurityTest and 4 more">
+    <configuration name="AdminControllerIntegrationTests and 2 more" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="registration-module" />
+      <option name="TEST_OBJECT" value="pattern" />
+      <patterns>
+        <pattern testClass="com.example.registrationmodule.controller.AdminControllerIntegrationTests" />
+        <pattern testClass="com.example.registrationmodule.controller.PetControllerIntegrationTests" />
+        <pattern testClass="com.example.registrationmodule.controller.UserControllerIntegrationTests" />
+      </patterns>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="ChatControllerIntegrationTests and 2 more" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="friends-and-chats-module" />
       <option name="TEST_OBJECT" value="pattern" />
@@ -111,18 +128,16 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="InterServiceCommunicationTest.testUserDeletionPropagation" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="petzania-system-tests" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.example.petzaniasystemtests.tests.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.example.petzaniasystemtests.tests" />
-      <option name="MAIN_CLASS_NAME" value="com.example.petzaniasystemtests.tests.InterServiceCommunicationTest" />
-      <option name="METHOD_NAME" value="testUserDeletionPropagation" />
-      <option name="TEST_OBJECT" value="method" />
+    <configuration name="DTOConversionServiceTest and 4 more" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="notification-module" />
+      <option name="TEST_OBJECT" value="pattern" />
+      <patterns>
+        <pattern testClass="com.example.notificationmodule.service.DTOConversionServiceTest" />
+        <pattern testClass="com.example.notificationmodule.service.NotificationEventListenerTest" />
+        <pattern testClass="com.example.notificationmodule.service.NotificationServiceTest" />
+        <pattern testClass="com.example.notificationmodule.service.WebSocketServiceTest" />
+        <pattern testClass="com.example.notificationmodule.controller.NotificationControllerIntegrationTests" />
+      </patterns>
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -138,22 +153,6 @@
       <option name="PACKAGE_NAME" value="com.example.adoption_and_breeding_module.controller" />
       <option name="MAIN_CLASS_NAME" value="com.example.adoption_and_breeding_module.controller.PetPostControllerIntegrationTests" />
       <option name="TEST_OBJECT" value="class" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="RegistrationSystemTest.testUserDeletionEventPropagation" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="petzania-system-tests" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.example.petzaniasystemtests.tests.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.example.petzaniasystemtests.tests" />
-      <option name="MAIN_CLASS_NAME" value="com.example.petzaniasystemtests.tests.RegistrationSystemTest" />
-      <option name="METHOD_NAME" value="testUserDeletionEventPropagation" />
-      <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -191,11 +190,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="JUnit.RegistrationSystemTest.testUserDeletionEventPropagation" />
-        <item itemvalue="JUnit.InterServiceCommunicationTest.testUserDeletionPropagation" />
         <item itemvalue="JUnit.CrossServiceSecurityTest and 4 more" />
-        <item itemvalue="JUnit.PetPostControllerIntegrationTests" />
+        <item itemvalue="JUnit.AdminControllerIntegrationTests and 2 more" />
+        <item itemvalue="JUnit.DTOConversionServiceTest and 4 more" />
         <item itemvalue="JUnit.ChatControllerIntegrationTests and 2 more" />
+        <item itemvalue="JUnit.PetPostControllerIntegrationTests" />
       </list>
     </recent_temporary>
   </component>
@@ -210,7 +209,7 @@
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="aeca1ffb-0884-4a26-9d15-e67eb5c2d7c7" name="Changes" comment="" />
+      <changelist id="ea048906-7657-4d6f-95bf-3cfefcfdfc3b" name="Changes" comment="" />
       <created>1749769451719</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
@@ -234,6 +233,9 @@
       <workItem from="1751466666850" duration="1873000" />
       <workItem from="1751505589066" duration="55000" />
       <workItem from="1751743686245" duration="1826000" />
+      <workItem from="1752839262973" duration="322000" />
+      <workItem from="1752839597511" duration="1993000" />
+      <workItem from="1752842058765" duration="1681000" />
     </task>
     <servers />
   </component>
