@@ -24,8 +24,10 @@ public class Media {
     @Column(name = "media_key")
     private String key; // S3 key
 
+    @Column(name = "type")
     private String type; // Content type like image/jpeg, video/mp4
 
+    @Column(name = "format")
     private String format; // jpg, png, mp4, etc.
 
     @Column(nullable = false, updatable = false)
