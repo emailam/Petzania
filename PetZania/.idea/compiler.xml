@@ -9,51 +9,20 @@
         <outputRelativeToContentRoot value="true" />
         <module name="petzania-system-tests" />
       </profile>
-      <profile name="Annotation profile for RegistrationModule" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-<<<<<<< HEAD
-        <processorPath useClasspath="false">
-=======
-        <processorPath>
->>>>>>> origin/Merging-Registration-with-Friends
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
-        </processorPath>
-        <module name="RegistrationModule" />
-      </profile>
       <profile name="Annotation profile for friends-and-chats-module" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <processorPath>
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
-        </processorPath>
-        <module name="friends-and-chats-module" />
-      </profile>
-      <profile name="Annotation profile for registration-module" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <processorPath>
+        <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
         </processorPath>
         <module name="registration-module" />
+        <module name="friends-and-chats-module" />
       </profile>
     </annotationProcessing>
-<<<<<<< HEAD
-=======
-    <bytecodeTargetLevel>
-      <module name="friends-and-chats-module" target="19" />
-      <module name="petzania-system-tests" target="19" />
-      <module name="registration-module" target="19" />
-      <module name="RegistrationModule" target="19" />
-    </bytecodeTargetLevel>
->>>>>>> origin/Merging-Registration-with-Friends
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="RegistrationModule" options="-parameters" />
       <module name="friends-and-chats-module" options="-parameters" />
       <module name="registration-module" options="-parameters" />
     </option>
