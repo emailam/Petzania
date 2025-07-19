@@ -31,10 +31,13 @@ spring:
 
 feed:
     weights:
-        recency: 0.4
-        totalReacts: 0.3
-        petCategoryAffinity: 0.25
-        postCategoryAffinity: 0.2
+        recency:              400
+        totalReacts:          300
+        petCategoryAffinity:  250
+        postCategoryAffinity: 200
+        friendBoost:          5000
+        followeeBoost:        3000
+        distance:             400
     freshness-window-hours: 96
 
 server:

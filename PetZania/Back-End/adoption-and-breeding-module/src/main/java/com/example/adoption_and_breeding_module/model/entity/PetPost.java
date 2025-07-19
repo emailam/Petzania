@@ -79,7 +79,7 @@ public class PetPost {
     private Instant updatedAt;
 
     @Transient
-    private double score;
+    private long score;
 
     @PrePersist
     public void onCreate() {

@@ -9,12 +9,14 @@ import com.example.adoption_and_breeding_module.model.entity.Pet;
 import com.example.adoption_and_breeding_module.model.entity.PetPost;
 import com.example.adoption_and_breeding_module.model.entity.User;
 import com.example.adoption_and_breeding_module.model.enumeration.PetPostSortBy;
-import com.example.adoption_and_breeding_module.repository.BlockRepository;
-import com.example.adoption_and_breeding_module.repository.PetPostRepository;
-import com.example.adoption_and_breeding_module.repository.UserRepository;
+import com.example.adoption_and_breeding_module.model.enumeration.PetPostType;
+import com.example.adoption_and_breeding_module.model.enumeration.PetSpecies;
+import com.example.adoption_and_breeding_module.repository.*;
 import com.example.adoption_and_breeding_module.service.IDTOConversionService;
 import com.example.adoption_and_breeding_module.service.IPetPostService;
 import com.example.adoption_and_breeding_module.util.PetPostSpecification;
+import com.example.adoption_and_breeding_module.repository.PetPostRepository.SpeciesCount;
+import com.example.adoption_and_breeding_module.repository.PetPostRepository.TypeCount;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
@@ -22,13 +24,15 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.example.adoption_and_breeding_module.model.enumeration.PetPostSortBy.CREATED_DATE;
 import static com.example.adoption_and_breeding_module.model.enumeration.PetPostSortBy.REACTS;
+import static java.util.stream.Collectors.toMap;
+import static org.springframework.data.domain.Sort.Direction.ASC;
+import static org.springframework.data.domain.Sort.Direction.DESC;
 
 @Service
 @RequiredArgsConstructor
@@ -38,12 +42,14 @@ public class PetPostService implements IPetPostService {
     private final UserRepository userRepository;
     private final PetPostRepository petPostRepository;
     private final BlockRepository blockRepository;
+    private final FollowRepository followRepository;
+    private final FriendshipRepository friendshipRepository;
     private final IDTOConversionService dtoConversionService;
     private final NotificationPublisher notificationPublisher;
     private final FeedScorer feedScorer;
 
     @Override
-    public PetPostDTO createPetPost(CreatePetPostDTO dto, UUID ownerId){
+    public PetPostDTO createPetPost(CreatePetPostDTO dto, UUID ownerId) {
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new UserNotFound("User not found with id: " + ownerId));
 
@@ -84,11 +90,11 @@ public class PetPostService implements IPetPostService {
             post.setDescription(dto.getDescription());
         }
 
-        if(dto.getLatitude() != null) {
+        if (dto.getLatitude() != null) {
             post.setLatitude(dto.getLatitude());
         }
 
-        if(dto.getLongitude() != null) {
+        if (dto.getLongitude() != null) {
             post.setLongitude(dto.getLongitude());
         }
 
@@ -159,12 +165,94 @@ public class PetPostService implements IPetPostService {
             int page,
             int size
     ) {
-        Specification<PetPost> spec = PetPostSpecification.withFilters(filter);
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFound("User not found with ID: " + userId));
+
+        // 1. Build base spec + block filters (no social filter!)
+        Specification<PetPost> spec = PetPostSpecification.withFilters(filter)
+                .and(buildBlockSpec(userId));
+
+        // 2. Load social graph
+        List<UUID> followeeIds = followRepository
+                .findFollowedUserIdByFollowerUserId(userId);
+        // flatten both directions of friendship
+        List<UUID> friends = Stream
+                .concat(
+                        friendshipRepository.findUser2UserIdByUser1UserId(userId).stream(),
+                        friendshipRepository.findUser1UserIdByUser2UserId(userId).stream()
+                )
+                .distinct()
+                .toList();
+
+        // 3. Prefetch your affinity counts
+        long userTotalReacts = petPostRepository.countByReactedUsersUserId(userId);
+        Map<PetSpecies, Long> reactsBySpecies = petPostRepository.countReactsBySpecies(userId)
+                .stream().collect(Collectors.toMap(
+                        SpeciesCount::getSpecies,
+                        SpeciesCount::getCnt
+                ));
+
+        Map<PetPostType, Long> reactsByType = petPostRepository.countReactsByPostType(userId)
+                .stream().collect(Collectors.toMap(
+                        TypeCount::getPostType,
+                        TypeCount::getCnt
+                ));
+
+        if (filter.getSortBy() == PetPostSortBy.SCORE) {
+            // 4. Candidate generation (recent ∪ popular)
+            int window = (page + 1) * size;
+            List<PetPost> recent = petPostRepository
+                    .findAll(spec, PageRequest.of(0, window,
+                            Sort.by(DESC, "createdAt")))
+                    .getContent();
+            List<PetPost> popular = petPostRepository
+                    .findAll(spec, PageRequest.of(0, window,
+                            Sort.by(DESC, "reacts")))
+                    .getContent();
+
+            Set<PetPost> candidateSet = new LinkedHashSet<>();
+            candidateSet.addAll(recent);
+            candidateSet.addAll(popular);
+            List<PetPost> candidates = new ArrayList<>(candidateSet);
+
+            // 5. Score & sort with social boosts *only* in scorer
+            feedScorer.scoreAndSort(
+                    candidates,
+                    user.getLatitude(),
+                    user.getLongitude(),
+                    userTotalReacts,
+                    reactsBySpecies,
+                    reactsByType,
+                    friends,
+                    followeeIds
+            );
+
+            // 6. page slice
+            int start = page * size, end = Math.min(start + size, candidates.size());
+            List<PetPostDTO> dtos = candidates.subList(start, end).stream()
+                    .map(dtoConversionService::mapToPetPostDTO)
+                    .toList();
+
+            return new PageImpl<>(dtos, PageRequest.of(page, size), candidates.size());
+        }
+
+        // fallback DB‐side sorting/paging
+        Sort.Direction dir = filter.isSortDesc() ? DESC : ASC;
+        String field = filter.getSortBy() == REACTS ? "reacts" : "createdAt";
+        return petPostRepository
+                .findAll(spec, PageRequest.of(page, size, Sort.by(dir, field)))
+                .map(dtoConversionService::mapToPetPostDTO);
+    }
+
+    private Specification<PetPost> buildBlockSpec(UUID userId) {
+        // users I have blocked
         List<UUID> usersBlockedByMe = blockRepository.findByBlockerUserId(userId)
                 .stream()
                 .map(b -> b.getBlocked().getUserId())
                 .toList();
+
+        // users who have blocked me
         List<UUID> usersBlockingMe = blockRepository.findByBlockedUserId(userId)
                 .stream()
                 .map(b -> b.getBlocker().getUserId())
@@ -182,54 +270,20 @@ public class PetPostService implements IPetPostService {
                     cb.not(root.get("owner").get("userId").in(usersBlockingMe))
             );
         }
-        spec = spec.and(blockSpec);
 
-        PetPostSortBy sortBy = filter.getSortBy();
-        boolean descending = filter.isSortDesc();
-
-        if (sortBy == PetPostSortBy.SCORE) {
-            List<PetPost> posts = petPostRepository.findAll(spec);
-            feedScorer.scoreAndSort(posts, userId);
-            if (!descending) {
-                Collections.reverse(posts);
-            }
-
-            int start = page * size;
-            int end = Math.min(start + size, posts.size());
-
-            List<PetPostDTO> pageContent = posts.subList(start, end)
-                    .stream()
-                    .map(dtoConversionService::mapToPetPostDTO)
-                    .toList();
-
-            return new PageImpl<>(pageContent, PageRequest.of(page, size), posts.size());
-        }
-        else {
-            String sortField = switch (sortBy) {
-                case REACTS -> "reacts";
-                default -> "createdAt"; // fallback
-            };
-
-            Sort.Direction direction = descending ? Sort.Direction.DESC : Sort.Direction.ASC;
-            Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
-
-            return petPostRepository
-                    .findAll(spec, pageable)
-                    .map(dtoConversionService::mapToPetPostDTO);
-        }
+        return blockSpec;
     }
-
 
     @Override
     public Page<PetPostDTO> getAllPetPostsByUserId(UUID requesterUserId, UUID userId, int page, int size) {
-        if(!userRepository.existsById(userId)) {
+        if (!userRepository.existsById(userId)) {
             throw new UserNotFound("User not found with ID: " + userId);
         }
         if (blockRepository.existsByBlocker_UserIdAndBlocked_UserId(requesterUserId, userId) ||
                 blockRepository.existsByBlocker_UserIdAndBlocked_UserId(userId, requesterUserId)) {
             throw new BlockingExist("Operation blocked due to existing block relationship");
         }
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(DESC, "createdAt"));
         Specification<PetPost> specByUser = (root, query, cb) ->
                 cb.equal(root.get("owner").get("userId"), userId);
         Page<PetPost> posts = petPostRepository.findAll(specByUser, pageable);
