@@ -18,6 +18,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import java.util.List;
 
 class FriendServiceTest {
 
@@ -57,7 +58,7 @@ class FriendServiceTest {
         FriendRequestDTO result = friendService.sendFriendRequest(senderId, receiverId);
 
         assertNotNull(result);
-        verify(friendRequestRepository, times(1)).save(any());
+        verify(friendRequestRepository, times(2)).save(any());
         verify(notificationPublisher, times(1)).sendFriendRequestNotification(eq(senderId), eq(receiverId), any());
     }
 
@@ -160,5 +161,264 @@ class FriendServiceTest {
         when(friendRequestRepository.findById(requestId)).thenReturn(Optional.of(request));
 
         assertThrows(ForbiddenOperation.class, () -> friendService.cancelFriendRequest(requestId, userId));
+    }
+
+    @Test
+    void followUser_success() {
+        UUID followerId = UUID.randomUUID();
+        UUID followedId = UUID.randomUUID();
+        User follower = new User(); follower.setUserId(followerId);
+        User followed = new User(); followed.setUserId(followedId);
+        Follow follow = Follow.builder().follower(follower).followed(followed).build();
+
+        when(userRepository.findById(followerId)).thenReturn(Optional.of(follower));
+        when(userRepository.findById(followedId)).thenReturn(Optional.of(followed));
+        when(blockRepository.existsByBlockerAndBlocked(any(), any())).thenReturn(false);
+        when(followRepository.existsByFollowerAndFollowed(follower, followed)).thenReturn(false);
+        when(followRepository.save(any())).thenReturn(follow);
+        when(dtoConversionService.mapToFollowDTO(any())).thenReturn(new com.example.friends.and.chats.module.model.dto.friend.FollowDTO());
+
+        com.example.friends.and.chats.module.model.dto.friend.FollowDTO result = friendService.followUser(followerId, followedId);
+        assertNotNull(result);
+        verify(followRepository, times(1)).save(any());
+        verify(notificationPublisher, times(1)).sendNewFollowerNotification(followerId, followedId);
+    }
+
+    @Test
+    void followUser_selfFollow_throws() {
+        UUID userId = UUID.randomUUID();
+        assertThrows(InvalidOperation.class, () -> friendService.followUser(userId, userId));
+    }
+
+    @Test
+    void followUser_alreadyFollowing_throws() {
+        UUID followerId = UUID.randomUUID();
+        UUID followedId = UUID.randomUUID();
+        User follower = new User(); follower.setUserId(followerId);
+        User followed = new User(); followed.setUserId(followedId);
+
+        when(userRepository.findById(followerId)).thenReturn(Optional.of(follower));
+        when(userRepository.findById(followedId)).thenReturn(Optional.of(followed));
+        when(blockRepository.existsByBlockerAndBlocked(any(), any())).thenReturn(false);
+        when(followRepository.existsByFollowerAndFollowed(follower, followed)).thenReturn(true);
+
+        assertThrows(FollowingAlreadyExists.class, () -> friendService.followUser(followerId, followedId));
+    }
+
+    @Test
+    void followUser_blocked_throws() {
+        UUID followerId = UUID.randomUUID();
+        UUID followedId = UUID.randomUUID();
+        User follower = new User(); follower.setUserId(followerId);
+        User followed = new User(); followed.setUserId(followedId);
+
+        when(userRepository.findById(followerId)).thenReturn(Optional.of(follower));
+        when(userRepository.findById(followedId)).thenReturn(Optional.of(followed));
+        when(blockRepository.existsByBlockerAndBlocked(any(), any())).thenReturn(true);
+
+        assertThrows(BlockingExist.class, () -> friendService.followUser(followerId, followedId));
+    }
+
+    @Test
+    void unfollowUser_success() {
+        UUID followerId = UUID.randomUUID();
+        UUID followedId = UUID.randomUUID();
+        User follower = new User(); follower.setUserId(followerId);
+        User followed = new User(); followed.setUserId(followedId);
+        Follow follow = Follow.builder().follower(follower).followed(followed).build();
+
+        when(userRepository.findById(followerId)).thenReturn(Optional.of(follower));
+        when(userRepository.findById(followedId)).thenReturn(Optional.of(followed));
+        when(followRepository.findByFollowerAndFollowed(follower, followed)).thenReturn(Optional.of(follow));
+        doNothing().when(followRepository).delete(follow);
+
+        assertDoesNotThrow(() -> friendService.unfollowUser(followerId, followedId));
+        verify(followRepository, times(1)).delete(follow);
+    }
+
+    @Test
+    void unfollowUser_notFollowing_throws() {
+        UUID followerId = UUID.randomUUID();
+        UUID followedId = UUID.randomUUID();
+        User follower = new User(); follower.setUserId(followerId);
+        User followed = new User(); followed.setUserId(followedId);
+
+        when(userRepository.findById(followerId)).thenReturn(Optional.of(follower));
+        when(userRepository.findById(followedId)).thenReturn(Optional.of(followed));
+        when(followRepository.findByFollowerAndFollowed(follower, followed)).thenReturn(Optional.empty());
+
+        assertThrows(FollowingDoesNotExist.class, () -> friendService.unfollowUser(followerId, followedId));
+    }
+
+    @Test
+    void blockUser_success() {
+        UUID blockerId = UUID.randomUUID();
+        UUID blockedId = UUID.randomUUID();
+        User blocker = new User(); blocker.setUserId(blockerId);
+        User blocked = new User(); blocked.setUserId(blockedId);
+        Block block = Block.builder().blocker(blocker).blocked(blocked).build();
+
+        when(userRepository.findById(blockerId)).thenReturn(Optional.of(blocker));
+        when(userRepository.findById(blockedId)).thenReturn(Optional.of(blocked));
+        when(blockRepository.existsByBlockerAndBlocked(blocker, blocked)).thenReturn(false);
+        when(blockRepository.save(any())).thenReturn(block);
+        when(dtoConversionService.mapToBlockDTO(any())).thenReturn(new com.example.friends.and.chats.module.model.dto.friend.BlockDTO());
+
+        com.example.friends.and.chats.module.model.dto.friend.BlockDTO result = friendService.blockUser(blockerId, blockedId);
+        assertNotNull(result);
+        verify(blockRepository, times(1)).save(any());
+    }
+
+    @Test
+    void blockUser_alreadyBlocked_throws() {
+        UUID blockerId = UUID.randomUUID();
+        UUID blockedId = UUID.randomUUID();
+        User blocker = new User(); blocker.setUserId(blockerId);
+        User blocked = new User(); blocked.setUserId(blockedId);
+
+        when(userRepository.findById(blockerId)).thenReturn(Optional.of(blocker));
+        when(userRepository.findById(blockedId)).thenReturn(Optional.of(blocked));
+        when(blockRepository.existsByBlockerAndBlocked(blocker, blocked)).thenReturn(true);
+
+        assertThrows(BlockingAlreadyExist.class, () -> friendService.blockUser(blockerId, blockedId));
+    }
+
+    @Test
+    void unblockUser_success() {
+        UUID blockerId = UUID.randomUUID();
+        UUID blockedId = UUID.randomUUID();
+        User blocker = new User(); blocker.setUserId(blockerId);
+        User blocked = new User(); blocked.setUserId(blockedId);
+        Block block = Block.builder().blocker(blocker).blocked(blocked).build();
+
+        when(userRepository.findById(blockerId)).thenReturn(Optional.of(blocker));
+        when(userRepository.findById(blockedId)).thenReturn(Optional.of(blocked));
+        when(blockRepository.findByBlockerAndBlocked(blocker, blocked)).thenReturn(Optional.of(block));
+        doNothing().when(blockRepository).delete(block);
+
+        assertDoesNotThrow(() -> friendService.unblockUser(blockerId, blockedId));
+        verify(blockRepository, times(1)).delete(block);
+    }
+
+    @Test
+    void unblockUser_notBlocked_throws() {
+        UUID blockerId = UUID.randomUUID();
+        UUID blockedId = UUID.randomUUID();
+        User blocker = new User(); blocker.setUserId(blockerId);
+        User blocked = new User(); blocked.setUserId(blockedId);
+
+        when(userRepository.findById(blockerId)).thenReturn(Optional.of(blocker));
+        when(userRepository.findById(blockedId)).thenReturn(Optional.of(blocked));
+        when(blockRepository.findByBlockerAndBlocked(blocker, blocked)).thenReturn(Optional.empty());
+
+        assertThrows(BlockingDoesNotExist.class, () -> friendService.unblockUser(blockerId, blockedId));
+    }
+
+    @Test
+    void getFriendships_returnsCorrectData() {
+        UUID userId = UUID.randomUUID();
+        User user = new User(); user.setUserId(userId);
+        Friendship friendship = Friendship.builder().user1(user).user2(new User()).build();
+        org.springframework.data.domain.Page<Friendship> page = new org.springframework.data.domain.PageImpl<>(List.of(friendship));
+        when(friendshipRepository.findFriendsByUserId(eq(userId), any())).thenReturn(page);
+        when(dtoConversionService.mapToFriendDTO(any(), any())).thenReturn(new FriendDTO());
+
+        org.springframework.data.domain.Page<FriendDTO> result = friendService.getFriendships(userId, 0, 10, "createdAt", "asc");
+        assertEquals(1, result.getTotalElements());
+    }
+
+    @Test
+    void getBlockedUsers_returnsCorrectData() {
+        UUID userId = UUID.randomUUID();
+        User user = new User(); user.setUserId(userId);
+        Block block = Block.builder().blocker(user).blocked(new User()).build();
+        org.springframework.data.domain.Page<Block> page = new org.springframework.data.domain.PageImpl<>(List.of(block));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(blockRepository.findBlocksByBlocker(eq(user), any())).thenReturn(page);
+        when(dtoConversionService.mapToBlockDTO(any())).thenReturn(new com.example.friends.and.chats.module.model.dto.friend.BlockDTO());
+
+        org.springframework.data.domain.Page<com.example.friends.and.chats.module.model.dto.friend.BlockDTO> result = friendService.getBlockedUsers(userId, 0, 10, "createdAt", "asc");
+        assertEquals(1, result.getTotalElements());
+    }
+
+    @Test
+    void getFollowersCount_returnsCorrectCount() {
+        UUID userId = UUID.randomUUID();
+        User user = new User(); user.setUserId(userId);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(followRepository.countByFollowed(user)).thenReturn(5);
+        assertEquals(5, friendService.getFollowersCount(userId));
+    }
+
+    @Test
+    void getBlockedUsersCount_returnsCorrectCount() {
+        UUID userId = UUID.randomUUID();
+        User user = new User(); user.setUserId(userId);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(blockRepository.countByBlocker(user)).thenReturn(3);
+        assertEquals(3, friendService.getBlockedUsersCount(userId));
+    }
+
+    @Test
+    void getNumberOfFriends_returnsCorrectCount() {
+        UUID userId = UUID.randomUUID();
+        when(friendshipRepository.countFriendsByUserId(userId)).thenReturn(7);
+        assertEquals(7, friendService.getNumberOfFriends(userId));
+    }
+
+    @Test
+    void isFriendshipExists_true() {
+        User user1 = new User(); user1.setUserId(UUID.randomUUID());
+        User user2 = new User(); user2.setUserId(UUID.randomUUID());
+        when(friendshipRepository.existsByUser1AndUser2(user1, user2)).thenReturn(true);
+        when(friendshipRepository.existsByUser1AndUser2(user2, user1)).thenReturn(true);
+        assertTrue(friendService.isFriendshipExists(user1, user2));
+    }
+
+    @Test
+    void isFriendshipExists_false() {
+        User user1 = new User(); user1.setUserId(UUID.randomUUID());
+        User user2 = new User(); user2.setUserId(UUID.randomUUID());
+        when(friendshipRepository.existsByUser1AndUser2(user1, user2)).thenReturn(false);
+        assertFalse(friendService.isFriendshipExists(user1, user2));
+    }
+
+    @Test
+    void isFriendshipExistsByUsersId_true() {
+        UUID userId1 = UUID.randomUUID();
+        UUID userId2 = UUID.randomUUID();
+        User user1 = new User(); user1.setUserId(userId1);
+        User user2 = new User(); user2.setUserId(userId2);
+        when(userRepository.findById(userId1)).thenReturn(Optional.of(user1));
+        when(userRepository.findById(userId2)).thenReturn(Optional.of(user2));
+        when(friendshipRepository.existsByUser1AndUser2(user1, user2)).thenReturn(true);
+        when(friendshipRepository.existsByUser1AndUser2(user2, user1)).thenReturn(true);
+        assertTrue(friendService.isFriendshipExistsByUsersId(userId1, userId2));
+    }
+
+    @Test
+    void isFriendshipExistsByUsersId_false() {
+        UUID userId1 = UUID.randomUUID();
+        UUID userId2 = UUID.randomUUID();
+        User user1 = new User(); user1.setUserId(userId1);
+        User user2 = new User(); user2.setUserId(userId2);
+        when(userRepository.findById(userId1)).thenReturn(Optional.of(user1));
+        when(userRepository.findById(userId2)).thenReturn(Optional.of(user2));
+        when(friendshipRepository.existsByUser1AndUser2(user1, user2)).thenReturn(false);
+        assertFalse(friendService.isFriendshipExistsByUsersId(userId1, userId2));
+    }
+
+    @Test
+    void getReceivedFriendRequests_returnsCorrectData() {
+        UUID userId = UUID.randomUUID();
+        User user = new User(); user.setUserId(userId);
+        FriendRequest request = FriendRequest.builder().id(UUID.randomUUID()).sender(new User()).receiver(user).build();
+        org.springframework.data.domain.Page<FriendRequest> page = new org.springframework.data.domain.PageImpl<>(List.of(request));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(friendRequestRepository.findFriendRequestsByReceiver(eq(user), any())).thenReturn(page);
+        when(dtoConversionService.mapToFriendRequestDTO(any())).thenReturn(new FriendRequestDTO());
+
+        org.springframework.data.domain.Page<FriendRequestDTO> result = friendService.getReceivedFriendRequests(userId, 0, 10, "createdAt", "asc");
+        assertEquals(1, result.getTotalElements());
     }
 } 

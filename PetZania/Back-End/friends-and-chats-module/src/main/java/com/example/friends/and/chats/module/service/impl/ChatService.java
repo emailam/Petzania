@@ -130,7 +130,7 @@ public class ChatService implements IChatService {
     @RateLimiter(name = CHAT_RATE_LIMITER, fallbackMethod = "rateLimitFallbackDelete")
     public void deleteUserChatById(UUID userChatId, UUID userId) {
         UserChat chat = userChatRepository.findById(userChatId)
-                .orElseThrow(() -> new ChatNotFound("User chat does not exist"));
+                .orElseThrow(() -> new UserChatNotFound("User chat does not exist"));
         if (!chat.getUser().getUserId().equals(userId)) {
             throw new UserAccessDenied("You can only delete your chats");
         }
