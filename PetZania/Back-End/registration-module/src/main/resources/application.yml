@@ -3,10 +3,10 @@ spring:
     name: RegistrationModule
 
   rabbitmq:
-    host: rabbitmq
-    port: 5672
-    username: guest
-    password: guest
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
 
   flyway:
     enabled: true
@@ -14,9 +14,9 @@ spring:
     baseline-on-migrate: true
 
   datasource:
-    password: admin
-    url: jdbc:postgresql://postgres:5432/postgres
-    username: postgres
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    url: ${REGISTRATION_DB_URL}
 
 
   jpa:
@@ -31,51 +31,51 @@ spring:
 
   data:
     redis:
-      host: redis
-      port: 6379
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
     cache:
       type: redis
 
   security:
     user:
-      name: admin
-      password: 1234
+      name: ${SECURITY_USER_NAME}
+      password: ${SECURITY_USER_PASSWORD}
 
   jwt:
     secret-key:
-      4ioX3ogCr4GAZ9gB99txf1LyhqVOmTJ8RsL9hyJzZXQ=
+      ${SPRING_JWT_SECRET_KEY}
 
   access:
     token:
       expiration:
-        900000
+        ${ACCESS_TOKEN_EXPIRATION}
 
   refresh:
     token:
       expiration:
-        86400000
+        ${REFRESH_TOKEN_EXPIRATION}
 
   sendgrid:
-    key: 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
+    key: ${SPRING_SENDGRID_KEY}
 
 
   email:
     sender:
-      petzaniasystem@gmail.com
+      ${SPRING_EMAIL_SENDER}
 
   aws:
     access-key:
-      AKIA4LWSL3LGHUPC3QWG
+      ${SPRING_AWS_ACCESS_KEY}
     secret-access-key:
-      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
-    region: eu-north-1
-    bucket-name: petzania-media
-    cdn-url: "https://d1xkc8gz1va7ak.cloudfront.net"
+      ${SPRING_AWS_SECRET_ACCESS_KEY}
+    region: ${SPRING_AWS_REGION}
+    bucket-name: ${SPRING_AWS_BUCKET_NAME}
+    cdn-url: ${SPRING_AWS_CDN_URL}
     max-size:
-      image: 10485760
-      video: 52428800
-      text: 5242880
-      application-pdf: 10485760
+      image: ${SPRING_AWS_MAX_SIZE_IMAGE}
+      video: ${SPRING_AWS_MAX_SIZE_VIDEO}
+      text: ${SPRING_AWS_MAX_SIZE_TEXT}
+      application-pdf: ${SPRING_AWS_MAX_SIZE_PDF}
     allowed-types:
         - image/jpeg
         - image/png
@@ -87,7 +87,7 @@ server:
   error:
     include-message: always
     include-binding-errors: always
-  port: 8080
+  port: ${REGISTRATION_SERVER_PORT}
 
 
 resilience4j.ratelimiter:

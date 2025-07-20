@@ -23,20 +23,33 @@ import java.sql.ResultSet;
 import java.time.Duration;
 
 import static io.restassured.RestAssured.given;
+import io.github.cdimascio.dotenv.Dotenv;
 
 @Testcontainers
 public class BaseSystemTest {
     protected static Network network = Network.newNetwork();
     protected static final String PASSWORD = "Password123!";
 
+    // Load .env file from the project root (adjust path if needed)
+    static Dotenv dotenv = Dotenv.configure()
+        .directory("..") // Adjust path if needed
+        .ignoreIfMalformed()
+        .ignoreIfMissing()
+        .load();
+
+    static {
+        // Debug print to verify SendGrid key is loaded
+        System.out.println("SENDGRID KEY: " + dotenv.get("SPRING_SENDGRID_KEY"));
+        System.out.println("Postgres Passowrd: " + dotenv.get("DB_PASSWORD"));
+    }
 
     @Container
     protected static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:latest")
             .withNetwork(network)
             .withNetworkAliases("postgres")
             .withDatabaseName("postgres")
-            .withUsername("postgres")
-            .withPassword("admin")
+            .withUsername(dotenv.get("DB_USERNAME"))
+            .withPassword(dotenv.get("DB_PASSWORD"))
             .withCommand("postgres", "-c", "max_connections=200")
             .withInitScript("init-test-db.sql")
             .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(2)));
@@ -44,13 +57,14 @@ public class BaseSystemTest {
     protected static RabbitMQContainer rabbitmq = new RabbitMQContainer("rabbitmq:3.12-management-alpine")
             .withNetwork(network)
             .withNetworkAliases("rabbitmq")
-            .withExposedPorts(5672, 15672)
+            .withExposedPorts(Integer.parseInt(dotenv.get("RABBITMQ_PORT")), 15672)
+            .withUser(dotenv.get("RABBITMQ_USERNAME"), dotenv.get("RABBITMQ_PASSWORD"))
             .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(2)));
     @Container
     protected static GenericContainer<?> redis = new GenericContainer<>("redis:7-alpine")
             .withNetwork(network)
             .withNetworkAliases("redis")
-            .withExposedPorts(6379)
+            .withExposedPorts(Integer.parseInt(dotenv.get("REDIS_PORT", "6379")))
             .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(1)));
 
     @Container
@@ -58,16 +72,34 @@ public class BaseSystemTest {
             DockerImageName.parse("registration-module:latest"))
             .withNetwork(network)
             .withNetworkAliases("registration-service")
-            .withExposedPorts(8080)
+            .withExposedPorts(Integer.parseInt(dotenv.get("REGISTRATION_SERVER_PORT", "8080")))
             .withEnv("SPRING_PROFILES_ACTIVE", "test")
-            .withEnv("SPRING_DATASOURCE_URL", "jdbc:postgresql://postgres:5432/postgres")
-            .withEnv("SPRING_DATASOURCE_USERNAME", "postgres")
-            .withEnv("SPRING_DATASOURCE_PASSWORD", "admin")
-            .withEnv("SPRING_RABBITMQ_HOST", "rabbitmq")
-            .withEnv("SPRING_RABBITMQ_PORT", "5672")
-            .withEnv("SPRING_DATA_REDIS_HOST", "redis")
-            .withEnv("SPRING_DATA_REDIS_PORT", "6379")
-            .withEnv("SPRING_JPA_HIBERNATE_DDL_AUTO", "create-drop")
+            .withEnv("RABBITMQ_HOST", dotenv.get("RABBITMQ_HOST"))
+            .withEnv("RABBITMQ_PORT", dotenv.get("RABBITMQ_PORT"))
+            .withEnv("RABBITMQ_USERNAME", dotenv.get("RABBITMQ_USERNAME"))
+            .withEnv("RABBITMQ_PASSWORD", dotenv.get("RABBITMQ_PASSWORD"))
+            .withEnv("DB_USERNAME", dotenv.get("DB_USERNAME"))
+            .withEnv("DB_PASSWORD", dotenv.get("DB_PASSWORD"))
+            .withEnv("REGISTRATION_DB_URL", dotenv.get("REGISTRATION_DB_URL"))
+            .withEnv("REDIS_HOST", dotenv.get("REDIS_HOST"))
+            .withEnv("REDIS_PORT", dotenv.get("REDIS_PORT"))
+            .withEnv("SECURITY_USER_NAME", dotenv.get("SECURITY_USER_NAME"))
+            .withEnv("SECURITY_USER_PASSWORD", dotenv.get("SECURITY_USER_PASSWORD"))
+            .withEnv("SPRING_JWT_SECRET_KEY", dotenv.get("SPRING_JWT_SECRET_KEY"))
+            .withEnv("ACCESS_TOKEN_EXPIRATION", dotenv.get("ACCESS_TOKEN_EXPIRATION"))
+            .withEnv("REFRESH_TOKEN_EXPIRATION", dotenv.get("REFRESH_TOKEN_EXPIRATION"))
+            .withEnv("SPRING_SENDGRID_KEY", dotenv.get("SPRING_SENDGRID_KEY"))
+            .withEnv("SPRING_EMAIL_SENDER", dotenv.get("SPRING_EMAIL_SENDER"))
+            .withEnv("SPRING_AWS_ACCESS_KEY", dotenv.get("SPRING_AWS_ACCESS_KEY"))
+            .withEnv("SPRING_AWS_SECRET_ACCESS_KEY", dotenv.get("SPRING_AWS_SECRET_ACCESS_KEY"))
+            .withEnv("SPRING_AWS_REGION", dotenv.get("SPRING_AWS_REGION"))
+            .withEnv("SPRING_AWS_BUCKET_NAME", dotenv.get("SPRING_AWS_BUCKET_NAME"))
+            .withEnv("SPRING_AWS_CDN_URL", dotenv.get("SPRING_AWS_CDN_URL"))
+            .withEnv("SPRING_AWS_MAX_SIZE_IMAGE", dotenv.get("SPRING_AWS_MAX_SIZE_IMAGE"))
+            .withEnv("SPRING_AWS_MAX_SIZE_VIDEO", dotenv.get("SPRING_AWS_MAX_SIZE_VIDEO"))
+            .withEnv("SPRING_AWS_MAX_SIZE_TEXT", dotenv.get("SPRING_AWS_MAX_SIZE_TEXT"))
+            .withEnv("SPRING_AWS_MAX_SIZE_PDF", dotenv.get("SPRING_AWS_MAX_SIZE_PDF"))
+            .withEnv("REGISTRATION_SERVER_PORT", dotenv.get("REGISTRATION_SERVER_PORT"))
             .dependsOn(postgres, rabbitmq, redis)
             .withLogConsumer(outputFrame -> {
                 System.err.println("REGISTRATION: " + outputFrame.getUtf8String());
@@ -80,16 +112,19 @@ public class BaseSystemTest {
             DockerImageName.parse("friends-module:latest"))
             .withNetwork(network)
             .withNetworkAliases("friends-service")
-            .withExposedPorts(8081)
+            .withExposedPorts(Integer.parseInt(dotenv.get("FRIENDS_SERVER_PORT", "8081")))
             .withEnv("SPRING_PROFILES_ACTIVE", "test")
-            .withEnv("SPRING_DATASOURCE_URL", "jdbc:postgresql://postgres:5432/friends_chat")
-            .withEnv("SPRING_DATASOURCE_USERNAME", "postgres")
-            .withEnv("SPRING_DATASOURCE_PASSWORD", "admin")
-            .withEnv("SPRING_RABBITMQ_HOST", "rabbitmq")
-            .withEnv("SPRING_RABBITMQ_PORT", "5672")
-            .withEnv("SPRING_DATA_REDIS_HOST", "redis")
-            .withEnv("SPRING_DATA_REDIS_PORT", "6379")
-            .withEnv("SPRING_JPA_HIBERNATE_DDL_AUTO", "create-drop")
+            .withEnv("RABBITMQ_HOST", dotenv.get("RABBITMQ_HOST"))
+            .withEnv("RABBITMQ_PORT", dotenv.get("RABBITMQ_PORT"))
+            .withEnv("RABBITMQ_USERNAME", dotenv.get("RABBITMQ_USERNAME"))
+            .withEnv("RABBITMQ_PASSWORD", dotenv.get("RABBITMQ_PASSWORD"))
+            .withEnv("DB_USERNAME", dotenv.get("DB_USERNAME"))
+            .withEnv("DB_PASSWORD", dotenv.get("DB_PASSWORD"))
+            .withEnv("FRIENDS_DB_URL", dotenv.get("FRIENDS_DB_URL"))
+            .withEnv("SECURITY_USER_NAME", dotenv.get("SECURITY_USER_NAME"))
+            .withEnv("SECURITY_USER_PASSWORD", dotenv.get("SECURITY_USER_PASSWORD"))
+            .withEnv("SPRING_JWT_SECRET_KEY", dotenv.get("SPRING_JWT_SECRET_KEY"))
+            .withEnv("FRIENDS_SERVER_PORT", dotenv.get("FRIENDS_SERVER_PORT"))
             .dependsOn(postgres, rabbitmq, redis, registrationService)
             .withLogConsumer(outputFrame -> {
                 System.err.println("FriendsAndChats: " + outputFrame.getUtf8String());
@@ -102,16 +137,20 @@ public class BaseSystemTest {
             "adoption-and-breeding-module:latest")
             .withNetwork(network)
             .withNetworkAliases("adoption-service")
-            .withExposedPorts(8082)
+            .withExposedPorts(Integer.parseInt(dotenv.get("ADOPTION_SERVER_PORT")))
             .withEnv("SPRING_PROFILES_ACTIVE", "test")
-            .withEnv("SPRING_DATASOURCE_URL", "jdbc:postgresql://postgres:5432/adoption_breeding")
-            .withEnv("SPRING_DATASOURCE_USERNAME", "postgres")
-            .withEnv("SPRING_DATASOURCE_PASSWORD", "admin")
-            .withEnv("SPRING_RABBITMQ_HOST", "rabbitmq")
-            .withEnv("SPRING_RABBITMQ_PORT", "5672")
-            .withEnv("SPRING_DATA_REDIS_HOST", "redis")
-            .withEnv("SPRING_DATA_REDIS_PORT", "6379")
-            .withEnv("SPRING_JPA_HIBERNATE_DDL_AUTO", "create-drop")
+            .withEnv("RABBITMQ_HOST", dotenv.get("RABBITMQ_HOST"))
+            .withEnv("RABBITMQ_PORT", dotenv.get("RABBITMQ_PORT"))
+            .withEnv("RABBITMQ_USERNAME", dotenv.get("RABBITMQ_USERNAME"))
+            .withEnv("RABBITMQ_PASSWORD", dotenv.get("RABBITMQ_PASSWORD"))
+            .withEnv("DB_USERNAME", dotenv.get("DB_USERNAME"))
+            .withEnv("DB_PASSWORD", dotenv.get("DB_PASSWORD"))
+            .withEnv("ADOPTION_DB_URL", dotenv.get("ADOPTION_DB_URL"))
+            .withEnv("SECURITY_USER_NAME", dotenv.get("SECURITY_USER_NAME"))
+            .withEnv("SECURITY_USER_PASSWORD", dotenv.get("SECURITY_USER_PASSWORD"))
+            .withEnv("SPRING_JWT_SECRET_KEY", dotenv.get("SPRING_JWT_SECRET_KEY"))
+            .withEnv("ADOPTION_SERVER_PORT", dotenv.get("ADOPTION_SERVER_PORT"))
+            .withEnv("SPRING_PROFILES_ACTIVE", "test")
             .dependsOn(postgres, rabbitmq, redis, registrationService)
             .withLogConsumer(outputFrame -> {
                 System.err.println("ADOPTION: " + outputFrame.getUtf8String());
@@ -124,16 +163,19 @@ public class BaseSystemTest {
             "notification-module:latest")
             .withNetwork(network)
             .withNetworkAliases("notification-service")
-            .withExposedPorts(8083)
+            .withExposedPorts(Integer.parseInt(dotenv.get("NOTIFICATION_SERVER_PORT", "8083")))
             .withEnv("SPRING_PROFILES_ACTIVE", "test")
-            .withEnv("SPRING_DATASOURCE_URL", "jdbc:postgresql://postgres:5432/notifications")
-            .withEnv("SPRING_DATASOURCE_USERNAME", "postgres")
-            .withEnv("SPRING_DATASOURCE_PASSWORD", "admin")
-            .withEnv("SPRING_RABBITMQ_HOST", "rabbitmq")
-            .withEnv("SPRING_RABBITMQ_PORT", "5672")
-            .withEnv("SPRING_DATA_REDIS_HOST", "redis")
-            .withEnv("SPRING_DATA_REDIS_PORT", "6379")
-            .withEnv("SPRING_JPA_HIBERNATE_DDL_AUTO", "create-drop")
+            .withEnv("RABBITMQ_HOST", dotenv.get("RABBITMQ_HOST"))
+            .withEnv("RABBITMQ_PORT", dotenv.get("RABBITMQ_PORT"))
+            .withEnv("RABBITMQ_USERNAME", dotenv.get("RABBITMQ_USERNAME"))
+            .withEnv("RABBITMQ_PASSWORD", dotenv.get("RABBITMQ_PASSWORD"))
+            .withEnv("DB_USERNAME", dotenv.get("DB_USERNAME"))
+            .withEnv("DB_PASSWORD", dotenv.get("DB_PASSWORD"))
+            .withEnv("NOTIFICATION_DB_URL", dotenv.get("NOTIFICATION_DB_URL"))
+            .withEnv("SECURITY_USER_NAME", dotenv.get("SECURITY_USER_NAME"))
+            .withEnv("SECURITY_USER_PASSWORD", dotenv.get("SECURITY_USER_PASSWORD"))
+            .withEnv("SPRING_JWT_SECRET_KEY", dotenv.get("SPRING_JWT_SECRET_KEY"))
+            .withEnv("NOTIFICATION_SERVER_PORT", dotenv.get("NOTIFICATION_SERVER_PORT"))
             .dependsOn(postgres, rabbitmq, redis, registrationService)
             .withLogConsumer(outputFrame -> {
                 System.err.println("NOTIFICATION: " + outputFrame.getUtf8String());
@@ -212,10 +254,10 @@ public class BaseSystemTest {
     }
 
     protected String getOtpFromDatabase(String email) throws Exception {
-        String jdbcUrl = String.format("jdbc:postgresql://localhost:%d/postgres",
+        String jdbcUrl = String.format("jdbc:postgresql://localhost:%d/registration",
                 postgres.getMappedPort(5432));
 
-        try (Connection conn = DriverManager.getConnection(jdbcUrl, "postgres", "admin")) {
+        try (Connection conn = DriverManager.getConnection(jdbcUrl, dotenv.get("DB_USERNAME"), dotenv.get("DB_PASSWORD"))) {
 
             String query = "SELECT verification_code FROM users WHERE email = ?";
 

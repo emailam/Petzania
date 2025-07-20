@@ -3,10 +3,10 @@ spring:
     name: FriendsAndChatsModule
 
   rabbitmq:
-    host: rabbitmq
-    port: 5672
-    username: guest
-    password: guest
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
 
   flyway:
     enabled: true
@@ -14,9 +14,9 @@ spring:
     baseline-on-migrate: true
 
   datasource:
-    password: admin
-    url: jdbc:postgresql://postgres:5432/friends_chat
-    username: postgres
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    url: ${FRIENDS_DB_URL}
 
   jpa:
     hibernate:
@@ -30,18 +30,18 @@ spring:
 
   security:
     user:
-      name: admin
-      password: 1234
+      name: ${SECURITY_USER_NAME}
+      password: ${SECURITY_USER_PASSWORD}
 
   jwt:
     secret-key:
-      4ioX3ogCr4GAZ9gB99txf1LyhqVOmTJ8RsL9hyJzZXQ=
+      ${SPRING_JWT_SECRET_KEY}
 
 server:
   error:
     include-message: always
     include-binding-errors: always
-  port: 8081
+  port: ${FRIENDS_SERVER_PORT}
 
 logging:
   level:
