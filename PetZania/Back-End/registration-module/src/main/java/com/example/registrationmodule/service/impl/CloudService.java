@@ -103,9 +103,11 @@ public class CloudService implements ICloudService {
 
     @Override
     public void deleteById(UUID mediaId) {
-        if (!mediaRepository.existsById(mediaId)) {
-            throw new EntityNotFoundException("Media not found with ID: " + mediaId);
-        }
+        Media media = mediaRepository.findById(mediaId)
+            .orElseThrow(() -> new EntityNotFoundException("Media not found with ID: " + mediaId));
+        // Delete from S3
+        s3Client.deleteObject(cloudStorageConfig.getBucketName(), media.getKey());
+        // Delete from DB
         mediaRepository.deleteById(mediaId);
     }
 
