@@ -165,34 +165,31 @@ public class PetPostService implements IPetPostService {
             int page,
             int size
     ) {
-
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFound("User not found with ID: " + userId));
 
-        // 1. Build base spec + block filters (no social filter!)
-        Specification<PetPost> spec = PetPostSpecification.withFilters(filter)
+        // 1. Base spec + blocks
+        Specification<PetPost> baseSpec = PetPostSpecification.withFilters(filter)
                 .and(buildBlockSpec(userId));
 
         // 2. Load social graph
         List<UUID> followeeIds = followRepository
-                .findFollowedUserIdByFollowerUserId(userId);
-        // flatten both directions of friendship
+                .findFollowed_UserIdByFollower_UserId(userId);
         List<UUID> friends = Stream
                 .concat(
-                        friendshipRepository.findUser2UserIdByUser1UserId(userId).stream(),
-                        friendshipRepository.findUser1UserIdByUser2UserId(userId).stream()
+                        friendshipRepository.findUser2_UserIdByUser1_UserId(userId).stream(),
+                        friendshipRepository.findUser1_UserIdByUser2_UserId(userId).stream()
                 )
                 .distinct()
                 .toList();
 
-        // 3. Prefetch your affinity counts
+        // 3. Prefetch affinity counts
         long userTotalReacts = petPostRepository.countByReactedUsersUserId(userId);
         Map<PetSpecies, Long> reactsBySpecies = petPostRepository.countReactsBySpecies(userId)
                 .stream().collect(Collectors.toMap(
                         SpeciesCount::getSpecies,
                         SpeciesCount::getCnt
                 ));
-
         Map<PetPostType, Long> reactsByType = petPostRepository.countReactsByPostType(userId)
                 .stream().collect(Collectors.toMap(
                         TypeCount::getPostType,
@@ -200,23 +197,41 @@ public class PetPostService implements IPetPostService {
                 ));
 
         if (filter.getSortBy() == PetPostSortBy.SCORE) {
-            // 4. Candidate generation (recent ∪ popular)
             int window = (page + 1) * size;
-            List<PetPost> recent = petPostRepository
-                    .findAll(spec, PageRequest.of(0, window,
-                            Sort.by(DESC, "createdAt")))
-                    .getContent();
-            List<PetPost> popular = petPostRepository
-                    .findAll(spec, PageRequest.of(0, window,
-                            Sort.by(DESC, "reacts")))
-                    .getContent();
+            Pageable recPage   = PageRequest.of(0, window, Sort.by(DESC, "createdAt"));
+            Pageable popPage   = PageRequest.of(0, window, Sort.by(DESC, "reacts"));
 
-            Set<PetPost> candidateSet = new LinkedHashSet<>();
-            candidateSet.addAll(recent);
-            candidateSet.addAll(popular);
-            List<PetPost> candidates = new ArrayList<>(candidateSet);
+            // Bucket 1: friends’ recency
+            Specification<PetPost> friendsSpec = baseSpec.and((r, q, cb) ->
+                    r.get("owner").get("userId").in(friends));
+            List<PetPost> friendPosts = petPostRepository.findAll(friendsSpec, recPage).getContent();
 
-            // 5. Score & sort with social boosts *only* in scorer
+            // Bucket 2: followees’ recency
+            Specification<PetPost> followeeSpec = baseSpec.and((r, q, cb) ->
+                    r.get("owner").get("userId").in(followeeIds));
+            List<PetPost> followeePosts = petPostRepository.findAll(followeeSpec, recPage).getContent();
+
+            // Bucket 3: interest recency (top‐N species/types)
+            List<PetSpecies> topSpecies = topKeys(reactsBySpecies, 3);
+            List<PetPostType> topTypes  = topKeys(reactsByType, 2);
+            Specification<PetPost> interestSpec = baseSpec.and((r, q, cb) -> cb.or(
+                    r.get("pet").get("species").in(topSpecies),
+                    r.get("postType").in(topTypes)
+            ));
+            List<PetPost> interestPosts = petPostRepository.findAll(interestSpec, recPage).getContent();
+
+            // Bucket 4: global popular
+            List<PetPost> popularPosts = petPostRepository.findAll(baseSpec, popPage).getContent();
+
+            // Union & dedupe
+            Set<PetPost> union = new LinkedHashSet<>();
+            union.addAll(friendPosts);
+            union.addAll(followeePosts);
+            union.addAll(interestPosts);
+            union.addAll(popularPosts);
+            List<PetPost> candidates = new ArrayList<>(union);
+
+            // Score & sort
             feedScorer.scoreAndSort(
                     candidates,
                     user.getLatitude(),
@@ -228,7 +243,7 @@ public class PetPostService implements IPetPostService {
                     followeeIds
             );
 
-            // 6. page slice
+            // Slice page
             int start = page * size, end = Math.min(start + size, candidates.size());
             List<PetPostDTO> dtos = candidates.subList(start, end).stream()
                     .map(dtoConversionService::mapToPetPostDTO)
@@ -237,12 +252,20 @@ public class PetPostService implements IPetPostService {
             return new PageImpl<>(dtos, PageRequest.of(page, size), candidates.size());
         }
 
-        // fallback DB‐side sorting/paging
+        // fallback DB paging
         Sort.Direction dir = filter.isSortDesc() ? DESC : ASC;
         String field = filter.getSortBy() == REACTS ? "reacts" : "createdAt";
-        return petPostRepository
-                .findAll(spec, PageRequest.of(page, size, Sort.by(dir, field)))
+        return petPostRepository.findAll(baseSpec, PageRequest.of(page, size, Sort.by(dir, field)))
                 .map(dtoConversionService::mapToPetPostDTO);
+    }
+
+    /** Helper: pick the top N keys by their map values (descending). */
+    private <K> List<K> topKeys(Map<K,Long> map, int n) {
+        return map.entrySet().stream()
+                .sorted(Map.Entry.<K,Long>comparingByValue(Comparator.reverseOrder()))
+                .limit(n)
+                .map(Map.Entry::getKey)
+                .toList();
     }
 
     private Specification<PetPost> buildBlockSpec(UUID userId) {

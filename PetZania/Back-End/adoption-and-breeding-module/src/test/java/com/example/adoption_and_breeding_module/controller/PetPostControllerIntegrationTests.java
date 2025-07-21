@@ -33,6 +33,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.MediaType;
 import com.example.adoption_and_breeding_module.repository.PetRepository;
+import com.example.adoption_and_breeding_module.repository.FriendshipRepository;
+import com.example.adoption_and_breeding_module.repository.FollowRepository;
 import jakarta.persistence.EntityManager;
 
 import java.sql.Timestamp;
@@ -75,6 +77,11 @@ public class PetPostControllerIntegrationTests {
 
     @Autowired
     private EntityManager entityManager;
+
+    @Autowired
+    private FriendshipRepository friendshipRepository;
+    @Autowired
+    private FollowRepository followRepository;
 
     double EPSILON = 1e-6;
 
@@ -809,86 +816,107 @@ public class PetPostControllerIntegrationTests {
         User userD = userRepository.save(TestDataUtil.createTestUser("userD"));
         User userE = userRepository.save(TestDataUtil.createTestUser("userE"));
 
-        Pet dog1 = TestDataUtil.createTestPet("Dog1", PetSpecies.DOG, Gender.MALE, 12);
-        Pet cat1 = TestDataUtil.createTestPet("Cat1", PetSpecies.CAT, Gender.FEMALE, 24);
+        // 2. Set up friendships and followings for userA
+        // userA friends: userB, userC
+        friendshipRepository.save(com.example.adoption_and_breeding_module.model.entity.Friendship.builder()
+                .user1(userA).user2(userB).createdAt(new Timestamp(System.currentTimeMillis())).build());
+        friendshipRepository.save(com.example.adoption_and_breeding_module.model.entity.Friendship.builder()
+                .user1(userA).user2(userC).createdAt(new Timestamp(System.currentTimeMillis())).build());
+        // userA follows: userD
+        followRepository.save(com.example.adoption_and_breeding_module.model.entity.Follow.builder()
+                .follower(userA).followed(userD).createdAt(new Timestamp(System.currentTimeMillis())).build());
 
-        // 2. Build new test posts (mutable collections)
+        // 3. Build new test posts with variety in location, type, owner, and reacts
         List<PetPost> newPosts = new ArrayList<>();
-
+        // Close to userA, by friend userB
         newPosts.add(PetPost.builder()
-                .owner(userC)
-                .pet(dog1)
+                .owner(userB)
+                .pet(TestDataUtil.createTestPet("DogFriend", PetSpecies.DOG, Gender.MALE, 10))
                 .postType(PetPostType.ADOPTION)
                 .postStatus(PetPostStatus.PENDING)
-                .description("Recent post, 0 reacts")
-                .latitude(35.8617)
-                .longitude(104.1954)
-                .reacts(0)
-                .reactedUsers(new HashSet<>())
-                .createdAt(Instant.now())
+                .description("By friend, close location, 3 reacts")
+                .latitude(userA.getLatitude() + 0.01)
+                .longitude(userA.getLongitude() + 0.01)
+                .reacts(3)
+                .reactedUsers(new HashSet<>(Arrays.asList(userA, userC, userD)))
+                .createdAt(Instant.now().minus(Duration.ofHours(2)))
                 .build());
-
-        newPosts.add(PetPost.builder()
-                .owner(userC)
-                .pet(dog1)
-                .postType(PetPostType.ADOPTION)
-                .postStatus(PetPostStatus.PENDING)
-                .description("12h old, 2 reacts")
-                .latitude(35.8617)
-                .longitude(104.1954)
-                .reacts(2)
-                .reactedUsers(new HashSet<>(Arrays.asList(userA, userB)))
-                .createdAt(Instant.now().minus(Duration.ofHours(12)))
-                .build());
-
+        // By followee userD, far from userA
         newPosts.add(PetPost.builder()
                 .owner(userD)
-                .pet(cat1)
+                .pet(TestDataUtil.createTestPet("CatFollowee", PetSpecies.CAT, Gender.FEMALE, 20))
                 .postType(PetPostType.BREEDING)
                 .postStatus(PetPostStatus.PENDING)
-                .description("3d old, 5 reacts")
-                .latitude(35.8617)
-                .longitude(104.1954)
-                .reacts(5)
-                .reactedUsers(new HashSet<>(Arrays.asList(userA, userB, userC, userD, userE)))
-                .createdAt(Instant.now().minus(Duration.ofDays(3)))
+                .description("By followee, far location, 2 reacts")
+                .latitude(0.0)
+                .longitude(0.0)
+                .reacts(2)
+                .reactedUsers(new HashSet<>(Arrays.asList(userB, userE)))
+                .createdAt(Instant.now().minus(Duration.ofHours(10)))
                 .build());
-
+        // By neither friend nor followee, but high affinity (species userA liked most)
         newPosts.add(PetPost.builder()
                 .owner(userE)
-                .pet(cat1)
-                .postType(PetPostType.BREEDING)
+                .pet(TestDataUtil.createTestPet("DogAffinity", PetSpecies.DOG, Gender.FEMALE, 8))
+                .postType(PetPostType.ADOPTION)
                 .postStatus(PetPostStatus.PENDING)
-                .description("36h old, 1 react")
-                .latitude(35.8617)
-                .longitude(104.1954)
+                .description("High affinity species, 1 react")
+                .latitude(userA.getLatitude() + 1.0)
+                .longitude(userA.getLongitude() + 1.0)
                 .reacts(1)
                 .reactedUsers(new HashSet<>(Collections.singletonList(userA)))
-                .createdAt(Instant.now().minus(Duration.ofHours(36)))
+                .createdAt(Instant.now().minus(Duration.ofHours(20)))
                 .build());
-
-        // 3. Persist only the new posts
+        // By neither friend nor followee, old post, many reacts
+        newPosts.add(PetPost.builder()
+                .owner(userC)
+                .pet(TestDataUtil.createTestPet("RabbitPopular", PetSpecies.RABBIT, Gender.MALE, 30))
+                .postType(PetPostType.BREEDING)
+                .postStatus(PetPostStatus.PENDING)
+                .description("Old, popular, not friend/followee")
+                .latitude(userA.getLatitude() + 5.0)
+                .longitude(userA.getLongitude() + 5.0)
+                .reacts(10)
+                .reactedUsers(new HashSet<>(Arrays.asList(userA, userB, userC, userD, userE)))
+                .createdAt(Instant.now().minus(Duration.ofDays(5)))
+                .build());
+        // By friend userC, close, recent, 0 reacts
+        newPosts.add(PetPost.builder()
+                .owner(userC)
+                .pet(TestDataUtil.createTestPet("DogFriendRecent", PetSpecies.DOG, Gender.FEMALE, 6))
+                .postType(PetPostType.ADOPTION)
+                .postStatus(PetPostStatus.PENDING)
+                .description("By friend, close, recent, 0 reacts")
+                .latitude(userA.getLatitude() + 0.02)
+                .longitude(userA.getLongitude() + 0.02)
+                .reacts(0)
+                .reactedUsers(new HashSet<>())
+                .createdAt(Instant.now().minus(Duration.ofMinutes(30)))
+                .build());
+        // Persist new posts
         List<PetPost> savedNew = newPosts.stream()
                 .map(petPostRepository::save)
                 .collect(Collectors.toList());
-
-        // 4. Combine with the two posts from @BeforeEach
+        // Add the two posts from @BeforeEach
         List<PetPost> allPosts = new ArrayList<>(savedNew);
         allPosts.add(adoptionPost);
         allPosts.add(breedingPost);
-
-        // 5. Score & sort in-memory
-        feedScorer.scoreAndSort(allPosts, userA.getUserId());
-
-        // Map of postId -> expected score
-        Map<UUID, Double> expectedScores = allPosts.stream()
+        // Score & sort in-memory using userA's context
+        feedScorer.scoreAndSort(
+                allPosts,
+                userA.getLatitude(),
+                userA.getLongitude(),
+                petPostRepository.countByReactedUsersUserId(userA.getUserId()),
+                petPostRepository.countReactsBySpecies(userA.getUserId()).stream().collect(Collectors.toMap(e -> e.getSpecies(), e -> e.getCnt())),
+                petPostRepository.countReactsByPostType(userA.getUserId()).stream().collect(Collectors.toMap(e -> e.getPostType(), e -> e.getCnt())),
+                friendshipRepository.findUser2_UserIdByUser1_UserId(userA.getUserId()),
+                followRepository.findFollowed_UserIdByFollower_UserId(userA.getUserId())
+        );
+        Map<UUID, Long> expectedScores = allPosts.stream()
                 .collect(Collectors.toMap(PetPost::getPostId, PetPost::getScore));
-
-        // 6. Call the endpoint with SCORE sorting
         PetPostFilterDTO filter = new PetPostFilterDTO();
         filter.setSortBy(PetPostSortBy.SCORE);
         filter.setSortDesc(true);
-
         MvcResult result = mockMvc.perform(post("/api/pet-posts/filtered")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(filter))
@@ -896,26 +924,21 @@ public class PetPostControllerIntegrationTests {
                         .param("size", String.valueOf(allPosts.size())))
                 .andExpect(status().isOk())
                 .andReturn();
-
-        // 7. Extract returned post IDs and verify descending scores
         JsonNode content = objectMapper.readTree(result.getResponse().getContentAsString())
                 .get("content");
-
-        List<Double> returnedScores = new ArrayList<>();
+        List<Long> returnedScores = new ArrayList<>();
         for (JsonNode node : content) {
             UUID id = UUID.fromString(node.get("postId").asText());
             returnedScores.add(expectedScores.get(id));
         }
-
         for (int i = 0; i < returnedScores.size() - 1; i++) {
-            double curr = returnedScores.get(i);
-            double next = returnedScores.get(i + 1);
+            Long curr = returnedScores.get(i);
+            Long next = returnedScores.get(i + 1);
             assertTrue(
-                    curr + EPSILON >= next,
-                    String.format("Score %.6f should be >= %.6f (with epsilon)", curr, next)
+                    curr >= next,
+                    String.format("Score %d should be >= %d", curr, next)
             );
         }
-
     }
 
     @Test

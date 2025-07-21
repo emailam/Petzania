@@ -52,22 +52,22 @@ public class FeedScorer {
     /**
      * Score & sort the given candidate posts in‐place.
      *
-     * @param posts             candidate posts to rank
-     * @param userLat           user's latitude
-     * @param userLng           user's longitude
-     * @param userTotalReacts   total reacts by this user
-     * @param reactsBySpecies   map of species→react‐count for user
-     * @param reactsByPostType  map of postType→react‐count for user
-     * @param friendIds         IDs of this user's friends
-     * @param followeeIds       IDs of users this user follows
+     * @param posts            candidate posts to rank
+     * @param userLat          user's latitude
+     * @param userLng          user's longitude
+     * @param userTotalReacts  total reacts by this user
+     * @param reactsBySpecies  map of species→react‐count for user
+     * @param reactsByPostType map of postType→react‐count for user
+     * @param friendIds        IDs of this user's friends
+     * @param followeeIds      IDs of users this user follows
      */
     public void scoreAndSort(
             List<PetPost> posts,
             double userLat,
             double userLng,
             long userTotalReacts,
-            Map<PetSpecies,Long> reactsBySpecies,
-            Map<PetPostType,Long> reactsByPostType,
+            Map<PetSpecies, Long> reactsBySpecies,
+            Map<PetPostType, Long> reactsByPostType,
             List<UUID> friendIds,
             List<UUID> followeeIds
     ) {
@@ -87,7 +87,7 @@ public class FeedScorer {
             long reactSc = totalReactsScoreLong(p.getReacts(), maxReacts);
 
             // 4) affinities: categoryReacts/userTotalReacts → [0..SIGNAL_SCALE]
-            long petAff  = affinityScoreLong(
+            long petAff = affinityScoreLong(
                     reactsBySpecies.getOrDefault(p.getPet().getSpecies(), 0L),
                     userTotalReacts
             );
@@ -97,11 +97,8 @@ public class FeedScorer {
             );
 
             // 5) social boost is already in long units (no scale)
-            long socialBoost = friendIds.contains(p.getOwner().getUserId())
-                    ? wFriendBoost
-                    : followeeIds.contains(p.getOwner().getUserId())
-                    ? wFolloweeBoost
-                    : 0L;
+            long socialBoost = friendIds.contains(p.getOwner().getUserId()) ? wFriendBoost : 0L;
+            socialBoost += followeeIds.contains(p.getOwner().getUserId()) ? wFolloweeBoost : 0L;
 
             // 6) distance: (1/(1+km)) → [0..SIGNAL_SCALE]
             long distSc = distanceScoreLong(
@@ -111,12 +108,12 @@ public class FeedScorer {
 
             // 7) final weighted sum
             long score =
-                    wRecency               * recSc
-                            + wTotalReacts           * reactSc
-                            + wPetCategoryAffinity   * petAff
-                            + wPostCategoryAffinity  * typeAff
-                            + socialBoost
-                            + wDistance              * distSc;
+                    wRecency * recSc
+                    + wTotalReacts * reactSc
+                    + wPetCategoryAffinity * petAff
+                    + wPostCategoryAffinity * typeAff
+                    + socialBoost
+                    + wDistance * distSc;
 
             p.setScore(score);
         }
@@ -126,8 +123,8 @@ public class FeedScorer {
     }
 
     private long recencyScoreLong(Instant createdAt, Instant now) {
-        long ageH  = Duration.between(createdAt, now).toHours();
-        long remH  = Math.max(freshnessWindowHours - ageH, 0L);
+        long ageH = Duration.between(createdAt, now).toHours();
+        long remH = Math.max(freshnessWindowHours - ageH, 0L);
         return (remH * SIGNAL_SCALE) / freshnessWindowHours;
     }
 
@@ -157,10 +154,10 @@ public class FeedScorer {
         final double R = 6371; // km
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);
-        double a = Math.sin(dLat/2) * Math.sin(dLat/2)
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
                 + Math.cos(Math.toRadians(lat1))
                 * Math.cos(Math.toRadians(lat2))
-                * Math.sin(dLon/2) * Math.sin(dLon/2);
+                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
         return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 }

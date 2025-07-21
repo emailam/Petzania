@@ -5,16 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ea048906-7657-4d6f-95bf-3cfefcfdfc3b" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/entity/Follow.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/entity/Friendship.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/FollowRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/FriendshipRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/entity/PetPost.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/entity/PetPost.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/PetPostRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/PetPostRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/FollowRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/FollowRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/FriendshipRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/FriendshipRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/FeedScorer.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/FeedScorer.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/PetPostService.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/PetPostService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/test/java/com/example/adoption_and_breeding_module/controller/PetPostControllerIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/test/java/com/example/adoption_and_breeding_module/controller/PetPostControllerIntegrationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/test/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/test/resources/application.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -271,6 +268,8 @@
       <workItem from="1752921411278" duration="5448000" />
       <workItem from="1752939459946" duration="1195000" />
       <workItem from="1752960157138" duration="1000" />
+      <workItem from="1752960180702" duration="624000" />
+      <workItem from="1753101367579" duration="3623000" />
     </task>
     <servers />
   </component>
