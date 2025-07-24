@@ -5,11 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ea048906-7657-4d6f-95bf-3cfefcfdfc3b" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/entity/UserPreference.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/enumeration/PreferenceType.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/FollowRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/FollowRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/FriendshipRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/FriendshipRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/FeedScorer.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/FeedScorer.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/PetPostService.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/PetPostService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/util/PetPostSpecification.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/util/PetPostSpecification.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/resources/application.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/test/java/com/example/adoption_and_breeding_module/controller/PetPostControllerIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/test/java/com/example/adoption_and_breeding_module/controller/PetPostControllerIntegrationTests.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/test/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/test/resources/application.yml" afterDir="false" />
     </list>
@@ -22,6 +23,8 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Interface" />
+        <option value="Enum" />
+        <option value="Class" />
       </list>
     </option>
   </component>
@@ -269,7 +272,10 @@
       <workItem from="1752939459946" duration="1195000" />
       <workItem from="1752960157138" duration="1000" />
       <workItem from="1752960180702" duration="624000" />
-      <workItem from="1753101367579" duration="3623000" />
+      <workItem from="1753101367579" duration="4254000" />
+      <workItem from="1753122119806" duration="895000" />
+      <workItem from="1753188841305" duration="1261000" />
+      <workItem from="1753362768247" duration="946000" />
     </task>
     <servers />
   </component>

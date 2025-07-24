@@ -40,6 +40,9 @@ feed:
         distance:             400
     freshness-window-hours: 96
 
+post:
+  expiration-days: 45
+
 server:
     port: 8082
     error:

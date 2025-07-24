@@ -83,8 +83,6 @@ public class PetPostControllerIntegrationTests {
     @Autowired
     private FollowRepository followRepository;
 
-    double EPSILON = 1e-6;
-
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);

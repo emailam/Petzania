@@ -52,6 +52,9 @@ feed:
         distance:             400
     freshness-window-hours: 96
 
+post:
+  expiration-days: 45
+
 server:
   error:
     include-message: always

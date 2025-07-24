@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.Instant;
 import java.util.*;
@@ -47,6 +48,9 @@ public class PetPostService implements IPetPostService {
     private final IDTOConversionService dtoConversionService;
     private final NotificationPublisher notificationPublisher;
     private final FeedScorer feedScorer;
+
+    @Value("${post.expiration-days:30}")
+    private long expirationDays;
 
     @Override
     public PetPostDTO createPetPost(CreatePetPostDTO dto, UUID ownerId) {
@@ -169,7 +173,7 @@ public class PetPostService implements IPetPostService {
                 .orElseThrow(() -> new UserNotFound("User not found with ID: " + userId));
 
         // 1. Base spec + blocks
-        Specification<PetPost> baseSpec = PetPostSpecification.withFilters(filter)
+        Specification<PetPost> baseSpec = PetPostSpecification.withFilters(filter, expirationDays)
                 .and(buildBlockSpec(userId));
 
         // 2. Load social graph
