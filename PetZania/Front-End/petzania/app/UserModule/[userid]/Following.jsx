@@ -6,14 +6,17 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { UserContext } from '@/context/UserContext';
 import UserList from '@/components/UserList';
-import { getFollowingByUserId, getNumberOfFollowingByUserId } from '@/services/friendsService';
+import EmptyState from '@/components/EmptyState';
+import { getFollowingByUserId, getNumberOfFollowingByUserId, unfollowUser } from '@/services/friendsService';
 import { getUserById, getUserProfilePicture } from '@/services/userService';
 import Toast from 'react-native-toast-message';
+import LottieView from 'lottie-react-native';
 
 export default function Following() {
   const { userid } = useLocalSearchParams();
@@ -29,6 +32,7 @@ export default function Following() {
   const [page, setPage] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [profileUser, setProfileUser] = useState(null);
+  const [unfollowingUsers, setUnfollowingUsers] = useState(new Set());
 
   const isOwnProfile = currentUser?.userId === userid;
   useEffect(() => {
@@ -141,25 +145,108 @@ export default function Following() {
       params: { username: user.username || 'User Profile' }
     });
   };
+
+  const handleUnfollow = (followedUser) => {
+    Alert.alert(
+      "Unfollow User",
+      `Are you sure you want to unfollow ${followedUser.username || followedUser.firstName + ' ' + followedUser.lastName}?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Unfollow",
+          style: "destructive",
+          onPress: () => confirmUnfollow(followedUser)
+        }
+      ]
+    );
+  };
+
+  const confirmUnfollow = async (followedUser) => {
+    try {
+      setUnfollowingUsers(prev => new Set(prev).add(followedUser.userId));
+
+      await unfollowUser(followedUser.userId);
+
+      // Remove user from following list
+      setFollowing(prev => prev.filter(item => item.userId !== followedUser.userId));
+
+      Toast.show({
+        type: 'success',
+        text1: 'User Unfollowed',
+        text2: `You are no longer following ${followedUser.username || followedUser.firstName}`,
+        position: 'top',
+        visibilityTime: 2000,
+      });
+    } catch (error) {
+      console.error('Error unfollowing user:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to unfollow user',
+        text2: 'Please try again later',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+    } finally {
+      setUnfollowingUsers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(followedUser.userId);
+        return newSet;
+      });
+    }
+  };
+
+  const renderUnfollowButton = (followedUser) => {
+    if (!isOwnProfile) return null; // Only show unfollow button on own profile
+    
+    const isUnfollowing = unfollowingUsers.has(followedUser.userId);
+    
+    return (
+      <TouchableOpacity
+        style={[styles.unfollowButton, isUnfollowing && styles.unfollowButtonDisabled]}
+        onPress={() => handleUnfollow(followedUser)}
+        disabled={isUnfollowing}
+      >
+        {isUnfollowing ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <>
+            <Ionicons name="person-remove-outline" size={16} color="#fff" />
+            <Text style={styles.unfollowButtonText}>Unfollow</Text>
+          </>
+        )}
+      </TouchableOpacity>
+    );
+  };
+
   const renderEmptyState = () => (
-    <View style={styles.emptyContainer}>
-      <Ionicons name="people-outline" size={60} color="#ccc" />
-      <Text style={styles.emptyTitle}>No Following</Text>
-      <Text style={styles.emptySubtitle}>
-        {isOwnProfile 
+    <EmptyState
+      iconName="people-outline"
+      title="No Following"
+      subtitle={
+        isOwnProfile 
           ? "When you follow people, they'll appear here"
           : `${profileUser?.name || 'This user'} isn't following anyone yet`
-        }
-      </Text>
-    </View>
+      }
+    />
   );
 
   if (loading) {
     return (
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#9188E5" />
+          <LottieView
+            source={require("@/assets/lottie/loading.json")}
+            autoPlay
+            loop
+            style={styles.lottie}
+          />
           <Text style={styles.loadingText}>Loading following...</Text>
+          <Text style={styles.loadingSubText}>
+            Getting following information
+          </Text>
         </View>
       </View>
     );
@@ -171,6 +258,8 @@ export default function Following() {
         users={following}
         onUserPress={handleUserPress}
         keyExtractor={(item) => item.userId}
+        showChevron={!isOwnProfile}
+        renderActionButton={isOwnProfile ? renderUnfollowButton : null}
         onEndReached={loadMoreFollowing}
         onEndReachedThreshold={0.1}
         contentContainerStyle={{ padding: 12 }}
@@ -201,35 +290,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  lottie: {
+    width: 80,
+    height: 80,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#9188E5',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#999',
     marginTop: 16,
-    textAlign: 'center',
+    fontSize: 18,
+    color: '#9188E5',
+    fontWeight: '600',
   },
-  emptySubtitle: {
-    fontSize: 14,
-    color: '#999',
+  loadingSubText: {
     marginTop: 8,
+    fontSize: 14,
+    color: '#666',
     textAlign: 'center',
-    lineHeight: 20,
   },
   footerLoading: {
     flexDirection: 'row',
@@ -241,5 +321,24 @@ const styles = StyleSheet.create({
   footerLoadingText: {
     fontSize: 14,
     color: '#666',
+  },
+  unfollowButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ff6b6b',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    minWidth: 90,
+    justifyContent: 'center',
+  },
+  unfollowButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  unfollowButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 4,
   },
 });

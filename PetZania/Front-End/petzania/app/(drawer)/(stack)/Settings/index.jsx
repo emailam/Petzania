@@ -275,7 +275,7 @@ export default function Settings() { const router = useRouter();
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: '#F9FAFB',
     },
     section: {
         marginTop: 20,

@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import Foundation from '@expo/vector-icons/Foundation';
 import { useRouter } from "expo-router";
 
-export default function PetCard({ pet }) {
+export default function PetCard({ pet, marginHorizontal = 10 }) {
     const router = useRouter();
 
     const showPetInfo = (pet) => {
@@ -22,7 +22,7 @@ export default function PetCard({ pet }) {
     };
 
     return (
-        <TouchableOpacity style={styles.container} onPress={() => {showPetInfo(pet)}} >
+        <TouchableOpacity style={[styles.container, { marginHorizontal: marginHorizontal }]} onPress={() => {showPetInfo(pet)}} >
             <View style={styles.leftContainer}>
                 <Image style={styles.imageContainer} source={pet?.myPicturesURLs?.length ? { uri: pet.myPicturesURLs[0] } : require('@/assets/images/AddPet/Pet Default Pic.png')}  />
                 <View>
@@ -46,11 +46,13 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
+        borderColor: "#9188E5",
+        borderWidth: 0.25,
         borderRadius: 10,
         backgroundColor: "#fff",
-        elevation: 5,
-        margin: 10,
-        padding: 10,
+        elevation: 2,
+        marginVertical: 8,
+        padding: 16,
     },
     leftContainer: {
         flexDirection: "row",

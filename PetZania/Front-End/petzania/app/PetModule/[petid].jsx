@@ -385,6 +385,9 @@ export default function PetDetails() {
         deletePet(petId)
             .then(() => {
                 setPets(prevPets => prevPets.filter(pet => pet.petId !== petId));
+                if (currentUser) {
+                    currentUser.myPets = currentUser.myPets.filter(pet => pet.petId !== petId);
+                }
                 showSuccessMessage('Pet deleted successfully!');
                 router.back();
             })
@@ -930,7 +933,6 @@ const styles = StyleSheet.create({
     profileSection: {
         alignItems: 'center',
         marginBottom: 20,
-        paddingHorizontal: 20,
     },
     profileImageContainer: {
         position: 'relative',
@@ -979,7 +981,7 @@ const styles = StyleSheet.create({
     // Tab Navigation Styles
     tabContainer: {
         flexDirection: 'row',
-        marginHorizontal: 20,
+        marginHorizontal: 16,
         marginBottom: 20,
         borderBottomWidth: 1,
         borderBottomColor: '#e0e0e0',
@@ -1087,7 +1089,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#9188E5',
-        paddingHorizontal: 20,
+        paddingHorizontal: 16,
         paddingVertical: 12,
         borderRadius: 25,
     },
@@ -1099,16 +1101,16 @@ const styles = StyleSheet.create({
     },
     // Form Styles
     inputsContainer: {
-        paddingHorizontal: 20,
+        paddingHorizontal: 16,
         width: '100%',
     },
     inputsContainerFull: {
-        paddingHorizontal: 20,
+        paddingHorizontal: 16,
         width: '100%',
     },
     inputContainer: {
         alignItems: 'flex-start',
-        paddingVertical: 15,
+        paddingVertical: 12,
     },
     label: {
         fontSize: 18,
@@ -1122,7 +1124,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#9188E5',
         borderRadius: 10,
-        paddingHorizontal: 15,
+        paddingHorizontal: 16,
         fontSize: 16,
         backgroundColor: '#fff',
     },
@@ -1202,14 +1204,14 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
         borderTopColor: '#fff',
         backgroundColor: '#fff',
-        padding: 20,
+        paddingHorizontal: 16,
         width: '100%',
-        marginTop: 20,
+        marginVertical: 20,
         flex: 1,
         justifyContent: 'flex-end',
     },
     saveButton: {
-        backgroundColor: '#2CA269',
+        backgroundColor: '#9188E5',
         paddingVertical: 15,
         borderRadius: 10,
         alignItems: 'center',

@@ -80,8 +80,7 @@ const LandingImages = ({
 
 const styles = StyleSheet.create({
   container: {
-    width: width,
-    height: height * 0.3, // Adjust height as needed
+    height: height * 0.25, // Adjust height as needed
     position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',

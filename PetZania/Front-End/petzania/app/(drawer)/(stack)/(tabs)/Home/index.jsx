@@ -109,7 +109,7 @@ export default function index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9ff',
+    backgroundColor: '#F9FAFB',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',

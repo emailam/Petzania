@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#666',
         textAlign: 'center',
-        marginHorizontal: 20,
+        marginHorizontal: 16,
         lineHeight: 22,
     },
     optionsList: {

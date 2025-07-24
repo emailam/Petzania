@@ -45,15 +45,6 @@ export default function CustomDrawer(props) {
 
     } catch (error) {
       console.error('Logout error:', error);
-      
-      // Even if server logout fails, show info message
-      Toast.show({
-        type: 'info',
-        text1: 'Logged out locally',
-        text2: 'Unable to reach server, but you have been logged out',
-        position: 'top',
-        visibilityTime: 3000,
-      });
     } finally {
       // Always clear local storage and navigate to login, regardless of server response
       try {
@@ -312,7 +303,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: '#F9FAFB',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
@@ -336,7 +327,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#F9FAFB',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,

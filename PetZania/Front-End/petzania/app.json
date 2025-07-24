@@ -59,8 +59,7 @@
         "android.permission.ACCESS_WIFI_STATE"
       ],
       "package": "com.alivetube.petzania",
-      "versionCode": 1,
-      "usesCleartextTraffic": true
+      "versionCode": 1
     },
     "web": {
       "bundler": "metro",

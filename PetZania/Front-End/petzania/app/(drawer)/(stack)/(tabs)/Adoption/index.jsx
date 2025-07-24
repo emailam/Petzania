@@ -1,6 +1,7 @@
-import AdoptionScreen from "./AdoptionScreen";
+import PostScreen from '@/components/AdoptionBreedingModule/PostScreen';
+
 export default function index(){
     return (
-        <AdoptionScreen/>
+        <PostScreen postType="ADOPTION"/>
     );
 }

@@ -7,6 +7,7 @@ import { useActionSheet } from '@expo/react-native-action-sheet';
 import ImageViewing from 'react-native-image-viewing';
 import LottieView from 'lottie-react-native';
 import UserPosts from '@/components/AdoptionBreedingModule/UserPosts';
+import PetCard from '@/components/PetCard';
 
 import { UserContext } from '@/context/UserContext';
 
@@ -721,7 +722,7 @@ export default function UserProfile() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.headerContainer}>
-        <View style={{ flexDirection: 'row', alignItems: 'center'}}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <TouchableOpacity
             style={styles.profileImageContainer}
             onPress={handleImagePress}
@@ -930,46 +931,26 @@ export default function UserProfile() {
       {/* Tab Content */}
       {activeTab === 'posts' && (
         <View style={styles.tabContent}>
-          <UserPosts userId={userid} />
+          <View style = {styles.tabSection}>
+            <UserPosts userId={userid} />
+          </View>
         </View>
       )}
 
       {activeTab === 'pets' && (
         <View style={styles.tabContent}>
           {/* Pets Section */}
-          <View style={styles.petsSection}>
+          <View style={styles.tabSection}>
             {user?.myPets && user?.myPets.length > 0 ? (
-              <View style={styles.petsGrid}>
-                {user?.myPets.map((pet) => (
-                  <TouchableOpacity
-                    key={pet.petId}
-                    style={styles.petGridCard}
-                    onPress={() => { router.push(`/PetModule/${pet.petId}`)}}
-                  >
-                    {pet.myPicturesURLs && pet.myPicturesURLs.length > 0 ? (
-                      <Image
-                        source={{ uri: pet.myPicturesURLs[0] }}
-                        style={styles.petGridImage}
-                      />
-                    ) : (
-                      <View style={styles.defaultPetGridImage}>
-                        <MaterialIcons name="pets" size={30} color="#9188E5" />
-                      </View>
-                    )}
-                    <View style={styles.petGridInfo}>
-                      <Text style={styles.petGridName} numberOfLines={1}>
-                        {pet.name}
-                      </Text>
-                      <Text style={styles.petGridType} numberOfLines={1}>
-                        {pet.type || 'Pet'}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              user.myPets.map((pet) => (
+                <PetCard
+                  key={pet.petId}
+                  pet={pet}
+                />
+              ))
             ) : (
               <View style={styles.noContentContainer}>
-                <MaterialIcons name="pets" size={40} color="#ccc" />
+                <MaterialIcons name="pets" size={64} color="#999" />
                 <Text style={styles.noContentText}>No pets yet</Text>
                 <Text style={styles.noContentSubText}>
                   {isOwnProfile ? "Add your first pet!" : `${user?.name || 'User'} hasn't added any pets yet`}
@@ -996,8 +977,9 @@ export default function UserProfile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-  },  lottie: {
+    backgroundColor: '#F9FAFB',
+  },
+  lottie: {
     width: 80,
     height: 80,
   },
@@ -1051,7 +1033,7 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     padding: 20,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#fff',
   },
   profileImageContainer: {
     marginBottom: 16,
@@ -1270,6 +1252,7 @@ const styles = StyleSheet.create({
   },
   bioContainer: {
     padding: 20,
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
@@ -1316,23 +1299,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   // Updated Pets Section Styles
-  petsSection: {
-    padding: 16,
-  },
-  petsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  petGridCard: {
-    width: '48%',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
-    padding: 12,
-    marginBottom: 16,
-    alignItems: 'center',
+  tabSection: {
+    paddingVertical: 20,
   },
   petGridImage: {
     width: 80,

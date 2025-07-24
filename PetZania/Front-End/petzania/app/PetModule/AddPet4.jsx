@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         borderColor: '#9188E5',
         borderRadius: 10,
-        paddingHorizontal: 15,
+        paddingHorizontal: 16,
         justifyContent: 'center',
         backgroundColor: '#fff',
     },

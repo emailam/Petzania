@@ -11,10 +11,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { UserContext } from '@/context/UserContext';
 import UserList from '@/components/UserList';
+import EmptyState from '@/components/EmptyState';
 import { getFollowersByUserId, getNumberOfFollowersByUserId } from '@/services/friendsService';
 import { getUserById, getUserProfilePicture } from '@/services/userService';
 import Toast from 'react-native-toast-message';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import LottieView from 'lottie-react-native';
 
 export default function Followers() {
   const { userid } = useLocalSearchParams();
@@ -126,24 +128,31 @@ export default function Followers() {
   };
 
   const renderEmptyState = () => (
-    <View style={styles.emptyContainer}>
-      <Ionicons name="people-outline" size={60} color="#ccc" />
-      <Text style={styles.emptyTitle}>No Followers Yet</Text>
-      <Text style={styles.emptySubtitle}>
-        {isOwnProfile
+    <EmptyState
+      iconName="people-outline"
+      title="No Followers Yet"
+      subtitle={
+        isOwnProfile
           ? "When people follow you, they'll appear here"
           : `${profileUser?.name || 'This user'} doesn't have any followers yet`
-        }
-      </Text>
-    </View>
+      }
+    />
   );
 
   if (isLoading && !followersResponse) {
     return (
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#9188E5" />
+          <LottieView
+            source={require("@/assets/lottie/loading.json")}
+            autoPlay
+            loop
+            style={styles.lottie}
+          />
           <Text style={styles.loadingText}>Loading followers...</Text>
+          <Text style={styles.loadingSubText}>
+            Getting follower information
+          </Text>
         </View>
       </View>
     );
@@ -202,6 +211,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  lottie: {
+    width: 80,
+    height: 80,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -235,9 +248,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    marginTop: 12,
-    fontSize: 16,
+    marginTop: 16,
+    fontSize: 18,
     color: '#9188E5',
+    fontWeight: '600',
+  },
+  loadingSubText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
   },
   errorContainer: {
     flex: 1,
@@ -270,26 +290,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#999',
-    marginTop: 16,
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 8,
-    textAlign: 'center',
-    lineHeight: 20,
   },
   footerLoading: {
     flexDirection: 'row',

@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { Redirect } from 'expo-router';
 import { useFonts } from 'expo-font';
-import { ActivityIndicator, View, Text, Image } from 'react-native';
+import { View, Text, Image } from 'react-native';
 import { getToken, clearAllTokens } from '@/storage/tokenStorage';
 import { getUserById } from '@/services/userService';
 import { getUserId } from '@/storage/userStorage';
+import LottieView from 'lottie-react-native';
 
 import { UserContext } from '@/context/UserContext';
 import { PetContext } from '@/context/PetContext';
@@ -72,7 +73,7 @@ export default function App() {
     // Add this effect to handle when user context is lost
     useEffect(() => {
         if (isReady && !user) {
-            setRedirectPath('/RegisterModule/LoginScreen');
+            setRedirectPath('/RegisterModule/Onboarding');
         }
     }, [isReady, user]);
 
@@ -82,7 +83,7 @@ export default function App() {
             // Add 3-second delay before setting app as ready
             const timer = setTimeout(() => {
                 setAppIsReady(true);
-            }, 30);
+            }, 3000);
 
             return () => clearTimeout(timer);
         }
@@ -101,9 +102,9 @@ export default function App() {
 
     if (!appIsReady) {
         return (
-            <View style={{ 
-                flex: 1, 
-                justifyContent: 'center', 
+            <View style={{
+                flex: 1,
+                justifyContent: 'center',
                 alignItems: 'center',
                 backgroundColor: '#9a90f5' // Match your app's primary color
             }}>
@@ -117,10 +118,30 @@ export default function App() {
                     }}
                 />
                 
-                {/* Loading Indicator */}
-                <View style={{ marginTop: 60 }}>
-                    <ActivityIndicator size="large" color="white" />
+                {/* Loading Animation */}
+                <View style={{ marginTop: 40 }}>
+                    <LottieView
+                        source={require('@/assets/lottie/loading.json')}
+                        style={{
+                            width: 100,
+                            height: 100,
+                        }}
+                        autoPlay
+                        loop
+                        speed={1.0}
+                    />
                 </View>
+                
+                {/* Loading Text */}
+                <Text style={{
+                    color: 'white',
+                    fontSize: 16,
+                    fontWeight: '600',
+                    marginTop: 20,
+                    textAlign: 'center'
+                }}>
+                    Loading PetZania...
+                </Text>
             </View>
         );
     }

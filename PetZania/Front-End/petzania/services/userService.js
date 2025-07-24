@@ -4,6 +4,7 @@ import { getToken, clearAllTokens, saveToken} from '../storage/tokenStorage';
 import { saveUserId } from '../storage/userStorage';
 
 export async function getUserById(userId) {
+    console.log('Fetching user by ID:', userId);
     try {
         const response = await api.get(`/user/auth/${userId}`);
 

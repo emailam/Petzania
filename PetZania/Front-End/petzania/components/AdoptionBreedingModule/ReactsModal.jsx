@@ -1,14 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
-  Modal,
   ActivityIndicator,
   Image,
+  BackHandler,
 } from 'react-native';
+import {
+  BottomSheetModal,
+  BottomSheetBackdrop,
+  BottomSheetFlatList,
+} from '@gorhom/bottom-sheet';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 const ReactsModal = ({
@@ -17,8 +22,64 @@ const ReactsModal = ({
   onClose,
   getUsers,
 }) => {
+  const bottomSheetModalRef = useRef(null);
+  const snapPoints = useMemo(() => ['60%'], []);
+  const router = useRouter();
+
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Handle modal visibility
+  useEffect(() => {
+    if (visible) {
+      bottomSheetModalRef.current?.present();
+    } else {
+      bottomSheetModalRef.current?.dismiss();
+    }
+  }, [visible]);
+
+  // Handle Android back button
+  useEffect(() => {
+    const backAction = () => {
+      if (visible) {
+        onClose?.();
+        return true;
+      }
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+    return () => backHandler.remove();
+  }, [visible, onClose]);
+
+  // Handle modal dismiss
+  const handleSheetChanges = useCallback((index) => {
+    if (index === -1) {
+      onClose?.();
+    }
+  }, [onClose]);
+
+  // Backdrop component
+  const renderBackdrop = useCallback(
+    (props) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.5}
+        pressBehavior="close"
+      />
+    ),
+    []
+  );
+
+  const handleNavigateToUser = useCallback((item) => {
+    bottomSheetModalRef.current?.dismiss();
+    router.push({
+      pathname: `/UserModule/${item.userId}`,
+      params: { username: item.username }
+    });
+  }, [router]);
 
   useEffect(() => {
     if (!visible) return;
@@ -39,7 +100,7 @@ const ReactsModal = ({
   }, [visible, post.reactedUsersIds, getUsers]);
 
   const renderUserItem = ({ item }) => (
-    <View style={styles.userItem}>
+    <TouchableOpacity style={styles.userItem} onPress={() => handleNavigateToUser(item)}>
       {item.profilePictureURL ? (
         <Image
           source={{ uri: item.profilePictureURL }}
@@ -50,94 +111,91 @@ const ReactsModal = ({
         <Ionicons name="person-circle-outline" size={32} color="#666" />
       )}
       <Text style={styles.usernameText}>{item.username}</Text>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
-    <Modal
-      animationType="slide"
-      transparent
-      visible={visible}
-      onRequestClose={onClose}
+    <BottomSheetModal
+      ref={bottomSheetModalRef}
+      onChange={handleSheetChanges}
+      snapPoints={snapPoints}
+      backdropComponent={renderBackdrop}
+      enablePanDownToClose={true}
+      enableDismissOnClose={true}
+      handleIndicatorStyle={styles.handleIndicator}
+      backgroundStyle={styles.bottomSheetBackground}
     >
-      <View style={styles.overlay}>
-        <View style={styles.modal}>
+    <BottomSheetFlatList
+      data={loading ? [] : profiles}
+      keyExtractor={u => u.userId}
+      renderItem={renderUserItem}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.flatListContent}
+      ListHeaderComponent={
+        <>
           <View style={styles.header}>
             <Text style={styles.title}>Post Reactions</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <Ionicons name="close" size={24} color="#666" />
             </TouchableOpacity>
           </View>
-
           <View style={styles.content}>
             <Text style={styles.count}>
               {post.reactedUsersIds.length} reaction
               {post.reactedUsersIds.length !== 1 ? 's' : ''}
             </Text>
-
-            {loading ? (
+            {loading && (
               <ActivityIndicator style={{ marginTop: 20 }} />
-            ) : profiles.length > 0 ? (
-              <FlatList
-                data={profiles}
-                keyExtractor={u => u.userId}
-                renderItem={renderUserItem}
-                style={styles.list}
-                showsVerticalScrollIndicator={false}
-              />
-            ) : (
+            )}
+            {!loading && profiles.length === 0 && (
               <Text style={styles.noReacts}>No reactions yet</Text>
             )}
           </View>
-        </View>
-      </View>
-    </Modal>
+        </>
+      }
+      ListEmptyComponent={null}
+    />
+    </BottomSheetModal>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
+  container: {
     flex: 1,
-    backgroundColor: 'rgba(16, 18, 26, 0.50)', // slightly deeper overlay for modern look
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: 'white',
   },
-  modal: {
-    width: '90%',
-    maxHeight: '80%',
-    backgroundColor: '#fff',
-    borderRadius: 12, // match input/button/card system
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+  bottomSheetBackground: {
+    backgroundColor: 'white',
+  },
+  handleIndicator: {
+    backgroundColor: '#9188E5',
+    width: 40,
   },
   header: {
     flexDirection: 'row',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderColor: '#E5E7EB', // match input card border
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB', // subtle off-white
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
   title: {
-    fontSize: 16, // match to input-style label
+    fontSize: 16,
     fontWeight: '500',
-    color: '#374151', // gray-700
+    color: '#374151',
   },
   closeBtn: {
     padding: 4,
     borderRadius: 8,
-    backgroundColor: '#F3F4F6', // subtle hover look on close
+    backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
   },
   content: {
     padding: 16,
     backgroundColor: '#FFFFFF',
+    flex: 1,
   },
   count: {
     fontSize: 14,
@@ -145,16 +203,19 @@ const styles = StyleSheet.create({
     color: '#374151',
     marginBottom: 12,
   },
-  list: { maxHeight: 320 }, // slight increase for better spacing
+  flatListContent: {
+    paddingBottom: 20,
+  },
   userItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,
     paddingHorizontal: 12,
-    backgroundColor: '#F9FAFB', // subtle card background
+    marginHorizontal: 16,
+    backgroundColor: '#F9FAFB',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB', // match to input border
+    borderColor: '#E5E7EB',
     marginBottom: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -171,12 +232,12 @@ const styles = StyleSheet.create({
   usernameText: {
     marginLeft: 12,
     fontSize: 16,
-    color: '#111827', // gray-900
+    color: '#111827',
     fontWeight: '500',
   },
   noReacts: {
     fontSize: 14,
-    color: '#9CA3AF', // gray-400
+    color: '#9CA3AF',
     textAlign: 'center',
     marginTop: 32,
   },

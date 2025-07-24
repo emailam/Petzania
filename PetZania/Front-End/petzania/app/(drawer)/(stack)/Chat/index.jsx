@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
+import EmptyState from "@/components/EmptyState";
 import {
     View,
     Text,
@@ -723,11 +724,11 @@ export default function ChatIndex() {
 
     const renderEmptyState = () => (
         <View style={styles.emptyContainer}>
-            <Ionicons name="chatbubbles-outline" size={60} color="#ccc" />
-            <Text style={styles.emptyTitle}>No Conversations Yet</Text>
-            <Text style={styles.emptySubtitle}>
-                Start a conversation by visiting someone's profile and tapping Message
-            </Text>
+            <EmptyState
+                iconName="chatbubbles-outline"
+                title="No Conversations Yet"
+                subtitle="Start a conversation by visiting someone's profile and tapping Message"
+            />
         </View>
     );
 
@@ -897,25 +898,7 @@ const styles = StyleSheet.create({
         marginLeft: 78,
     },
     emptyContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 40,
-        paddingTop: 100,
-    },
-    emptyTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#999',
-        marginTop: 16,
-        textAlign: 'center',
-    },
-    emptySubtitle: {
-        fontSize: 14,
-        color: '#999',
-        marginTop: 8,
-        textAlign: 'center',
-        lineHeight: 20,
+        paddingVertical: 12
     },
     footerLoading: {
         flexDirection: 'row',

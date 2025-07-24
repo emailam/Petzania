@@ -142,16 +142,8 @@ function PostCard({
                   postId={post.postId}
                   onLikeChange={onPostLikeToggle}
                   initialLiked={post?.reactedUsersIds?.includes(user.userId)}
+                  onLongPress={handleReactsModalPress}
                 />
-                <TouchableOpacity
-                  style={styles.reactCountButton}
-                  onPress={handleReactsModalPress}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.reactCountText}>
-                    {post.reactedUsersIds.length}
-                  </Text>
-                </TouchableOpacity>
               </View>
             </View>
           </View>
@@ -192,7 +184,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    marginHorizontal: 16,
+    marginHorizontal: 10,
     marginVertical: 8,
     padding: 12,
     ...Platform.select({
@@ -203,7 +195,7 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
       },
       android: {
-        elevation: 4,
+        elevation: 2,
       },
     }),
   },

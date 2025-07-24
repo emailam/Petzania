@@ -7,6 +7,7 @@ import { getAllNotifications, markNotificationAsRead, markAllNotificationsAsRead
 import { acceptFriendRequest, cancelFriendRequest } from '@/services/friendsService'
 import { useNotifications } from '@/context/NotificationContext'
 import { getUserById } from '@/services/userService';
+import EmptyState from '@/components/EmptyState';
 
 export default function index() {
     const defaultImage = require('@/assets/images/Defaults/default-user.png');
@@ -512,9 +513,12 @@ export default function index() {
                 {/* Empty state */}
                 {notifications.length === 0 && !loading && (
                     <View style={styles.emptyState}>
-                        <Ionicons name="notifications-off" size={64} color="#ccc" />
-                        <Text style={styles.emptyTitle}>No notifications</Text>
-                        <Text style={styles.emptyMessage}>You're all caught up!</Text>
+                        <EmptyState
+                            iconName="notifications-off"
+                            title="No notifications"
+                            subtitle="You're all caught up!"
+                            iconColor='#ccc'
+                        />
                     </View>
                 )}
             </ScrollView>
@@ -525,7 +529,7 @@ export default function index() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: '#F9FAFB',
     },
     header: {
         backgroundColor: '#fff',
@@ -727,20 +731,6 @@ const styles = StyleSheet.create({
     },
     emptyState: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingTop: 100,
-    },
-    emptyTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#333',
-        marginTop: 16,
-        marginBottom: 8,
-    },
-    emptyMessage: {
-        fontSize: 14,
-        color: '#666',
-        textAlign: 'center',
-    },
+        paddingVertical: 20,
+    }
 })

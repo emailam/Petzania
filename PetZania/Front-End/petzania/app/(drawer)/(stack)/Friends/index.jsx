@@ -6,6 +6,7 @@ import { getFriendsByUserId } from '@/services/friendsService';
 import { getUserProfilePicture } from '@/services/userService';
 import { UserContext } from '@/context/UserContext';
 import UserList from '@/components/UserList';
+import EmptyState from '@/components/EmptyState';
 
 export default function FriendsScreen() {
   const { user } = useContext(UserContext);
@@ -73,9 +74,12 @@ export default function FriendsScreen() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const EmptyComponent = () => (
-    <View style={styles.centered}>
-      <Text style={styles.emptyText}>You have no friends yet.</Text>
-    </View>
+    <EmptyState
+      iconName="people-outline"
+      title="No Friends Yet"
+      subtitle="Start connecting with other pet lovers in your area. Your friends will appear here once you make connections!"
+      style={styles.emptyState}
+    />
   );
 
   const FooterComponent = () => {
@@ -138,6 +142,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
   },
+  emptyState: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
@@ -145,11 +153,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: '#f44336',
-    fontSize: 16,
-    marginTop: 8,
-  },
-  emptyText: {
-    color: '#888',
     fontSize: 16,
     marginTop: 8,
   },
