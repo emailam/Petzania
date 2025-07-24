@@ -1,8 +1,8 @@
 -- USERS TABLE
 CREATE TABLE users (
                        user_id UUID PRIMARY KEY,
-                       username VARCHAR(255) NOT NULL UNIQUE,
-                       email VARCHAR(255) NOT NULL UNIQUE
+                       username VARCHAR(32) NOT NULL UNIQUE,
+                       email VARCHAR(100) NOT NULL UNIQUE
 );
 
 CREATE INDEX idx_username ON users(username);
@@ -10,8 +10,8 @@ CREATE INDEX idx_username ON users(username);
 -- ADMINS TABLE
 CREATE TABLE admins (
                         admin_id UUID PRIMARY KEY,
-                        username VARCHAR(255) NOT NULL UNIQUE,
-                        role VARCHAR(32) NOT NULL
+                        username VARCHAR(32) NOT NULL UNIQUE,
+                        role VARCHAR(20) NOT NULL
 );
 
 -- FRIENDSHIPS TABLE
@@ -106,7 +106,7 @@ CREATE TABLE messages (
                           content TEXT,
                           reply_to_id UUID,
                           sent_at TIMESTAMP NOT NULL,
-                          status VARCHAR(32) NOT NULL,
+                          status VARCHAR(20) NOT NULL,
                           is_file BOOLEAN NOT NULL,
                           is_edited BOOLEAN NOT NULL DEFAULT FALSE,
                           CONSTRAINT fk_message_chat FOREIGN KEY (chat_id) REFERENCES chats(chat_id) ON DELETE CASCADE,
@@ -122,7 +122,7 @@ CREATE TABLE message_reactions (
                                    message_reaction_id UUID PRIMARY KEY,
                                    user_id UUID NOT NULL,
                                    message_id UUID NOT NULL,
-                                   reaction_type VARCHAR(32) NOT NULL,
+                                   reaction_type VARCHAR(20) NOT NULL,
                                    CONSTRAINT fk_reaction_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
                                    CONSTRAINT fk_reaction_message FOREIGN KEY (message_id) REFERENCES messages(message_id) ON DELETE CASCADE,
                                    UNIQUE (user_id, message_id)
