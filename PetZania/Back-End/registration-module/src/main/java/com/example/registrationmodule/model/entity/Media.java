@@ -21,13 +21,13 @@ public class Media {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID mediaId;
 
-    @Column(name = "media_key")
+    @Column(name = "media_key", length = 255)
     private String key; // S3 key
 
-    @Column(name = "type")
+    @Column(name = "type", length = 50)
     private String type; // Content type like image/jpeg, video/mp4
 
-    @Column(name = "format")
+    @Column(name = "format", length = 10)
     private String format; // jpg, png, mp4, etc.
 
     @Column(nullable = false, updatable = false)

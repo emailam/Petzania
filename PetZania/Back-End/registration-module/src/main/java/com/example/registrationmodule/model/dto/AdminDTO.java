@@ -18,10 +18,10 @@ public class AdminDTO {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY) // This prevents clients from sending adminId
     private UUID adminId;
 
-    @Size(min = 5, max = 32, message = "Username must be between 5 and 30 characters")
+    @Size(min = 5, max = 32, message = "Username must be between 5 and 32 characters.")
     private String username;
 
-    @Size(min = 8, message = "Password must be at least 8 characters long.")
+    @Size(min = 8, max = 32, message = "Password must be between 8 and 32 characters.")
     @Pattern(
             regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[!@#$&~%*()\\[\\]]).{8,}$",
             message = "Password must include at least 1 uppercase letter, 1 lowercase letter, 1 special symbol (!@#$&~%*()[]), and 1 number."

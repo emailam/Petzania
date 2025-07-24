@@ -2,11 +2,11 @@
 CREATE TABLE users (
                        user_id UUID PRIMARY KEY,
                        username VARCHAR(32) NOT NULL UNIQUE,
-                       password VARCHAR(255) NOT NULL,
+                       password VARCHAR(100) NOT NULL,
                        login_times INTEGER DEFAULT 0,
-                       email VARCHAR(255) NOT NULL UNIQUE,
-                       name VARCHAR(255),
-                       bio TEXT,
+                       email VARCHAR(100) NOT NULL UNIQUE,
+                       name VARCHAR(50),
+                       bio VARCHAR(255),
                        profile_picture_url VARCHAR(255),
                        phone_number VARCHAR(20),
                        verification_code VARCHAR(10),
@@ -27,8 +27,8 @@ CREATE INDEX idx_is_blocked ON users(is_blocked);
 CREATE TABLE admins (
                         admin_id UUID PRIMARY KEY,
                         username VARCHAR(32) NOT NULL UNIQUE,
-                        password VARCHAR(255) NOT NULL,
-                        role VARCHAR(32) NOT NULL
+                        password VARCHAR(100) NOT NULL,
+                        role VARCHAR(20) NOT NULL
 );
 
 CREATE INDEX idx_admin_username ON admins(username);
@@ -37,9 +37,9 @@ CREATE INDEX idx_admin_role ON admins(role);
 -- PETS TABLE
 CREATE TABLE pets (
                       pet_id UUID PRIMARY KEY,
-                      name VARCHAR(255) NOT NULL,
-                      description TEXT,
-                      gender VARCHAR(16) NOT NULL,
+                      name VARCHAR(50) NOT NULL,
+                      description VARCHAR(255),
+                      gender VARCHAR(10) NOT NULL,
                       date_of_birth DATE NOT NULL,
                       breed VARCHAR(32) NOT NULL,
                       species VARCHAR(32) NOT NULL,
@@ -83,8 +83,8 @@ CREATE INDEX idx_blocked_users ON blocks(blocker_id);
 CREATE TABLE media (
                        media_id UUID PRIMARY KEY,
                        media_key VARCHAR(255),
-                       type VARCHAR(64),
-                       format VARCHAR(32),
+                       type VARCHAR(50),
+                       format VARCHAR(10),
                        uploaded_at TIMESTAMP NOT NULL
 );
 

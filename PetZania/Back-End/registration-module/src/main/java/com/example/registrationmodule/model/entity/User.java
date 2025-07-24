@@ -31,34 +31,34 @@ public class User {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
-    @Column(name = "username", nullable = false, unique = true)
+    @Column(name = "username", length = 32, nullable = false, unique = true)
     private String username;
 
-    @Column(name = "password", nullable = false)
+    @Column(name = "password", length = 100, nullable = false)
     private String password;
 
     @Column(name = "login_times")
     private Integer loginTimes = 0;
-    @Column(name = "email", nullable = false, unique = true)
+    @Column(name = "email", length = 100, nullable = false, unique = true)
     @Email
     private String email;
 
-    @Column(name = "name")
+    @Column(name = "name", length = 50)
     private String name;
 
-    @Column(name = "bio")
+    @Column(name = "bio", length = 255)
     private String bio;
 
-    @Column(name = "profile_picture_url")
+    @Column(name = "profile_picture_url", length = 255)
     private String profilePictureURL;
 
-    @Column(name = "phone_number")
+    @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
-    @Column(name = "verification_code")
+    @Column(name = "verification_code", length = 10)
     private String verificationCode;
 
-    @Column(name = "reset_code")
+    @Column(name = "reset_code", length = 10)
     private String resetCode;
 
     @Column(name = "reset_code_expiration_time")
