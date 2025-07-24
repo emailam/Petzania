@@ -29,7 +29,7 @@ public class Notification {
     @Column(name = "recipient_id", nullable = false)
     private UUID recipientId;
 
-    @Column(name = "message", nullable = false, length = 500)
+    @Column(name = "message", nullable = false, length = 255)
     private String message;
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)

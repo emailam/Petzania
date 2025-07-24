@@ -18,7 +18,7 @@ CREATE TABLE admins (
 CREATE TABLE notifications (
                                notification_id UUID PRIMARY KEY,
                                recipient_id UUID NOT NULL,
-                               message VARCHAR(500) NOT NULL,
+                               message VARCHAR(255) NOT NULL,
                                type VARCHAR(32) NOT NULL,
                                status VARCHAR(32) NOT NULL,
                                created_at TIMESTAMP NOT NULL,

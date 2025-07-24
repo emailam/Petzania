@@ -21,10 +21,10 @@ public class Admin {
     @Column(name = "admin_id", nullable = false)
     private UUID adminId;
 
-    @Column(name = "username", nullable = false, unique = true)
+    @Column(name = "username", length = 32, nullable = false, unique = true)
     private String username;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false)
+    @Column(name = "role", length = 20, nullable = false)
     private AdminRole role;
 }
