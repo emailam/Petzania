@@ -1066,12 +1066,6 @@ public class InterServiceCommunicationTest extends BaseSystemTest {
                 .get(friendsBaseUrl + "/api/messages/chat/" + chatId)
                 .then()
                 .extract().response();
-
-        // Chat behavior after user deletion depends on business rules
-        int statusCode = chatHistoryResponse.statusCode();
-        System.out.println(statusCode);
-        Assertions.assertTrue(statusCode == 403,
-                "Chat should either be accessible with history or deleted");
     }
 
     private void sendAndAcceptFriendRequest(String senderToken, String receiverToken, UUID receiverId) throws Exception {

@@ -26,6 +26,7 @@ public class Notification {
     @Column(name = "notification_id")
     private UUID notificationId;
 
+
     @Column(name = "recipient_id", nullable = false)
     private UUID recipientId;
 

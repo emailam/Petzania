@@ -31,9 +31,9 @@ public class UserEventListener {
     @RabbitListener(queues = "userDeletedQueueNotificationModule")
     public void onUserDeleted(UserEvent user) {
         if (userRepository.existsById(user.getUserId())) {
-            userRepository.deleteById(user.getUserId());
             notificationRepository.deleteByRecipientId(user.getUserId());
             notificationRepository.deleteByInitiatorId(user.getUserId());
+            userRepository.deleteById(user.getUserId());
             System.out.println("received deleted user: " + user);
         }
     }
