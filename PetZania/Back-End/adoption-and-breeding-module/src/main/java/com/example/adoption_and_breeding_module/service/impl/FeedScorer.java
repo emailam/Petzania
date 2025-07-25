@@ -37,6 +37,18 @@ public class FeedScorer {
     @Value("${feed.weights.distance:400}")
     private long wDistance;
 
+    @Value("${feed.weights.speciesAffinity:250}")
+    private long wSpeciesAffinity;
+
+    @Value("${feed.weights.breedAffinity:150}")
+    private long wBreedAffinity;
+
+    @Value("${feed.weights.postTypeAffinity:200}")
+    private long wPostTypeAffinity;
+
+    @Value("${feed.weights.authorAffinity:100}")
+    private long wAuthorAffinity;
+
     @Value("${feed.freshness-window-hours:96}")
     private long freshnessWindowHours;
 
@@ -49,44 +61,48 @@ public class FeedScorer {
         this.petPostRepository = petPostRepository;
     }
 
-    /**
-     * Score & sort the given candidate posts in‐place.
-     *
-     * @param posts            candidate posts to rank
-     * @param userLat          user's latitude
-     * @param userLng          user's longitude
-     * @param userTotalReacts  total reacts by this user
-     * @param reactsBySpecies  map of species→react‐count for user
-     * @param reactsByPostType map of postType→react‐count for user
-     * @param friendIds        IDs of this user's friends
-     * @param followeeIds      IDs of users this user follows
-     */
     public void scoreAndSort(
             List<PetPost> posts,
-            double userLat,
-            double userLng,
+            double userLat, double userLng,
             long userTotalReacts,
             Map<PetSpecies, Long> reactsBySpecies,
             Map<PetPostType, Long> reactsByPostType,
             List<UUID> friendIds,
-            List<UUID> followeeIds
+            List<UUID> followeeIds,
+            Map<PetSpecies, Long> interestSpecies,
+            Map<String, Long> interestBreed,
+            Map<PetPostType, Long> interestPostType,
+            Map<UUID, Long> interestOwner
     ) {
         Instant now = Instant.now(clock);
-
-        // 1) find max reacts among candidates for normalization
         long maxReacts = posts.stream()
                 .mapToLong(PetPost::getReacts)
-                .max()
+                .max().orElse(1L);
+
+        // find the maximum *absolute* interest score in each category
+        long maxSpeciesScore = interestSpecies.values().stream()
+                .map(Math::abs)
+                .max(Long::compare)
+                .orElse(1L);
+        long maxBreedScore = interestBreed.values().stream()
+                .map(Math::abs)
+                .max(Long::compare)
+                .orElse(1L);
+        long maxPostTypeScore = interestPostType.values().stream()
+                .map(Math::abs)
+                .max(Long::compare)
+                .orElse(1L);
+        long maxOwnerScore = interestOwner.values().stream()
+                .map(Math::abs)
+                .max(Long::compare)
                 .orElse(1L);
 
-        for (PetPost p : posts) {
-            // 2) recency: hours left in window → [0..SIGNAL_SCALE]
-            long recSc = recencyScoreLong(p.getCreatedAt(), now);
 
-            // 3) total-reacts: count/maxReacts → [0..SIGNAL_SCALE]
+        for (PetPost p : posts) {
+            long recSc = recencyScoreLong(p.getCreatedAt(), now);
             long reactSc = totalReactsScoreLong(p.getReacts(), maxReacts);
 
-            // 4) affinities: categoryReacts/userTotalReacts → [0..SIGNAL_SCALE]
+            // … existing affinity from reacts …
             long petAff = affinityScoreLong(
                     reactsBySpecies.getOrDefault(p.getPet().getSpecies(), 0L),
                     userTotalReacts
@@ -96,29 +112,44 @@ public class FeedScorer {
                     userTotalReacts
             );
 
-            // 5) social boost is already in long units (no scale)
-            long socialBoost = friendIds.contains(p.getOwner().getUserId()) ? wFriendBoost : 0L;
-            socialBoost += followeeIds.contains(p.getOwner().getUserId()) ? wFolloweeBoost : 0L;
+            // —— signed interest scores ——
+            long speciesScore = interestSpecies.getOrDefault(p.getPet().getSpecies(), 0L);
+            long breedScore = interestBreed.getOrDefault(p.getPet().getBreed(), 0L);
+            long postTypeScore = interestPostType.getOrDefault(p.getPostType(), 0L);
+            long ownerScore = interestOwner.getOrDefault(p.getOwner().getUserId(), 0L);
 
-            // 6) distance: (1/(1+km)) → [0..SIGNAL_SCALE]
+            // map into [–SIGNAL_SCALE .. +SIGNAL_SCALE]
+            long speciesBoost = affinityScoreLong(speciesScore, maxSpeciesScore);
+            long breedBoost = affinityScoreLong(breedScore, maxBreedScore);
+            long postTypeBoost = affinityScoreLong(postTypeScore, maxPostTypeScore);
+            long ownerBoost = affinityScoreLong(ownerScore, maxOwnerScore);
+
+
+            long socialBoost = (friendIds.contains(p.getOwner().getUserId())
+                    ? wFriendBoost : 0)
+                    + (followeeIds.contains(p.getOwner().getUserId())
+                    ? wFolloweeBoost : 0);
+
             long distSc = distanceScoreLong(
                     userLat, userLng,
                     p.getLatitude(), p.getLongitude()
             );
 
-            // 7) final weighted sum
             long score =
                     wRecency * recSc
                     + wTotalReacts * reactSc
                     + wPetCategoryAffinity * petAff
                     + wPostCategoryAffinity * typeAff
+                    + wSpeciesAffinity * speciesBoost
+                    + wBreedAffinity * breedBoost
+                    + wPostTypeAffinity * postTypeBoost
+                    + wAuthorAffinity * ownerBoost
                     + socialBoost
                     + wDistance * distSc;
 
             p.setScore(score);
         }
 
-        // sort descending by the long score
         posts.sort(Comparator.comparingLong(PetPost::getScore).reversed());
     }
 

@@ -1,6 +1,7 @@
 package com.example.adoption_and_breeding_module.service.impl;
 
 import com.example.adoption_and_breeding_module.exception.BlockingExist;
+import com.example.adoption_and_breeding_module.exception.PetPostInterestNotFound;
 import com.example.adoption_and_breeding_module.exception.PetPostNotFound;
 import com.example.adoption_and_breeding_module.exception.UserAccessDenied;
 import com.example.adoption_and_breeding_module.exception.UserNotFound;
@@ -8,15 +9,23 @@ import com.example.adoption_and_breeding_module.model.dto.*;
 import com.example.adoption_and_breeding_module.model.entity.Pet;
 import com.example.adoption_and_breeding_module.model.entity.PetPost;
 import com.example.adoption_and_breeding_module.model.entity.User;
+import com.example.adoption_and_breeding_module.model.entity.PetPostInterest;
+import com.example.adoption_and_breeding_module.model.entity.PetPostInterestId;
 import com.example.adoption_and_breeding_module.model.enumeration.PetPostSortBy;
 import com.example.adoption_and_breeding_module.model.enumeration.PetPostType;
 import com.example.adoption_and_breeding_module.model.enumeration.PetSpecies;
+import com.example.adoption_and_breeding_module.model.enumeration.InterestType;
 import com.example.adoption_and_breeding_module.repository.*;
+import com.example.adoption_and_breeding_module.repository.projection.BreedScore;
+import com.example.adoption_and_breeding_module.repository.projection.OwnerScore;
+import com.example.adoption_and_breeding_module.repository.projection.PostTypeScore;
+import com.example.adoption_and_breeding_module.repository.projection.SpeciesScore;
 import com.example.adoption_and_breeding_module.service.IDTOConversionService;
 import com.example.adoption_and_breeding_module.service.IPetPostService;
 import com.example.adoption_and_breeding_module.util.PetPostSpecification;
 import com.example.adoption_and_breeding_module.repository.PetPostRepository.SpeciesCount;
 import com.example.adoption_and_breeding_module.repository.PetPostRepository.TypeCount;
+import com.example.adoption_and_breeding_module.repository.PetPostInterestRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
@@ -48,6 +57,7 @@ public class PetPostService implements IPetPostService {
     private final IDTOConversionService dtoConversionService;
     private final NotificationPublisher notificationPublisher;
     private final FeedScorer feedScorer;
+    private final PetPostInterestRepository petPostInterestRepository;
 
     @Value("${post.expiration-days:30}")
     private long expirationDays;
@@ -199,6 +209,23 @@ public class PetPostService implements IPetPostService {
                         TypeCount::getPostType,
                         TypeCount::getCnt
                 ));
+        // 3b. Fetch interest metrics
+
+        List<SpeciesScore> speciesScores = petPostInterestRepository.scoreBySpecies(userId);
+        Map<PetSpecies, Long> interestSpecies = speciesScores.stream()
+                .collect(Collectors.toMap(SpeciesScore::getSpecies, SpeciesScore::getScore));
+
+        List<BreedScore> breedScores = petPostInterestRepository.scoreByBreed(userId);
+        Map<String, Long> interestBreed = breedScores.stream()
+                .collect(Collectors.toMap(BreedScore::getBreed, BreedScore::getScore));
+
+        List<PostTypeScore> postTypeScores = petPostInterestRepository.scoreByPostType(userId);
+        Map<PetPostType, Long> interestPostType = postTypeScores.stream()
+                .collect(Collectors.toMap(PostTypeScore::getPostType, PostTypeScore::getScore));
+
+        List<OwnerScore> ownerScores = petPostInterestRepository.scoreByOwner(userId);
+        Map<UUID, Long> interestOwner = ownerScores.stream()
+                .collect(Collectors.toMap(OwnerScore::getOwnerId, OwnerScore::getScore));
 
         if (filter.getSortBy() == PetPostSortBy.SCORE) {
             int window = (page + 1) * size;
@@ -235,7 +262,7 @@ public class PetPostService implements IPetPostService {
             union.addAll(popularPosts);
             List<PetPost> candidates = new ArrayList<>(union);
 
-            // Score & sort
+            // Score & sort with interest metrics
             feedScorer.scoreAndSort(
                     candidates,
                     user.getLatitude(),
@@ -244,7 +271,11 @@ public class PetPostService implements IPetPostService {
                     reactsBySpecies,
                     reactsByType,
                     friends,
-                    followeeIds
+                    followeeIds,
+                    interestSpecies,
+                    interestBreed,
+                    interestPostType,
+                    interestOwner
             );
 
             // Slice page
@@ -261,6 +292,35 @@ public class PetPostService implements IPetPostService {
         String field = filter.getSortBy() == REACTS ? "reacts" : "createdAt";
         return petPostRepository.findAll(baseSpec, PageRequest.of(page, size, Sort.by(dir, field)))
                 .map(dtoConversionService::mapToPetPostDTO);
+    }
+
+    @Override
+    public void markInterest(UUID postId, UUID userId, InterestType interestType) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFound("User not found with ID: " + userId));
+        PetPost post = petPostRepository.findById(postId)
+                .orElseThrow(() -> new PetPostNotFound("Pet post not found with ID: " + postId));
+        PetPostInterestId interestId = new PetPostInterestId(userId, postId);
+        PetPostInterest interest = petPostInterestRepository.findById(interestId)
+                .orElse(PetPostInterest.builder().id(interestId).user(user).post(post).build());
+        interest.setInterestType(interestType);
+        petPostInterestRepository.save(interest);
+    }
+
+    @Override
+    public void removeInterest(UUID postId, UUID userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new UserNotFound("User not found with ID: " + userId);
+        }
+        if (!petPostRepository.existsById(postId)) {
+            throw new PetPostNotFound("Pet post not found with ID: " + postId);
+        }
+        // throw exception if interest does not exist
+        PetPostInterestId interestId = new PetPostInterestId(userId, postId);
+        if (!petPostInterestRepository.existsById(interestId)) {
+            throw new PetPostInterestNotFound("Pet post interest not found with ID: " + interestId);
+        }
+        petPostInterestRepository.deleteById(interestId);
     }
 
     /** Helper: pick the top N keys by their map values (descending). */

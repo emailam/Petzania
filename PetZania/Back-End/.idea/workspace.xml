@@ -5,11 +5,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ea048906-7657-4d6f-95bf-3cfefcfdfc3b" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/entity/UserPreference.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/enumeration/PreferenceType.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/entity/PetPostInterest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/entity/PetPostInterestId.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/enumeration/InterestType.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/PetPostInterestRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/projection/BreedScore.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/projection/OwnerScore.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/projection/PostTypeScore.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/projection/SpeciesScore.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/controller/PetPostController.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/controller/PetPostController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/exception/globalhandler/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/exception/globalhandler/GlobalExceptionHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/IPetPostService.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/IPetPostService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/FeedScorer.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/FeedScorer.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/PetPostService.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/PetPostService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/util/PetPostSpecification.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/util/PetPostSpecification.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/resources/application.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/test/java/com/example/adoption_and_breeding_module/controller/PetPostControllerIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/test/java/com/example/adoption_and_breeding_module/controller/PetPostControllerIntegrationTests.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/test/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/test/resources/application.yml" afterDir="false" />
@@ -22,9 +31,9 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Interface" />
         <option value="Enum" />
         <option value="Class" />
+        <option value="Interface" />
       </list>
     </option>
   </component>
@@ -96,6 +105,9 @@
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\Petzania\PetZania\Back-End\adoption-and-breeding-module\src\main\java\com\example\adoption_and_breeding_module\model\entity" />
     </key>
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.example.adoption_and_breeding_module.repository.projection" />
+    </key>
   </component>
   <component name="RunDashboard">
     <option name="configurationTypes">
@@ -123,22 +135,6 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="InterServiceCommunicationTest.testUserDeletionPropagation" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="petzania-system-tests" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.example.petzaniasystemtests.tests.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.example.petzaniasystemtests.tests" />
-      <option name="MAIN_CLASS_NAME" value="com.example.petzaniasystemtests.tests.InterServiceCommunicationTest" />
-      <option name="METHOD_NAME" value="testUserDeletionPropagation" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="PetPostControllerIntegrationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="adoption-and-breeding-module" />
       <extension name="coverage">
@@ -150,6 +146,22 @@
       <option name="PACKAGE_NAME" value="com.example.adoption_and_breeding_module.controller" />
       <option name="MAIN_CLASS_NAME" value="com.example.adoption_and_breeding_module.controller.PetPostControllerIntegrationTests" />
       <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="PetPostControllerIntegrationTests.markInterestedAndRemoveInterest_Success" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="adoption-and-breeding-module" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.example.adoption_and_breeding_module.controller.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.example.adoption_and_breeding_module.controller" />
+      <option name="MAIN_CLASS_NAME" value="com.example.adoption_and_breeding_module.controller.PetPostControllerIntegrationTests" />
+      <option name="METHOD_NAME" value="markInterestedAndRemoveInterest_Success" />
+      <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -220,10 +232,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="JUnit.PetPostControllerIntegrationTests" />
+        <item itemvalue="JUnit.PetPostControllerIntegrationTests.markInterestedAndRemoveInterest_Success" />
         <item itemvalue="JUnit.AdoptionAndBreedingModuleApplicationTests" />
         <item itemvalue="JUnit.PetPostControllerIntegrationTests.userDeletionShouldCascadeToPetPosts" />
         <item itemvalue="JUnit.RegistrationSystemTest.testUserDeletionEventPropagation" />
-        <item itemvalue="JUnit.InterServiceCommunicationTest.testUserDeletionPropagation" />
       </list>
     </recent_temporary>
   </component>
@@ -275,7 +287,8 @@
       <workItem from="1753101367579" duration="4254000" />
       <workItem from="1753122119806" duration="895000" />
       <workItem from="1753188841305" duration="1261000" />
-      <workItem from="1753362768247" duration="946000" />
+      <workItem from="1753362768247" duration="5219000" />
+      <workItem from="1753457190354" duration="2033000" />
     </task>
     <servers />
   </component>

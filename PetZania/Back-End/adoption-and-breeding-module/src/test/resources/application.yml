@@ -50,6 +50,10 @@ feed:
         friendBoost:          5000
         followeeBoost:        3000
         distance:             400
+        speciesAffinity:      250
+        breedAffinity:        150
+        postTypeAffinity:     200
+        authorAffinity:       100
     freshness-window-hours: 96
 
 post:

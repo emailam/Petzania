@@ -35,6 +35,10 @@ import org.springframework.http.MediaType;
 import com.example.adoption_and_breeding_module.repository.PetRepository;
 import com.example.adoption_and_breeding_module.repository.FriendshipRepository;
 import com.example.adoption_and_breeding_module.repository.FollowRepository;
+import com.example.adoption_and_breeding_module.repository.PetPostInterestRepository;
+import com.example.adoption_and_breeding_module.model.entity.PetPostInterest;
+import com.example.adoption_and_breeding_module.model.entity.PetPostInterestId;
+import com.example.adoption_and_breeding_module.model.enumeration.InterestType;
 import jakarta.persistence.EntityManager;
 
 import java.sql.Timestamp;
@@ -82,6 +86,8 @@ public class PetPostControllerIntegrationTests {
     private FriendshipRepository friendshipRepository;
     @Autowired
     private FollowRepository followRepository;
+    @Autowired
+    private PetPostInterestRepository petPostInterestRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule())
@@ -809,6 +815,39 @@ public class PetPostControllerIntegrationTests {
     }
 
     @Test
+    void markInterestedAndRemoveInterest_Success() throws Exception {
+        // Mark as interested
+        mockMvc.perform(put("/api/pet-posts/{petPostId}/interested", adoptionPost.getPostId()))
+                .andExpect(status().isOk());
+
+        // Mark as not interested (should overwrite interest)
+        mockMvc.perform(put("/api/pet-posts/{petPostId}/not-interested", adoptionPost.getPostId()))
+                .andExpect(status().isOk());
+
+        // Remove interest
+        mockMvc.perform(delete("/api/pet-posts/{petPostId}/interest", adoptionPost.getPostId()))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void markInterested_NotFoundCases() throws Exception {
+        UUID nonExistentId = UUID.randomUUID();
+        // Mark interest on non-existent post
+        mockMvc.perform(put("/api/pet-posts/{petPostId}/interested", nonExistentId))
+                .andExpect(status().isNotFound());
+        // Remove interest on non-existent post
+        mockMvc.perform(delete("/api/pet-posts/{petPostId}/interest", nonExistentId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void removeInterest_NotFoundInterest() throws Exception {
+        // Try to remove interest when none exists
+        mockMvc.perform(delete("/api/pet-posts/{petPostId}/interest", adoptionPost.getPostId()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void testFilteredPostsSortedByScore() throws Exception {
         // 1. Create additional users
         User userD = userRepository.save(TestDataUtil.createTestUser("userD"));
@@ -899,7 +938,31 @@ public class PetPostControllerIntegrationTests {
         List<PetPost> allPosts = new ArrayList<>(savedNew);
         allPosts.add(adoptionPost);
         allPosts.add(breedingPost);
-        // Score & sort in-memory using userA's context
+
+        // Add interest: userA marks DogAffinity as INTERESTED
+        PetPost dogAffinityPost = allPosts.stream()
+                .filter(p -> "DogAffinity".equals(p.getPet().getName()))
+                .findFirst().orElseThrow();
+        petPostInterestRepository.save(
+                PetPostInterest.builder()
+                        .id(new PetPostInterestId(userA.getUserId(), dogAffinityPost.getPostId()))
+                        .user(userA)
+                        .post(dogAffinityPost)
+                        .interestType(InterestType.INTERESTED)
+                        .build()
+        );
+
+        // Prepare interest maps for scoring
+        Map<PetSpecies, Long> interestSpecies = petPostInterestRepository.scoreBySpecies(userA.getUserId()).stream()
+                .collect(Collectors.toMap(e -> e.getSpecies(), e -> e.getScore()));
+        Map<String, Long> interestBreed = petPostInterestRepository.scoreByBreed(userA.getUserId()).stream()
+                .collect(Collectors.toMap(e -> e.getBreed(), e -> e.getScore()));
+        Map<PetPostType, Long> interestPostType = petPostInterestRepository.scoreByPostType(userA.getUserId()).stream()
+                .collect(Collectors.toMap(e -> e.getPostType(), e -> e.getScore()));
+        Map<UUID, Long> interestOwner = petPostInterestRepository.scoreByOwner(userA.getUserId()).stream()
+                .collect(Collectors.toMap(e -> e.getOwnerId(), e -> e.getScore()));
+
+        // Score & sort in-memory using userA's context, with interest
         feedScorer.scoreAndSort(
                 allPosts,
                 userA.getLatitude(),
@@ -908,7 +971,11 @@ public class PetPostControllerIntegrationTests {
                 petPostRepository.countReactsBySpecies(userA.getUserId()).stream().collect(Collectors.toMap(e -> e.getSpecies(), e -> e.getCnt())),
                 petPostRepository.countReactsByPostType(userA.getUserId()).stream().collect(Collectors.toMap(e -> e.getPostType(), e -> e.getCnt())),
                 friendshipRepository.findUser2_UserIdByUser1_UserId(userA.getUserId()),
-                followRepository.findFollowed_UserIdByFollower_UserId(userA.getUserId())
+                followRepository.findFollowed_UserIdByFollower_UserId(userA.getUserId()),
+                interestSpecies,
+                interestBreed,
+                interestPostType,
+                interestOwner
         );
         Map<UUID, Long> expectedScores = allPosts.stream()
                 .collect(Collectors.toMap(PetPost::getPostId, PetPost::getScore));

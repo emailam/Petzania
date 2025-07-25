@@ -1,6 +1,7 @@
 package com.example.adoption_and_breeding_module.exception.globalhandler;
 
 import com.example.adoption_and_breeding_module.exception.BlockingExist;
+import com.example.adoption_and_breeding_module.exception.PetPostInterestNotFound;
 import com.example.adoption_and_breeding_module.exception.PetPostNotFound;
 import com.example.adoption_and_breeding_module.exception.UserAccessDenied;
 import com.example.adoption_and_breeding_module.exception.UserNotFound;
@@ -79,4 +80,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleBlockingExistException(BlockingExist ex) {
         return buildErrorResponse(ex, HttpStatus.FORBIDDEN);
     }
+
+    @ExceptionHandler(PetPostInterestNotFound.class)
+    public ResponseEntity<Map<String, Object>> handlePetPostInterestNotFoundException(PetPostInterestNotFound ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+    
 }
