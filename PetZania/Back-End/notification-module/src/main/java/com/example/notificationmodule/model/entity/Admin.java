@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -15,7 +16,7 @@ import java.util.UUID;
 @Data
 @Entity
 @Table(name = "admins")
-public class Admin {
+public class Admin implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "admin_id", nullable = false)

@@ -63,4 +63,9 @@ public class Notification {
             createdAt = Instant.now();
         }
     }
+
+    public Map<String, String> getAttributes() {
+        return attributes == null ? null : Map.copyOf(attributes);
+    }
+
 }

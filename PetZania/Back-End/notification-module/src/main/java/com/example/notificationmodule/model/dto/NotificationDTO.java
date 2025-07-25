@@ -23,4 +23,9 @@ public class NotificationDTO {
     private NotificationStatus status;
     private Map<String, String> attributes;
     private Instant createdAt;
+
+    public Map<String, String> getAttributes() {
+        return attributes == null ? null : Map.copyOf(attributes);
+        // Or: return attributes == null ? null : new HashMap<>(attributes);
+    }
 }

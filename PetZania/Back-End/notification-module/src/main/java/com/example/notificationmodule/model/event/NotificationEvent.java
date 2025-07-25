@@ -21,4 +21,7 @@ public class NotificationEvent {
     private String message;
     private Map<String, String> attributes;
 
+    public Map<String, String> getAttributes() {
+        return attributes == null ? null : Map.copyOf(attributes);
+    }
 }

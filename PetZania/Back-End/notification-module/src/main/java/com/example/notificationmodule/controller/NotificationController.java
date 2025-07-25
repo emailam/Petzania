@@ -4,6 +4,7 @@ import com.example.notificationmodule.model.dto.NotificationDTO;
 import com.example.notificationmodule.model.principal.UserPrincipal;
 import com.example.notificationmodule.service.INotificationService;
 import com.example.notificationmodule.util.SecurityUtils;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import java.util.UUID;
 @RequestMapping("/api/notifications")
 @Tag(name = "Notifications", description = "Notification management endpoints")
 public class NotificationController {
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Injected Spring Bean, safe for use here")
     private final INotificationService notificationService;
 
     @Operation(summary = "Get notifications for a user with pagination")

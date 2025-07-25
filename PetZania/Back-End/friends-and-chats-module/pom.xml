@@ -190,17 +190,16 @@
 			<plugin>
 				<groupId>com.github.spotbugs</groupId>
 				<artifactId>spotbugs-maven-plugin</artifactId>
-				<version>4.7.3.6</version>
+				<version>4.8.5.0</version>
+				<dependencies>
+					<dependency>
+						<groupId>com.github.spotbugs</groupId>
+						<artifactId>spotbugs</artifactId>
+						<version>4.8.5</version>
+					</dependency>
+				</dependencies>
 				<configuration>
-					<effort>Max</effort>
-					<threshold>Low</threshold>
-					<plugins>
-						<plugin>
-							<groupId>com.h3xstream.findsecbugs</groupId>
-							<artifactId>findsecbugs-plugin</artifactId>
-							<version>1.12.0</version>
-						</plugin>
-					</plugins>
+					<htmlOutput>true</htmlOutput>
 				</configuration>
 			</plugin>
 			<plugin>

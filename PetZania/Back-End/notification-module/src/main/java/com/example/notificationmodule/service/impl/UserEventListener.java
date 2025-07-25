@@ -19,10 +19,11 @@ public class UserEventListener {
     @RabbitListener(queues = "userRegisteredQueueNotificationModule")
     public void onUserRegistered(UserEvent user) {
         if (!userRepository.existsById(user.getUserId()) && !userRepository.existsByUsername(user.getUsername()) && !userRepository.existsByEmail(user.getEmail())) {
-            User newUser = new User();
-            newUser.setUserId(user.getUserId());
-            newUser.setUsername(user.getUsername());
-            newUser.setEmail(user.getEmail());
+            User newUser = User.builder()
+                    .userId(user.getUserId())
+                    .email(user.getEmail())
+                    .username(user.getUsername())
+                    .build();
             userRepository.save(newUser);
             System.out.println("received registered user: " + user);
         }
