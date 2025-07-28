@@ -1,6 +1,7 @@
 package com.example.notificationmodule.service.impl;
 
 import com.example.notificationmodule.model.entity.Notification;
+import com.example.notificationmodule.model.enumeration.NotificationType;
 import com.example.notificationmodule.model.event.NotificationEvent;
 import com.example.notificationmodule.repository.NotificationRepository;
 import com.example.notificationmodule.service.IDTOConversionService;
@@ -25,12 +26,26 @@ public class NotificationEventListener {
         log.info("Received notification event: {} for recipient: {}", event.getType(), event.getRecipientId());
 
         try {
+            if (event.getType() == NotificationType.PET_POST_DELETED) {
+                notificationRepository.deleteByEntityId(event.getEntityId());
+                log.info("Deleted notifications for deleted post {}", event.getEntityId());
+                return;
+            }
+            if (event.getType() == NotificationType.FRIEND_REQUEST_WITHDRAWN) {
+                notificationRepository.deleteByEntityId(event.getEntityId());
+                log.info("Deleted notifications for withdrawn friend request {}", event.getEntityId());
+                return;
+            }
+            if (event.getInitiatorId() == event.getRecipientId()) {
+                // Ignore notifications to yourself.
+                return;
+            }
             Notification notification = Notification.builder()
                     .recipientId(event.getRecipientId())
                     .initiatorId(event.getInitiatorId())
+                    .entityId(event.getEntityId())
                     .type(event.getType())
                     .message(event.getMessage())
-                    .attributes(event.getAttributes())
                     .build();
 
             Notification savedNotification = notificationRepository.save(notification);

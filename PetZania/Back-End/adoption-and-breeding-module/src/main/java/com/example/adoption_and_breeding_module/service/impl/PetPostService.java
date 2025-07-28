@@ -43,7 +43,7 @@ public class PetPostService implements IPetPostService {
     private final FeedScorer feedScorer;
 
     @Override
-    public PetPostDTO createPetPost(CreatePetPostDTO dto, UUID ownerId){
+    public PetPostDTO createPetPost(CreatePetPostDTO dto, UUID ownerId) {
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new UserNotFound("User not found with id: " + ownerId));
 
@@ -82,7 +82,7 @@ public class PetPostService implements IPetPostService {
         if (dto.getDescription() != null) {
             post.setDescription(dto.getDescription());
         }
-        if(dto.getLocation() != null) {
+        if (dto.getLocation() != null) {
             post.setLocation(dto.getLocation());
         }
         if (dto.getPostStatus() != null) {
@@ -114,6 +114,7 @@ public class PetPostService implements IPetPostService {
         }
 
         petPostRepository.deleteById(postId);
+        notificationPublisher.sendPetPostDeleted(postId);
     }
 
     @Override
@@ -139,7 +140,7 @@ public class PetPostService implements IPetPostService {
             reacts--;
         } else {
             reactedUsers.add(user);
-            notificationPublisher.sendPetPostLikedNotification(ownerId, userId, postId);
+            notificationPublisher.sendPetPostLikedNotification(ownerId, userId, postId, user.getUsername());
             reacts++;
         }
         post.setReacts(reacts);
@@ -197,8 +198,7 @@ public class PetPostService implements IPetPostService {
                     .toList();
 
             return new PageImpl<>(pageContent, PageRequest.of(page, size), posts.size());
-        }
-        else {
+        } else {
             String sortField = switch (sortBy) {
                 case REACTS -> "reacts";
                 default -> "createdAt"; // fallback

@@ -12,24 +12,34 @@ import com.example.friends.and.chats.module.service.impl.NotificationPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
+
 import java.sql.Timestamp;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+
 import java.util.List;
 
 class FriendServiceTest {
 
-    @Mock private FriendRequestRepository friendRequestRepository;
-    @Mock private FriendshipRepository friendshipRepository;
-    @Mock private UserRepository userRepository;
-    @Mock private BlockRepository blockRepository;
-    @Mock private FollowRepository followRepository;
-    @Mock private IDTOConversionService dtoConversionService;
-    @Mock private BlockPublisher blockPublisher;
-    @Mock private NotificationPublisher notificationPublisher;
+    @Mock
+    private FriendRequestRepository friendRequestRepository;
+    @Mock
+    private FriendshipRepository friendshipRepository;
+    @Mock
+    private UserRepository userRepository;
+    @Mock
+    private BlockRepository blockRepository;
+    @Mock
+    private FollowRepository followRepository;
+    @Mock
+    private IDTOConversionService dtoConversionService;
+    @Mock
+    private BlockPublisher blockPublisher;
+    @Mock
+    private NotificationPublisher notificationPublisher;
 
     @InjectMocks
     private FriendService friendService;
@@ -43,8 +53,10 @@ class FriendServiceTest {
     void sendFriendRequest_success() {
         UUID senderId = UUID.randomUUID();
         UUID receiverId = UUID.randomUUID();
-        User sender = new User(); sender.setUserId(senderId);
-        User receiver = new User(); receiver.setUserId(receiverId);
+        User sender = new User();
+        sender.setUserId(senderId);
+        User receiver = new User();
+        receiver.setUserId(receiverId);
 
         when(userRepository.findById(senderId)).thenReturn(Optional.of(sender));
         when(userRepository.findById(receiverId)).thenReturn(Optional.of(receiver));
@@ -59,7 +71,9 @@ class FriendServiceTest {
 
         assertNotNull(result);
         verify(friendRequestRepository, times(2)).save(any());
-        verify(notificationPublisher, times(1)).sendFriendRequestNotification(eq(senderId), eq(receiverId), any());
+
+        verify(notificationPublisher, times(1))
+                .sendFriendRequestNotification(any(), any(), any(), any());
     }
 
     @Test
@@ -72,8 +86,10 @@ class FriendServiceTest {
     void sendFriendRequest_alreadyFriends_throws() {
         UUID senderId = UUID.randomUUID();
         UUID receiverId = UUID.randomUUID();
-        User sender = new User(); sender.setUserId(senderId);
-        User receiver = new User(); receiver.setUserId(receiverId);
+        User sender = new User();
+        sender.setUserId(senderId);
+        User receiver = new User();
+        receiver.setUserId(receiverId);
 
         when(userRepository.findById(senderId)).thenReturn(Optional.of(sender));
         when(userRepository.findById(receiverId)).thenReturn(Optional.of(receiver));
@@ -86,8 +102,10 @@ class FriendServiceTest {
     void sendFriendRequest_blocked_throws() {
         UUID senderId = UUID.randomUUID();
         UUID receiverId = UUID.randomUUID();
-        User sender = new User(); sender.setUserId(senderId);
-        User receiver = new User(); receiver.setUserId(receiverId);
+        User sender = new User();
+        sender.setUserId(senderId);
+        User receiver = new User();
+        receiver.setUserId(receiverId);
 
         when(userRepository.findById(senderId)).thenReturn(Optional.of(sender));
         when(userRepository.findById(receiverId)).thenReturn(Optional.of(receiver));
@@ -102,8 +120,10 @@ class FriendServiceTest {
         UUID requestId = UUID.randomUUID();
         UUID receiverId = UUID.randomUUID();
         UUID senderId = UUID.randomUUID();
-        User sender = new User(); sender.setUserId(senderId);
-        User receiver = new User(); receiver.setUserId(receiverId);
+        User sender = new User();
+        sender.setUserId(senderId);
+        User receiver = new User();
+        receiver.setUserId(receiverId);
         FriendRequest request = FriendRequest.builder().id(requestId).sender(sender).receiver(receiver).build();
         Friendship friendship = Friendship.builder().user1(sender).user2(receiver).build();
         FriendDTO friendDTO = new FriendDTO();
@@ -112,13 +132,13 @@ class FriendServiceTest {
         when(friendshipRepository.save(any())).thenReturn(friendship);
         when(userRepository.findById(senderId)).thenReturn(Optional.of(sender));
         doNothing().when(friendRequestRepository).deleteById(requestId);
-        doNothing().when(notificationPublisher).sendFriendRequestAcceptedNotification(senderId, receiverId);
+        doNothing().when(notificationPublisher).sendFriendRequestAcceptedNotification(senderId, receiverId, friendship.getId(), receiver.getUsername());
         when(dtoConversionService.mapToFriendDTO(any(), any())).thenReturn(friendDTO);
 
         FriendDTO result = friendService.acceptFriendRequest(requestId, receiverId);
         assertNotNull(result);
         verify(friendRequestRepository, times(1)).deleteById(requestId);
-        verify(notificationPublisher, times(1)).sendFriendRequestAcceptedNotification(senderId, receiverId);
+        verify(notificationPublisher, times(1)).sendFriendRequestAcceptedNotification(senderId, receiverId, friendship.getId(), receiver.getUsername());
     }
 
     @Test
@@ -126,8 +146,10 @@ class FriendServiceTest {
         UUID requestId = UUID.randomUUID();
         UUID receiverId = UUID.randomUUID();
         UUID senderId = UUID.randomUUID();
-        User sender = new User(); sender.setUserId(senderId);
-        User receiver = new User(); receiver.setUserId(UUID.randomUUID()); // Not the same as receiverId
+        User sender = new User();
+        sender.setUserId(senderId);
+        User receiver = new User();
+        receiver.setUserId(UUID.randomUUID()); // Not the same as receiverId
         FriendRequest request = FriendRequest.builder().id(requestId).sender(sender).receiver(receiver).build();
 
         when(friendRequestRepository.findById(requestId)).thenReturn(Optional.of(request));
@@ -139,8 +161,10 @@ class FriendServiceTest {
     void cancelFriendRequest_success() {
         UUID requestId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
-        User sender = new User(); sender.setUserId(userId);
-        User receiver = new User(); receiver.setUserId(UUID.randomUUID());
+        User sender = new User();
+        sender.setUserId(userId);
+        User receiver = new User();
+        receiver.setUserId(UUID.randomUUID());
         FriendRequest request = FriendRequest.builder().id(requestId).sender(sender).receiver(receiver).build();
 
         when(friendRequestRepository.findById(requestId)).thenReturn(Optional.of(request));
@@ -154,8 +178,10 @@ class FriendServiceTest {
     void cancelFriendRequest_forbidden_throws() {
         UUID requestId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
-        User sender = new User(); sender.setUserId(UUID.randomUUID());
-        User receiver = new User(); receiver.setUserId(UUID.randomUUID());
+        User sender = new User();
+        sender.setUserId(UUID.randomUUID());
+        User receiver = new User();
+        receiver.setUserId(UUID.randomUUID());
         FriendRequest request = FriendRequest.builder().id(requestId).sender(sender).receiver(receiver).build();
 
         when(friendRequestRepository.findById(requestId)).thenReturn(Optional.of(request));
@@ -167,8 +193,10 @@ class FriendServiceTest {
     void followUser_success() {
         UUID followerId = UUID.randomUUID();
         UUID followedId = UUID.randomUUID();
-        User follower = new User(); follower.setUserId(followerId);
-        User followed = new User(); followed.setUserId(followedId);
+        User follower = new User();
+        follower.setUserId(followerId);
+        User followed = new User();
+        followed.setUserId(followedId);
         Follow follow = Follow.builder().follower(follower).followed(followed).build();
 
         when(userRepository.findById(followerId)).thenReturn(Optional.of(follower));
@@ -181,7 +209,7 @@ class FriendServiceTest {
         com.example.friends.and.chats.module.model.dto.friend.FollowDTO result = friendService.followUser(followerId, followedId);
         assertNotNull(result);
         verify(followRepository, times(1)).save(any());
-        verify(notificationPublisher, times(1)).sendNewFollowerNotification(followerId, followedId);
+        verify(notificationPublisher, times(1)).sendNewFollowerNotification(followerId, followedId, follow.getId(), follower.getUsername());
     }
 
     @Test
@@ -194,8 +222,10 @@ class FriendServiceTest {
     void followUser_alreadyFollowing_throws() {
         UUID followerId = UUID.randomUUID();
         UUID followedId = UUID.randomUUID();
-        User follower = new User(); follower.setUserId(followerId);
-        User followed = new User(); followed.setUserId(followedId);
+        User follower = new User();
+        follower.setUserId(followerId);
+        User followed = new User();
+        followed.setUserId(followedId);
 
         when(userRepository.findById(followerId)).thenReturn(Optional.of(follower));
         when(userRepository.findById(followedId)).thenReturn(Optional.of(followed));
@@ -209,8 +239,10 @@ class FriendServiceTest {
     void followUser_blocked_throws() {
         UUID followerId = UUID.randomUUID();
         UUID followedId = UUID.randomUUID();
-        User follower = new User(); follower.setUserId(followerId);
-        User followed = new User(); followed.setUserId(followedId);
+        User follower = new User();
+        follower.setUserId(followerId);
+        User followed = new User();
+        followed.setUserId(followedId);
 
         when(userRepository.findById(followerId)).thenReturn(Optional.of(follower));
         when(userRepository.findById(followedId)).thenReturn(Optional.of(followed));
@@ -223,8 +255,10 @@ class FriendServiceTest {
     void unfollowUser_success() {
         UUID followerId = UUID.randomUUID();
         UUID followedId = UUID.randomUUID();
-        User follower = new User(); follower.setUserId(followerId);
-        User followed = new User(); followed.setUserId(followedId);
+        User follower = new User();
+        follower.setUserId(followerId);
+        User followed = new User();
+        followed.setUserId(followedId);
         Follow follow = Follow.builder().follower(follower).followed(followed).build();
 
         when(userRepository.findById(followerId)).thenReturn(Optional.of(follower));
@@ -240,8 +274,10 @@ class FriendServiceTest {
     void unfollowUser_notFollowing_throws() {
         UUID followerId = UUID.randomUUID();
         UUID followedId = UUID.randomUUID();
-        User follower = new User(); follower.setUserId(followerId);
-        User followed = new User(); followed.setUserId(followedId);
+        User follower = new User();
+        follower.setUserId(followerId);
+        User followed = new User();
+        followed.setUserId(followedId);
 
         when(userRepository.findById(followerId)).thenReturn(Optional.of(follower));
         when(userRepository.findById(followedId)).thenReturn(Optional.of(followed));
@@ -254,8 +290,10 @@ class FriendServiceTest {
     void blockUser_success() {
         UUID blockerId = UUID.randomUUID();
         UUID blockedId = UUID.randomUUID();
-        User blocker = new User(); blocker.setUserId(blockerId);
-        User blocked = new User(); blocked.setUserId(blockedId);
+        User blocker = new User();
+        blocker.setUserId(blockerId);
+        User blocked = new User();
+        blocked.setUserId(blockedId);
         Block block = Block.builder().blocker(blocker).blocked(blocked).build();
 
         when(userRepository.findById(blockerId)).thenReturn(Optional.of(blocker));
@@ -273,8 +311,10 @@ class FriendServiceTest {
     void blockUser_alreadyBlocked_throws() {
         UUID blockerId = UUID.randomUUID();
         UUID blockedId = UUID.randomUUID();
-        User blocker = new User(); blocker.setUserId(blockerId);
-        User blocked = new User(); blocked.setUserId(blockedId);
+        User blocker = new User();
+        blocker.setUserId(blockerId);
+        User blocked = new User();
+        blocked.setUserId(blockedId);
 
         when(userRepository.findById(blockerId)).thenReturn(Optional.of(blocker));
         when(userRepository.findById(blockedId)).thenReturn(Optional.of(blocked));
@@ -287,8 +327,10 @@ class FriendServiceTest {
     void unblockUser_success() {
         UUID blockerId = UUID.randomUUID();
         UUID blockedId = UUID.randomUUID();
-        User blocker = new User(); blocker.setUserId(blockerId);
-        User blocked = new User(); blocked.setUserId(blockedId);
+        User blocker = new User();
+        blocker.setUserId(blockerId);
+        User blocked = new User();
+        blocked.setUserId(blockedId);
         Block block = Block.builder().blocker(blocker).blocked(blocked).build();
 
         when(userRepository.findById(blockerId)).thenReturn(Optional.of(blocker));
@@ -304,8 +346,10 @@ class FriendServiceTest {
     void unblockUser_notBlocked_throws() {
         UUID blockerId = UUID.randomUUID();
         UUID blockedId = UUID.randomUUID();
-        User blocker = new User(); blocker.setUserId(blockerId);
-        User blocked = new User(); blocked.setUserId(blockedId);
+        User blocker = new User();
+        blocker.setUserId(blockerId);
+        User blocked = new User();
+        blocked.setUserId(blockedId);
 
         when(userRepository.findById(blockerId)).thenReturn(Optional.of(blocker));
         when(userRepository.findById(blockedId)).thenReturn(Optional.of(blocked));
@@ -317,7 +361,8 @@ class FriendServiceTest {
     @Test
     void getFriendships_returnsCorrectData() {
         UUID userId = UUID.randomUUID();
-        User user = new User(); user.setUserId(userId);
+        User user = new User();
+        user.setUserId(userId);
         Friendship friendship = Friendship.builder().user1(user).user2(new User()).build();
         org.springframework.data.domain.Page<Friendship> page = new org.springframework.data.domain.PageImpl<>(List.of(friendship));
         when(friendshipRepository.findFriendsByUserId(eq(userId), any())).thenReturn(page);
@@ -330,7 +375,8 @@ class FriendServiceTest {
     @Test
     void getBlockedUsers_returnsCorrectData() {
         UUID userId = UUID.randomUUID();
-        User user = new User(); user.setUserId(userId);
+        User user = new User();
+        user.setUserId(userId);
         Block block = Block.builder().blocker(user).blocked(new User()).build();
         org.springframework.data.domain.Page<Block> page = new org.springframework.data.domain.PageImpl<>(List.of(block));
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
@@ -344,7 +390,8 @@ class FriendServiceTest {
     @Test
     void getFollowersCount_returnsCorrectCount() {
         UUID userId = UUID.randomUUID();
-        User user = new User(); user.setUserId(userId);
+        User user = new User();
+        user.setUserId(userId);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(followRepository.countByFollowed(user)).thenReturn(5);
         assertEquals(5, friendService.getFollowersCount(userId));
@@ -353,7 +400,8 @@ class FriendServiceTest {
     @Test
     void getBlockedUsersCount_returnsCorrectCount() {
         UUID userId = UUID.randomUUID();
-        User user = new User(); user.setUserId(userId);
+        User user = new User();
+        user.setUserId(userId);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(blockRepository.countByBlocker(user)).thenReturn(3);
         assertEquals(3, friendService.getBlockedUsersCount(userId));
@@ -368,8 +416,10 @@ class FriendServiceTest {
 
     @Test
     void isFriendshipExists_true() {
-        User user1 = new User(); user1.setUserId(UUID.randomUUID());
-        User user2 = new User(); user2.setUserId(UUID.randomUUID());
+        User user1 = new User();
+        user1.setUserId(UUID.randomUUID());
+        User user2 = new User();
+        user2.setUserId(UUID.randomUUID());
         when(friendshipRepository.existsByUser1AndUser2(user1, user2)).thenReturn(true);
         when(friendshipRepository.existsByUser1AndUser2(user2, user1)).thenReturn(true);
         assertTrue(friendService.isFriendshipExists(user1, user2));
@@ -377,8 +427,10 @@ class FriendServiceTest {
 
     @Test
     void isFriendshipExists_false() {
-        User user1 = new User(); user1.setUserId(UUID.randomUUID());
-        User user2 = new User(); user2.setUserId(UUID.randomUUID());
+        User user1 = new User();
+        user1.setUserId(UUID.randomUUID());
+        User user2 = new User();
+        user2.setUserId(UUID.randomUUID());
         when(friendshipRepository.existsByUser1AndUser2(user1, user2)).thenReturn(false);
         assertFalse(friendService.isFriendshipExists(user1, user2));
     }
@@ -387,8 +439,10 @@ class FriendServiceTest {
     void isFriendshipExistsByUsersId_true() {
         UUID userId1 = UUID.randomUUID();
         UUID userId2 = UUID.randomUUID();
-        User user1 = new User(); user1.setUserId(userId1);
-        User user2 = new User(); user2.setUserId(userId2);
+        User user1 = new User();
+        user1.setUserId(userId1);
+        User user2 = new User();
+        user2.setUserId(userId2);
         when(userRepository.findById(userId1)).thenReturn(Optional.of(user1));
         when(userRepository.findById(userId2)).thenReturn(Optional.of(user2));
         when(friendshipRepository.existsByUser1AndUser2(user1, user2)).thenReturn(true);
@@ -400,8 +454,10 @@ class FriendServiceTest {
     void isFriendshipExistsByUsersId_false() {
         UUID userId1 = UUID.randomUUID();
         UUID userId2 = UUID.randomUUID();
-        User user1 = new User(); user1.setUserId(userId1);
-        User user2 = new User(); user2.setUserId(userId2);
+        User user1 = new User();
+        user1.setUserId(userId1);
+        User user2 = new User();
+        user2.setUserId(userId2);
         when(userRepository.findById(userId1)).thenReturn(Optional.of(user1));
         when(userRepository.findById(userId2)).thenReturn(Optional.of(user2));
         when(friendshipRepository.existsByUser1AndUser2(user1, user2)).thenReturn(false);
@@ -411,7 +467,8 @@ class FriendServiceTest {
     @Test
     void getReceivedFriendRequests_returnsCorrectData() {
         UUID userId = UUID.randomUUID();
-        User user = new User(); user.setUserId(userId);
+        User user = new User();
+        user.setUserId(userId);
         FriendRequest request = FriendRequest.builder().id(UUID.randomUUID()).sender(new User()).receiver(user).build();
         org.springframework.data.domain.Page<FriendRequest> page = new org.springframework.data.domain.PageImpl<>(List.of(request));
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));

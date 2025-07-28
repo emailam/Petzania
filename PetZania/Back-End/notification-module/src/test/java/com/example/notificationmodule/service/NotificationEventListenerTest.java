@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -55,7 +56,6 @@ class NotificationEventListenerTest {
                 .recipientId(recipientId)
                 .type(NotificationType.FRIEND_REQUEST_ACCEPTED)
                 .message("John Doe accepted your friend request")
-                .attributes(attributes)
                 .initiatorId(recipientId)
                 .build();
 
@@ -66,7 +66,6 @@ class NotificationEventListenerTest {
                 .type(NotificationType.FRIEND_REQUEST_ACCEPTED)
                 .message("John Doe accepted your friend request")
                 .status(NotificationStatus.UNREAD)
-                .attributes(attributes)
                 .createdAt(Instant.now())
                 .build();
 
@@ -76,7 +75,6 @@ class NotificationEventListenerTest {
                 .type(NotificationType.FRIEND_REQUEST_ACCEPTED)
                 .message("John Doe accepted your friend request")
                 .status(NotificationStatus.UNREAD)
-                .attributes(attributes)
                 .createdAt(savedNotification.getCreatedAt())
                 .build();
     }
@@ -99,7 +97,6 @@ class NotificationEventListenerTest {
         assertEquals(recipientId, capturedNotification.getRecipientId());
         assertEquals(NotificationType.FRIEND_REQUEST_ACCEPTED, capturedNotification.getType());
         assertEquals("John Doe accepted your friend request", capturedNotification.getMessage());
-        assertEquals(notificationEvent.getAttributes(), capturedNotification.getAttributes());
 
         verify(webSocketService).sendNotificationToUser(recipientId, notificationDTO);
         verify(dtoConversionService).toDTO(savedNotification);
@@ -140,12 +137,16 @@ class NotificationEventListenerTest {
     @Test
     @DisplayName("Should process event with null attributes")
     void shouldProcessEventWithNullAttributes() {
+        Set<NotificationType> deletionTypes = Set.of(
+                NotificationType.PET_POST_DELETED,
+                NotificationType.FRIEND_REQUEST_WITHDRAWN
+        );
         // Arrange
         NotificationEvent eventWithNullAttributes = NotificationEvent.builder()
                 .recipientId(recipientId)
                 .type(NotificationType.NEW_FOLLOWER)
                 .message("You have a new follower")
-                .attributes(null)
+                .entityId(null)
                 .initiatorId(recipientId)
                 .build();
 
@@ -160,14 +161,21 @@ class NotificationEventListenerTest {
         verify(notificationRepository).save(notificationCaptor.capture());
 
         Notification capturedNotification = notificationCaptor.getValue();
-        assertNull(capturedNotification.getAttributes());
+        assertNull(capturedNotification.getEntityId());
     }
 
     @Test
     @DisplayName("Should process all notification types")
     void shouldProcessAllNotificationTypes() {
+        Set<NotificationType> deletionTypes = Set.of(
+                NotificationType.PET_POST_DELETED,
+                NotificationType.FRIEND_REQUEST_WITHDRAWN
+        );
         // Test each notification type
         for (NotificationType type : NotificationType.values()) {
+            if(deletionTypes.contains(type)){
+                continue;
+            }
             // Arrange
             NotificationEvent event = NotificationEvent.builder()
                     .recipientId(recipientId)

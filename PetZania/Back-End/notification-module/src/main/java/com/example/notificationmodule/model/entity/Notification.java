@@ -26,29 +26,23 @@ public class Notification {
     @Column(name = "notification_id")
     private UUID notificationId;
 
-
     @Column(name = "recipient_id", nullable = false)
     private UUID recipientId;
 
+    @Column(name = "entity_id")
+    private UUID entityId;
+
     @Column(name = "message", nullable = false, length = 255)
     private String message;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
     private NotificationType type;
-
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     @Builder.Default
     private NotificationStatus status = NotificationStatus.UNREAD;
-
-    // Store dynamic attributes as JSON
-    @ElementCollection
-    @CollectionTable(name = "notification_attributes",
-            joinColumns = @JoinColumn(name = "notification_id"))
-    @MapKeyColumn(name = "attribute_key")
-    @Column(name = "attribute_value", length = 1000)
-    private Map<String, String> attributes;
 
     @Column(name = "created_at", nullable = false)
     @Builder.Default
@@ -62,10 +56,6 @@ public class Notification {
         if (createdAt == null) {
             createdAt = Instant.now();
         }
-    }
-
-    public Map<String, String> getAttributes() {
-        return attributes == null ? null : Map.copyOf(attributes);
     }
 
 }
