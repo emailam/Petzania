@@ -8,6 +8,10 @@ spring:
     username: ${RABBITMQ_USERNAME}
     password: ${RABBITMQ_PASSWORD}
 
+  super:
+    admin:
+      username: ${SUPER_ADMIN_USERNAME}
+
   flyway:
     enabled: true
     locations: classpath:db/migration

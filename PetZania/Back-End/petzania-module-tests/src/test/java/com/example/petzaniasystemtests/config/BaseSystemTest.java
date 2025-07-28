@@ -100,6 +100,8 @@ public class BaseSystemTest {
             .withEnv("SPRING_AWS_MAX_SIZE_TEXT", dotenv.get("SPRING_AWS_MAX_SIZE_TEXT"))
             .withEnv("SPRING_AWS_MAX_SIZE_PDF", dotenv.get("SPRING_AWS_MAX_SIZE_PDF"))
             .withEnv("REGISTRATION_SERVER_PORT", dotenv.get("REGISTRATION_SERVER_PORT"))
+            .withEnv("SUPER_ADMIN_USERNAME", dotenv.get("SUPER_ADMIN_USERNAME"))
+            .withEnv("SUPER_ADMIN_PASSWORD", dotenv.get("SUPER_ADMIN_PASSWORD"))
             .dependsOn(postgres, rabbitmq, redis)
             .withLogConsumer(outputFrame -> {
                 System.err.println("REGISTRATION: " + outputFrame.getUtf8String());
@@ -125,6 +127,7 @@ public class BaseSystemTest {
             .withEnv("SECURITY_USER_PASSWORD", dotenv.get("SECURITY_USER_PASSWORD"))
             .withEnv("SPRING_JWT_SECRET_KEY", dotenv.get("SPRING_JWT_SECRET_KEY"))
             .withEnv("FRIENDS_SERVER_PORT", dotenv.get("FRIENDS_SERVER_PORT"))
+            .withEnv("SUPER_ADMIN_USERNAME", dotenv.get("SUPER_ADMIN_USERNAME"))
             .dependsOn(postgres, rabbitmq, redis, registrationService)
             .withLogConsumer(outputFrame -> {
                 System.err.println("FriendsAndChats: " + outputFrame.getUtf8String());
@@ -150,6 +153,7 @@ public class BaseSystemTest {
             .withEnv("SECURITY_USER_PASSWORD", dotenv.get("SECURITY_USER_PASSWORD"))
             .withEnv("SPRING_JWT_SECRET_KEY", dotenv.get("SPRING_JWT_SECRET_KEY"))
             .withEnv("ADOPTION_SERVER_PORT", dotenv.get("ADOPTION_SERVER_PORT"))
+            .withEnv("SUPER_ADMIN_USERNAME", dotenv.get("SUPER_ADMIN_USERNAME"))
             .withEnv("SPRING_PROFILES_ACTIVE", "test")
             .dependsOn(postgres, rabbitmq, redis, registrationService)
             .withLogConsumer(outputFrame -> {
@@ -176,6 +180,7 @@ public class BaseSystemTest {
             .withEnv("SECURITY_USER_PASSWORD", dotenv.get("SECURITY_USER_PASSWORD"))
             .withEnv("SPRING_JWT_SECRET_KEY", dotenv.get("SPRING_JWT_SECRET_KEY"))
             .withEnv("NOTIFICATION_SERVER_PORT", dotenv.get("NOTIFICATION_SERVER_PORT"))
+            .withEnv("SUPER_ADMIN_USERNAME", dotenv.get("SUPER_ADMIN_USERNAME"))
             .dependsOn(postgres, rabbitmq, redis, registrationService)
             .withLogConsumer(outputFrame -> {
                 System.err.println("NOTIFICATION: " + outputFrame.getUtf8String());

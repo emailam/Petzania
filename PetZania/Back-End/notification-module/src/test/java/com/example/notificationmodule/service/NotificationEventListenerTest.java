@@ -54,15 +54,15 @@ class NotificationEventListenerTest {
 
         notificationEvent = NotificationEvent.builder()
                 .recipientId(recipientId)
+                .initiatorId(UUID.randomUUID())
                 .type(NotificationType.FRIEND_REQUEST_ACCEPTED)
                 .message("John Doe accepted your friend request")
-                .initiatorId(recipientId)
                 .build();
 
         savedNotification = Notification.builder()
                 .notificationId(UUID.randomUUID())
                 .recipientId(recipientId)
-                .initiatorId(recipientId)
+                .initiatorId(UUID.randomUUID())
                 .type(NotificationType.FRIEND_REQUEST_ACCEPTED)
                 .message("John Doe accepted your friend request")
                 .status(NotificationStatus.UNREAD)
@@ -72,6 +72,7 @@ class NotificationEventListenerTest {
         notificationDTO = NotificationDTO.builder()
                 .notificationId(savedNotification.getNotificationId())
                 .recipientId(recipientId)
+                .initiatorId(UUID.randomUUID())
                 .type(NotificationType.FRIEND_REQUEST_ACCEPTED)
                 .message("John Doe accepted your friend request")
                 .status(NotificationStatus.UNREAD)
@@ -147,7 +148,7 @@ class NotificationEventListenerTest {
                 .type(NotificationType.NEW_FOLLOWER)
                 .message("You have a new follower")
                 .entityId(null)
-                .initiatorId(recipientId)
+                .initiatorId(UUID.randomUUID())
                 .build();
 
         when(notificationRepository.save(any(Notification.class))).thenReturn(savedNotification);
@@ -181,7 +182,7 @@ class NotificationEventListenerTest {
                     .recipientId(recipientId)
                     .type(type)
                     .message("Test message for " + type)
-                    .initiatorId(recipientId)
+                    .initiatorId(UUID.randomUUID())
                     .build();
 
             when(notificationRepository.save(any(Notification.class))).thenReturn(savedNotification);
