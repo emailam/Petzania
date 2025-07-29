@@ -1,4 +1,4 @@
-package com.example.adoption_and_breeding_module.model.event;
+package com.example.friends.and.chats.module.model.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,15 +12,15 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 @Data
-public class BlockEvent {
+public class FollowEvent {
     @org.hibernate.validator.constraints.UUID
-    private UUID blockId;
+    private UUID followId;
 
     @org.hibernate.validator.constraints.UUID
-    private UUID blockerId;
+    private UUID followerId;
 
     @org.hibernate.validator.constraints.UUID
-    private UUID blockedId;
+    private UUID followedId;
 
     private Timestamp createdAt;
-}
+} 

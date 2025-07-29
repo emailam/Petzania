@@ -7,6 +7,8 @@ import com.example.friends.and.chats.module.model.dto.friend.FriendDTO;
 import com.example.friends.and.chats.module.model.dto.friend.FriendRequestDTO;
 import com.example.friends.and.chats.module.model.entity.*;
 import com.example.friends.and.chats.module.model.event.BlockEvent;
+import com.example.friends.and.chats.module.model.event.FollowEvent;
+import com.example.friends.and.chats.module.model.event.FriendEvent;
 import com.example.friends.and.chats.module.repository.*;
 import com.example.friends.and.chats.module.service.IDTOConversionService;
 import com.example.friends.and.chats.module.service.IFriendService;
@@ -19,6 +21,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -32,6 +35,8 @@ public class FriendService implements IFriendService {
     private final FollowRepository followRepository;
     private final IDTOConversionService dtoConversionService;
     private final BlockPublisher blockPublisher;
+    private final FollowProducer followProducer;
+    private final FriendProducer friendProducer;
     private final NotificationPublisher notificationPublisher;
 
     public void validateSelfOperation(UUID senderId, UUID receiverId) {
@@ -69,6 +74,24 @@ public class FriendService implements IFriendService {
     public User getUser(UUID userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFound("User not found with ID: " + userId));
+    }
+
+    public FriendEvent getFriendEvent(Friendship friendship) {
+        return FriendEvent.builder()
+                .friendshipId(friendship.getId())
+                .user1Id(friendship.getUser1().getUserId())
+                .user2Id(friendship.getUser2().getUserId())
+                .createdAt(friendship.getCreatedAt())
+                .build();
+    }
+
+    public FollowEvent getFollowEvent(Follow follow) {
+        return FollowEvent.builder()
+                .followId(follow.getId())
+                .followerId(follow.getFollower().getUserId())
+                .followedId(follow.getFollowed().getUserId())
+                .createdAt(follow.getCreatedAt())
+                .build();
     }
 
     @Override
@@ -124,6 +147,8 @@ public class FriendService implements IFriendService {
         }
         UUID senderId = request.getSender().getUserId();
         Friendship friendship = createFriendship(request.getSender(), request.getReceiver());
+
+        friendProducer.sendFriendAddedMessage(getFriendEvent(friendship));
         friendRequestRepository.deleteById(requestId);
         notificationPublisher.sendFriendRequestAcceptedNotification(senderId, receiverId);
         return dtoConversionService.mapToFriendDTO(friendship, getUser(senderId));
@@ -149,11 +174,10 @@ public class FriendService implements IFriendService {
             user = friend;
             friend = temp;
         }
-        if (isFriendshipExists(user, friend)) {
-            friendshipRepository.deleteByUser1AndUser2(user, friend);
-        } else {
-            throw new FriendshipDoesNotExist("User with ID: " + userId + " is not friend with User with ID: " + friendId);
-        }
+        Friendship friendship = friendshipRepository.findByUser1AndUser2(user, friend)
+                .orElseThrow(() -> new FriendshipDoesNotExist("User with ID: " + userId + " is not friend with User with ID: " + friendId));
+        friendProducer.sendFriendRemovedMessage(getFriendEvent(friendship));
+        friendshipRepository.deleteByUser1AndUser2(user, friend);
     }
 
     @Override
@@ -184,9 +208,17 @@ public class FriendService implements IFriendService {
         friendRequestRepository.deleteBySenderAndReceiver(blocked, blocker);
 
         // Remove follows
-        followRepository.deleteByFollowerAndFollowed(blocker, blocked);
-        followRepository.deleteByFollowerAndFollowed(blocked, blocker);
+        Optional<Follow> follow1 = followRepository.findByFollowerAndFollowed(blocker, blocked);
+        if(follow1.isPresent()) {
+            followProducer.sendFollowRemovedMessage(getFollowEvent(follow1.get()));
+            followRepository.deleteByFollowerAndFollowed(blocker, blocked);
+        }
 
+        Optional<Follow> follow2 = followRepository.findByFollowerAndFollowed(blocked, blocker);
+        if(follow2.isPresent()) {
+            followProducer.sendFollowRemovedMessage(getFollowEvent(follow2.get()));
+            followRepository.deleteByFollowerAndFollowed(blocked, blocker);
+        }
 
         if (blocker.getUserId().compareTo(blocked.getUserId()) > 0) {
             User temp = blocker;
@@ -194,7 +226,11 @@ public class FriendService implements IFriendService {
             blocked = temp;
         }
         // Remove friendship
-        friendshipRepository.deleteByUser1AndUser2(blocker, blocked);
+        Optional<Friendship> friendship = friendshipRepository.findByUser1AndUser2(blocker, blocked);
+        if(friendship.isPresent()) {
+            friendProducer.sendFriendRemovedMessage(getFriendEvent(friendship.get()));
+            friendshipRepository.deleteByUser1AndUser2(blocker, blocked);
+        }
     }
 
     @Override
@@ -287,6 +323,7 @@ public class FriendService implements IFriendService {
                 .build();
 
         Follow newFollow = followRepository.save(follow);
+        followProducer.sendFollowAddedMessage(getFollowEvent(newFollow));
         notificationPublisher.sendNewFollowerNotification(followerId, followedId);
         return dtoConversionService.mapToFollowDTO(newFollow);
     }
@@ -296,6 +333,7 @@ public class FriendService implements IFriendService {
         Follow follow = followRepository.findByFollowerAndFollowed(
                 getUser(followerId),
                 getUser(followedId)).orElseThrow(() -> new FollowingDoesNotExist("User with ID: " + followerId + " " + "is not following the User with ID: " + followedId));
+        followProducer.sendFollowRemovedMessage(getFollowEvent(follow));
         followRepository.delete(follow);
     }
 

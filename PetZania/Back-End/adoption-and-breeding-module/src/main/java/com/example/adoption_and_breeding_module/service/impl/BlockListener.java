@@ -27,7 +27,8 @@ public class BlockListener {
 
     @RabbitListener(queues = "userBlockedQueueAdoptionModule")
     public void onUserBlocked(BlockEvent blockEvent) {
-         if(!blockRepository.existsByBlocker_UserIdAndBlocked_UserId(blockEvent.getBlockerId(), blockEvent.getBlockedId())) {
+        UUID blockId = blockEvent.getBlockId();
+        if(!blockRepository.existsById(blockId)) {
              User blocker = getUser(blockEvent.getBlockerId());
              User blocked = getUser(blockEvent.getBlockedId());
              Block block = Block.builder()
@@ -43,8 +44,9 @@ public class BlockListener {
 
     @RabbitListener(queues = "userUnBlockedQueueAdoptionModule")
     public void onUserUnBlocked(BlockEvent blockEvent) {
-        if(blockRepository.existsByBlocker_UserIdAndBlocked_UserId(blockEvent.getBlockerId(), blockEvent.getBlockedId())) {
-            blockRepository.deleteByBlocker_UserIdAndBlocked_UserId(blockEvent.getBlockerId(), blockEvent.getBlockedId());
+        UUID blockId = blockEvent.getBlockId();
+        if(blockRepository.existsById(blockId)) {
+            blockRepository.deleteById(blockId);
             System.out.println("Received unblocked user with IDs:\nBlockerId: " + blockEvent.getBlockerId() + "\nBlockedId: " + blockEvent.getBlockedId());
         }
     }

@@ -42,19 +42,19 @@ spring:
         86400000
 
 feed:
-    weights:
-        recency:              400
-        totalReacts:          300
-        petCategoryAffinity:  250
-        postCategoryAffinity: 200
-        friendBoost:          5000
-        followeeBoost:        3000
-        distance:             400
-        speciesAffinity:      250
-        breedAffinity:        150
-        postTypeAffinity:     200
-        authorAffinity:       100
-    freshness-window-hours: 96
+  weights:
+    recency:              700
+    totalReacts:          300
+    petCategoryAffinity:  400
+    postCategoryAffinity: 300
+    friendBoost:          5000
+    followeeBoost:        3000
+    distance:             750
+    speciesAffinity:      500
+    breedAffinity:        350
+    postTypeAffinity:     300
+    authorAffinity:       200
+  freshness-window-hours: 96
 
 post:
   expiration-days: 45

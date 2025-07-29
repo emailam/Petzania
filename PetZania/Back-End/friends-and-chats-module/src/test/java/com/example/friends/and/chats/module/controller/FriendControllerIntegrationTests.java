@@ -324,10 +324,6 @@ public class FriendControllerIntegrationTests {
         friendService.createFriendship(userA, userB);
         friendService.followUser(userA.getUserId(), userB.getUserId());
         friendService.followUser(userB.getUserId(), userA.getUserId());
-        friendshipRepository.save(Friendship.builder()
-                .user1(userA)
-                .user2(userB)
-                .build());
 
         User tempA = userA;
         User tempB = userB;

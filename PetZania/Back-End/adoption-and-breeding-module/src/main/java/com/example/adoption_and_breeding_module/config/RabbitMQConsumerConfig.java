@@ -42,6 +42,36 @@ public class RabbitMQConsumerConfig {
     }
 
     @Bean
+    public TopicExchange friendExchange() {
+        return new TopicExchange("friendExchange");
+    }
+
+    @Bean
+    public TopicExchange followExchange() {
+        return new TopicExchange("followExchange");
+    }
+
+    @Bean
+    public Queue friendAddedQueueAdoptionModule() {
+        return new Queue("friendAddedQueueAdoptionModule", true);
+    }
+
+    @Bean
+    public Queue friendRemovedQueueAdoptionModule() {
+        return new Queue("friendRemovedQueueAdoptionModule", true);
+    }
+
+    @Bean
+    public Queue followAddedQueueAdoptionModule() {
+        return new Queue("followAddedQueueAdoptionModule", true);
+    }
+
+    @Bean
+    public Queue followRemovedQueueAdoptionModule() {
+        return new Queue("followRemovedQueueAdoptionModule", true);
+    }
+
+    @Bean
     public Binding userRegistrationAdoptionModuleBinding(Queue userRegisteredQueueAdoptionModule, TopicExchange userExchange) {
         return BindingBuilder.bind(userRegisteredQueueAdoptionModule).to(userExchange).with("user.registered");
     }
@@ -59,5 +89,25 @@ public class RabbitMQConsumerConfig {
     @Bean
     public Binding userUnBlockingAdoptionBinding(Queue userUnBlockedQueueAdoptionModule, TopicExchange blockExchange) {
         return BindingBuilder.bind(userUnBlockedQueueAdoptionModule).to(blockExchange).with("block.delete");
+    }
+
+    @Bean
+    public Binding friendAddedAdoptionModuleBinding(Queue friendAddedQueueAdoptionModule, TopicExchange friendExchange) {
+        return BindingBuilder.bind(friendAddedQueueAdoptionModule).to(friendExchange).with("friend.added");
+    }
+
+    @Bean
+    public Binding friendRemovedAdoptionModuleBinding(Queue friendRemovedQueueAdoptionModule, TopicExchange friendExchange) {
+        return BindingBuilder.bind(friendRemovedQueueAdoptionModule).to(friendExchange).with("friend.removed");
+    }
+
+    @Bean
+    public Binding followAddedAdoptionModuleBinding(Queue followAddedQueueAdoptionModule, TopicExchange followExchange) {
+        return BindingBuilder.bind(followAddedQueueAdoptionModule).to(followExchange).with("follow.added");
+    }
+
+    @Bean
+    public Binding followRemovedAdoptionModuleBinding(Queue followRemovedQueueAdoptionModule, TopicExchange followExchange) {
+        return BindingBuilder.bind(followRemovedQueueAdoptionModule).to(followExchange).with("follow.removed");
     }
 }

@@ -5,23 +5,28 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ea048906-7657-4d6f-95bf-3cfefcfdfc3b" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/entity/PetPostInterest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/entity/PetPostInterestId.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/enumeration/InterestType.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/PetPostInterestRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/projection/BreedScore.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/projection/OwnerScore.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/projection/PostTypeScore.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/projection/SpeciesScore.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/event/FollowEvent.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/event/FriendEvent.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/FollowListener.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/FriendListener.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/model/event/FollowEvent.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/model/event/FriendEvent.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/service/impl/FollowProducer.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/service/impl/FriendProducer.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/controller/PetPostController.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/controller/PetPostController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/exception/globalhandler/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/exception/globalhandler/GlobalExceptionHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/IPetPostService.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/IPetPostService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/FeedScorer.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/FeedScorer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/PetPostService.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/PetPostService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/config/RabbitMQConsumerConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/config/RabbitMQConsumerConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/event/BlockEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/event/BlockEvent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/FollowRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/FollowRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/FriendshipRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/repository/FriendshipRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/BlockListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/service/impl/BlockListener.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/test/java/com/example/adoption_and_breeding_module/controller/PetPostControllerIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/test/java/com/example/adoption_and_breeding_module/controller/PetPostControllerIntegrationTests.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/test/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/test/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/config/RabbitMQProducerConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/config/RabbitMQProducerConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/repository/FriendshipRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/repository/FriendshipRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/service/impl/FriendService.java" beforeDir="false" afterPath="$PROJECT_DIR$/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/service/impl/FriendService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/friends-and-chats-module/src/test/java/com/example/friends/and/chats/module/controller/FriendControllerIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/friends-and-chats-module/src/test/java/com/example/friends/and/chats/module/controller/FriendControllerIntegrationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/petzania-system-tests/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/petzania-system-tests/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/petzania-system-tests/src/test/java/com/example/petzaniasystemtests/tests/RabbitMQEventIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/petzania-system-tests/src/test/java/com/example/petzaniasystemtests/tests/RabbitMQEventIntegrationTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -32,8 +37,8 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Enum" />
-        <option value="Class" />
         <option value="Interface" />
+        <option value="Class" />
       </list>
     </option>
   </component>
@@ -67,42 +72,44 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
-    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
-    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
-    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;Spring Boot.AdoptionAndBreedingModuleApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.FriendsAndChatsModuleApplication.executor&quot;: &quot;Run&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;#46 on merge/front-and-back-registration…ation&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/Petzania/PetZania/Back-End/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/model/entity&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;run.configurations.included.in.services&quot;: &quot;true&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.projectsettings.compiler.annotationProcessors&quot;,
-    &quot;spring.configuration.checksum&quot;: &quot;6995429b9a4f4a9965ce0635d290d2fc&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "Spring Boot.AdoptionAndBreedingModuleApplication.executor": "Run",
+    "Spring Boot.FriendsAndChatsModuleApplication.executor": "Run",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "#46 on merge/front-and-back-registration…ation",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "D:/Petzania/PetZania/Back-End/petzania-system-tests/src/test/java/com/example/petzaniasystemtests/dto",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.0",
+    "run.configurations.included.in.services": "true",
+    "settings.editor.selected.configurable": "reference.projectsettings.compiler.annotationProcessors",
+    "spring.configuration.checksum": "6995429b9a4f4a9965ce0635d290d2fc",
+    "vue.rearranger.settings.migration": "true"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;DatabaseDriversLRU&quot;: [
-      &quot;postgresql&quot;
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "postgresql"
     ]
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\Petzania\PetZania\Back-End\petzania-system-tests\src\test\java\com\example\petzaniasystemtests\dto" />
+      <recent name="D:\Petzania\PetZania\Back-End\friends-and-chats-module\src\main\java\com\example\friends\and\chats\module\model\event" />
       <recent name="D:\Petzania\PetZania\Back-End\adoption-and-breeding-module\src\main\java\com\example\adoption_and_breeding_module\model\entity" />
     </key>
     <key name="CopyClassDialog.RECENTS_KEY">
@@ -119,7 +126,7 @@
       </set>
     </option>
   </component>
-  <component name="RunManager" selected="JUnit.PetPostControllerIntegrationTests">
+  <component name="RunManager" selected="JUnit.FriendControllerIntegrationTests.blockUser_WhenAlreadyFriends_ShouldCleanup">
     <configuration name="AdoptionAndBreedingModuleApplicationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="adoption-and-breeding-module" />
       <extension name="coverage">
@@ -131,6 +138,34 @@
       <option name="PACKAGE_NAME" value="com.example.adoption_and_breeding_module" />
       <option name="MAIN_CLASS_NAME" value="com.example.adoption_and_breeding_module.AdoptionAndBreedingModuleApplicationTests" />
       <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ChatControllerIntegrationTests and 2 more" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="friends-and-chats-module" />
+      <option name="TEST_OBJECT" value="pattern" />
+      <patterns>
+        <pattern testClass="com.example.friends.and.chats.module.controller.ChatControllerIntegrationTests" />
+        <pattern testClass="com.example.friends.and.chats.module.controller.FriendControllerIntegrationTests" />
+        <pattern testClass="com.example.friends.and.chats.module.controller.MessageControllerIntegrationTests" />
+      </patterns>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="FriendControllerIntegrationTests.blockUser_WhenAlreadyFriends_ShouldCleanup" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="friends-and-chats-module" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.example.friends.and.chats.module.controller.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.example.friends.and.chats.module.controller" />
+      <option name="MAIN_CLASS_NAME" value="com.example.friends.and.chats.module.controller.FriendControllerIntegrationTests" />
+      <option name="METHOD_NAME" value="blockUser_WhenAlreadyFriends_ShouldCleanup" />
+      <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -161,38 +196,6 @@
       <option name="PACKAGE_NAME" value="com.example.adoption_and_breeding_module.controller" />
       <option name="MAIN_CLASS_NAME" value="com.example.adoption_and_breeding_module.controller.PetPostControllerIntegrationTests" />
       <option name="METHOD_NAME" value="markInterestedAndRemoveInterest_Success" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="PetPostControllerIntegrationTests.userDeletionShouldCascadeToPetPosts" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="adoption-and-breeding-module" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.example.adoption_and_breeding_module.controller.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.example.adoption_and_breeding_module.controller" />
-      <option name="MAIN_CLASS_NAME" value="com.example.adoption_and_breeding_module.controller.PetPostControllerIntegrationTests" />
-      <option name="METHOD_NAME" value="userDeletionShouldCascadeToPetPosts" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="RegistrationSystemTest.testUserDeletionEventPropagation" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="petzania-system-tests" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.example.petzaniasystemtests.tests.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.example.petzaniasystemtests.tests" />
-      <option name="MAIN_CLASS_NAME" value="com.example.petzaniasystemtests.tests.RegistrationSystemTest" />
-      <option name="METHOD_NAME" value="testUserDeletionEventPropagation" />
       <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -231,11 +234,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="JUnit.FriendControllerIntegrationTests.blockUser_WhenAlreadyFriends_ShouldCleanup" />
+        <item itemvalue="JUnit.ChatControllerIntegrationTests and 2 more" />
         <item itemvalue="JUnit.PetPostControllerIntegrationTests" />
         <item itemvalue="JUnit.PetPostControllerIntegrationTests.markInterestedAndRemoveInterest_Success" />
         <item itemvalue="JUnit.AdoptionAndBreedingModuleApplicationTests" />
-        <item itemvalue="JUnit.PetPostControllerIntegrationTests.userDeletionShouldCascadeToPetPosts" />
-        <item itemvalue="JUnit.RegistrationSystemTest.testUserDeletionEventPropagation" />
       </list>
     </recent_temporary>
   </component>
@@ -288,11 +291,24 @@
       <workItem from="1753122119806" duration="895000" />
       <workItem from="1753188841305" duration="1261000" />
       <workItem from="1753362768247" duration="5219000" />
-      <workItem from="1753457190354" duration="2033000" />
+      <workItem from="1753457190354" duration="4614000" />
+      <workItem from="1753718762745" duration="4376000" />
+      <workItem from="1753787130292" duration="5321000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/friends-and-chats-module/src/main/java/com/example/friends/and/chats/module/service/impl/FriendService.java</url>
+          <line>348</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
