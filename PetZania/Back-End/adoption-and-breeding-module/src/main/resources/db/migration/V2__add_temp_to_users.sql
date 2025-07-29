@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN temp CHAR(20) DEFAULT 'abc';

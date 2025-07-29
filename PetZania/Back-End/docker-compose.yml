@@ -3,10 +3,12 @@ version: '3'
 services:
   # PostgreSQL for both services
   postgres:
-    image: postgres:latest
+    env_file:
+      - .env
+    image: postgres:14-alpine
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: admin
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5433:5432"
     volumes:
@@ -16,17 +18,18 @@ services:
       - app-network
 
   rabbitmq:
+    env_file:
+      - .env
     image: rabbitmq:latest
     ports:
       - "5673:5672"
       - "15673:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
     networks:
       - app-network
 
   redis:
+    env_file:
+      - .env
     image: redis:latest
     ports:
       - "6379:6379"
@@ -34,16 +37,13 @@ services:
       - app-network
 
   registration-module:
+    env_file:
+      - .env
     build:
       context: ./registration-module
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
-    environment:
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
-      SPRING_REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
     depends_on:
       - postgres
       - rabbitmq
@@ -52,16 +52,13 @@ services:
       - app-network
 
   friends-module:
+    env_file:
+      - .env
     build:
       context: ./friends-and-chats-module
       dockerfile: Dockerfile
     ports:
       - "8081:8081"
-    environment:
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/friends_chat
-      SPRING_REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
     depends_on:
       - postgres
       - rabbitmq
@@ -70,16 +67,13 @@ services:
       - app-network
 
   adoption-and-breeding-module:
+    env_file:
+      - .env
     build:
       context: ./adoption-and-breeding-module
       dockerfile: Dockerfile
     ports:
       - "8082:8082"
-    environment:
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/adoption_breeding
-      SPRING_REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
     depends_on:
       - postgres
       - rabbitmq
@@ -89,16 +83,13 @@ services:
       - app-network
 
   notification-module:
+    env_file:
+      - .env
     build:
       context: ./notification-module
       dockerfile: Dockerfile
     ports:
       - "8083:8083"
-    environment:
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/notifications
-      SPRING_REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
     depends_on:
       - postgres
       - rabbitmq

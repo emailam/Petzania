@@ -19,10 +19,11 @@ public class UserEventListener {
     @RabbitListener(queues = "userRegisteredQueueNotificationModule")
     public void onUserRegistered(UserEvent user) {
         if (!userRepository.existsById(user.getUserId()) && !userRepository.existsByUsername(user.getUsername()) && !userRepository.existsByEmail(user.getEmail())) {
-            User newUser = new User();
-            newUser.setUserId(user.getUserId());
-            newUser.setUsername(user.getUsername());
-            newUser.setEmail(user.getEmail());
+            User newUser = User.builder()
+                    .userId(user.getUserId())
+                    .email(user.getEmail())
+                    .username(user.getUsername())
+                    .build();
             userRepository.save(newUser);
             System.out.println("received registered user: " + user);
         }
@@ -31,9 +32,9 @@ public class UserEventListener {
     @RabbitListener(queues = "userDeletedQueueNotificationModule")
     public void onUserDeleted(UserEvent user) {
         if (userRepository.existsById(user.getUserId())) {
-            userRepository.deleteById(user.getUserId());
             notificationRepository.deleteByRecipientId(user.getUserId());
             notificationRepository.deleteByInitiatorId(user.getUserId());
+            userRepository.deleteById(user.getUserId());
             System.out.println("received deleted user: " + user);
         }
     }

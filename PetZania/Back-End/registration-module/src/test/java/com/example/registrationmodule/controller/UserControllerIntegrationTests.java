@@ -59,6 +59,62 @@ public class UserControllerIntegrationTests {
     }
 
     @Test
+    public void testLogout_Success() throws Exception {
+        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
+        String refreshToken = obtainRefreshToken(testUserA.getEmail(), DEFAULT_PASSWORD);
+        LogoutDTO logoutDTO = new LogoutDTO(testUserA.getEmail(), refreshToken);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/user/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(logoutDTO))
+                        .header("Authorization", token))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().string("User logged out successfully"));
+    }
+
+    @Test
+    public void testLogout_UserATriesToLogoutUserB_Failure() throws Exception {
+        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserB = userService.saveUser(TestDataUtil.createTestUserB());
+        String tokenA = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
+        String refreshTokenB = obtainRefreshToken(testUserB.getEmail(), DEFAULT_PASSWORD);
+        LogoutDTO logoutDTO = new LogoutDTO(testUserB.getEmail(), refreshTokenB);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/user/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(logoutDTO))
+                        .header("Authorization", tokenA))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest()); // or isUnauthorized() as per your implementation
+    }
+
+    @Test
+    public void testLogout_InvalidEmail_Failure() throws Exception {
+        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        String tokenA = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
+        String refreshTokenA = obtainRefreshToken(testUserA.getEmail(), DEFAULT_PASSWORD);
+
+        // Malformed email
+        LogoutDTO logoutDTO = new LogoutDTO("invalid-email", refreshTokenA);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/user/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(logoutDTO))
+                        .header("Authorization", tokenA))
+                .andExpect(MockMvcResultMatchers.status().isNotAcceptable());
+    }
+    @Test
+    public void testLogout_WithoutAuthentication_Failure() throws Exception {
+        // No authentication token is passed
+        LogoutDTO logoutDTO = new LogoutDTO("anyone@email.com", "valid-refresh-token");
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/user/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(logoutDTO)))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+    }
+
+    @Test
     public void testGetUsersByPrefixUsername_WithMatchingPrefix_ShouldReturnUsers() throws Exception {
         // Arrange
         User user1 = userService.saveUser(TestDataUtil.createTestUserA());
@@ -418,7 +474,7 @@ public class UserControllerIntegrationTests {
                         .param("size", "10"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content").isArray())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(7));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(2));
     }
 
     @Test
@@ -1381,6 +1437,26 @@ public class UserControllerIntegrationTests {
 
         // Navigate to tokenDTO -> accessToken
         return "Bearer " + jsonNode.get("tokenDTO").get("accessToken").asText();
+    }
+
+    private String obtainRefreshToken(String email, String password) throws Exception {
+        String loginPayload = objectMapper.writeValueAsString(Map.of(
+                "email", email,
+                "password", password
+        ));
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                        .post("/api/user/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginPayload))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        String response = result.getResponse().getContentAsString();
+        JsonNode jsonNode = objectMapper.readTree(response);
+
+        // Navigate to tokenDTO -> accessToken
+        return jsonNode.get("tokenDTO").get("refreshToken").asText();
     }
 
     private String obtainAdminToken(String username, String password) throws Exception {

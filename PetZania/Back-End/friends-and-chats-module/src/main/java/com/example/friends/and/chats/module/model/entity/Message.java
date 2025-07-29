@@ -48,7 +48,7 @@ public class Message {
     private LocalDateTime sentAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(name = "status", nullable = false, length = 20)
     private MessageStatus status = MessageStatus.SENT;
 
     @Column(name = "is_file", nullable = false)

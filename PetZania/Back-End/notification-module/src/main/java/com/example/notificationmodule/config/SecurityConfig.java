@@ -1,6 +1,7 @@
 package com.example.notificationmodule.config;
 
 import com.example.notificationmodule.filter.JWTFilter;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +22,7 @@ import java.util.List;
 @EnableWebSecurity
 @AllArgsConstructor
 public class SecurityConfig {
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Injected Spring Bean, safe for use here")
     private final JWTFilter jwtFilter;
 
     @Bean

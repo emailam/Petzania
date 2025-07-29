@@ -3,19 +3,28 @@ spring:
         name: AdoptionAndBreedingModule
 
     rabbitmq:
-        host: rabbitmq
-        port: 5672
-        username: guest
-        password: guest
+        host: ${RABBITMQ_HOST}
+        port: ${RABBITMQ_PORT}
+        username: ${RABBITMQ_USERNAME}
+        password: ${RABBITMQ_PASSWORD}
+
+    super:
+        admin:
+            username: ${SUPER_ADMIN_USERNAME}
 
     datasource:
-        url: jdbc:postgresql://postgres:5432/adoption_breeding
-        username: postgres
-        password: admin
+        username: ${DB_USERNAME}
+        password: ${DB_PASSWORD}
+        url: ${ADOPTION_DB_URL}
+
+    flyway:
+        enabled: true
+        locations: classpath:db/migration
+        baseline-on-migrate: true
 
     jpa:
         hibernate:
-            ddl-auto: update
+            ddl-auto: none
         #        show-sql: true
         properties:
             hibernate:
@@ -24,10 +33,10 @@ spring:
 
     security:
         user:
-            name: admin
-            password: 1234
+            name: ${SECURITY_USER_NAME}
+            password: ${SECURITY_USER_PASSWORD}
     jwt:
-        secret-key: 4ioX3ogCr4GAZ9gB99txf1LyhqVOmTJ8RsL9hyJzZXQ=
+        secret-key: ${SPRING_JWT_SECRET_KEY}
 
 feed:
     weights:
@@ -38,7 +47,7 @@ feed:
     freshness-window-hours: 96
 
 server:
-    port: 8082
+    port: ${ADOPTION_SERVER_PORT}
     error:
         include-message: always
         include-binding-errors: always

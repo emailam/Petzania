@@ -8,14 +8,15 @@ import lombok.Data;
 
 @Data
 public class RegisterUserDTO {
-    @Size(min = 5, max = 32, message = "Username must be between 5 and 30 characters")
+    @Size(min = 5, max = 32, message = "Username must be between 5 and 32 characters.")
     private String username;
 
-    @Email
-    @NotBlank
+    @Email(message = "Invalid email format.")
+    @NotBlank(message = "Email is required.")
+    @Size(max = 100, message = "Email must not exceed 100 characters.")
     private String email;
 
-    @Size(min = 8, message = "Password must be at least 8 characters long.")
+    @Size(min = 8, max = 32, message = "Password must be between 8 and 32 characters.")
     @Pattern(
             regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[!@#$&~%*()\\[\\]]).{8,}$",
             message = "Password must include at least 1 uppercase letter, 1 lowercase letter, 1 special symbol (!@#$&~%*()[]), and 1 number."
