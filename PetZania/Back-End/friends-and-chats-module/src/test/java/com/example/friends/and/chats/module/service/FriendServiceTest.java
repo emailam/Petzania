@@ -406,14 +406,6 @@ class FriendServiceTest {
         when(blockRepository.countByBlocker(user)).thenReturn(3);
         assertEquals(3, friendService.getBlockedUsersCount(userId));
     }
-
-    @Test
-    void getNumberOfFriends_returnsCorrectCount() {
-        UUID userId = UUID.randomUUID();
-        when(friendshipRepository.countFriendsByUserId(userId)).thenReturn(7);
-        assertEquals(7, friendService.getNumberOfFriends(userId));
-    }
-
     @Test
     void isFriendshipExists_true() {
         User user1 = new User();

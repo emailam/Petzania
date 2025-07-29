@@ -1,7 +1,6 @@
 package com.example.registrationmodule.controller;
 
 import com.example.registrationmodule.model.dto.*;
-import com.example.registrationmodule.model.entity.AdminPrincipal;
 import com.example.registrationmodule.model.entity.UserPrincipal;
 import com.example.registrationmodule.service.IUserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,12 +9,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
-
-import java.nio.file.AccessDeniedException;
 import java.util.UUID;
 
 @RestController
@@ -27,7 +25,18 @@ public class UserController {
 
     @Operation(summary = "Logout user")
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(@RequestBody @Valid LogoutDTO logoutDTO) {
+    public ResponseEntity<String> logout(@RequestBody @Valid LogoutDTO logoutDTO) throws AccessDeniedException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof UserPrincipal userPrincipal) {
+            System.out.println("authenticated user's email= " + ((UserPrincipal) principal).getEmail());
+            System.out.println("logged out user's email= " + logoutDTO.getEmail());
+            if (!userPrincipal.getEmail().equals(logoutDTO.getEmail())) {
+                throw new AccessDeniedException("Undoable operation");
+            }
+        } else {
+            throw new AccessDeniedException("Only the user can do this");
+        }
         userService.logout(logoutDTO);
         return ResponseEntity.ok("User logged out successfully");
     }

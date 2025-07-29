@@ -365,6 +365,9 @@ public class FriendService implements IFriendService {
 
     @Override
     public int getNumberOfFriends(UUID userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new UserNotFound("User does not exist");
+        }
         return friendshipRepository.countFriendsByUserId(userId);
     }
 
