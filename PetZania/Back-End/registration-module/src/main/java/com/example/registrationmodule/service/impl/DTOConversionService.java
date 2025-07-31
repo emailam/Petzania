@@ -37,7 +37,7 @@ public class DTOConversionService implements IDTOConversionService {
         return new UserProfileDTO(
                 user.getUserId(),
                 user.getUsername(),
-                user.getEmail(),
+                user.getEmail().toLowerCase(),
                 user.getName(),
                 user.getLoginTimes(),
                 user.getBio(),
@@ -129,7 +129,7 @@ public class DTOConversionService implements IDTOConversionService {
     public User mapToUser(RegisterUserDTO registerUserDTO) {
         User user = new User();
         user.setUsername(registerUserDTO.getUsername());
-        user.setEmail(registerUserDTO.getEmail());
+        user.setEmail(registerUserDTO.getEmail().toLowerCase());
         user.setPassword(registerUserDTO.getPassword());
         return user;
     }
