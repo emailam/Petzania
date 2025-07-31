@@ -25,7 +25,6 @@ import java.util.UUID;
 })
 public class Follow {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     @ManyToOne

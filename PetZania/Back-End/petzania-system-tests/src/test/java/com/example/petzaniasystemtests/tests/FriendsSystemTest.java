@@ -54,7 +54,8 @@ public class FriendsSystemTest extends BaseSystemTest {
                         },
                         "description": "This post will test blocking functionality",
                         "postType": "ADOPTION",
-                        "location": "Block Test City"
+                        "longitude": 5.0,
+                        "latitude": 5.0
                     }
                     """;
 
@@ -251,7 +252,8 @@ public class FriendsSystemTest extends BaseSystemTest {
                         },
                         "description": "Pet post with existing friendship",
                         "postType": "ADOPTION",
-                        "location": "Friendship City"
+                        "longitude": 5.0,
+                        "latitude": 5.0
                     }
                     """;
 
@@ -376,7 +378,8 @@ public class FriendsSystemTest extends BaseSystemTest {
                         },
                         "description": "User1 pet post",
                         "postType": "ADOPTION",
-                        "location": "Mutual City"
+                        "longitude": 5.0,
+                        "latitude": 5.0
                     }
                     """;
 
@@ -403,7 +406,8 @@ public class FriendsSystemTest extends BaseSystemTest {
                         },
                         "description": "User2 pet post",
                         "postType": "BREEDING",
-                        "location": "Mutual City"
+                        "longitude": 5.0,
+                        "latitude": 5.0
                     }
                     """;
 
@@ -537,7 +541,8 @@ public class FriendsSystemTest extends BaseSystemTest {
                             },
                             "description": "Concurrent blocking test post %d",
                             "postType": "ADOPTION",
-                            "location": "Concurrent City"
+                            "longitude": 5.0,
+                            "latitude": 5.0
                         }
                         """, i, i, i);
 
@@ -675,7 +680,8 @@ public class FriendsSystemTest extends BaseSystemTest {
                         },
                         "description": "Testing unblock functionality",
                         "postType": "BREEDING",
-                        "location": "Unblock Test City"
+                        "longitude": 5.0,
+                        "latitude": 5.0
                     }
                     """;
 
@@ -831,7 +837,8 @@ public class FriendsSystemTest extends BaseSystemTest {
                             },
                             "description": "Re-interaction test post %d",
                             "postType": "ADOPTION",
-                            "location": "ReInteract City"
+                            "longitude": 5.0,
+                            "latitude": 5.0
                         }
                         """, i, i, i);
 
@@ -1006,7 +1013,8 @@ public class FriendsSystemTest extends BaseSystemTest {
                         },
                         "description": "Rapid cycle test post",
                         "postType": "ADOPTION",
-                        "location": "Cycle City"
+                        "longitude": 5.0,
+                        "latitude": 5.0
                     }
                     """;
 

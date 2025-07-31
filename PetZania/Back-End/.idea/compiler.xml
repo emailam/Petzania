@@ -17,8 +17,16 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
         </processorPath>
         <module name="adoption-and-breeding-module" />
-        <module name="notification-module" />
         <module name="registration-module" />
+        <module name="notification-module" />
+      </profile>
+      <profile name="Annotation profile for friends-and-chats-module" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath>
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
+        </processorPath>
         <module name="friends-and-chats-module" />
       </profile>
     </annotationProcessing>

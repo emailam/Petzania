@@ -13,6 +13,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -49,6 +50,9 @@ public class PetDTO {
     @ValidEnum(enumClass = PetSpecies.class, message = "Invalid species value.")
     private PetSpecies species;
 
-    private List<String> myVaccinesURLs;
-    private List<String> myPicturesURLs;
+    @Builder.Default
+    private List<String> myVaccinesURLs = new ArrayList<>();
+
+    @Builder.Default
+    private List<String> myPicturesURLs = new ArrayList<>();
 }

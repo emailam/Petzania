@@ -24,11 +24,13 @@ public class CreatePetPostDTO {
     @NotToxicText
     private String description;
 
-    @NotNull(message = "Latitude is required")
-    private Double latitude;
+//    @NotNull(message = "Latitude is required")
+    @Builder.Default
+    private Double latitude = 0.0;
 
-    @NotNull(message = "Longitude is required")
-    private Double longitude;
+//    @NotNull(message = "Longitude is required")
+    @Builder.Default
+    private Double longitude = 0.0;
 
     @NotNull(message = "Post type is required.")
     @ValidEnum(enumClass = PetPostType.class, message = "Invalid post type.")
