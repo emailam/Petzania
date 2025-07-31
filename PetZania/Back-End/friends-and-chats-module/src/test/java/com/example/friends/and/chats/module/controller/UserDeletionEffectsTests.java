@@ -52,7 +52,7 @@ public class UserDeletionEffectsTests {
     private MessageReactionRepository messageReactionRepository;
 
     @PersistenceContext
-    private EntityManager entityManager; // Add this field
+    private EntityManager entityManager;
 
     @BeforeEach
     void cleanDatabase() {
