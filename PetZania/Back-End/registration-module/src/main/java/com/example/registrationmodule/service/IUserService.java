@@ -11,27 +11,27 @@ import java.util.UUID;
 @Transactional
 public interface IUserService {
 
-    public UserProfileDTO registerUser(RegisterUserDTO registerUserDTO);
+    UserProfileDTO registerUser(RegisterUserDTO registerUserDTO);
 
-    public void sendVerificationCode(String email);
+    void sendVerificationCode(String email);
 
-    public void sendDeactivationMessage(String email);
+    void sendDeactivationMessage(String email);
 
-    public ProfilePictureDTO getProfilePictureURLByUserId(UUID requesterId, UUID userId);
+    ProfilePictureDTO getProfilePictureURLByUserId(UUID requesterId, UUID userId);
     Page<UserProfileDTO> getUsers(UUID requesterId, int page, int size, String sortBy, String direction);
 
     Page<UserProfileDTO> getUsersByPrefixUsername(UUID requesterId, int page, int size, String sortBy, String direction, String prefix);
 
-    public void sendResetPasswordOTP(EmailDTO emailDTO);
+    void sendResetPasswordOTP(EmailDTO emailDTO);
 
-    public void verifyResetOTP(String email, String otp);
+    void verifyResetOTP(String email, String otp);
 
-    public void resetPassword(String email, String otp, String newPassword);
+    void resetPassword(String email, String otp, String newPassword);
     UserProfileDTO getUserById(UUID requesterId, UUID userId);
   
-    public void deleteUser(EmailDTO emailDTO);
+    void deleteUser(EmailDTO emailDTO);
   
-    public void sendDeleteConfirmation(User user);
+    void sendDeleteConfirmation(User user);
 
     User saveUser(User user);
 
@@ -45,7 +45,7 @@ public interface IUserService {
 
     void unblockUser(BlockUserDTO blockUserDTO);
 
-    public void changePassword(ChangePasswordDTO changePasswordDTO);
+    void changePassword(ChangePasswordDTO changePasswordDTO);
 
     void deleteAll();
 

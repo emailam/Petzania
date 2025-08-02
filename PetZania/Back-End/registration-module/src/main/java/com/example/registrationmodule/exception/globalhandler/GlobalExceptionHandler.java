@@ -154,51 +154,10 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(TooManyAdminRequests.class)
-    public ResponseEntity<Map<String, Object>> handleTooManyAdminRequests(TooManyAdminRequests ex) {
-        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
-    }
-
     @ExceptionHandler(PetNotFound.class)
     public ResponseEntity<Map<String, Object>> handlePetNotFound(PetNotFound ex) {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
     }
-
-    @ExceptionHandler(TooManyPetRequests.class)
-    public ResponseEntity<Map<String, Object>> handleTooManyPetRequests(TooManyPetRequests ex) {
-        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
-    }
-
-    @ExceptionHandler(TooManyRegistrationRequests.class)
-    public ResponseEntity<Map<String, Object>> handleTooManyRegistrationRequests(TooManyRegistrationRequests ex) {
-        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
-    }
-
-    @ExceptionHandler(TooManyLoginRequests.class)
-    public ResponseEntity<Map<String, Object>> handleTooManyLoginRequests(TooManyLoginRequests ex) {
-        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
-    }
-
-    @ExceptionHandler(TooManyLogoutRequests.class)
-    public ResponseEntity<Map<String, Object>> handleTooManyLogoutRequests(TooManyLogoutRequests ex) {
-        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
-    }
-
-    @ExceptionHandler(TooManyOtpRequests.class)
-    public ResponseEntity<Map<String, Object>> handleTooManyOtpRequests(TooManyOtpRequests ex) {
-        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
-    }
-
-    @ExceptionHandler(TooManyRefreshRequests.class)
-    public ResponseEntity<Map<String, Object>> handleTooManyRefreshRequests(TooManyRefreshRequests ex) {
-        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
-    }
-
-    @ExceptionHandler(TooManyCloudRequests.class)
-    public ResponseEntity<Map<String, Object>> handleTooManyCloudRequests(TooManyCloudRequests ex) {
-        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
-    }
-
     @ExceptionHandler(InvalidMediaFile.class)
     public ResponseEntity<Map<String, Object>> handleInvalidMediaFile(InvalidMediaFile ex) {
         return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
@@ -207,5 +166,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MediaNotFound.class)
     public ResponseEntity<Map<String, Object>> handleMediaNotFound(MediaNotFound ex) {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(RateLimitExceeded.class)
+    public ResponseEntity<Map<String, Object>> handleRateLimitExceed(RateLimitExceeded ex) {
+        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
     }
 }
