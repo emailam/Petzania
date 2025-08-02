@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,6 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -51,6 +53,20 @@ public class ChatControllerIntegrationTests {
     private UserChatRepository userChatRepository;
     @Autowired
     private IChatService chatService;
+
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+    private final int RATE_LIMIT_VALUE = 10;
+
+
+    @AfterEach
+    public void cleanup() {
+        Set<String> rateLimitKeys = redisTemplate.keys("rate_limit:*");
+        if (!rateLimitKeys.isEmpty()) {
+            redisTemplate.delete(rateLimitKeys);
+        }
+    }
+
 
     private User userA;
     private User userB;
@@ -140,6 +156,16 @@ public class ChatControllerIntegrationTests {
     }
 
     @Test
+    void testRateLimit_createChatIfNotExists() throws Exception {
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(post("/api/chats/user/{user2Id}", userC.getUserId()))
+                    .andExpect(status().isCreated());
+        }
+        mockMvc.perform(post("/api/chats/user/{user2Id}", userC.getUserId()))
+                .andExpect(status().isTooManyRequests());
+    }
+
+    @Test
     void createChatIfNotExists_WithExistingChat_ReturnsExistingChat() throws Exception {
         mockMvc.perform(post("/api/chats/user/{user2Id}", userB.getUserId()))
                 .andExpect(status().isCreated())
@@ -175,6 +201,16 @@ public class ChatControllerIntegrationTests {
     }
 
     @Test
+    void testRateLimit_getChatById() throws Exception {
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(get("/api/chats/{chatId}", chatAB.getChatId().toString()))
+                    .andExpect(status().isOk());
+        }
+        mockMvc.perform(get("/api/chats/{chatId}", chatAB.getChatId().toString()))
+                .andExpect(status().isTooManyRequests());
+    }
+
+    @Test
     void getChatById_NonExistentChat_ShouldFail() throws Exception {
         UUID nonExistentChatId = UUID.randomUUID();
         mockMvc.perform(get("/api/chats/{chatId}", nonExistentChatId))
@@ -207,6 +243,16 @@ public class ChatControllerIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].chatId").value(chatAB.getChatId().toString()));
+    }
+
+    @Test
+    void testRateLimit_getUserChats() throws Exception {
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(get("/api/chats"))
+                    .andExpect(status().isOk());
+        }
+        mockMvc.perform(get("/api/chats"))
+                .andExpect(status().isTooManyRequests());
     }
 
     @Test

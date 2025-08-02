@@ -1,6 +1,6 @@
 package com.example.friends.and.chats.module.exception.globalhandler;
 
-import com.example.friends.and.chats.module.exception.RateLimitExceeded;
+import com.example.friends.and.chats.module.exception.ratelimit.RateLimitExceeded;
 import com.example.friends.and.chats.module.exception.admin.AdminNotFound;
 import com.example.friends.and.chats.module.exception.user.*;
 import com.example.friends.and.chats.module.exception.chat.ChatNotFound;

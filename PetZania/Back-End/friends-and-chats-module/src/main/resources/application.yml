@@ -53,16 +53,3 @@ logging:
     org.springframework.data.redis.cache: DEBUG
     org.springframework.security: DEBUG
     org.springframework.web.servlet.DispatcherServlet: DEBUG
-
-resilience4j.ratelimiter:
-  instances:
-    ### Chat Service Limiters
-    chatServiceRateLimiter:
-      limitForPeriod: 10       # e.g. allow 10 chat‐related calls
-      limitRefreshPeriod: 1s   # reset every second
-      timeoutDuration: 0       # immediate rejection when over limit
-    ### Message Service Limiters
-    messageServiceRateLimiter:
-      limitForPeriod: 10
-      limitRefreshPeriod: 1s
-      timeoutDuration: 0
