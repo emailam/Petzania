@@ -57,7 +57,7 @@ feed:
   freshness-window-hours: 96
 
 post:
-  expiration-days: 45
+  expiration-days: 30
 
 server:
   error:

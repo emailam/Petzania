@@ -17,26 +17,33 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 @Data
-@Table(name = "follows", indexes = {
+@Table(name = "follows",
+        indexes = {
         // Index for finding all followers of a user
         @Index(name = "idx_follow_followed", columnList = "followed_id"),
         // Index for finding all users followed by a user
-        @Index(name = "idx_follow_follower", columnList = "follower_id")
-})
+        @Index(name = "idx_follow_follower", columnList = "follower_id")},
+
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_follow_follower_followed",
+                columnNames = {"follower_id","followed_id"})
+)
 public class Follow {
     @Id
+    @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "follower_id", referencedColumnName = "user_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User follower;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "followed_id", referencedColumnName = "user_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User followed;
 
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Timestamp createdAt;
 
 }

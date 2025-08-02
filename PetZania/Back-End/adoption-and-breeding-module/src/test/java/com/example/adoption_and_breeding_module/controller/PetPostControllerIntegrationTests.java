@@ -3,21 +3,24 @@ package com.example.adoption_and_breeding_module.controller;
 
 import com.example.adoption_and_breeding_module.TestDataUtil;
 import com.example.adoption_and_breeding_module.model.dto.*;
-import com.example.adoption_and_breeding_module.model.entity.Block;
-import com.example.adoption_and_breeding_module.model.entity.Pet;
-import com.example.adoption_and_breeding_module.model.entity.PetPost;
-import com.example.adoption_and_breeding_module.model.entity.User;
+import com.example.adoption_and_breeding_module.model.entity.*;
 import com.example.adoption_and_breeding_module.model.enumeration.*;
 import com.example.adoption_and_breeding_module.model.principal.UserPrincipal;
 import com.example.adoption_and_breeding_module.repository.BlockRepository;
 import com.example.adoption_and_breeding_module.repository.PetPostRepository;
 import com.example.adoption_and_breeding_module.repository.UserRepository;
+import com.example.adoption_and_breeding_module.repository.projection.BreedScore;
+import com.example.adoption_and_breeding_module.repository.projection.OwnerScore;
+import com.example.adoption_and_breeding_module.repository.projection.PostTypeScore;
+import com.example.adoption_and_breeding_module.repository.projection.SpeciesScore;
 import com.example.adoption_and_breeding_module.service.impl.FeedScorer;
 import com.example.adoption_and_breeding_module.util.SecurityUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+
 import static org.hamcrest.Matchers.*;
+
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,8 +39,6 @@ import com.example.adoption_and_breeding_module.repository.PetRepository;
 import com.example.adoption_and_breeding_module.repository.FriendshipRepository;
 import com.example.adoption_and_breeding_module.repository.FollowRepository;
 import com.example.adoption_and_breeding_module.repository.PetPostInterestRepository;
-import com.example.adoption_and_breeding_module.model.entity.PetPostInterest;
-import com.example.adoption_and_breeding_module.model.entity.PetPostInterestId;
 import com.example.adoption_and_breeding_module.model.enumeration.InterestType;
 import jakarta.persistence.EntityManager;
 
@@ -241,8 +242,9 @@ public class PetPostControllerIntegrationTests {
 
         mockMvc.perform(post("/api/pet-posts")
                         .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)           // ← add this
                         .content(objectMapper.writeValueAsString(createDTO)))
-                .andExpect(status().isBadRequest()); // AuthenticatedUserNotFound
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -400,8 +402,15 @@ public class PetPostControllerIntegrationTests {
         updatePetDTO.setName("Buddy Updated");
         updatePetDTO.setDescription("Updated pet description");
         updatePetDTO.setBreed("Golden Retriever");
-        updatePetDTO.setMyVaccinesURLs(List.of("new-vaccine1.jpg", "new-vaccine2.jpg"));
-        updatePetDTO.setMyPicturesURLs(List.of("new-pic1.jpg", "new-pic2.jpg"));
+        updatePetDTO.setMyVaccinesURLs(List.of(
+                "https://example.com/new-vaccine1.jpg",
+                "https://example.com/new-vaccine2.jpg"
+        ));
+
+        updatePetDTO.setMyPicturesURLs(List.of(
+                "https://example.com/new-pic1.jpg",
+                "https://example.com/new-pic2.jpg"
+        ));
 
         UpdatePetPostDTO updateDTO = new UpdatePetPostDTO();
         updateDTO.setUpdatePetDTO(updatePetDTO);
@@ -855,13 +864,13 @@ public class PetPostControllerIntegrationTests {
 
         // 2. Set up friendships and followings for userA
         // userA friends: userB, userC
+        friendshipRepository.save(Friendship.builder()
+                .id(UUID.randomUUID()).user1(userA).user2(userB).createdAt(new Timestamp(System.currentTimeMillis())).build());
         friendshipRepository.save(com.example.adoption_and_breeding_module.model.entity.Friendship.builder()
-                .user1(userA).user2(userB).createdAt(new Timestamp(System.currentTimeMillis())).build());
-        friendshipRepository.save(com.example.adoption_and_breeding_module.model.entity.Friendship.builder()
-                .user1(userA).user2(userC).createdAt(new Timestamp(System.currentTimeMillis())).build());
+                .id(UUID.randomUUID()).user1(userA).user2(userC).createdAt(new Timestamp(System.currentTimeMillis())).build());
         // userA follows: userD
-        followRepository.save(com.example.adoption_and_breeding_module.model.entity.Follow.builder()
-                .follower(userA).followed(userD).createdAt(new Timestamp(System.currentTimeMillis())).build());
+        followRepository.save(Follow.builder()
+                .id(UUID.randomUUID()).follower(userA).followed(userD).createdAt(new Timestamp(System.currentTimeMillis())).build());
 
         // 3. Build new test posts with variety in location, type, owner, and reacts
         List<PetPost> newPosts = new ArrayList<>();
@@ -933,7 +942,7 @@ public class PetPostControllerIntegrationTests {
         // Persist new posts
         List<PetPost> savedNew = newPosts.stream()
                 .map(petPostRepository::save)
-                .collect(Collectors.toList());
+                .toList();
         // Add the two posts from @BeforeEach
         List<PetPost> allPosts = new ArrayList<>(savedNew);
         allPosts.add(adoptionPost);
@@ -954,13 +963,13 @@ public class PetPostControllerIntegrationTests {
 
         // Prepare interest maps for scoring
         Map<PetSpecies, Long> interestSpecies = petPostInterestRepository.scoreBySpecies(userA.getUserId()).stream()
-                .collect(Collectors.toMap(e -> e.getSpecies(), e -> e.getScore()));
+                .collect(Collectors.toMap(SpeciesScore::getSpecies, SpeciesScore::getScore));
         Map<String, Long> interestBreed = petPostInterestRepository.scoreByBreed(userA.getUserId()).stream()
-                .collect(Collectors.toMap(e -> e.getBreed(), e -> e.getScore()));
+                .collect(Collectors.toMap(BreedScore::getBreed, BreedScore::getScore));
         Map<PetPostType, Long> interestPostType = petPostInterestRepository.scoreByPostType(userA.getUserId()).stream()
-                .collect(Collectors.toMap(e -> e.getPostType(), e -> e.getScore()));
+                .collect(Collectors.toMap(PostTypeScore::getPostType, PostTypeScore::getScore));
         Map<UUID, Long> interestOwner = petPostInterestRepository.scoreByOwner(userA.getUserId()).stream()
-                .collect(Collectors.toMap(e -> e.getOwnerId(), e -> e.getScore()));
+                .collect(Collectors.toMap(OwnerScore::getOwnerId, OwnerScore::getScore));
 
         // Score & sort in-memory using userA's context, with interest
         feedScorer.scoreAndSort(
@@ -1036,7 +1045,7 @@ public class PetPostControllerIntegrationTests {
 
         entityManager.flush();
         entityManager.clear();
-        
+
         assertTrue(petPostRepository.existsById(post1.getPostId()));
         assertTrue(petPostRepository.existsById(post2.getPostId()));
 

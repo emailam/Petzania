@@ -24,15 +24,11 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    @Builder.Default
-    private Set<PetPost> petPosts = new HashSet<>();
-
-    @Column(name = "latitude")
+    @Column(name = "latitude", nullable = false)
     @Builder.Default
     private Double latitude = 0.0;
 
-    @Column(name = "longitude")
+    @Column(name = "longitude", nullable = false)
     @Builder.Default
     private Double longitude = 0.0;
 }

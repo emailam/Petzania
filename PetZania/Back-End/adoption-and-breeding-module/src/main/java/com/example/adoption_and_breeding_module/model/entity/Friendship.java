@@ -17,24 +17,31 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 @Data
-@Table(name = "friendships", indexes = {
+@Table(name = "friendships",
+        indexes = {
         @Index(name = "idx_friendship_user1", columnList = "user1_id"),
         @Index(name = "idx_friendship_user2", columnList = "user2_id"),
-        @Index(name = "idx_friendship_user1_user2", columnList = "user1_id, user2_id")
-})
+        @Index(name = "idx_friendship_user1_user2", columnList = "user1_id, user2_id")},
+
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_friendship_user1_user2",
+                columnNames = {"user1_id","user2_id"})
+)
 public class Friendship {
     @Id
+    @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "user1_id", referencedColumnName = "user_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user1;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "user2_id", referencedColumnName = "user_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user2;
 
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Timestamp createdAt;
 }

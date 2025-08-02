@@ -31,8 +31,8 @@ public class TestDataUtil {
         dto.setDateOfBirth(LocalDate.now().minusYears(1));
         dto.setBreed("Test Breed");
         dto.setDescription("Test description");
-        dto.setMyVaccinesURLs(List.of("vaccine.jpg"));
-        dto.setMyPicturesURLs(List.of("picture.jpg"));
+        dto.setMyVaccinesURLs(List.of("https://example.com/vaccine.jpg"));
+        dto.setMyPicturesURLs(List.of("https://example.com/picture.jpg"));
         return dto;
     }
 
@@ -45,8 +45,8 @@ public class TestDataUtil {
                 .dateOfBirth(dateOfBirth)
                 .breed("Test Breed")
                 .description("Test pet description")
-                .myVaccinesURLs(List.of("vaccine1.jpg", "vaccine2.jpg"))
-                .myPicturesURLs(List.of("pic1.jpg", "pic2.jpg"))
+                .myVaccinesURLs(List.of("https://example.com/vaccine.jpg"))
+                .myPicturesURLs(List.of("https://example.com/picture.jpg"))
                 .build();
     }
 }

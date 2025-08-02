@@ -3,6 +3,9 @@ package com.example.adoption_and_breeding_module.model.entity;
 import com.example.adoption_and_breeding_module.model.enumeration.InterestType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import java.time.Instant;
 import java.util.UUID;
 import java.io.Serializable;
@@ -21,12 +24,15 @@ public class PetPostInterest {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @MapsId("userId")
     @JoinColumn(name = "user_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @MapsId("postId")
     @JoinColumn(name = "post_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private PetPost post;
+;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "interest_type", nullable = false)

@@ -16,16 +16,16 @@ import java.util.stream.Collectors;
 @Service
 public class FeedScorer {
 
-    @Value("${feed.weights.recency:400}")
+    @Value("${feed.weights.recency:700}")
     private long wRecency;
 
     @Value("${feed.weights.totalReacts:300}")
     private long wTotalReacts;
 
-    @Value("${feed.weights.petCategoryAffinity:250}")
+    @Value("${feed.weights.petCategoryAffinity:400}")
     private long wPetCategoryAffinity;
 
-    @Value("${feed.weights.postCategoryAffinity:200}")
+    @Value("${feed.weights.postCategoryAffinity:300}")
     private long wPostCategoryAffinity;
 
     @Value("${feed.weights.friendBoost:5000}")
@@ -34,25 +34,25 @@ public class FeedScorer {
     @Value("${feed.weights.followeeBoost:3000}")
     private long wFolloweeBoost;
 
-    @Value("${feed.weights.distance:400}")
+    @Value("${feed.weights.distance:750}")
     private long wDistance;
 
-    @Value("${feed.weights.speciesAffinity:250}")
+    @Value("${feed.weights.speciesAffinity:500}")
     private long wSpeciesAffinity;
 
-    @Value("${feed.weights.breedAffinity:150}")
+    @Value("${feed.weights.breedAffinity:350}")
     private long wBreedAffinity;
 
-    @Value("${feed.weights.postTypeAffinity:200}")
+    @Value("${feed.weights.postTypeAffinity:300}")
     private long wPostTypeAffinity;
 
-    @Value("${feed.weights.authorAffinity:100}")
+    @Value("${feed.weights.authorAffinity:200}")
     private long wAuthorAffinity;
 
     @Value("${feed.freshness-window-hours:96}")
     private long freshnessWindowHours;
 
-    private static final long SIGNAL_SCALE = 1_000L;
+    private static final long SIGNAL_SCALE = 10_000L;
 
     private final Clock clock = Clock.systemUTC();
     private final PetPostRepository petPostRepository;

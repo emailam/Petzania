@@ -2,7 +2,9 @@ package com.example.adoption_and_breeding_module.model.entity;
 import com.example.adoption_and_breeding_module.model.enumeration.PetPostStatus;
 import com.example.adoption_and_breeding_module.model.enumeration.PetPostType;
 import com.example.adoption_and_breeding_module.validator.NotToxicText;
+import com.example.adoption_and_breeding_module.validator.ValidEnum;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -27,11 +29,12 @@ public class PetPost {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @EqualsAndHashCode.Include
-    @Column(name = "post_id", nullable = false)
+    @Column(name = "post_id", nullable = false, updatable = false)
     private UUID postId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User owner;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false, cascade = CascadeType.ALL)
@@ -41,7 +44,7 @@ public class PetPost {
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
-    @Column(name = "post_status", nullable = false)
+    @Column(name = "post_status", nullable = false, length = 20)
     PetPostStatus postStatus = PetPostStatus.PENDING;
 
     @JoinTable(
@@ -62,16 +65,16 @@ public class PetPost {
     @Column(name = "description", length = 2000)
     private String description;
 
-    @Column(name = "latitude")
+    @Column(name = "latitude", nullable = false)
     @Builder.Default
     private Double latitude = 0.0;
 
-    @Column(name = "longitude")
+    @Column(name = "longitude", nullable = false)
     @Builder.Default
     private Double longitude = 0.0;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "post_type", nullable = false)
+    @Column(name = "post_type", nullable = false, length = 20)
     private PetPostType postType;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -79,6 +82,7 @@ public class PetPost {
 
     @Column(name = "updated_at")
     private Instant updatedAt;
+
 
     @Transient
     private long score;

@@ -18,12 +18,13 @@ public class UserListener {
     public void onUserRegistered(UserEvent user) {
         if (!userRepository.existsById(user.getUserId()) && !userRepository.existsByUsername(user.getUsername())
                 && !userRepository.existsByEmail(user.getEmail())) {
-            User newUser = new User();
-            newUser.setUserId(user.getUserId());
-            newUser.setUsername(user.getUsername());
-            newUser.setEmail(user.getEmail());
-            newUser.setLatitude(user.getLatitude());
-            newUser.setLongitude(user.getLongitude());
+            User newUser = User.builder()
+                    .userId(user.getUserId())
+                    .username(user.getUsername())
+                    .email(user.getEmail())
+                    .latitude(user.getLatitude() != null ? user.getLatitude() : 0.0)
+                    .longitude(user.getLongitude() != null ? user.getLongitude() : 0.0)
+                    .build();
             userRepository.save(newUser);
             System.out.println("Received registered user: " + user);
         }

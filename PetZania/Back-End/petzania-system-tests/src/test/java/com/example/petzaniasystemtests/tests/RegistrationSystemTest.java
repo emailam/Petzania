@@ -124,7 +124,8 @@ public class RegistrationSystemTest extends BaseSystemTest {
                     },
                     "description": "Looking for a loving home",
                     "postType": "ADOPTION",
-                    "location": "Cross Test City"
+                    "latitude": 5.0,
+                    "longitude": 5.0
                 }
                 """;
 
@@ -398,7 +399,8 @@ public class RegistrationSystemTest extends BaseSystemTest {
                     },
                     "description": "Testing deletion propagation",
                     "postType": "ADOPTION",
-                    "location": "Deletion Test City"
+                    "latitude": 5.0,
+                    "longitude": 5.0
                 }
                 """;
 
@@ -612,7 +614,8 @@ public class RegistrationSystemTest extends BaseSystemTest {
                         },
                         "description": "Complex relationship test post %d",
                         "postType": "ADOPTION",
-                        "location": "Complex City"
+                        "latitude": 5.0,
+                        "longitude": 5.0
                     }
                     """, i, i, i);
 
@@ -877,7 +880,8 @@ public class RegistrationSystemTest extends BaseSystemTest {
                         },
                         "description": "Concurrent deletion test post %d",
                         "postType": "ADOPTION",
-                        "location": "Concurrent City"
+                        "latitude": 5.0,
+                        "longitude": 5.0
                     }
                     """, i, i, i);
 
@@ -1093,7 +1097,8 @@ public class RegistrationSystemTest extends BaseSystemTest {
                         },
                         "description": "Testing active interactions %d",
                         "postType": "BREEDING",
-                        "location": "Interaction City"
+                        "latitude": 5.0,
+                        "longitude": 5.0
                     }
                     """, i, i, i);
 
@@ -1377,7 +1382,8 @@ public class RegistrationSystemTest extends BaseSystemTest {
                     },
                     "description": "Testing post-deletion functionality",
                     "postType": "ADOPTION",
-                    "location": "Post Deletion City"
+                    "latitude": 5.0,
+                    "longitude": 5.0
                 }
                 """;
 
@@ -1420,7 +1426,8 @@ public class RegistrationSystemTest extends BaseSystemTest {
                         },
                         "description": "Rapid cycle test post %d",
                         "postType": "ADOPTION",
-                        "location": "Cycle City"
+                        "latitude": 5.0,
+                        "longitude": 5.0
                     }
                     """, cycle, cycle, cycle);
 
@@ -1522,7 +1529,8 @@ public class RegistrationSystemTest extends BaseSystemTest {
                     },
                     "description": "Testing cross-module integrity",
                     "postType": "ADOPTION",
-                    "location": "Integrity City"
+                    "latitude": 5.0,
+                    "longitude": 5.0
                 }
                 """;
 
@@ -1677,7 +1685,8 @@ public class RegistrationSystemTest extends BaseSystemTest {
                         },
                         "description": "Maximum complexity test post %d",
                         "postType": "BREEDING",
-                        "location": "Max Complexity City"
+                        "latitude": 5.0,
+                        "longitude": 5.0
                     }
                     """, i, i, i);
 
@@ -1874,7 +1883,8 @@ public class RegistrationSystemTest extends BaseSystemTest {
                     },
                     "description": "Proving system integrity after complex deletion",
                     "postType": "ADOPTION",
-                    "location": "Post Cascade City"
+                    "latitude": 5.0,
+                    "longitude": 5.0
                 }
                 """;
 

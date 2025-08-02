@@ -5,8 +5,7 @@ import com.example.adoption_and_breeding_module.model.enumeration.PetSpecies;
 import com.example.adoption_and_breeding_module.validator.NotToxicText;
 import com.example.adoption_and_breeding_module.validator.ValidEnum;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,14 +21,17 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 public class PetDTO {
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY) // Clients can't send petId
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private UUID petId;
 
-    @NotBlank(message = "Name is required.")
     @NotToxicText
+    @NotBlank(message = "Name is required.")
+    @Size(max = 50, message = "Name must be at most 50 characters.")
     private String name;
 
     @NotToxicText
+    @Size(max = 255, message = "Description must be at most 255 characters.")
     private String description;
 
     @NotNull(message = "Gender is required.")
@@ -37,13 +39,15 @@ public class PetDTO {
     private Gender gender;
 
     @NotNull(message = "Date of birth is required.")
+    @Past(message = "Date of birth must be in the past.")
     private LocalDate dateOfBirth;
 
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY) // Exclude from requests
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String age;
 
-    @NotBlank(message = "Breed is required.")
     @NotToxicText
+    @NotBlank(message = "Breed is required.")
+    @Size(max = 32, message = "Breed must be at most 32 characters.")
     private String breed;
 
     @NotNull(message = "Species is required.")
@@ -51,8 +55,17 @@ public class PetDTO {
     private PetSpecies species;
 
     @Builder.Default
-    private List<String> myVaccinesURLs = new ArrayList<>();
+    @Size(max = 50, message = "At most 50 vaccine URLs.")
+    private List<@NotBlank @Pattern(
+            regexp = "https?://.*",
+            message = "Each vaccine URL must be a valid HTTP/HTTPS URL"
+    ) String> myVaccinesURLs = new ArrayList<>();
 
     @Builder.Default
-    private List<String> myPicturesURLs = new ArrayList<>();
+    @Size(max = 150, message = "At most 150 picture URLs.")
+    private List<@NotBlank @Pattern(
+            regexp = "https?://.*",
+            message = "Each picture URL must be a valid HTTP/HTTPS URL"
+    ) String> myPicturesURLs = new ArrayList<>();
 }
+

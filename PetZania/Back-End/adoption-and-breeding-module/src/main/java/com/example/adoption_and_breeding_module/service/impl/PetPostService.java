@@ -72,8 +72,8 @@ public class PetPostService implements IPetPostService {
                 .owner(owner)
                 .description(dto.getDescription())
                 .postType(dto.getPostType())
-                .latitude(dto.getLatitude())
-                .longitude(dto.getLongitude())
+                .latitude(dto.getLatitude() != null ? dto.getLatitude() : 0.0)
+                .longitude(dto.getLongitude() != null ? dto.getLongitude() : 0.0)
                 .score(0)
                 .build();
 
