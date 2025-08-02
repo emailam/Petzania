@@ -2,8 +2,6 @@ package com.example.registrationmodule.service;
 
 import com.example.registrationmodule.exception.admin.AdminNotFound;
 import com.example.registrationmodule.exception.authenticationAndVerificattion.RefreshTokenNotValid;
-import com.example.registrationmodule.exception.rateLimiting.TooManyAdminRequests;
-import com.example.registrationmodule.exception.rateLimiting.TooManyLoginRequests;
 import com.example.registrationmodule.exception.user.UserAlreadyLoggedOut;
 import com.example.registrationmodule.exception.user.UsernameAlreadyExists;
 import com.example.registrationmodule.model.dto.*;
@@ -14,7 +12,6 @@ import com.example.registrationmodule.service.impl.AdminService;
 import com.example.registrationmodule.service.impl.DTOConversionService;
 import com.example.registrationmodule.service.impl.JWTService;
 import com.example.registrationmodule.service.impl.RefreshTokenService;
-import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -91,11 +88,6 @@ class AdminServiceTest {
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(auth);
         when(auth.isAuthenticated()).thenReturn(false);
         assertThrows(AdminNotFound.class, () -> adminService.login(dto));
-    }
-
-    @Test
-    void loginFallback_throws() {
-        assertThrows(TooManyLoginRequests.class, () -> adminService.loginFallback(new LoginAdminDTO(), mock(RequestNotPermitted.class)));
     }
 
     @Test
@@ -213,11 +205,6 @@ class AdminServiceTest {
     }
 
     @Test
-    void saveAdminFallback_throws() {
-        assertThrows(TooManyAdminRequests.class, () -> adminService.saveAdminFallback(new Admin(), mock(RequestNotPermitted.class)));
-    }
-
-    @Test
     void deleteById_success() {
         UUID id = UUID.randomUUID();
         when(adminRepository.existsById(id)).thenReturn(true);
@@ -230,10 +217,5 @@ class AdminServiceTest {
         UUID id = UUID.randomUUID();
         when(adminRepository.existsById(id)).thenReturn(false);
         assertThrows(AdminNotFound.class, () -> adminService.deleteById(id));
-    }
-
-    @Test
-    void deleteAdminFallback_throws() {
-        assertThrows(TooManyAdminRequests.class, () -> adminService.deleteAdminFallback(UUID.randomUUID(), mock(RequestNotPermitted.class)));
     }
 } 

@@ -1,21 +1,17 @@
 package com.example.registrationmodule.service.impl;
 
 import com.example.registrationmodule.model.entity.RevokedRefreshToken;
-import com.example.registrationmodule.model.entity.User;
 import com.example.registrationmodule.repository.RevokedRefreshTokenRepository;
 import com.example.registrationmodule.service.IRefreshTokenService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.antlr.v4.runtime.Token;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
-import java.util.Optional;
 
 @Service
 @Transactional

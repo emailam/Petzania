@@ -5,7 +5,6 @@ import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.example.registrationmodule.config.CloudStorageConfig;
 import com.example.registrationmodule.exception.media.InvalidMediaFile;
 import com.example.registrationmodule.exception.media.MediaNotFound;
-import com.example.registrationmodule.exception.rateLimiting.TooManyCloudRequests;
 import com.example.registrationmodule.model.entity.Media;
 import com.example.registrationmodule.repository.MediaRepository;
 import com.example.registrationmodule.service.impl.CloudService;
@@ -55,11 +54,6 @@ class CloudServiceTest {
     }
 
     @Test
-    void uploadAndSaveMedia_fallback_throws() {
-        assertThrows(TooManyCloudRequests.class, () -> cloudService.uploadFallback(null, true, mock(RequestNotPermitted.class)));
-    }
-
-    @Test
     void getMediaUrl_success() {
         UUID id = UUID.randomUUID();
         Media media = Media.builder().mediaId(id).key("key").build();
@@ -74,11 +68,6 @@ class CloudServiceTest {
         UUID id = UUID.randomUUID();
         when(mediaRepository.findById(id)).thenReturn(Optional.empty());
         assertThrows(MediaNotFound.class, () -> cloudService.getMediaUrl(id));
-    }
-
-    @Test
-    void getMediaUrl_fallback_throws() {
-        assertThrows(TooManyCloudRequests.class, () -> cloudService.mediaUrlFallback(UUID.randomUUID(), mock(RequestNotPermitted.class)));
     }
 
     @Test

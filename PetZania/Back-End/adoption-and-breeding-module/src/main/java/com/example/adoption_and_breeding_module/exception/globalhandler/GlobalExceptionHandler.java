@@ -4,6 +4,7 @@ import com.example.adoption_and_breeding_module.exception.BlockingExist;
 import com.example.adoption_and_breeding_module.exception.PetPostNotFound;
 import com.example.adoption_and_breeding_module.exception.UserAccessDenied;
 import com.example.adoption_and_breeding_module.exception.UserNotFound;
+import com.example.adoption_and_breeding_module.exception.ratelimit.RateLimitExceeded;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -78,5 +79,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BlockingExist.class)
     public ResponseEntity<Map<String, Object>> handleBlockingExistException(BlockingExist ex) {
         return buildErrorResponse(ex, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(RateLimitExceeded.class)
+    public ResponseEntity<Map<String, Object>> handleRateLimitExceededException(RateLimitExceeded ex) {
+        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
     }
 }

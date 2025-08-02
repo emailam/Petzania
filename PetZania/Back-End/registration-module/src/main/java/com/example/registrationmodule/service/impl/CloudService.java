@@ -7,12 +7,9 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.example.registrationmodule.config.CloudStorageConfig;
 import com.example.registrationmodule.exception.media.InvalidMediaFile;
 import com.example.registrationmodule.exception.media.MediaNotFound;
-import com.example.registrationmodule.exception.rateLimiting.TooManyCloudRequests;
 import com.example.registrationmodule.model.entity.Media;
 import com.example.registrationmodule.repository.MediaRepository;
 import com.example.registrationmodule.service.ICloudService;
-import io.github.resilience4j.ratelimiter.RequestNotPermitted;
-import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -33,7 +30,6 @@ public class CloudService implements ICloudService {
 
     @Transactional
     @Override
-    @RateLimiter(name = "mediaUploadLimiter", fallbackMethod = "uploadFallback")
     public Media uploadAndSaveMedia(MultipartFile file, boolean validate) throws IOException {
 
         if (validate) {
@@ -63,7 +59,6 @@ public class CloudService implements ICloudService {
     }
 
     @Override
-    @RateLimiter(name = "mediaUrlLimiter", fallbackMethod = "mediaUrlFallback")
     public String getMediaUrl(UUID mediaId) {
         Media media = mediaRepository.findById(mediaId)
                 .orElseThrow(() -> new MediaNotFound("Media not found"));
@@ -157,13 +152,5 @@ public class CloudService implements ICloudService {
         } else if (mediaFiles.getContentType().equals("application/pdf") && mediaFiles.getSize() > cloudStorageConfig.getMaxSize().get("application-pdf")) {
             throw new InvalidMediaFile("PDF: " + mediaFiles.getOriginalFilename() + " is too large. Max allowed is " + cloudStorageConfig.getMaxSize().get("application-pdf") + " MB.");
         }
-    }
-
-    public Media uploadFallback(MultipartFile files, boolean validate, RequestNotPermitted ex) {
-        throw new TooManyCloudRequests("Media upload rate exceeded. Please try again later.");
-    }
-
-    public String mediaUrlFallback(UUID mediaId, RequestNotPermitted ex) {
-        throw new TooManyCloudRequests("Rate limit for getting media url's reached. Try again later.");
     }
 }

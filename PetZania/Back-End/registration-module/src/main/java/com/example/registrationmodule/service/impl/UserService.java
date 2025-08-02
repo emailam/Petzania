@@ -1,7 +1,6 @@
 package com.example.registrationmodule.service.impl;
 
 import com.example.registrationmodule.exception.authenticationAndVerificattion.*;
-import com.example.registrationmodule.exception.rateLimiting.*;
 import com.example.registrationmodule.exception.user.*;
 import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.dto.EmailRequestDTO;
@@ -12,8 +11,6 @@ import com.example.registrationmodule.repository.UserRepository;
 import com.example.registrationmodule.service.IDTOConversionService;
 import com.example.registrationmodule.service.IEmailService;
 import com.example.registrationmodule.service.IUserService;
-import io.github.resilience4j.ratelimiter.RequestNotPermitted;
-import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,7 +51,6 @@ public class UserService implements IUserService {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
     @Override
-    @RateLimiter(name = "registerRateLimiter", fallbackMethod = "registerFallback")
     public UserProfileDTO registerUser(RegisterUserDTO registerUserDTO) {
         // convert to regular user.
         User user = converter.mapToUser(registerUserDTO);
@@ -88,12 +84,6 @@ public class UserService implements IUserService {
 
         return converter.mapToUserProfileDto(user);
     }
-
-
-    public UserProfileDTO registerFallback(RegisterUserDTO registerUserDTO, RequestNotPermitted t) {
-        throw new TooManyRegistrationRequests("Too many registration attempts. Try again later.");
-    }
-
     @Override
     public Page<UserProfileDTO> getUsers(UUID requesterId, int page, int size, String sortBy, String direction) {
         Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
@@ -165,7 +155,6 @@ public class UserService implements IUserService {
     }
 
     @Override
-    @RateLimiter(name = "loginRateLimiter", fallbackMethod = "loginFallback")
     public ResponseLoginDTO login(LoginUserDTO loginUserDTO) {
         User user = userRepository.findByEmailIgnoreCase(loginUserDTO.getEmail()).orElseThrow(() -> new InvalidUserCredentials("Email is incorrect"));
 
@@ -195,13 +184,7 @@ public class UserService implements IUserService {
             throw new InvalidUserCredentials("Email or password is incorrect");
         }
     }
-
-    public ResponseLoginDTO loginFallback(LoginUserDTO loginUserDTO, RequestNotPermitted t) {
-        throw new TooManyLoginRequests("Too many login attempts. Try again later.");
-    }
-
     @Override
-    @RateLimiter(name = "refreshTokenRateLimiter", fallbackMethod = "refreshFallback")
     public TokenDTO refreshToken(String refreshToken) {
         if (refreshToken == null) {
             throw new RefreshTokenNotValid("There is no refresh token sent");
@@ -225,11 +208,6 @@ public class UserService implements IUserService {
         String newAccessToken = jwtService.generateAccessToken(email, role);
         return new TokenDTO(newAccessToken, refreshToken);
     }
-
-    public TokenDTO refreshFallback(String refreshToken, RequestNotPermitted t) {
-        throw new TooManyRefreshRequests("Too many refresh requests. Try again later.");
-    }
-
 
     @Override
     public void sendResetPasswordOTP(EmailDTO emailDTO) {
@@ -294,7 +272,6 @@ public class UserService implements IUserService {
 
 
     @Override
-    @RateLimiter(name = "logoutRateLimiter", fallbackMethod = "logoutFallback")
     public void logout(LogoutDTO logoutDTO) {
         // get the revoked token data
         User user = userRepository.findByEmailIgnoreCase(logoutDTO.getEmail()).orElseThrow(() -> new UserNotFound("User does not exist"));
@@ -309,10 +286,6 @@ public class UserService implements IUserService {
         // mark user as not online
         user.setOnline(false);
         userRepository.save(user);
-    }
-
-    public void logoutFallback(LogoutDTO logoutDTO, RequestNotPermitted t) {
-        throw new TooManyLogoutRequests("Too many logout requests. Try again later.");
     }
 
     @Override
@@ -367,7 +340,6 @@ public class UserService implements IUserService {
     }
 
     @Override
-    @RateLimiter(name = "verifyOtpRateLimiter", fallbackMethod = "otpFallback")
     public void verifyCode(OTPValidationDTO otpValidationDTO) {
         User user = userRepository.findByEmailIgnoreCase(otpValidationDTO.getEmail()).orElseThrow(() -> new UserNotFound("User does not exist"));
         if (user.isVerified()) {
@@ -389,10 +361,6 @@ public class UserService implements IUserService {
         userRepository.save(user);
     }
 
-    public void otpFallback(OTPValidationDTO otpValidationDTO, RequestNotPermitted t) {
-        throw new TooManyOtpRequests("Too many OTP attempts. Try again later.");
-    }
-
     @Override
     public boolean userExistsById(UUID userId) {
         if (userRepository.findById(userId).isPresent()) {
@@ -403,7 +371,6 @@ public class UserService implements IUserService {
     }
 
     @Override
-    @RateLimiter(name = "sendOtpRateLimiter", fallbackMethod = "sendOtpFallback")
     public void sendVerificationCode(String email) {
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new UserNotFound("User does not exist"));
@@ -464,11 +431,6 @@ public class UserService implements IUserService {
 
         emailService.sendEmail(emailRequestDTO);
     }
-
-    public void sendOtpFallback(String email, RequestNotPermitted t) {
-        throw new TooManyOtpRequests("Too many OTP requests. Try again later.");
-    }
-
 
     @Override
     public UserProfileDTO updateUserById(UUID userId, UpdateUserProfileDto updateUserProfileDto) {

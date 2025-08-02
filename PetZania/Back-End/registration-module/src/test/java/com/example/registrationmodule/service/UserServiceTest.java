@@ -535,30 +535,4 @@ class UserServiceTest {
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
         assertFalse(userService.userExistsById(userId));
     }
-
-    // Fallbacks for rate limiters
-    @Test
-    void registerFallback_throws() {
-        assertThrows(TooManyRegistrationRequests.class, () -> userService.registerFallback(new RegisterUserDTO(), mock(RequestNotPermitted.class)));
-    }
-    @Test
-    void loginFallback_throws() {
-        assertThrows(TooManyLoginRequests.class, () -> userService.loginFallback(new LoginUserDTO(), mock(RequestNotPermitted.class)));
-    }
-    @Test
-    void refreshFallback_throws() {
-        assertThrows(TooManyRefreshRequests.class, () -> userService.refreshFallback("refresh", mock(RequestNotPermitted.class)));
-    }
-    @Test
-    void logoutFallback_throws() {
-        assertThrows(TooManyLogoutRequests.class, () -> userService.logoutFallback(new LogoutDTO("user@test.com", "refresh"), mock(RequestNotPermitted.class)));
-    }
-    @Test
-    void otpFallback_throws() {
-        assertThrows(TooManyOtpRequests.class, () -> userService.otpFallback(new OTPValidationDTO(), mock(RequestNotPermitted.class)));
-    }
-    @Test
-    void sendOtpFallback_throws() {
-        assertThrows(TooManyOtpRequests.class, () -> userService.sendOtpFallback("user@test.com", mock(RequestNotPermitted.class)));
-    }
 } 

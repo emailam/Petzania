@@ -1,5 +1,6 @@
 package com.example.registrationmodule.controller;
 
+import com.example.registrationmodule.annotation.RateLimit;
 import com.example.registrationmodule.exception.admin.AdminNotFound;
 import com.example.registrationmodule.model.dto.*;
 import com.example.registrationmodule.model.entity.Admin;
@@ -27,11 +28,14 @@ public class AdminController {
 
     @Operation(summary = "Refresh access token using a refresh token")
     @PostMapping("/admin/refresh-token")
+    @RateLimit
     public ResponseEntity<TokenDTO> refreshToken(@RequestBody RefreshTokenDTO refreshTokenDTO){
         return ResponseEntity.status(HttpStatus.OK).body(adminService.refreshToken(refreshTokenDTO.getRefreshToken()));
     }
+
     @Operation(summary = "Admin login and generate tokens")
     @PostMapping("/admin/login")
+    @RateLimit
     public ResponseEntity<ResponseLoginDTO> login(@RequestBody @Valid LoginAdminDTO loginAdminDTO) {
         ResponseLoginDTO token = adminService.login(loginAdminDTO);
         return ResponseEntity.status(HttpStatus.OK).body(token);
@@ -39,6 +43,7 @@ public class AdminController {
 
     @Operation(summary = "Admin logout and invalidate refresh token")
     @PostMapping("/admin/logout")
+    @RateLimit
     public ResponseEntity<String> logout(@RequestBody @Valid AdminLogoutDTO adminLogoutDTO) {
         adminService.logout(adminLogoutDTO);
         return ResponseEntity.ok("Admin logged out successfully");
@@ -46,6 +51,7 @@ public class AdminController {
 
     @Operation(summary = "Create a new admin account")
     @PostMapping(path = "/admin/create")
+    @RateLimit
     public ResponseEntity<AdminDTO> createAdmin(@RequestBody @Valid AdminDTO adminDto) {
         Admin admin = dtoConversionService.mapToAdmin(adminDto);
         Admin createdAdmin = adminService.saveAdmin(admin);
@@ -58,6 +64,7 @@ public class AdminController {
 
     @Operation(summary = "Get an admin by ID")
     @GetMapping(path = "/admin/{id}")
+    @RateLimit
     public ResponseEntity<AdminDTO> getAdminById(@PathVariable("id") UUID adminId) {
         Admin admin = adminService.getAdminById(adminId)
                 .orElseThrow(() -> new AdminNotFound("Admin not found with ID: " + adminId));
@@ -67,12 +74,14 @@ public class AdminController {
 
     @Operation(summary = "Retrieve all admins")
     @GetMapping(path = "/admin/get-all")
+    @RateLimit
     public ResponseEntity<List<AdminDTO>> getAllAdmins(){
         return ResponseEntity.ok(adminService.getAllAdmins());
     }
 
     @Operation(summary = "Delete an admin by ID")
     @DeleteMapping("/admin/delete/{id}")
+    @RateLimit
     public ResponseEntity<Void> deleteAdminById(@PathVariable("id") UUID adminId) {
         if (!adminService.existsById(adminId)) {
             throw new AdminNotFound("Admin not found with ID: " + adminId);

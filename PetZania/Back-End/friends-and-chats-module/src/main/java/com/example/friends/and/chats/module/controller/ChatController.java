@@ -1,6 +1,7 @@
 package com.example.friends.and.chats.module.controller;
 
 
+import com.example.friends.and.chats.module.annotation.RateLimit;
 import com.example.friends.and.chats.module.model.dto.chat.ChatDTO;
 import com.example.friends.and.chats.module.model.dto.chat.UpdateUserChatDTO;
 import com.example.friends.and.chats.module.model.dto.chat.UserChatDTO;
@@ -27,6 +28,7 @@ public class ChatController {
 
     @Operation(summary = "Create a new chat or return existing one between two users")
     @PostMapping("/user/{user2Id}")
+    @RateLimit
     public ResponseEntity<ChatDTO> createChatIfNotExists(@PathVariable(name = "user2Id") UUID user2Id) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID user1Id = userPrincipal.getUserId();
@@ -36,6 +38,7 @@ public class ChatController {
 
     @Operation(summary = "Get a specific chat by ID for the current user")
     @GetMapping("{chatId}")
+    @RateLimit
     public ResponseEntity<ChatDTO> getChatById(@PathVariable(name = "chatId") UUID chatId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();
@@ -44,6 +47,7 @@ public class ChatController {
 
     @Operation(summary = "Get all chats for the current user")
     @GetMapping
+    @RateLimit
     public ResponseEntity<List<ChatDTO>> getUserChats() {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();
@@ -52,6 +56,7 @@ public class ChatController {
 
     @Operation(summary = "Get a specific userChat by chat ID for the current user")
     @GetMapping("{chatId}/user-chat")
+    @RateLimit
     public ResponseEntity<UserChatDTO> getUserChatByChatId(@PathVariable(name = "chatId") UUID chatId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();
@@ -60,6 +65,7 @@ public class ChatController {
 
     @Operation(summary = "Partially update a user chat (like renaming, muting, etc.)")
     @PatchMapping("/{chatId}")
+    @RateLimit
     public ResponseEntity<UserChatDTO> partialUpdateUserChat(@PathVariable(name = "chatId") UUID chatId,
                                                       @RequestBody UpdateUserChatDTO updateUserChatDTO) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
@@ -69,6 +75,7 @@ public class ChatController {
 
     @Operation(summary = "Delete a user chat entry (without affecting the other user)")
     @DeleteMapping("/user/{userChatId}")
+    @RateLimit
     public ResponseEntity<Void> deleteUserChatById(@PathVariable(name = "userChatId") UUID userChatId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();

@@ -11,12 +11,14 @@ import com.example.registrationmodule.service.IUserService;
 import com.example.registrationmodule.service.impl.AdminService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -28,6 +30,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @SpringBootTest
@@ -40,6 +43,8 @@ public class UserControllerIntegrationTests {
     private IUserService userService;
     private ObjectMapper objectMapper;
     private IAdminService adminService;
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
     private final String DEFAULT_PASSWORD = "Password123#";
     private String adminToken;
     private String superAdminToken;
@@ -49,18 +54,25 @@ public class UserControllerIntegrationTests {
 
     @BeforeEach
     public void setupAdminTokens() throws Exception {
-        Admin superAdmin = TestDataUtil.createSuperAdminA();
+        Admin superAdmin = TestDataUtil.createSuperAdmin("superAdminA");
         adminService.saveAdmin(superAdmin);
         superAdminToken = obtainAdminToken(superAdmin.getUsername(), DEFAULT_PASSWORD);
 
-        Admin admin = TestDataUtil.createAdminA();
+        Admin admin = TestDataUtil.createAdmin("adminA");
         adminService.saveAdmin(admin);
         adminToken = obtainAdminToken(admin.getUsername(), DEFAULT_PASSWORD);
+    }
+    @AfterEach
+    public void cleanup(){
+        Set<String> rateLimitKeys = redisTemplate.keys("rate_limit:*");
+        if (!rateLimitKeys.isEmpty()) {
+            redisTemplate.delete(rateLimitKeys);
+        }
     }
 
     @Test
     public void testLogout_Success() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
         String refreshToken = obtainRefreshToken(testUserA.getEmail(), DEFAULT_PASSWORD);
         LogoutDTO logoutDTO = new LogoutDTO(testUserA.getEmail(), refreshToken);
@@ -75,8 +87,8 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testLogout_UserATriesToLogoutUserB_Failure() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
-        User testUserB = userService.saveUser(TestDataUtil.createTestUserB());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
+        User testUserB = userService.saveUser(TestDataUtil.createTestUser("userB"));
         String tokenA = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
         String refreshTokenB = obtainRefreshToken(testUserB.getEmail(), DEFAULT_PASSWORD);
         LogoutDTO logoutDTO = new LogoutDTO(testUserB.getEmail(), refreshTokenB);
@@ -90,7 +102,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testLogout_InvalidEmail_Failure() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String tokenA = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
         String refreshTokenA = obtainRefreshToken(testUserA.getEmail(), DEFAULT_PASSWORD);
 
@@ -103,6 +115,7 @@ public class UserControllerIntegrationTests {
                         .header("Authorization", tokenA))
                 .andExpect(MockMvcResultMatchers.status().isNotAcceptable());
     }
+
     @Test
     public void testLogout_WithoutAuthentication_Failure() throws Exception {
         // No authentication token is passed
@@ -117,8 +130,8 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUsersByPrefixUsername_WithMatchingPrefix_ShouldReturnUsers() throws Exception {
         // Arrange
-        User user1 = userService.saveUser(TestDataUtil.createTestUserA());
-        User user2 = userService.saveUser(TestDataUtil.createTestUserB());
+        User user1 = userService.saveUser(TestDataUtil.createTestUser("testUserA"));
+        User user2 = userService.saveUser(TestDataUtil.createTestUser("testUserB"));
 
         // Act & Assert
         mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/users/test")
@@ -129,15 +142,15 @@ public class UserControllerIntegrationTests {
                         .param("direction", "asc"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(2))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].username").value("testUser"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.content[1].username").value("testUserB"));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].username").value(user1.getUsername()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[1].username").value(user2.getUsername()));
     }
 
     @Test
     public void testGetUsersByPrefixUsername_WithNoMatches_ShouldReturnNoContent() throws Exception {
         // Arrange
-        userService.saveUser(TestDataUtil.createTestUserA());
-        userService.saveUser(TestDataUtil.createTestUserB());
+        userService.saveUser(TestDataUtil.createTestUser("userA"));
+        userService.saveUser(TestDataUtil.createTestUser("userB"));
 
         // Act & Assert
         mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/users/xyz")
@@ -149,7 +162,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testUserChangesOwnPassword_ShouldReturnSuccess() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
 
         ChangePasswordDTO changePasswordDTO = new ChangePasswordDTO();
@@ -166,7 +179,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testAdminChangesUserPassword_ShouldReturnSuccess() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
 
         ChangePasswordDTO changePasswordDTO = new ChangePasswordDTO();
         changePasswordDTO.setEmail(testUserA.getEmail());
@@ -182,7 +195,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testUserDeletesOwnAccount_ShouldReturnSuccess() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
 
         EmailDTO emailDTO = new EmailDTO();
@@ -195,9 +208,10 @@ public class UserControllerIntegrationTests {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().string("User deleted successfully"));
     }
+
     @Test
     public void testAdminDeletesUser_ShouldReturnSuccess() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
 
         EmailDTO emailDTO = new EmailDTO();
         emailDTO.setEmail(testUserA.getEmail());
@@ -212,8 +226,8 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testUserChangeOtherUserPassword_ShouldReturnBadRequest() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
-        User testUserB = userService.saveUser(TestDataUtil.createTestUserB());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
+        User testUserB = userService.saveUser(TestDataUtil.createTestUser("userB"));
         String tokenA = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
 
         ChangePasswordDTO changePasswordDTO = new ChangePasswordDTO();
@@ -229,59 +243,62 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testGetUserProfilePictureURL_ShouldReturnSuccess() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
         String profilePictureURL = testUserA.getProfilePictureURL();
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/profile-picture-url/{id}", testUserA.getUserId())
-                .header("Authorization", token))
+                        .header("Authorization", token))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.profilePictureURL").value(profilePictureURL));
     }
 
     @Test
     public void testGetAnotherUserProfilePictureURL_ShouldSuccess() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
-        User testUserB = userService.saveUser(TestDataUtil.createTestUserB());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
+        User testUserB = userService.saveUser(TestDataUtil.createTestUser("userB"));
         String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
         String profilePictureURL = testUserB.getProfilePictureURL();
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/profile-picture-url/{id}", testUserB.getUserId())
-                .header("Authorization", token))
+                        .header("Authorization", token))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.profilePictureURL").value(profilePictureURL));
     }
 
     @Test
     public void testGetNonExistentUserProfilePictureURL_ShouldFail() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
         String profilePictureURL = "random.com";
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/profile-picture-url/{id}", UUID.randomUUID())
-                .header("Authorization", token))
+                        .header("Authorization", token))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
+
     @Test
     public void testUserDeleteAnotherUser_ShouldReturnBadRequest() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
-        User testUserB = userService.saveUser(TestDataUtil.createTestUserB());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
+        User testUserB = userService.saveUser(TestDataUtil.createTestUser("userB"));
         String tokenA = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/user/auth/{id}", testUserB.getUserId())
                         .header("Authorization", tokenA))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
+
     @Test
     public void testDeleteUserWithoutToken_ShouldReturnUnauthorized() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/user/auth/{id}", testUserA.getUserId()))
                 .andExpect(MockMvcResultMatchers.status().isUnauthorized());
     }
+
     @Test
     public void testUserDeleteSelf_ShouldReturnOk() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String tokenA = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
 
         EmailDTO emailDTO = new EmailDTO();
@@ -296,7 +313,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testAdminDeletesUser_ShouldReturnOk() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
 
 
         EmailDTO emailDTO = new EmailDTO();
@@ -311,7 +328,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testSuperAdminDeletesUser_ShouldReturnOk() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
 
         EmailDTO emailDTO = new EmailDTO();
         emailDTO.setEmail(testUserA.getEmail());
@@ -339,7 +356,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testChangePasswordWithoutToken_ShouldReturnUnauthorized() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
 
         ChangePasswordDTO changePasswordDTO = new ChangePasswordDTO();
         changePasswordDTO.setEmail(testUserA.getEmail());
@@ -350,6 +367,7 @@ public class UserControllerIntegrationTests {
                         .content(objectMapper.writeValueAsString(changePasswordDTO)))
                 .andExpect(MockMvcResultMatchers.status().isUnauthorized());
     }
+
     @Test
     public void testAdminBlockUser_UserNotFound_ShouldReturnNotFound() throws Exception {
         BlockUserDTO blockUserDTO = new BlockUserDTO();
@@ -376,7 +394,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testAdminBlockedUser_ShouldPreventLogin() throws Exception {
-        User testUser = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUser = userService.saveUser(TestDataUtil.createTestUser("userA"));
         testUser.setBlocked(true);
         userService.saveUser(testUser);
 
@@ -392,7 +410,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testBlockUser_AsAdmin_ShouldSucceed() throws Exception {
-        User testUser = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUser = userService.saveUser(TestDataUtil.createTestUser("userA"));
         BlockUserDTO blockUserDTO = new BlockUserDTO();
         blockUserDTO.setEmail(testUser.getEmail());
 
@@ -405,7 +423,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testBlockUser_AsSuperAdmin_ShouldSucceed() throws Exception {
-        User testUser = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUser = userService.saveUser(TestDataUtil.createTestUser("userA"));
         BlockUserDTO blockUserDTO = new BlockUserDTO();
         blockUserDTO.setEmail(testUser.getEmail());
 
@@ -418,7 +436,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testUnblockUser_AsAdmin_ShouldSucceed() throws Exception {
-        User testUser = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUser = userService.saveUser(TestDataUtil.createTestUser("userA"));
         testUser.setBlocked(true);
         userService.saveUser(testUser);
         BlockUserDTO unblockUserDTO = new BlockUserDTO();
@@ -433,7 +451,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testDeleteUser_AsAdmin_ShouldSucceed() throws Exception {
-        User testUser = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUser = userService.saveUser(TestDataUtil.createTestUser("userA"));
         EmailDTO emailDTO = new EmailDTO();
         emailDTO.setEmail(testUser.getEmail());
 
@@ -447,8 +465,8 @@ public class UserControllerIntegrationTests {
     @Test
     public void testDeleteAllUsers_AsSuperAdmin_ShouldSucceed() throws Exception {
         // Create some test users first
-        userService.saveUser(TestDataUtil.createTestUserA());
-        userService.saveUser(TestDataUtil.createTestUserB());
+        userService.saveUser(TestDataUtil.createTestUser("userA"));
+        userService.saveUser(TestDataUtil.createTestUser("userB"));
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/user/auth/delete-all")
                         .header("Authorization", superAdminToken))
@@ -465,8 +483,8 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUsers_AsAdmin_ShouldReturnUsers() throws Exception {
         // Create some test users
-        userService.saveUser(TestDataUtil.createTestUserA());
-        userService.saveUser(TestDataUtil.createTestUserB());
+        userService.saveUser(TestDataUtil.createTestUser("userA"));
+        userService.saveUser(TestDataUtil.createTestUser("userB"));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/users")
                         .header("Authorization", adminToken)
@@ -510,7 +528,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testVerifyRegistrationOTPCode_Success() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String verificationCode = "123456";
         testUserA.setVerified(false);
         testUserA.setVerificationCode(verificationCode);
@@ -530,7 +548,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testVerifyRegistrationOTPCode_UserAlreadyVerified_Failure() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String verificationCode = "123456";
         testUserA.setVerified(true);
         testUserA.setVerificationCode(verificationCode);
@@ -550,7 +568,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testVerifyRegistrationOTPCode_InvalidOTPCode_Failure() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String verificationCode = "123456";
         String invalidCode = "654321";
         testUserA.setVerified(false);
@@ -571,7 +589,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testChangePassword_Success() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String newPassword = "abcD1234#";
         String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
 
@@ -588,7 +606,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testSendResetOTP_Success() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
 
         EmailDTO emailDTO = new EmailDTO();
         emailDTO.setEmail(testUserA.getEmail());
@@ -601,7 +619,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testSendResetOTP_Failure() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String invalidEmail = "invalidEmail@gmail.com";
 
         EmailDTO emailDTO = new EmailDTO();
@@ -615,7 +633,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testVerifyResetOTP_Success() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         testUserA.setResetCode("123456");
         testUserA.setResetCodeExpirationTime(Timestamp.valueOf(LocalDateTime.now().plusMinutes(10)));
         userService.saveUser(testUserA);
@@ -632,7 +650,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testVerifyResetOTP_Failure() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String invalidCode = "654321";
         testUserA.setResetCode("123456");
         testUserA.setResetCodeExpirationTime(Timestamp.valueOf(LocalDateTime.now().plusMinutes(10)));
@@ -650,7 +668,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testResetPassword_Success() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String otp = "123456";
         testUserA.setResetCode(otp);
         testUserA.setResetCodeExpirationTime(Timestamp.valueOf(LocalDateTime.now().plusMinutes(10)));
@@ -669,7 +687,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testResetPassword_InvalidEmail_Failure() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String otp = "123456";
         String invalidEmail = "invalidEmail@gmail.com";
         testUserA.setResetCode(otp);
@@ -689,7 +707,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testResetPassword_InvalidPassword_Failure() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String otp = "123456";
         testUserA.setResetCode(otp);
         testUserA.setResetCodeExpirationTime(Timestamp.valueOf(LocalDateTime.now().plusMinutes(10)));
@@ -709,7 +727,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testResetPassword_InvalidOTP_Failure() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String otp = "123456";
         String invalidOTP = "654321";
         testUserA.setResetCode(otp);
@@ -782,7 +800,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testUserLogin_ValidCredentials_ShouldReturnOk() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
 
         LoginUserDTO loginUserDTO = new LoginUserDTO();
         loginUserDTO.setEmail(testUserA.getEmail());
@@ -796,7 +814,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testUserLogin_InvalidEmail_ShouldReturnUnauthorized() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String invalidEmail = "invalid@gmail.com";
 
         LoginUserDTO loginUserDTO = new LoginUserDTO();
@@ -811,7 +829,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testUserLogin_InvalidPassword_ShouldReturnUnauthorized() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String wrongPassword = "wassword12#";
 
         LoginUserDTO loginUserDTO = new LoginUserDTO();
@@ -826,7 +844,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testGetUserById_UserExists_ShouldReturnUserProfile() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
 
 
@@ -848,7 +866,7 @@ public class UserControllerIntegrationTests {
     public void testGetUserById_UserNotFound_ShouldReturnNotFound() throws Exception {
         UUID nonExistentId = UUID.randomUUID();
 
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/{userId}", nonExistentId)
@@ -859,7 +877,7 @@ public class UserControllerIntegrationTests {
 
     @Test
     public void testAdminUpdatesOtherUserProfile_ShouldReturnSuccess() throws Exception {
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
 
         UpdateUserProfileDto updateDto = new UpdateUserProfileDto();
@@ -883,7 +901,7 @@ public class UserControllerIntegrationTests {
     @Test
     public void testUpdateUserProfileById_UserExists_ShouldUpdateAndReturnUserProfile() throws Exception {
 
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
 
         UpdateUserProfileDto updateDto = new UpdateUserProfileDto();
@@ -910,7 +928,7 @@ public class UserControllerIntegrationTests {
         UpdateUserProfileDto updateDto = new UpdateUserProfileDto();
         updateDto.setName("Updated Name");
 
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
 
         // Act & Assert
@@ -927,7 +945,7 @@ public class UserControllerIntegrationTests {
         UpdateUserProfileDto updateDto = new UpdateUserProfileDto();
         updateDto.setBio("Updated Bio Only");
 
-        User testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        User testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
 
         // Act & Assert
@@ -943,8 +961,8 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUsers_WhenUserABlocksUserB_ShouldNotReturnUserB() throws Exception {
         // Arrange
-        User userA = userService.saveUser(TestDataUtil.createTestUserA());
-        User userB = userService.saveUser(TestDataUtil.createTestUserB());
+        User userA = userService.saveUser(TestDataUtil.createTestUser("userA"));
+        User userB = userService.saveUser(TestDataUtil.createTestUser("userB"));
 
         // Get initial count (includes dummy users)
         String tokenA = obtainAccessToken(userA.getEmail(), DEFAULT_PASSWORD);
@@ -980,8 +998,8 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUsers_WhenUserBBlocksUserA_ShouldNotReturnUserB() throws Exception {
         // Arrange
-        User userA = userService.saveUser(TestDataUtil.createTestUserA());
-        User userB = userService.saveUser(TestDataUtil.createTestUserB());
+        User userA = userService.saveUser(TestDataUtil.createTestUser("userA"));
+        User userB = userService.saveUser(TestDataUtil.createTestUser("userB"));
 
         // Create block relationship: userB blocks userA
         Block block = Block.builder()
@@ -1006,8 +1024,8 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUsers_WithMutualBlocking_ShouldExcludeBothUsers() throws Exception {
         // Arrange
-        User userA = userService.saveUser(TestDataUtil.createTestUserA());
-        User userB = userService.saveUser(TestDataUtil.createTestUserB());
+        User userA = userService.saveUser(TestDataUtil.createTestUser("userA"));
+        User userB = userService.saveUser(TestDataUtil.createTestUser("userB"));
 
         // Create mutual block relationships
         Block blockAB = Block.builder()
@@ -1040,8 +1058,8 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUsers_AsAdmin_ShouldReturnAllUsersRegardlessOfBlocking() throws Exception {
         // Arrange
-        User userA = userService.saveUser(TestDataUtil.createTestUserA());
-        User userB = userService.saveUser(TestDataUtil.createTestUserB());
+        User userA = userService.saveUser(TestDataUtil.createTestUser("userA"));
+        User userB = userService.saveUser(TestDataUtil.createTestUser("userB"));
 
         // Get initial count with admin token
         MvcResult initialResult = mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/users")
@@ -1077,9 +1095,9 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUsers_WithMultipleBlockedUsers_ShouldExcludeAllBlockedUsers() throws Exception {
         // Arrange
-        User userA = userService.saveUser(TestDataUtil.createTestUserA());
-        User userB = userService.saveUser(TestDataUtil.createTestUserB());
-        User userC = userService.saveUser(TestDataUtil.createTestUserC());
+        User userA = userService.saveUser(TestDataUtil.createTestUser("userA"));
+        User userB = userService.saveUser(TestDataUtil.createTestUser("userB"));
+        User userC = userService.saveUser(TestDataUtil.createTestUser("userC"));
 
         // UserA blocks UserB and UserC
         Block blockAB = Block.builder()
@@ -1113,9 +1131,9 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUsersByPrefixUsername_WhenUserABlocksUserB_ShouldNotReturnUserB() throws Exception {
         // Arrange
-        User userA = userService.saveUser(TestDataUtil.createTestUserA()); // username: testUserA
-        User userB = userService.saveUser(TestDataUtil.createTestUserB()); // username: testUserB
-        User userC = userService.saveUser(TestDataUtil.createTestUserC()); // username: testUserC
+        User userA = userService.saveUser(TestDataUtil.createTestUser("testUserA")); // username: testUserA
+        User userB = userService.saveUser(TestDataUtil.createTestUser("testUserB")); // username: testUserB
+        User userC = userService.saveUser(TestDataUtil.createTestUser("testUserC")); // username: testUserC
 
         // Create block relationship: userA blocks userB
         Block block = Block.builder()
@@ -1140,9 +1158,9 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUsersByPrefixUsername_WhenUserBBlocksUserA_ShouldNotReturnUserB() throws Exception {
         // Arrange
-        User userA = userService.saveUser(TestDataUtil.createTestUserA());
-        User userB = userService.saveUser(TestDataUtil.createTestUserB());
-        User userC = userService.saveUser(TestDataUtil.createTestUserC());
+        User userA = userService.saveUser(TestDataUtil.createTestUser("testUserA"));
+        User userB = userService.saveUser(TestDataUtil.createTestUser("testUserB"));
+        User userC = userService.saveUser(TestDataUtil.createTestUser("testUserC"));
 
         // Create block relationship: userB blocks userA
         Block block = Block.builder()
@@ -1167,9 +1185,9 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUsersByPrefixUsername_WithBlockingAndMultipleMatches_ShouldReturnOnlyUnblockedUsers() throws Exception {
         // Arrange
-        User userA = userService.saveUser(TestDataUtil.createTestUserA()); // testUser
-        User userB = userService.saveUser(TestDataUtil.createTestUserB()); // testUserB
-        User userC = userService.saveUser(TestDataUtil.createTestUserC()); // testUserC
+        User userA = userService.saveUser(TestDataUtil.createTestUser("testUserA")); // testUser
+        User userB = userService.saveUser(TestDataUtil.createTestUser("testUserB")); // testUserB
+        User userC = userService.saveUser(TestDataUtil.createTestUser("testUserC")); // testUserC
 
         // UserA blocks UserB
         Block block = Block.builder()
@@ -1196,8 +1214,8 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUsersByPrefixUsername_AsAdmin_ShouldReturnAllMatchingUsersRegardlessOfBlocking() throws Exception {
         // Arrange
-        User userA = userService.saveUser(TestDataUtil.createTestUserA());
-        User userB = userService.saveUser(TestDataUtil.createTestUserB());
+        User userA = userService.saveUser(TestDataUtil.createTestUser("testUserA"));
+        User userB = userService.saveUser(TestDataUtil.createTestUser("testUserB"));
 
         // Create block relationship
         Block block = Block.builder()
@@ -1221,8 +1239,8 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUserById_WhenUserABlocksUserB_ShouldReturnForbidden() throws Exception {
         // Arrange
-        User userA = userService.saveUser(TestDataUtil.createTestUserA());
-        User userB = userService.saveUser(TestDataUtil.createTestUserB());
+        User userA = userService.saveUser(TestDataUtil.createTestUser("userA"));
+        User userB = userService.saveUser(TestDataUtil.createTestUser("userB"));
 
         // Create block relationship: userA blocks userB
         Block block = Block.builder()
@@ -1245,8 +1263,8 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUserById_WhenUserBBlocksUserA_ShouldReturnForbidden() throws Exception {
         // Arrange
-        User userA = userService.saveUser(TestDataUtil.createTestUserA());
-        User userB = userService.saveUser(TestDataUtil.createTestUserB());
+        User userA = userService.saveUser(TestDataUtil.createTestUser("userA"));
+        User userB = userService.saveUser(TestDataUtil.createTestUser("userB"));
 
         // Create block relationship: userB blocks userA
         Block block = Block.builder()
@@ -1269,11 +1287,11 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUsers_WithChainedBlocking_ShouldHandleComplexBlockingChains() throws Exception {
         // Arrange - Create a chain: A blocks B, B blocks C, C blocks D
-        User userA = userService.saveUser(TestDataUtil.createTestUserA());
-        User userB = userService.saveUser(TestDataUtil.createTestUserB());
-        User userC = userService.saveUser(TestDataUtil.createTestUserC());
-        User userD = userService.saveUser(TestDataUtil.createTestUserD());
-        User userE = userService.saveUser(TestDataUtil.createTestUserE());
+        User userA = userService.saveUser(TestDataUtil.createTestUser("userA"));
+        User userB = userService.saveUser(TestDataUtil.createTestUser("userB"));
+        User userC = userService.saveUser(TestDataUtil.createTestUser("userC"));
+        User userD = userService.saveUser(TestDataUtil.createTestUser("userD"));
+        User userE = userService.saveUser(TestDataUtil.createTestUser("userE"));
 
         // Create blocking chain
         Block blockAB = Block.builder()
@@ -1325,10 +1343,10 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUsers_WithCircularBlocking_ShouldHandleCircularReferences() throws Exception {
         // Arrange - Create circular blocking: A blocks B, B blocks C, C blocks A
-        User userA = userService.saveUser(TestDataUtil.createTestUserA());
-        User userB = userService.saveUser(TestDataUtil.createTestUserB());
-        User userC = userService.saveUser(TestDataUtil.createTestUserC());
-        User userD = userService.saveUser(TestDataUtil.createTestUserD());
+        User userA = userService.saveUser(TestDataUtil.createTestUser("userA"));
+        User userB = userService.saveUser(TestDataUtil.createTestUser("userB"));
+        User userC = userService.saveUser(TestDataUtil.createTestUser("userC"));
+        User userD = userService.saveUser(TestDataUtil.createTestUser("userD"));
 
         // Create circular blocking
         Block blockAB = Block.builder()
@@ -1373,7 +1391,7 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUserById_WithSelfReference_ShouldReturnOwnProfile() throws Exception {
         // Arrange
-        User userA = userService.saveUser(TestDataUtil.createTestUserA());
+        User userA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         String tokenA = obtainAccessToken(userA.getEmail(), DEFAULT_PASSWORD);
 
         // Act & Assert - User should be able to see their own profile
@@ -1387,8 +1405,8 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUserById_WithBlockingAndUnblocking_ShouldReflectCurrentBlockStatus() throws Exception {
         // Arrange
-        User userA = userService.saveUser(TestDataUtil.createTestUserA());
-        User userB = userService.saveUser(TestDataUtil.createTestUserB());
+        User userA = userService.saveUser(TestDataUtil.createTestUser("userA"));
+        User userB = userService.saveUser(TestDataUtil.createTestUser("userB"));
         String tokenA = obtainAccessToken(userA.getEmail(), DEFAULT_PASSWORD);
 
         // Initially no blocking - should work
