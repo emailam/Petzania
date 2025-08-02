@@ -164,7 +164,7 @@ public class AdminControllerIntegrationTests {
     @Test
     public void testCreateAdmin_UsernameAlreadyExists_ShouldReturnConflict() throws Exception {
         AdminDTO adminDTO = new AdminDTO();
-        adminDTO.setUsername("admin");
+        adminDTO.setUsername("adminA");
         adminDTO.setPassword("ValidPass123!");
         adminDTO.setAdminRole(AdminRole.ADMIN);
 

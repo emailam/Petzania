@@ -130,8 +130,8 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUsersByPrefixUsername_WithMatchingPrefix_ShouldReturnUsers() throws Exception {
         // Arrange
-        User user1 = userService.saveUser(TestDataUtil.createTestUser("userA"));
-        User user2 = userService.saveUser(TestDataUtil.createTestUser("userB"));
+        User user1 = userService.saveUser(TestDataUtil.createTestUser("testUserA"));
+        User user2 = userService.saveUser(TestDataUtil.createTestUser("testUserB"));
 
         // Act & Assert
         mockMvc.perform(MockMvcRequestBuilders.get("/api/user/auth/users/test")
@@ -142,8 +142,8 @@ public class UserControllerIntegrationTests {
                         .param("direction", "asc"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(2))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].username").value("testUser"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.content[1].username").value("testUserB"));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].username").value(user1.getUsername()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[1].username").value(user2.getUsername()));
     }
 
     @Test
@@ -1131,9 +1131,9 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUsersByPrefixUsername_WhenUserABlocksUserB_ShouldNotReturnUserB() throws Exception {
         // Arrange
-        User userA = userService.saveUser(TestDataUtil.createTestUser("userA")); // username: testUserA
-        User userB = userService.saveUser(TestDataUtil.createTestUser("userB")); // username: testUserB
-        User userC = userService.saveUser(TestDataUtil.createTestUser("userC")); // username: testUserC
+        User userA = userService.saveUser(TestDataUtil.createTestUser("testUserA")); // username: testUserA
+        User userB = userService.saveUser(TestDataUtil.createTestUser("testUserB")); // username: testUserB
+        User userC = userService.saveUser(TestDataUtil.createTestUser("testUserC")); // username: testUserC
 
         // Create block relationship: userA blocks userB
         Block block = Block.builder()
@@ -1158,9 +1158,9 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUsersByPrefixUsername_WhenUserBBlocksUserA_ShouldNotReturnUserB() throws Exception {
         // Arrange
-        User userA = userService.saveUser(TestDataUtil.createTestUser("userA"));
-        User userB = userService.saveUser(TestDataUtil.createTestUser("userB"));
-        User userC = userService.saveUser(TestDataUtil.createTestUser("userC"));
+        User userA = userService.saveUser(TestDataUtil.createTestUser("testUserA"));
+        User userB = userService.saveUser(TestDataUtil.createTestUser("testUserB"));
+        User userC = userService.saveUser(TestDataUtil.createTestUser("testUserC"));
 
         // Create block relationship: userB blocks userA
         Block block = Block.builder()
@@ -1185,9 +1185,9 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUsersByPrefixUsername_WithBlockingAndMultipleMatches_ShouldReturnOnlyUnblockedUsers() throws Exception {
         // Arrange
-        User userA = userService.saveUser(TestDataUtil.createTestUser("userA")); // testUser
-        User userB = userService.saveUser(TestDataUtil.createTestUser("userB")); // testUserB
-        User userC = userService.saveUser(TestDataUtil.createTestUser("userC")); // testUserC
+        User userA = userService.saveUser(TestDataUtil.createTestUser("testUserA")); // testUser
+        User userB = userService.saveUser(TestDataUtil.createTestUser("testUserB")); // testUserB
+        User userC = userService.saveUser(TestDataUtil.createTestUser("testUserC")); // testUserC
 
         // UserA blocks UserB
         Block block = Block.builder()
@@ -1214,8 +1214,8 @@ public class UserControllerIntegrationTests {
     @Test
     public void testGetUsersByPrefixUsername_AsAdmin_ShouldReturnAllMatchingUsersRegardlessOfBlocking() throws Exception {
         // Arrange
-        User userA = userService.saveUser(TestDataUtil.createTestUser("userA"));
-        User userB = userService.saveUser(TestDataUtil.createTestUser("userB"));
+        User userA = userService.saveUser(TestDataUtil.createTestUser("testUserA"));
+        User userB = userService.saveUser(TestDataUtil.createTestUser("testUserB"));
 
         // Create block relationship
         Block block = Block.builder()
