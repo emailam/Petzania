@@ -2,8 +2,10 @@ package com.example.notificationmodule.exception;
 
 import com.example.notificationmodule.exception.admin.AdminNotFound;
 import com.example.notificationmodule.exception.notification.NotificationNotFound;
+import com.example.notificationmodule.exception.ratelimit.RateLimitExceeded;
 import com.example.notificationmodule.exception.user.AuthenticatedUserNotFound;
 import com.example.notificationmodule.exception.user.UserNotFound;
+import com.example.notificationmodule.service.impl.RateLimitService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -71,8 +73,13 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NotificationNotFound.class)
-    public ResponseEntity<Map<String, Object>> handleNotificationNotFoundException(NotificationNotFound ex){
+    public ResponseEntity<Map<String, Object>> handleNotificationNotFoundException(NotificationNotFound ex) {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(RateLimitExceeded.class)
+    public ResponseEntity<Map<String, Object>> handleRateLimitExceededException(RateLimitExceeded ex) {
+        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
     }
 
 
