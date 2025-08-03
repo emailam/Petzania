@@ -32,10 +32,10 @@ public class Pet {
     @Column(name = "pet_id", nullable = false)
     private UUID petId;
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", length = 50, nullable = false)
     private String name;
 
-    @Column(name = "description")
+    @Column(name = "description", length = 255)
     private String description;
 
     @Enumerated(EnumType.STRING)
@@ -45,11 +45,11 @@ public class Pet {
     @Column(name = "date_of_birth", nullable = false)
     private LocalDate dateOfBirth;
 
-    @Column(name = "breed", nullable = false)
+    @Column(name = "breed", length = 32, nullable = false)
     private String breed;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "species", nullable = false)
+    @Column(name = "species", length = 32, nullable = false)
     private PetSpecies species;
 
     @ElementCollection

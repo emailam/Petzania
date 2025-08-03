@@ -17,8 +17,7 @@ import java.util.UUID;
 public class NotificationEvent {
     private UUID initiatorId;
     private UUID recipientId;
+    private UUID entityId;
     private NotificationType type;
     private String message;
-    private Map<String, String> attributes;
-
 }

@@ -130,7 +130,7 @@ public class UserService implements IUserService {
         sendDeleteConfirmation(user);
 
         // Delete the user
-        userRepository.deleteByEmail(emailDTO.getEmail());
+        userRepository.deleteByEmail(user.getEmail());
 
         // Send to the queue
         UserEvent userEvent = new UserEvent();
@@ -156,7 +156,6 @@ public class UserService implements IUserService {
 
         // send the email
         emailService.sendEmail(emailRequestDTO);
-
     }
 
     @Override
@@ -170,7 +169,7 @@ public class UserService implements IUserService {
     public ResponseLoginDTO login(LoginUserDTO loginUserDTO) {
         User user = userRepository.findByEmailIgnoreCase(loginUserDTO.getEmail()).orElseThrow(() -> new InvalidUserCredentials("Email is incorrect"));
 
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginUserDTO.getEmail(), loginUserDTO.getPassword()));
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getEmail(), loginUserDTO.getPassword()));
         if (authentication.isAuthenticated()) {
             System.out.println("valid credentials");
             if (!user.isVerified()) {
@@ -182,8 +181,8 @@ public class UserService implements IUserService {
             }
 
             String message = "Successful login";
-            TokenDTO tokenDTO = new TokenDTO(jwtService.generateAccessToken(loginUserDTO.getEmail(), "ROLE_USER"),
-                    jwtService.generateRefreshToken(loginUserDTO.getEmail(), "ROLE_USER"));
+            TokenDTO tokenDTO = new TokenDTO(jwtService.generateAccessToken(user.getEmail(), "ROLE_USER"),
+                    jwtService.generateRefreshToken(user.getEmail(), "ROLE_USER"));
             int loginTimes = user.getLoginTimes();
             UUID userId = user.getUserId();
             user.setLoginTimes(loginTimes + 1);
@@ -220,7 +219,7 @@ public class UserService implements IUserService {
 
         User user = userRepository.findByEmailIgnoreCase(email).orElseThrow(() -> new UserNotFound("User does not exist"));
         if (user.isBlocked()) {
-            throw new UserIsBlocked("User is blocked, sorry cannot able to generate a new token");
+            throw new UserIsBlocked("User is blocked, sorry cannot generate a new token");
         }
 
         String newAccessToken = jwtService.generateAccessToken(email, role);
@@ -323,7 +322,7 @@ public class UserService implements IUserService {
             throw new UserAlreadyBlocked("User is blocked already");
         } else {
             user.setBlocked(true);
-            sendDeactivationMessage(blockUserDTO.getEmail());
+            sendDeactivationMessage(user.getEmail());
         }
     }
 

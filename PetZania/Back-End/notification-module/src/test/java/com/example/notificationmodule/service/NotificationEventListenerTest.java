@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -53,30 +54,28 @@ class NotificationEventListenerTest {
 
         notificationEvent = NotificationEvent.builder()
                 .recipientId(recipientId)
+                .initiatorId(UUID.randomUUID())
                 .type(NotificationType.FRIEND_REQUEST_ACCEPTED)
                 .message("John Doe accepted your friend request")
-                .attributes(attributes)
-                .initiatorId(recipientId)
                 .build();
 
         savedNotification = Notification.builder()
                 .notificationId(UUID.randomUUID())
                 .recipientId(recipientId)
-                .initiatorId(recipientId)
+                .initiatorId(UUID.randomUUID())
                 .type(NotificationType.FRIEND_REQUEST_ACCEPTED)
                 .message("John Doe accepted your friend request")
                 .status(NotificationStatus.UNREAD)
-                .attributes(attributes)
                 .createdAt(Instant.now())
                 .build();
 
         notificationDTO = NotificationDTO.builder()
                 .notificationId(savedNotification.getNotificationId())
                 .recipientId(recipientId)
+                .initiatorId(UUID.randomUUID())
                 .type(NotificationType.FRIEND_REQUEST_ACCEPTED)
                 .message("John Doe accepted your friend request")
                 .status(NotificationStatus.UNREAD)
-                .attributes(attributes)
                 .createdAt(savedNotification.getCreatedAt())
                 .build();
     }
@@ -99,7 +98,6 @@ class NotificationEventListenerTest {
         assertEquals(recipientId, capturedNotification.getRecipientId());
         assertEquals(NotificationType.FRIEND_REQUEST_ACCEPTED, capturedNotification.getType());
         assertEquals("John Doe accepted your friend request", capturedNotification.getMessage());
-        assertEquals(notificationEvent.getAttributes(), capturedNotification.getAttributes());
 
         verify(webSocketService).sendNotificationToUser(recipientId, notificationDTO);
         verify(dtoConversionService).toDTO(savedNotification);
@@ -140,13 +138,17 @@ class NotificationEventListenerTest {
     @Test
     @DisplayName("Should process event with null attributes")
     void shouldProcessEventWithNullAttributes() {
+        Set<NotificationType> deletionTypes = Set.of(
+                NotificationType.PET_POST_DELETED,
+                NotificationType.FRIEND_REQUEST_WITHDRAWN
+        );
         // Arrange
         NotificationEvent eventWithNullAttributes = NotificationEvent.builder()
                 .recipientId(recipientId)
                 .type(NotificationType.NEW_FOLLOWER)
                 .message("You have a new follower")
-                .attributes(null)
-                .initiatorId(recipientId)
+                .entityId(null)
+                .initiatorId(UUID.randomUUID())
                 .build();
 
         when(notificationRepository.save(any(Notification.class))).thenReturn(savedNotification);
@@ -160,20 +162,27 @@ class NotificationEventListenerTest {
         verify(notificationRepository).save(notificationCaptor.capture());
 
         Notification capturedNotification = notificationCaptor.getValue();
-        assertNull(capturedNotification.getAttributes());
+        assertNull(capturedNotification.getEntityId());
     }
 
     @Test
     @DisplayName("Should process all notification types")
     void shouldProcessAllNotificationTypes() {
+        Set<NotificationType> deletionTypes = Set.of(
+                NotificationType.PET_POST_DELETED,
+                NotificationType.FRIEND_REQUEST_WITHDRAWN
+        );
         // Test each notification type
         for (NotificationType type : NotificationType.values()) {
+            if(deletionTypes.contains(type)){
+                continue;
+            }
             // Arrange
             NotificationEvent event = NotificationEvent.builder()
                     .recipientId(recipientId)
                     .type(type)
                     .message("Test message for " + type)
-                    .initiatorId(recipientId)
+                    .initiatorId(UUID.randomUUID())
                     .build();
 
             when(notificationRepository.save(any(Notification.class))).thenReturn(savedNotification);

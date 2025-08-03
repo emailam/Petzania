@@ -35,6 +35,6 @@ public class MessageReaction {
     private Message message;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "reaction_type", nullable = false)
+    @Column(name = "reaction_type", nullable = false, length = 20)
     private MessageReact reactionType;
 }

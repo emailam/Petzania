@@ -114,7 +114,7 @@ public class FriendService implements IFriendService {
                 .build();
 
         FriendRequest newRequest = friendRequestRepository.save(request);
-        notificationPublisher.sendFriendRequestNotification(senderId, receiverId, newRequest.getId());
+        notificationPublisher.sendFriendRequestNotification(senderId, receiverId, newRequest.getId(), sender.getUsername());
         return dtoConversionService.mapToFriendRequestDTO(friendRequestRepository.save(newRequest));
     }
 
@@ -150,7 +150,7 @@ public class FriendService implements IFriendService {
 
         friendProducer.sendFriendAddedMessage(getFriendEvent(friendship));
         friendRequestRepository.deleteById(requestId);
-        notificationPublisher.sendFriendRequestAcceptedNotification(senderId, receiverId);
+        notificationPublisher.sendFriendRequestAcceptedNotification(senderId, receiverId, friendship.getId(), request.getReceiver().getUsername());
         return dtoConversionService.mapToFriendDTO(friendship, getUser(senderId));
     }
 
@@ -159,6 +159,7 @@ public class FriendService implements IFriendService {
         FriendRequest request = getFriendRequest(requestId);
         if (request.getSender().getUserId().equals(userId) || request.getReceiver().getUserId().equals(userId)) {
             friendRequestRepository.delete(request);
+            notificationPublisher.sendFriendRequestCancelled(requestId);
         } else {
             throw new ForbiddenOperation("Forbidden operation, user tries to cancel a request he is not involved in");
         }
@@ -324,7 +325,7 @@ public class FriendService implements IFriendService {
 
         Follow newFollow = followRepository.save(follow);
         followProducer.sendFollowAddedMessage(getFollowEvent(newFollow));
-        notificationPublisher.sendNewFollowerNotification(followerId, followedId);
+        notificationPublisher.sendNewFollowerNotification(followerId, followedId, newFollow.getId(), follower.getUsername());
         return dtoConversionService.mapToFollowDTO(newFollow);
     }
 
@@ -402,6 +403,9 @@ public class FriendService implements IFriendService {
 
     @Override
     public int getNumberOfFriends(UUID userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new UserNotFound("User does not exist");
+        }
         return friendshipRepository.countFriendsByUserId(userId);
     }
 

@@ -1,6 +1,7 @@
 package com.example.adoption_and_breeding_module.model.event;
 
 import com.example.adoption_and_breeding_module.model.enumeration.NotificationType;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,7 +17,9 @@ import java.util.UUID;
 public class NotificationEvent {
     private UUID initiatorId;
     private UUID recipientId;
+    private UUID entityId;
     private NotificationType type;
+
+    @Size(max = 255, message = "Message size shouldn't exceed 255 characters.")
     private String message;
-    private Map<String, String> attributes;
 }

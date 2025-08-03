@@ -141,6 +141,7 @@ public class PetPostService implements IPetPostService {
         }
 
         petPostRepository.deleteById(postId);
+        notificationPublisher.sendPetPostDeleted(postId);
     }
 
     @Override
@@ -165,7 +166,7 @@ public class PetPostService implements IPetPostService {
             reacts--;
         } else {
             reactedUsers.add(user);
-            notificationPublisher.sendPetPostLikedNotification(ownerId, userId, postId);
+            notificationPublisher.sendPetPostLikedNotification(ownerId, userId, postId, user.getUsername());
             reacts++;
         }
         post.setReacts(reacts);

@@ -8,6 +8,11 @@ spring:
     username: sa
     password:
 
+  super:
+    admin:
+      username: superadmin
+      password: superadmin
+
   jpa:
 #    show-sql: true
     hibernate:

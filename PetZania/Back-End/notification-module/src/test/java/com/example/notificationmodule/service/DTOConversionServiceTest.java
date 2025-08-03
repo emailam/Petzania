@@ -31,19 +31,17 @@ class DTOConversionServiceTest {
         // Arrange
         UUID notificationId = UUID.randomUUID();
         UUID recipientId = UUID.randomUUID();
+        UUID entityId = UUID.randomUUID();
         Instant createdAt = Instant.now();
-        Map<String, String> attributes = new HashMap<>();
-        attributes.put("friendName", "John Doe");
-        attributes.put("postId", "12345");
 
         Notification notification = Notification.builder()
                 .notificationId(notificationId)
                 .recipientId(recipientId)
                 .initiatorId(recipientId)
+                .entityId(entityId)
                 .type(NotificationType.FRIEND_REQUEST_ACCEPTED)
                 .message("John Doe accepted your friend request")
                 .status(NotificationStatus.UNREAD)
-                .attributes(attributes)
                 .createdAt(createdAt)
                 .build();
 
@@ -57,7 +55,7 @@ class DTOConversionServiceTest {
         assertEquals(NotificationType.FRIEND_REQUEST_ACCEPTED, dto.getType());
         assertEquals("John Doe accepted your friend request", dto.getMessage());
         assertEquals(NotificationStatus.UNREAD, dto.getStatus());
-        assertEquals(attributes, dto.getAttributes());
+        assertEquals(entityId,dto.getEntityId());
         assertEquals(createdAt, dto.getCreatedAt());
     }
 
@@ -71,7 +69,6 @@ class DTOConversionServiceTest {
                 .type(NotificationType.NEW_FOLLOWER)
                 .message("You have a new follower")
                 .status(NotificationStatus.READ)
-                .attributes(null)
                 .createdAt(Instant.now())
                 .build();
 
@@ -80,7 +77,7 @@ class DTOConversionServiceTest {
 
         // Assert
         assertNotNull(dto);
-        assertNull(dto.getAttributes());
+        assertNull(dto.getEntityId());
     }
 
     @Test
@@ -90,20 +87,20 @@ class DTOConversionServiceTest {
         Notification notification = Notification.builder()
                 .notificationId(UUID.randomUUID())
                 .recipientId(UUID.randomUUID())
+                .entityId(UUID.randomUUID())
                 .type(NotificationType.PET_POST_LIKED)
                 .message("Your pet post was liked")
                 .status(NotificationStatus.UNREAD)
-                .attributes(new HashMap<>())
                 .createdAt(Instant.now())
                 .build();
 
         // Act
         NotificationDTO dto = dtoConversionService.toDTO(notification);
 
+
         // Assert
         assertNotNull(dto);
-        assertNotNull(dto.getAttributes());
-        assertTrue(dto.getAttributes().isEmpty());
+        assertNotNull(dto.getEntityId());
     }
 
     @Test

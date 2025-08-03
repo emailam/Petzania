@@ -1,5 +1,6 @@
 package com.example.adoption_and_breeding_module.service.impl;
 
+import com.example.adoption_and_breeding_module.model.entity.User;
 import com.example.adoption_and_breeding_module.model.enumeration.NotificationType;
 import com.example.adoption_and_breeding_module.model.event.NotificationEvent;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -22,22 +23,27 @@ public class NotificationPublisher {
         this.rabbitTemplate.setMessageConverter(new Jackson2JsonMessageConverter());
     }
 
-    public void sendPetPostLikedNotification(UUID postOwnerId, UUID likerId, UUID postId) {
+    public void sendPetPostLikedNotification(UUID postOwnerId, UUID likerId, UUID postId, String initiatorUsername) {
         String routingKey = "notification.pet_liked";
-
-        Map<String, String> attributes = new HashMap<>();
-        attributes.put("senderId", likerId.toString());
-        attributes.put("postId", postId.toString());
-        attributes.put("postOwnerId", postOwnerId.toString());
 
         NotificationEvent event = NotificationEvent.builder()
                 .initiatorId(likerId)
                 .recipientId(postOwnerId)
+                .entityId(postId)
                 .type(NotificationType.PET_POST_LIKED)
-                .attributes(attributes)
-                .message("User Liked Your Post")
+                .message(initiatorUsername + " liked your post")
                 .build();
         System.out.println("Sending a notification: " + event);
+        rabbitTemplate.convertAndSend(exchange, routingKey, event);
+    }
+
+    public void sendPetPostDeleted(UUID postId) {
+        String routingKey = "notification.pet_post_deleted";
+        NotificationEvent event = NotificationEvent.builder()
+                .entityId(postId)
+                .type(NotificationType.PET_POST_DELETED)
+                .build();
+        System.out.println("Sending an event, post with id: " + postId + " is deleted");
         rabbitTemplate.convertAndSend(exchange, routingKey, event);
     }
 }

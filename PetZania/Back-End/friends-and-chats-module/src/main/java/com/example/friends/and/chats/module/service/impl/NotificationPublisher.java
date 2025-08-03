@@ -22,20 +22,15 @@ public class NotificationPublisher {
         this.rabbitTemplate.setMessageConverter(new Jackson2JsonMessageConverter());
     }
 
-    public void sendFriendRequestNotification(UUID senderId, UUID receiverId, UUID requestId){
+    public void sendFriendRequestNotification(UUID senderId, UUID receiverId, UUID requestId, String senderUsername) {
         String routingKey = "notification.friend_request_received";
-
-        Map<String, String> attributes = new HashMap<>();
-        attributes.put("senderId", senderId.toString());
-        attributes.put("receiverId", receiverId.toString());
-        attributes.put("requestId", requestId.toString());
 
         NotificationEvent event = NotificationEvent.builder()
                 .initiatorId(senderId)
                 .recipientId(receiverId)
+                .entityId(requestId)
                 .type(NotificationType.FRIEND_REQUEST_RECEIVED)
-                .attributes(attributes)
-                .message("You Have A New Friend Request")
+                .message(senderUsername + " sent you a friend request")
                 .build();
 
         System.out.println("Sent friend request notification from " + senderId + " to recipient: " + receiverId);
@@ -43,20 +38,15 @@ public class NotificationPublisher {
         rabbitTemplate.convertAndSend(exchange, routingKey, event);
     }
 
-    public void sendFriendRequestAcceptedNotification(UUID senderId, UUID receiverId) {
+    public void sendFriendRequestAcceptedNotification(UUID senderId, UUID receiverId, UUID friendshipId, String receiverUsername) {
         String routingKey = "notification.friend_request_accepted";
-
-
-        Map<String, String> attributes = new HashMap<>();
-        attributes.put("senderId", senderId.toString());
-        attributes.put("receiverId", receiverId.toString());
 
         NotificationEvent event = NotificationEvent.builder()
                 .initiatorId(receiverId)
                 .recipientId(senderId)
+                .entityId(friendshipId)
                 .type(NotificationType.FRIEND_REQUEST_ACCEPTED)
-                .attributes(attributes)
-                .message("User Accepted Your Friend Request")
+                .message(receiverUsername + " accepted your friend request")
                 .build();
 
 
@@ -65,23 +55,32 @@ public class NotificationPublisher {
         rabbitTemplate.convertAndSend(exchange, routingKey, event);
     }
 
-    public void sendNewFollowerNotification(UUID followerId, UUID followedId) {
+    public void sendNewFollowerNotification(UUID followerId, UUID followedId, UUID followId, String followerUsername) {
         String routingKey = "notification.new_follower";
-
-        Map<String, String> attributes = new HashMap<>();
-        attributes.put("senderId", followerId.toString());
-        attributes.put("receiverId", followedId.toString());
 
         NotificationEvent event = NotificationEvent.builder()
                 .initiatorId(followerId)
                 .recipientId(followedId)
+                .entityId(followId)
                 .type(NotificationType.NEW_FOLLOWER)
-                .attributes(attributes)
-                .message("User Started Following You")
+                .message(followerUsername + " started following you")
                 .build();
 
-        rabbitTemplate.convertAndSend(exchange, routingKey, event);
         System.out.println("Sent new follower notification from " + followerId + " to recipient: " + followedId);
         System.out.println("Event: " + event);
+        rabbitTemplate.convertAndSend(exchange, routingKey, event);
+    }
+
+    public void sendFriendRequestCancelled(UUID friendRequestId) {
+        String routingKey = "notification.friend_request_cancelled";
+
+        NotificationEvent event = NotificationEvent.builder()
+                .entityId(friendRequestId)
+                .type(NotificationType.FRIEND_REQUEST_WITHDRAWN)
+                .build();
+
+        System.out.println("Friend request cancelled " + friendRequestId);
+        System.out.println("Event: " + event);
+        rabbitTemplate.convertAndSend(exchange, routingKey, event);
     }
 }
