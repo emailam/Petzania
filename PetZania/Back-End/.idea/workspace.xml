@@ -4,9 +4,28 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ea048906-7657-4d6f-95bf-3cfefcfdfc3b" name="Changes" comment="">
+    <list default="true" id="efb136ec-f3ac-4c84-8b21-549f76fdc886" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/exception/globalhandler/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/adoption-and-breeding-module/src/main/java/com/example/adoption_and_breeding_module/exception/globalhandler/GlobalExceptionHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/petzania-system-tests/.gitattributes" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/petzania-system-tests/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/petzania-system-tests/.mvn/wrapper/maven-wrapper.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/petzania-system-tests/mvnw" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/petzania-system-tests/mvnw.cmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/petzania-system-tests/pom.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/petzania-system-tests/src/test/java/com/example/petzaniasystemtests/PetzaniaSystemTestsApplicationTests.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/petzania-system-tests/src/test/java/com/example/petzaniasystemtests/builders/TestDataBuilder.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/petzania-system-tests/src/test/java/com/example/petzaniasystemtests/config/BaseSystemTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/petzania-system-tests/src/test/java/com/example/petzaniasystemtests/tests/CrossServiceSecurityTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/petzania-system-tests/src/test/java/com/example/petzaniasystemtests/tests/FriendsSystemTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/petzania-system-tests/src/test/java/com/example/petzaniasystemtests/tests/InterServiceCommunicationTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/petzania-system-tests/src/test/java/com/example/petzaniasystemtests/tests/RabbitMQEventIntegrationTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/petzania-system-tests/src/test/java/com/example/petzaniasystemtests/tests/RegistrationSystemTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/petzania-system-tests/src/test/java/com/example/petzaniasystemtests/utils/JwtTokenExtractor.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/petzania-system-tests/src/test/java/com/example/petzaniasystemtests/utils/WebSocketTestClient.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/petzania-system-tests/src/test/resources/application.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/petzania-system-tests/src/test/resources/init-test-db.sql" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,10 +63,20 @@
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="useMavenConfig" value="true" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 2
 }</component>
   <component name="ProjectId" id="2yQarl1FUXbUadBXtGESxntSVtt" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -66,7 +95,7 @@
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
     &quot;git-widget-placeholder&quot;: &quot;#46 on merge/front-and-back-registration…ation&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/Petzania/PetZania/Back-End/petzania-system-tests/src/test/java/com/example/petzaniasystemtests/dto&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/Petzania/PetZania/Back-End/petzania-system-tests/pom.xml&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -77,7 +106,7 @@
     &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
     &quot;run.configurations.included.in.services&quot;: &quot;true&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;reference.projectsettings.compiler.annotationProcessors&quot;,
-    &quot;spring.configuration.checksum&quot;: &quot;6995429b9a4f4a9965ce0635d290d2fc&quot;,
+    &quot;spring.configuration.checksum&quot;: &quot;854b16ec9d4c04ad3a85286667b42ed1&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
   &quot;keyToStringList&quot;: {
@@ -106,7 +135,7 @@
       </set>
     </option>
   </component>
-  <component name="RunManager" selected="JUnit.CrossServiceSecurityTest and 3 more">
+  <component name="RunManager" selected="JUnit.CrossServiceSecurityTest">
     <configuration name="CrossServiceSecurityTest and 3 more" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="petzania-system-tests" />
       <option name="TEST_OBJECT" value="pattern" />
@@ -120,33 +149,47 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="PetPostControllerIntegrationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="adoption-and-breeding-module" />
+    <configuration name="CrossServiceSecurityTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="petzania-system-tests" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.example.adoption_and_breeding_module.controller.*" />
+          <option name="PATTERN" value="com.example.petzaniasystemtests.tests.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
-      <option name="PACKAGE_NAME" value="com.example.adoption_and_breeding_module.controller" />
-      <option name="MAIN_CLASS_NAME" value="com.example.adoption_and_breeding_module.controller.PetPostControllerIntegrationTests" />
+      <option name="PACKAGE_NAME" value="com.example.petzaniasystemtests.tests" />
+      <option name="MAIN_CLASS_NAME" value="com.example.petzaniasystemtests.tests.CrossServiceSecurityTest" />
       <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="PetPostControllerIntegrationTests.updatePetPost_CompleteUpdate" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="adoption-and-breeding-module" />
+    <configuration name="NotificationModuleApplicationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="notification-module" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.example.adoption_and_breeding_module.controller.*" />
+          <option name="PATTERN" value="com.example.notificationmodule.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
-      <option name="PACKAGE_NAME" value="com.example.adoption_and_breeding_module.controller" />
-      <option name="MAIN_CLASS_NAME" value="com.example.adoption_and_breeding_module.controller.PetPostControllerIntegrationTests" />
-      <option name="METHOD_NAME" value="updatePetPost_CompleteUpdate" />
-      <option name="TEST_OBJECT" value="method" />
+      <option name="PACKAGE_NAME" value="com.example.notificationmodule" />
+      <option name="MAIN_CLASS_NAME" value="com.example.notificationmodule.NotificationModuleApplicationTests" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="PetzaniaSystemTestsApplicationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="petzania-system-tests" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.example.petzaniasystemtests.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.example.petzaniasystemtests" />
+      <option name="MAIN_CLASS_NAME" value="com.example.petzaniasystemtests.PetzaniaSystemTestsApplicationTests" />
+      <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -162,22 +205,6 @@
       <option name="PACKAGE_NAME" value="com.example.petzaniasystemtests.tests" />
       <option name="MAIN_CLASS_NAME" value="com.example.petzaniasystemtests.tests.RegistrationSystemTest" />
       <option name="TEST_OBJECT" value="class" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="RegistrationSystemTest.testMaximumComplexityUserDeletion" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="petzania-system-tests" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.example.petzaniasystemtests.tests.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.example.petzaniasystemtests.tests" />
-      <option name="MAIN_CLASS_NAME" value="com.example.petzaniasystemtests.tests.RegistrationSystemTest" />
-      <option name="METHOD_NAME" value="testMaximumComplexityUserDeletion" />
-      <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -215,11 +242,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="JUnit.CrossServiceSecurityTest" />
+        <item itemvalue="JUnit.PetzaniaSystemTestsApplicationTests" />
+        <item itemvalue="JUnit.NotificationModuleApplicationTests" />
         <item itemvalue="JUnit.CrossServiceSecurityTest and 3 more" />
         <item itemvalue="JUnit.RegistrationSystemTest" />
-        <item itemvalue="JUnit.RegistrationSystemTest.testMaximumComplexityUserDeletion" />
-        <item itemvalue="JUnit.PetPostControllerIntegrationTests.updatePetPost_CompleteUpdate" />
-        <item itemvalue="JUnit.PetPostControllerIntegrationTests" />
       </list>
     </recent_temporary>
   </component>
@@ -234,7 +261,7 @@
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="ea048906-7657-4d6f-95bf-3cfefcfdfc3b" name="Changes" comment="" />
+      <changelist id="efb136ec-f3ac-4c84-8b21-549f76fdc886" name="Changes" comment="" />
       <created>1749769451719</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
@@ -279,6 +306,8 @@
       <workItem from="1753882429605" duration="10489000" />
       <workItem from="1753962897757" duration="6482000" />
       <workItem from="1754127145490" duration="7536000" />
+      <workItem from="1754226884422" duration="349000" />
+      <workItem from="1754227236377" duration="6000" />
     </task>
     <servers />
   </component>

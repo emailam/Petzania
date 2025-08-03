@@ -6,7 +6,6 @@
       <list>
         <option value="$PROJECT_DIR$/notification-module/pom.xml" />
         <option value="$PROJECT_DIR$/registration-module/pom.xml" />
-        <option value="$PROJECT_DIR$/petzania-system-tests/pom.xml" />
         <option value="$PROJECT_DIR$/friends-and-chats-module/pom.xml" />
         <option value="$PROJECT_DIR$/adoption-and-breeding-module/pom.xml" />
       </list>

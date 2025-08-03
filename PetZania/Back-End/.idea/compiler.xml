@@ -7,7 +7,6 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="petzania-system-tests" />
       </profile>
       <profile name="Annotation profile for adoption-and-breeding-module" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -17,8 +16,6 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
         </processorPath>
         <module name="adoption-and-breeding-module" />
-        <module name="registration-module" />
-        <module name="notification-module" />
       </profile>
       <profile name="Annotation profile for friends-and-chats-module" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -29,7 +26,29 @@
         </processorPath>
         <module name="friends-and-chats-module" />
       </profile>
+      <profile name="Annotation profile for notification-module" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath>
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
+        </processorPath>
+        <module name="notification-module" />
+      </profile>
+      <profile name="Annotation profile for RegistrationModule" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
+        </processorPath>
+        <module name="registration-module" />
+      </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="petzania-module-tests" target="19" />
+      <module name="petzania-system-tests" target="19" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
