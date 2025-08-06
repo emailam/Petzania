@@ -5,10 +5,14 @@ import com.example.petzaniasystemtests.builders.TestDataBuilder;
 import com.example.petzaniasystemtests.utils.JwtTokenExtractor;
 import io.restassured.response.Response;
 import org.awaitility.Awaitility;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import java.time.Duration;
 import java.util.*;
@@ -128,7 +132,8 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                     },
                     "description": "Looking for a loving home",
                     "postType": "ADOPTION",
-                    "location": "Cross Test City"
+                    "latitude": 5.0,
+                    "longitude": 5.0
                 }
                 """;
 
@@ -402,7 +407,8 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                     },
                     "description": "Testing deletion propagation",
                     "postType": "ADOPTION",
-                    "location": "Deletion Test City"
+                    "latitude": 5.0,
+                    "longitude": 5.0
                 }
                 """;
 
@@ -616,7 +622,8 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                         },
                         "description": "Complex relationship test post %d",
                         "postType": "ADOPTION",
-                        "location": "Complex City"
+                        "latitude": 5.0,
+                        "longitude": 5.0
                     }
                     """, i, i, i);
 
@@ -881,7 +888,8 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                         },
                         "description": "Concurrent deletion test post %d",
                         "postType": "ADOPTION",
-                        "location": "Concurrent City"
+                        "latitude": 5.0,
+                        "longitude": 5.0
                     }
                     """, i, i, i);
 
@@ -1097,7 +1105,8 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                         },
                         "description": "Testing active interactions %d",
                         "postType": "BREEDING",
-                        "location": "Interaction City"
+                        "latitude": 5.0,
+                        "longitude": 5.0
                     }
                     """, i, i, i);
 
@@ -1381,7 +1390,8 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                     },
                     "description": "Testing post-deletion functionality",
                     "postType": "ADOPTION",
-                    "location": "Post Deletion City"
+                    "latitude": 5.0,
+                    "longitude": 5.0
                 }
                 """;
 
@@ -1424,7 +1434,8 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                         },
                         "description": "Rapid cycle test post %d",
                         "postType": "ADOPTION",
-                        "location": "Cycle City"
+                        "latitude": 5.0,
+                        "longitude": 5.0
                     }
                     """, cycle, cycle, cycle);
 
@@ -1526,7 +1537,8 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                     },
                     "description": "Testing cross-module integrity",
                     "postType": "ADOPTION",
-                    "location": "Integrity City"
+                    "latitude": 5.0,
+                    "longitude": 5.0
                 }
                 """;
 
@@ -1681,7 +1693,8 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                         },
                         "description": "Maximum complexity test post %d",
                         "postType": "BREEDING",
-                        "location": "Max Complexity City"
+                        "latitude": 5.0,
+                        "longitude": 5.0
                     }
                     """, i, i, i);
 
@@ -1878,7 +1891,8 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                     },
                     "description": "Proving system integrity after complex deletion",
                     "postType": "ADOPTION",
-                    "location": "Post Cascade City"
+                    "latitude": 5.0,
+                    "longitude": 5.0
                 }
                 """;
 
@@ -2339,7 +2353,8 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                 },
                 "description": "Testing notification system",
                 "postType": "ADOPTION",
-                "location": "Test City"
+                "latitude": 5.0,
+                "longitude": 5.0
             }
             """;
 
@@ -2993,7 +3008,7 @@ public class ModulesIntegrationTest extends BaseSystemTest {
         }
 
         // Should have hit rate limit at some point
-        Assertions.assertTrue(rateLimitedCount > 0 || successCount == requestCount,
+        assertTrue(rateLimitedCount > 0 || successCount == requestCount,
                 "Either rate limiting should trigger or all requests should succeed");
     }
 
@@ -3296,8 +3311,8 @@ public class ModulesIntegrationTest extends BaseSystemTest {
         System.out.println("reftoken1: " + refreshToken1);
         System.out.println("reftoken2: " + refreshToken2);
 
-        Assertions.assertNotEquals(token1, token2);
-        Assertions.assertNotEquals(refreshToken1, refreshToken2);
+        assertNotEquals(token1, token2);
+        assertNotEquals(refreshToken1, refreshToken2);
 
         // Both tokens should work (stateless JWT)
         given()
@@ -3466,7 +3481,8 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                         },
                         "description": "This post will test blocking functionality",
                         "postType": "ADOPTION",
-                        "location": "Block Test City"
+                        "latitude": 5.0,
+                        "longitude": 5.0
                     }
                     """;
 
@@ -3663,7 +3679,8 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                         },
                         "description": "Pet post with existing friendship",
                         "postType": "ADOPTION",
-                        "location": "Friendship City"
+                        "latitude": 5.0,
+                        "longitude": 5.0
                     }
                     """;
 
@@ -3788,7 +3805,8 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                         },
                         "description": "User1 pet post",
                         "postType": "ADOPTION",
-                        "location": "Mutual City"
+                        "latitude": 5.0,
+                        "longitude": 5.0
                     }
                     """;
 
@@ -3815,7 +3833,8 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                         },
                         "description": "User2 pet post",
                         "postType": "BREEDING",
-                        "location": "Mutual City"
+                        "latitude": 5.0,
+                        "longitude": 5.0
                     }
                     """;
 
@@ -3949,7 +3968,8 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                             },
                             "description": "Concurrent blocking test post %d",
                             "postType": "ADOPTION",
-                            "location": "Concurrent City"
+                            "latitude": 5.0,
+                            "longitude": 5.0
                         }
                         """, i, i, i);
 
@@ -4087,7 +4107,8 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                         },
                         "description": "Testing unblock functionality",
                         "postType": "BREEDING",
-                        "location": "Unblock Test City"
+                        "latitude": 5.0,
+                        "longitude": 5.0
                     }
                     """;
 
@@ -4243,7 +4264,8 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                             },
                             "description": "Re-interaction test post %d",
                             "postType": "ADOPTION",
-                            "location": "ReInteract City"
+                            "latitude": 5.0,
+                            "longitude": 5.0
                         }
                         """, i, i, i);
 
@@ -4418,7 +4440,8 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                         },
                         "description": "Rapid cycle test post",
                         "postType": "ADOPTION",
-                        "location": "Cycle City"
+                        "latitude": 5.0,
+                        "longitude": 5.0
                     }
                     """;
 
@@ -5624,7 +5647,7 @@ public class ModulesIntegrationTest extends BaseSystemTest {
         }
 
         // Verify some operations succeeded
-        Assertions.assertTrue(successCount > 0, "At least some follow operations should succeed");
+        assertTrue(successCount > 0, "At least some follow operations should succeed");
 
         // Verify final count
         Response countResponse = given()
@@ -5636,7 +5659,7 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                 .extract().response();
 
         int followingCount = Integer.parseInt(countResponse.body().asString());
-        Assertions.assertTrue(followingCount > 0, "User should be following at least one person");
+        assertTrue(followingCount > 0, "User should be following at least one person");
     }
 
     @Test
@@ -6284,7 +6307,7 @@ public class ModulesIntegrationTest extends BaseSystemTest {
 
         // Step 2: Get OTP from database
         String otp = getOtpFromDatabase(USER_EMAIL_XXX);
-        Assertions.assertNotNull(otp, "OTP should be generated and stored in database");
+        assertNotNull(otp, "OTP should be generated and stored in database");
 
         // Step 3: Verify OTP and Login to get token
         given()
@@ -7328,5 +7351,220 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                 .post(friendsBaseUrl + "/api/friends/accept-request/" + requestId)
                 .then()
                 .statusCode(201);
+    }
+
+    /** Connects to the adoption_breeding database inside the Postgres container */
+    private Connection getAdoptionConn() throws SQLException {
+        String url = String.format(
+                "jdbc:postgresql://localhost:%d/adoption_breeding",
+                postgres.getMappedPort(5432)
+        );
+        return DriverManager.getConnection(url, "postgres", "admin");
+    }
+
+    /** Returns all followed IDs for a given follower (table "follow", cols follower_id, followed_id) */
+    private List<UUID> persistedFollowees(UUID followerId) throws Exception {
+        String sql = "SELECT followed_id FROM follows WHERE follower_id = ?";
+        try (Connection conn = getAdoptionConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setObject(1, followerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                List<UUID> ids = new ArrayList<>();
+                while (rs.next()) {
+                    ids.add((UUID) rs.getObject("followed_id"));
+                }
+                return ids;
+            }
+        }
+    }
+
+    /** Checks whether a friendship record exists in table "friendship" (cols user1_id, user2_id) */
+    private boolean friendshipExists(UUID a, UUID b) throws Exception {
+        String sql =
+                "SELECT COUNT(*) FROM friendships " +
+                        "WHERE (user1_id = ? AND user2_id = ?) " +
+                        "   OR (user1_id = ? AND user2_id = ?)";
+        try (Connection conn = getAdoptionConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setObject(1, a);
+            ps.setObject(2, b);
+            ps.setObject(3, b);
+            ps.setObject(4, a);
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return rs.getLong(1) > 0;
+            }
+        }
+    }
+
+    @Test
+    @Order(82)
+    @DisplayName("Follow API → adoption DB has a follow record")
+    void testFollowPersistsInAdoption() throws Exception {
+        // Register A & B
+        Response a = registerAndLoginUser("alice", "alice@test.com");
+        Response b = registerAndLoginUser("bobsy",   "bob@test.com");
+        UUID idA = UUID.fromString(a.jsonPath().getString("userId"));
+        UUID idB = UUID.fromString(b.jsonPath().getString("userId"));
+        String tokenA = a.jsonPath().getString("tokenDTO.accessToken");
+
+        // Call friends-service follow endpoint
+        given()
+                .spec(getAuthenticatedSpec(tokenA))
+                .when().post(friendsBaseUrl + "/api/friends/follow/" + idB)
+                .then().statusCode(201);
+
+        // Allow listener to persist
+        Thread.sleep(500);
+
+        // Assert the adoption module's `follow` table has the row
+        List<UUID> followees = persistedFollowees(idA);
+        assertTrue(followees.contains(idB),
+                "Adoption DB should contain that Alice follows Bobsy");
+    }
+
+    @Test
+    @Order(83)
+    @DisplayName("Unfollow API → adoption DB no longer has the follow record")
+    void testUnfollowRemovesFromAdoption() throws Exception {
+        // Register C & D
+        Response c = registerAndLoginUser("carol", "carol@test.com");
+        Response d = registerAndLoginUser("daves",  "dave@test.com");
+        UUID idC = UUID.fromString(c.jsonPath().getString("userId"));
+        UUID idD = UUID.fromString(d.jsonPath().getString("userId"));
+        String tokenC = c.jsonPath().getString("tokenDTO.accessToken");
+
+        // Carol follows then unfollows Dave
+        given().spec(getAuthenticatedSpec(tokenC))
+                .post(friendsBaseUrl + "/api/friends/follow/" + idD);
+        given().spec(getAuthenticatedSpec(tokenC))
+                .when().put(friendsBaseUrl + "/api/friends/unfollow/" + idD)
+                .then().statusCode(204);
+
+        Thread.sleep(500);
+
+        // Assert row removed
+        List<UUID> followees = persistedFollowees(idC);
+        assertFalse(followees.contains(idD),
+                "Adoption DB should no longer record that Carol follows Daves");
+    }
+
+    @Test
+    @Order(84)
+    @DisplayName("Send & accept friend request → adoption DB has a friendship record")
+    void testFriendRequestThenAcceptPersistsFriendship() throws Exception {
+        // Register E & F
+        Response e = registerAndLoginUser("evese",   "eve@test.com");
+        Response f = registerAndLoginUser("frank", "frank@test.com");
+        UUID idE = UUID.fromString(e.jsonPath().getString("userId"));
+        UUID idF = UUID.fromString(f.jsonPath().getString("userId"));
+        String tokenE = e.jsonPath().getString("tokenDTO.accessToken");
+        String tokenF = f.jsonPath().getString("tokenDTO.accessToken");
+
+        // Evese sends, Frank accepts
+        String reqId = given().spec(getAuthenticatedSpec(tokenE))
+                .when().post(friendsBaseUrl + "/api/friends/send-request/" + idF)
+                .then().statusCode(201)
+                .extract().jsonPath().getString("requestId");
+        given().spec(getAuthenticatedSpec(tokenF))
+                .when().post(friendsBaseUrl + "/api/friends/accept-request/" + reqId)
+                .then().statusCode(201);
+
+        Thread.sleep(500);
+
+        // Assert friendship in adoption DB
+        assertTrue(friendshipExists(idE, idF),
+                "Adoption DB should record a friendship between Evese and Frank");
+    }
+
+    @Test
+    @Order(85)
+    @DisplayName("Send, accept, then remove friend → adoption DB no longer has friendship")
+    void testRemoveFriendRemovesFromAdoption() throws Exception {
+        // Register G & H
+        Response g = registerAndLoginUser("gweny", "gwen@test.com");
+        Response h = registerAndLoginUser("hanks", "hank@test.com");
+        UUID idG = UUID.fromString(g.jsonPath().getString("userId"));
+        UUID idH = UUID.fromString(h.jsonPath().getString("userId"));
+        String tokenG = g.jsonPath().getString("tokenDTO.accessToken");
+        String tokenH = h.jsonPath().getString("tokenDTO.accessToken");
+
+        // Gweny sends & Hanks accepts
+        String reqId = given().spec(getAuthenticatedSpec(tokenG))
+                .when().post(friendsBaseUrl + "/api/friends/send-request/" + idH)
+                .then().statusCode(201)
+                .extract().jsonPath().getString("requestId");
+        given().spec(getAuthenticatedSpec(tokenH))
+                .when().post(friendsBaseUrl + "/api/friends/accept-request/" + reqId)
+                .then().statusCode(201);
+
+        // Then Gwen removes Hank
+        given().spec(getAuthenticatedSpec(tokenG))
+                .when().delete(friendsBaseUrl + "/api/friends/remove/" + idH)
+                .then().statusCode(204);
+
+        Thread.sleep(500);
+
+        // Assert friendship removed
+        assertFalse(friendshipExists(idG, idH),
+                "Adoption DB should no longer record a friendship between Gweny and Hanks");
+    }
+
+    @Test
+    @Order(86)
+    @DisplayName("Mutual follow + friendship → block each other → adoption state cleaned up")
+    void testFollowFriendThenBlockCleansUpAdoption() throws Exception {
+        // Register X & Y
+        Response rx = registerAndLoginUser("xavier", "x@example.com");
+        Response ry = registerAndLoginUser("yvonne", "y@example.com");
+        UUID idX = UUID.fromString(rx.jsonPath().getString("userId"));
+        UUID idY = UUID.fromString(ry.jsonPath().getString("userId"));
+        String tx = rx.jsonPath().getString("tokenDTO.accessToken");
+        String ty = ry.jsonPath().getString("tokenDTO.accessToken");
+
+        // 1) Mutual follow
+        given().spec(getAuthenticatedSpec(tx))
+                .when().post(friendsBaseUrl + "/api/friends/follow/" + idY)
+                .then().statusCode(201);
+        given().spec(getAuthenticatedSpec(ty))
+                .when().post(friendsBaseUrl + "/api/friends/follow/" + idX)
+                .then().statusCode(201);
+
+        // wait for Adoption module
+        Thread.sleep(500);
+
+        // assert both follow records exist
+        List<UUID> xFollows = persistedFollowees(idX);
+        List<UUID> yFollows = persistedFollowees(idY);
+        assertTrue(xFollows.contains(idY), "X should follow Y in Adoption DB");
+        assertTrue(yFollows.contains(idX), "Y should follow X in Adoption DB");
+
+        // 2) Friendship
+        String reqXY = given().spec(getAuthenticatedSpec(tx))
+                .when().post(friendsBaseUrl + "/api/friends/send-request/" + idY)
+                .then().statusCode(201)
+                .extract().jsonPath().getString("requestId");
+        given().spec(getAuthenticatedSpec(ty))
+                .when().post(friendsBaseUrl + "/api/friends/accept-request/" + reqXY)
+                .then().statusCode(201);
+
+        Thread.sleep(500);
+        assertTrue(friendshipExists(idX, idY), "Friendship X↔Y should exist in Adoption DB");
+
+        // 3) Mutual block
+        given().spec(getAuthenticatedSpec(tx))
+                .when().post(friendsBaseUrl + "/api/friends/block/" + idY)
+                .then().statusCode(201);
+
+        Thread.sleep(500);
+
+        // 4) After block: follows and friendship must be removed
+        List<UUID> xFollowsAfter = persistedFollowees(idX);
+        List<UUID> yFollowsAfter = persistedFollowees(idY);
+        assertFalse(xFollowsAfter.contains(idY), "X’s follow of Y should be removed after block");
+        assertFalse(yFollowsAfter.contains(idX), "Y’s follow of X should be removed after block");
+
+        assertFalse(friendshipExists(idX, idY),
+                "Friendship X↔Y should be removed after block");
     }
 }
