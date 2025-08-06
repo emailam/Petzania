@@ -1,5 +1,6 @@
 package com.example.friends.and.chats.module.controller;
 
+import com.example.friends.and.chats.module.annotation.RateLimit;
 import com.example.friends.and.chats.module.model.dto.message.*;
 import com.example.friends.and.chats.module.model.enumeration.EventType;
 import com.example.friends.and.chats.module.model.enumeration.MessageReact;
@@ -28,6 +29,7 @@ public class MessageController {
 
     @Operation(summary = "Send a new message in a chat")
     @PostMapping("/send")
+    @RateLimit
     public ResponseEntity<MessageDTO> sendMessage(@RequestBody SendMessageDTO sendMessageDTO) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();
@@ -37,6 +39,7 @@ public class MessageController {
 
     @Operation(summary = "Get paginated messages for a specific chat")
     @GetMapping("/chat/{chatId}")
+    @RateLimit
     public ResponseEntity<Page<MessageDTO>> getMessagesByChat(
             @PathVariable UUID chatId,
             @RequestParam(defaultValue = "0") int page,
@@ -50,6 +53,7 @@ public class MessageController {
 
     @Operation(summary = "Get a message by its ID")
     @GetMapping("/{messageId}")
+    @RateLimit
     public ResponseEntity<MessageDTO> getMessageById(@PathVariable UUID messageId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();
@@ -58,6 +62,7 @@ public class MessageController {
 
     @Operation(summary = "Edit the content of a message")
     @PatchMapping("/{messageId}/content")
+    @RateLimit
     public ResponseEntity<MessageDTO> updateMessageContent(@PathVariable UUID messageId,
                                                            @RequestBody UpdateMessageContentDTO updateMessageContentDTO) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
@@ -71,6 +76,7 @@ public class MessageController {
 
     @Operation(summary = "Update the status of a message (e.g., read)")
     @PatchMapping("/{messageId}/status")
+    @RateLimit
     public ResponseEntity<MessageDTO> updateMessageStatus(@PathVariable UUID messageId,
                                                           @RequestBody UpdateMessageStatusDTO updateMessageStatusDTO) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
@@ -83,6 +89,7 @@ public class MessageController {
 
     @Operation(summary = "React to a message")
     @PutMapping("/{messageId}/reaction")
+    @RateLimit
     public ResponseEntity<MessageReactionDTO> reactToMessage(@PathVariable UUID messageId,
                                                              @RequestBody UpdateMessageReactDTO updateMessageReact) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
@@ -96,6 +103,7 @@ public class MessageController {
     // remove react
     @Operation(summary = "Remove your reaction from a message")
     @DeleteMapping("/{messageId}/reaction")
+    @RateLimit
     public ResponseEntity<Void> removeReactionFromMessage(@PathVariable UUID messageId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();
@@ -105,6 +113,7 @@ public class MessageController {
 
     @Operation(summary = "Get all reactions for a message")
     @GetMapping("/{messageId}/reactions")
+    @RateLimit
     public ResponseEntity<List<MessageReactionDTO>> getReactionsForMessage(@PathVariable UUID messageId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();
@@ -113,6 +122,7 @@ public class MessageController {
 
     @Operation(summary = "Delete a message")
     @DeleteMapping("/{messageId}")
+    @RateLimit
     public ResponseEntity<Void> deleteMessage(@PathVariable UUID messageId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();

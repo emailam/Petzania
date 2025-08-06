@@ -1,5 +1,6 @@
 package com.example.registrationmodule.controller;
 
+import com.example.registrationmodule.annotation.RateLimit;
 import com.example.registrationmodule.exception.pet.PetNotFound;
 import com.example.registrationmodule.exception.user.UserAccessDenied;
 import com.example.registrationmodule.exception.user.UserNotFound;
@@ -33,6 +34,7 @@ public class PetController {
 
     @Operation(summary = "Create a new pet for the current user")
     @PostMapping(path = "/pet")
+    @RateLimit
     public ResponseEntity<PetDTO> createPet(@RequestBody PetDTO petDto){
 
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
@@ -53,6 +55,7 @@ public class PetController {
 
     @Operation(summary = "Get pet details by pet ID")
     @GetMapping(path = "/pet/{petId}")
+    @RateLimit
     public ResponseEntity<PetDTO> getPetById(@PathVariable(name = "petId") UUID petId) {
 
         Pet pet = petService.getPetById(petId)
@@ -62,6 +65,7 @@ public class PetController {
 
     @Operation(summary = "Get all pets by user ID")
     @GetMapping(path = "/user/{userId}/pets")
+    @RateLimit
     public ResponseEntity<List<PetDTO>> getAllPetsByUserId(@PathVariable(name = "userId") UUID userId) {
         if (!userService.userExistsById(userId)) {
             throw new UserNotFound("User not found with ID: " + userId);
@@ -77,6 +81,7 @@ public class PetController {
 
     @Operation(summary = "Update pet partially by ID (only for current user)")
     @PatchMapping(path = "/pet/{petId}")
+    @RateLimit
     public ResponseEntity<PetDTO> updatePetById(@PathVariable("petId") UUID petId,
                                                 @RequestBody UpdatePetDTO updatePetDto) {
 
@@ -100,6 +105,7 @@ public class PetController {
 
     @Operation(summary = "Delete pet by ID (only for current user)")
     @DeleteMapping("/pet/{petId}")
+    @RateLimit
     public ResponseEntity<Void> deletePetById(@PathVariable(name = "petId") UUID petId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();

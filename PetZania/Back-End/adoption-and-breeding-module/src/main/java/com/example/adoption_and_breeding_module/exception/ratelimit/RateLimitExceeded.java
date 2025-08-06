@@ -1,4 +1,5 @@
-package com.example.friends.and.chats.module.exception;
+package com.example.adoption_and_breeding_module.exception.ratelimit;
+
 
 // 429 Too Many Requests
 public class RateLimitExceeded extends RuntimeException {
@@ -6,3 +7,4 @@ public class RateLimitExceeded extends RuntimeException {
         super(message);
     }
 }
+

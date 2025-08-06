@@ -10,6 +10,8 @@ import com.example.notificationmodule.repository.NotificationRepository;
 import com.example.notificationmodule.repository.UserRepository;
 import com.example.notificationmodule.service.IWebSocketService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.hamcrest.Matchers.anyOf;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
 import org.junit.jupiter.api.Test;
@@ -19,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.time.Instant;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
@@ -57,11 +61,14 @@ public class NotificationControllerIntegrationTests {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
     private MockMvc mockMvc;
     private User testUser;
     private UserPrincipal testUserPrincipal;
     private Notification testNotification1;
     private Notification testNotification2;
+    private final int RATE_LIMIT_VALUE = 10;
 
     @BeforeEach
     void setUp() {
@@ -73,6 +80,15 @@ public class NotificationControllerIntegrationTests {
         testNotification2 = notificationRepository.save(TestDataUtil.createTestNotification(testUser.getUserId(), NotificationType.PET_POST_LIKED,
                 "Test Notification 2", NotificationStatus.READ, Instant.now().minusSeconds(1800)));
     }
+
+    @AfterEach
+    public void cleanup() {
+        Set<String> rateLimitKeys = redisTemplate.keys("rate_limit:*");
+        if (!rateLimitKeys.isEmpty()) {
+            redisTemplate.delete(rateLimitKeys);
+        }
+    }
+
 
     @Test
     void testGetUserNotifications_DefaultPagination() throws Exception {
@@ -94,6 +110,18 @@ public class NotificationControllerIntegrationTests {
     }
 
     @Test
+    void testRateLimit_getUserNotifications() throws Exception {
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(get("/api/notifications")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk());
+        }
+        mockMvc.perform(get("/api/notifications")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isTooManyRequests());
+    }
+
+    @Test
     void testGetUserNotifications_CustomPagination() throws Exception {
         mockMvc.perform(get("/api/notifications")
                         .param("page", "0")
@@ -109,6 +137,7 @@ public class NotificationControllerIntegrationTests {
                 .andExpect(jsonPath("$.content[0].message", is("Test Notification 1"))); // Oldest first
     }
 
+
     @Test
     void testGetUserNotifications_NoNotifications() throws Exception {
         // Delete all notifications
@@ -121,12 +150,44 @@ public class NotificationControllerIntegrationTests {
     }
 
     @Test
+    void testRateLimit_getUserNotifications_NoNotifications() throws Exception {
+        // Delete all notifications
+        notificationRepository.deleteAll();
+
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(get("/api/notifications").contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNoContent());
+        }
+
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(get("/api/notifications").contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isTooManyRequests());
+        }
+    }
+
+    @Test
     void testGetUnreadNotificationCount_Success() throws Exception {
         mockMvc.perform(get("/api/notifications/unread-count")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().string("1")); // Only testNotification1 is unread
+    }
+
+    @Test
+    void testRateLimit_getUnreadNotifications() throws Exception {
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(get("/api/notifications/unread-count").contentType(MediaType.APPLICATION_JSON))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(content().string("1"));
+        }
+
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(get("/api/notifications/unread-count").contentType(MediaType.APPLICATION_JSON))
+                    .andDo(print())
+                    .andExpect(status().isTooManyRequests());
+        }
     }
 
     @Test
@@ -177,13 +238,12 @@ public class NotificationControllerIntegrationTests {
     }
 
 
-
     @Test
     void testGetUnreadNotificationCount_Zero() throws Exception {
         // Mark all as read
         mockMvc.perform(put("/api/notifications/mark-all-read")
-                .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isOk());
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/notifications/unread-count")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -225,6 +285,26 @@ public class NotificationControllerIntegrationTests {
         Notification updatedNotification = notificationRepository.findById(testNotification1.getNotificationId()).orElseThrow();
         assertEquals(NotificationStatus.READ, updatedNotification.getStatus());
     }
+
+    @Test
+    void testRateLimit_markAsRead() throws Exception {
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(put("/api/notifications/mark-read/{notificationId}", testNotification1.getNotificationId())
+                    .contentType(MediaType.APPLICATION_JSON))
+                    .andDo(print())
+                    .andExpect(result -> {
+                        int status = result.getResponse().getStatus();
+                        if (status != 200 && status != 400) {
+                            throw new AssertionError("Expected 200 OK or 400 Bad Request but was " + status);
+                        }
+                    });
+        }
+        mockMvc.perform(put("/api/notifications/mark-read/{notificationId}", testNotification1.getNotificationId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isTooManyRequests());
+    }
+
+
 
     @Test
     void testMarkAsRead_NotificationNotFound() throws Exception {

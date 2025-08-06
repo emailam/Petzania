@@ -1,5 +1,6 @@
 package com.example.notificationmodule.controller;
 
+import com.example.notificationmodule.annotation.RateLimit;
 import com.example.notificationmodule.model.dto.NotificationDTO;
 import com.example.notificationmodule.model.principal.UserPrincipal;
 import com.example.notificationmodule.service.INotificationService;
@@ -24,6 +25,7 @@ public class NotificationController {
 
     @Operation(summary = "Get notifications for a user with pagination")
     @GetMapping("")
+    @RateLimit
     public ResponseEntity<Page<NotificationDTO>> getUserNotifications(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -37,6 +39,7 @@ public class NotificationController {
 
     @Operation(summary = "Get unread notification count")
     @GetMapping("/unread-count")
+    @RateLimit
     public ResponseEntity<Integer> getUnreadNotificationCount() {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();
@@ -46,6 +49,7 @@ public class NotificationController {
 
     @Operation(summary = "Mark notification as read")
     @PutMapping("/mark-read/{notificationId}")
+    @RateLimit
     public ResponseEntity<String> markAsRead(@PathVariable UUID notificationId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();
@@ -59,6 +63,7 @@ public class NotificationController {
 
     @Operation(summary = "Mark all notifications as read")
     @PutMapping("/mark-all-read")
+    @RateLimit
     public ResponseEntity<String> markAllRead(){
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();
@@ -72,6 +77,7 @@ public class NotificationController {
 
     @Operation(summary = "Delete a notification")
     @DeleteMapping("/{notificationId}")
+    @RateLimit
     public ResponseEntity<String> deleteNotification(@PathVariable UUID notificationId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();

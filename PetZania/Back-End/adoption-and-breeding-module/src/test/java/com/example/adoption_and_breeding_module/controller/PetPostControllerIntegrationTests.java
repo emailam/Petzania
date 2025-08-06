@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.annotation.DirtiesContext;
@@ -64,10 +65,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class PetPostControllerIntegrationTests {
     @Autowired
     private MockMvc mockMvc;
-
     @Autowired
     private UserRepository userRepository;
-
     @Autowired
     private PetPostRepository petPostRepository;
 
@@ -76,9 +75,10 @@ public class PetPostControllerIntegrationTests {
 
     @Autowired
     private BlockRepository blockRepository;
-
     @Autowired
     private FeedScorer feedScorer;
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
 
     @Autowired
     private EntityManager entityManager;
@@ -100,6 +100,7 @@ public class PetPostControllerIntegrationTests {
     private PetPost adoptionPost;
     private PetPost breedingPost;
     private Pet testPet;
+    private final int RATE_LIMIT_VALUE = 10;
 
     @BeforeEach
     void setup() {
@@ -158,6 +159,10 @@ public class PetPostControllerIntegrationTests {
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
+        Set<String> rateLimitKeys = redisTemplate.keys("rate_limit:*");
+        if (!rateLimitKeys.isEmpty()) {
+            redisTemplate.delete(rateLimitKeys);
+        }
     }
 
     @Test
@@ -191,6 +196,30 @@ public class PetPostControllerIntegrationTests {
         // Verify post was saved
         assertEquals(3, petPostRepository.count());
     }
+
+    @Test
+    void testRateLimit_createPetPost() throws Exception {
+        PetDTO petDTO = TestDataUtil.createPetDTO("Max", PetSpecies.DOG, Gender.MALE);
+        setupSecurityContext(userA);
+        System.out.println(SecurityUtils.getCurrentUser().getUser());
+        CreatePetPostDTO createDTO = new CreatePetPostDTO();
+        createDTO.setPetDTO(petDTO);
+        createDTO.setDescription("Friendly dog needs home");
+        createDTO.setPostType(PetPostType.ADOPTION);
+        createDTO.setLatitude(5.0);
+        createDTO.setLongitude(5.0);
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(post("/api/pet-posts")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(createDTO)))
+                    .andExpect(status().isCreated());
+        }
+        mockMvc.perform(post("/api/pet-posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createDTO)))
+                .andExpect(status().isTooManyRequests());
+    }
+
 
     @Test
     void createPetPost_ValidationErrors() throws Exception {
@@ -259,6 +288,16 @@ public class PetPostControllerIntegrationTests {
     }
 
     @Test
+    void testRateLimit_getPetPostById() throws Exception {
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(get("/api/pet-posts/{petPostId}", adoptionPost.getPostId()))
+                    .andExpect(status().isOk());
+        }
+        mockMvc.perform(get("/api/pet-posts/{petPostId}", adoptionPost.getPostId()))
+                .andExpect(status().isTooManyRequests());
+    }
+
+    @Test
     void getPetPostById_NotFound() throws Exception {
         UUID nonExistentId = UUID.randomUUID();
 
@@ -280,6 +319,20 @@ public class PetPostControllerIntegrationTests {
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.totalPages").value(1))
                 .andExpect(jsonPath("$.number").value(0));
+    }
+
+    @Test
+    void testRateLimit_getAllPetPostsByUserId() throws Exception {
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(get("/api/pet-posts/user/{userId}", userA.getUserId())
+                            .param("page", "0")
+                            .param("size", "10"))
+                    .andExpect(status().isOk());
+        }
+        mockMvc.perform(get("/api/pet-posts/user/{userId}", userA.getUserId())
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isTooManyRequests());
     }
 
     @Test
@@ -497,6 +550,18 @@ public class PetPostControllerIntegrationTests {
         assertEquals(1, updated.getReacts());
         assertTrue(updated.getReactedUsers().stream()
                 .anyMatch(user -> user.getUserId().equals(userB.getUserId())));
+    }
+
+    @Test
+    void testRateLimit_toggleReact() throws Exception {
+        setupSecurityContext(userB);
+
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(put("/api/pet-posts/{petPostId}/react", adoptionPost.getPostId()))
+                    .andExpect(status().isOk());
+        }
+        mockMvc.perform(put("/api/pet-posts/{petPostId}/react", adoptionPost.getPostId()))
+                .andExpect(status().isTooManyRequests());
     }
 
     @Test

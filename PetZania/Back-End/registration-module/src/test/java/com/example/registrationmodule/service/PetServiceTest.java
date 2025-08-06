@@ -1,7 +1,6 @@
 package com.example.registrationmodule.service;
 
 import com.example.registrationmodule.exception.pet.PetNotFound;
-import com.example.registrationmodule.exception.rateLimiting.TooManyPetRequests;
 import com.example.registrationmodule.model.dto.UpdatePetDTO;
 import com.example.registrationmodule.model.entity.Pet;
 import com.example.registrationmodule.model.entity.User;
@@ -9,7 +8,6 @@ import com.example.registrationmodule.model.enumeration.Gender;
 import com.example.registrationmodule.model.enumeration.PetSpecies;
 import com.example.registrationmodule.repository.PetRepository;
 import com.example.registrationmodule.service.impl.PetService;
-import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -33,11 +31,6 @@ class PetServiceTest {
         Pet pet = buildPet();
         when(petRepository.save(pet)).thenReturn(pet);
         assertEquals(pet, petService.savePet(pet));
-    }
-
-    @Test
-    void savePetFallback_throws() {
-        assertThrows(TooManyPetRequests.class, () -> petService.savePetFallback(buildPet(), mock(RequestNotPermitted.class)));
     }
 
     @Test
@@ -98,22 +91,11 @@ class PetServiceTest {
     }
 
     @Test
-    void updatePetFallback_throws() {
-        assertThrows(TooManyPetRequests.class, () -> petService.updatePetFallback(UUID.randomUUID(), new UpdatePetDTO(), mock(RequestNotPermitted.class)));
-    }
-
-    @Test
     void deleteById_success() {
         UUID id = UUID.randomUUID();
         doNothing().when(petRepository).deleteById(id);
         assertDoesNotThrow(() -> petService.deleteById(id));
     }
-
-    @Test
-    void deletePetFallback_throws() {
-        assertThrows(TooManyPetRequests.class, () -> petService.deletePetFallback(UUID.randomUUID(), mock(RequestNotPermitted.class)));
-    }
-
     private Pet buildPet() {
         return Pet.builder()
                 .petId(UUID.randomUUID())

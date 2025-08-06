@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.annotation.DirtiesContext;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -49,6 +51,10 @@ public class FriendControllerIntegrationTests {
     private FollowRepository followRepository;
     @Autowired
     private IFriendService friendService;
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+
+    private int RATE_LIMIT_VALUE = 10;
 
     private User userA;
     private User userB;
@@ -85,6 +91,10 @@ public class FriendControllerIntegrationTests {
     void tearDown() {
         // Clear the security context after each test
         SecurityContextHolder.clearContext();
+        Set<String> rateLimitKeys = redisTemplate.keys("rate_limit:*");
+        if (!rateLimitKeys.isEmpty()) {
+            redisTemplate.delete(rateLimitKeys);
+        }
     }
 
     @Test
@@ -142,6 +152,23 @@ public class FriendControllerIntegrationTests {
     }
 
     @Test
+    void testRateLimit_checkIsBlockingExists() throws Exception {
+        blockRepository.save(Block.builder()
+                .blocker(userA)
+                .blocked(userB)
+                .build());
+
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(get("/api/friends/is-blocking-exists/{id}", userB.getUserId()))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string("true"));
+
+        }
+        mockMvc.perform(get("/api/friends/is-blocking-exists/{id}", userB.getUserId()))
+                .andExpect(status().isTooManyRequests());
+    }
+
+    @Test
     void checkIsBlockingExists_ShouldFail() throws Exception {
         mockMvc.perform(get("/api/friends/is-blocking-exists/{id}", userB.getUserId()))
                 .andExpect(status().isOk())
@@ -173,6 +200,27 @@ public class FriendControllerIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(content().string("true"));
 
+    }
+
+    @Test
+    void testRateLimit_checkIsFriendshipExists() throws Exception {
+        User tmp1 = userA;
+        User tmp2 = userB;
+        if (userA.getUserId().compareTo(userB.getUserId()) > 0) {
+            User tmp = tmp1;
+            tmp1 = tmp2;
+            tmp2 = tmp;
+        }
+        friendshipRepository.save(Friendship.builder().user1(tmp1).user2(tmp2).build());
+
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(get("/api/friends/is-friend/{id}", userB.getUserId()))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string("true"));
+        }
+
+        mockMvc.perform(get("/api/friends/is-friend/{id}", userB.getUserId()))
+                .andExpect(status().isTooManyRequests());
     }
 
     @Test

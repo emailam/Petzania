@@ -2,8 +2,6 @@ package com.example.registrationmodule.service.impl;
 
 import com.example.registrationmodule.exception.admin.AdminNotFound;
 import com.example.registrationmodule.exception.authenticationAndVerificattion.RefreshTokenNotValid;
-import com.example.registrationmodule.exception.rateLimiting.TooManyAdminRequests;
-import com.example.registrationmodule.exception.rateLimiting.TooManyLoginRequests;
 import com.example.registrationmodule.exception.user.UserAlreadyLoggedOut;
 import com.example.registrationmodule.exception.user.UsernameAlreadyExists;
 import com.example.registrationmodule.model.dto.*;
@@ -11,20 +9,15 @@ import com.example.registrationmodule.model.entity.Admin;
 import com.example.registrationmodule.model.enumeration.AdminRole;
 import com.example.registrationmodule.repository.AdminRepository;
 import com.example.registrationmodule.service.IAdminService;
-import com.example.registrationmodule.service.IDTOConversionService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
-import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -46,7 +39,6 @@ public class AdminService implements IAdminService {
     }
 
     @Override
-    @RateLimiter(name = "loginRateLimiter", fallbackMethod = "loginFallback")
     public ResponseLoginDTO login(LoginAdminDTO loginAdminDTO) {
         Admin admin = adminRepository.findByUsernameIgnoreCase(loginAdminDTO.getUsername()).orElseThrow(() -> new AdminNotFound("Username or password is incorrect"));
 
@@ -104,11 +96,6 @@ public class AdminService implements IAdminService {
                 .collect(Collectors.toList());
     }
 
-
-    public ResponseLoginDTO loginFallback(LoginAdminDTO loginAdminDTO, RequestNotPermitted t) {
-        throw new TooManyLoginRequests("Too many login attempts. Try again later.");
-    }
-
     @Override
     public void logout(AdminLogoutDTO adminLogoutDTO) {
         Admin admin = adminRepository.findByUsernameIgnoreCase(adminLogoutDTO.getUsername()).orElseThrow(() -> new AdminNotFound("Admin does not exist"));
@@ -127,7 +114,6 @@ public class AdminService implements IAdminService {
     }
 
     @Override
-    @RateLimiter(name = "saveAdminRateLimiter", fallbackMethod = "saveAdminFallback")
     public Admin saveAdmin(Admin admin) {
         if (adminRepository.findByUsernameIgnoreCase(admin.getUsername()).isPresent()) {
             throw new UsernameAlreadyExists("Username already exists");
@@ -137,20 +123,10 @@ public class AdminService implements IAdminService {
     }
 
     @Override
-    @RateLimiter(name = "deleteAdminRateLimiter", fallbackMethod = "deleteAdminFallback")
     public void deleteById(UUID adminId) {
         if (!adminRepository.existsById(adminId)) {
             throw new AdminNotFound("Admin not found with ID: " + adminId);
         }
         adminRepository.deleteById(adminId);
-    }
-
-    // Fallbacks for rate limiting
-    public Admin saveAdminFallback(Admin admin, RequestNotPermitted ex) {
-        throw new TooManyAdminRequests("Too many requests for saving admins. Please try again later.");
-    }
-
-    public void deleteAdminFallback(UUID adminId, RequestNotPermitted ex) {
-        throw new TooManyAdminRequests("Too many requests for deleting admins. Please try again later.");
     }
 }

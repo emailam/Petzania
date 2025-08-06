@@ -10,6 +10,7 @@ import com.example.registrationmodule.service.IPetService;
 import com.example.registrationmodule.service.IUserService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -26,6 +28,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -54,6 +57,9 @@ public class PetControllerIntegrationTests {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+
     private final String DEFAULT_PASSWORD = "Password123#";
     private User testUserA;
     private String token;
@@ -61,8 +67,15 @@ public class PetControllerIntegrationTests {
 
     @BeforeEach
     public void init() throws Exception {
-        testUserA = userService.saveUser(TestDataUtil.createTestUserA());
+        testUserA = userService.saveUser(TestDataUtil.createTestUser("userA"));
         token = obtainAccessToken(testUserA.getEmail(), DEFAULT_PASSWORD);
+    }
+    @AfterEach
+    public void cleanup(){
+        Set<String> rateLimitKeys = redisTemplate.keys("rate_limit:*");
+        if (!rateLimitKeys.isEmpty()) {
+            redisTemplate.delete(rateLimitKeys);
+        }
     }
 
     private String obtainAccessToken(String email, String password) throws Exception {
@@ -87,7 +100,7 @@ public class PetControllerIntegrationTests {
 
     @Test
     public void testCreateValidPet_AddItToCurrentUser() throws Exception {
-        Pet testPetA = TestDataUtil.createTestPetA(testUserA);
+        Pet testPetA = TestDataUtil.createTestPet(testUserA);
         PetDTO testPetDTO = dtoConversionService.mapToPetDto(testPetA);
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/api/pet")
@@ -109,7 +122,7 @@ public class PetControllerIntegrationTests {
 
     @Test
     public void testCreateValidPet_SetInvalidUserId_ShouldAddItToCurrentUser() throws Exception {
-        Pet testPetA = TestDataUtil.createTestPetA(testUserA);
+        Pet testPetA = TestDataUtil.createTestPet(testUserA);
         PetDTO testPetDTO = dtoConversionService.mapToPetDto(testPetA);
         testPetDTO.setUserId(UUID.randomUUID());
 
@@ -132,7 +145,7 @@ public class PetControllerIntegrationTests {
 
     @Test
     public void testGetValidPetById() throws Exception {
-        Pet testPetA = petService.savePet(TestDataUtil.createTestPetA(testUserA));
+        Pet testPetA = petService.savePet(TestDataUtil.createTestPet(testUserA));
         mockMvc.perform(MockMvcRequestBuilders.get("/api/pet/{petId}", testPetA.getPetId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Authorization", token))
@@ -153,9 +166,9 @@ public class PetControllerIntegrationTests {
 
     @Test
     public void testGetAllPetsByValidUserIdNotEmpty() throws Exception {
-        Pet testPetA = petService.savePet(TestDataUtil.createTestPetA(testUserA));
-        Pet testPetB = petService.savePet(TestDataUtil.createTestPetA(testUserA));
-        Pet testPetC = petService.savePet(TestDataUtil.createTestPetA(testUserA));
+        Pet testPetA = petService.savePet(TestDataUtil.createTestPet(testUserA));
+        Pet testPetB = petService.savePet(TestDataUtil.createTestPet(testUserA));
+        Pet testPetC = petService.savePet(TestDataUtil.createTestPet(testUserA));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/user/{userId}/pets", testUserA.getUserId())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -193,7 +206,7 @@ public class PetControllerIntegrationTests {
 
     @Test
     public void testUpdatePetByValidPetId() throws Exception {
-        Pet testPetA = petService.savePet(TestDataUtil.createTestPetA(testUserA));
+        Pet testPetA = petService.savePet(TestDataUtil.createTestPet(testUserA));
         UpdatePetDTO updatePetDTO = new UpdatePetDTO();
         updatePetDTO.setName("Koky");
         updatePetDTO.setDescription("Beshoy's cat");
@@ -227,8 +240,8 @@ public class PetControllerIntegrationTests {
 
     @Test
     public void testUpdatePetByValidPetId_OtherUser() throws Exception {
-        User testUserB = userService.saveUser(TestDataUtil.createTestUserB());
-        Pet testPetB = petService.savePet(TestDataUtil.createTestPetA(testUserB));
+        User testUserB = userService.saveUser(TestDataUtil.createTestUser("userB"));
+        Pet testPetB = petService.savePet(TestDataUtil.createTestPet(testUserB));
         UpdatePetDTO updatePetDTO = new UpdatePetDTO();
         updatePetDTO.setName("Koky");
         updatePetDTO.setDescription("Beshoy's cat");
@@ -242,7 +255,7 @@ public class PetControllerIntegrationTests {
 
     @Test
     public void testDeletePetByValidPetId() throws Exception {
-        Pet testPetA = petService.savePet(TestDataUtil.createTestPetA(testUserA));
+        Pet testPetA = petService.savePet(TestDataUtil.createTestPet(testUserA));
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/pet/{petId}", testPetA.getPetId())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -262,8 +275,8 @@ public class PetControllerIntegrationTests {
 
     @Test
     public void testDeletePetByValidPetId_OtherUser() throws Exception {
-        User testUserB = userService.saveUser(TestDataUtil.createTestUserB());
-        Pet testPetB = petService.savePet(TestDataUtil.createTestPetA(testUserB));
+        User testUserB = userService.saveUser(TestDataUtil.createTestUser("userB"));
+        Pet testPetB = petService.savePet(TestDataUtil.createTestPet(testUserB));
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/pet/{petId}", testPetB.getPetId())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -273,6 +286,6 @@ public class PetControllerIntegrationTests {
 
     @Test
     public void testUpdatePetFiles_validPetId() {
-        Pet testPetA = petService.savePet(TestDataUtil.createTestPetA(testUserA));
+        Pet testPetA = petService.savePet(TestDataUtil.createTestPet(testUserA));
     }
 }

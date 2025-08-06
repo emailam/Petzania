@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.support.AbstractMessageChannel;
@@ -32,10 +33,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.*;
@@ -101,6 +99,11 @@ public class MessageControllerIntegrationTests {
 
     @Autowired
     private MessageController messageController;
+
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+
+    private final int RATE_LIMIT_VALUE = 10;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -203,9 +206,12 @@ public class MessageControllerIntegrationTests {
 
     @AfterEach
     void tearDown() {
-
         // Clear the security context after each test
         SecurityContextHolder.clearContext();
+        Set<String> rateLimitKeys = redisTemplate.keys("rate_limit:*");
+        if (!rateLimitKeys.isEmpty()) {
+            redisTemplate.delete(rateLimitKeys);
+        }
     }
 
     @Test
@@ -227,6 +233,25 @@ public class MessageControllerIntegrationTests {
         // Verify message was saved
         assertEquals(4, messageRepository.count());
 
+    }
+
+    @Test
+    void testRateLimit_sendMessage() throws Exception {
+        SendMessageDTO sendMessageDTO = new SendMessageDTO();
+        sendMessageDTO.setChatId(chatAB.getChatId());
+        sendMessageDTO.setContent("Test message");
+        sendMessageDTO.setFile(false);
+
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(post("/api/messages/send")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(sendMessageDTO)))
+                    .andExpect(status().isOk());
+        }
+        mockMvc.perform(post("/api/messages/send")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(sendMessageDTO)))
+                .andExpect(status().isTooManyRequests());
     }
 
     @Test
@@ -282,6 +307,16 @@ public class MessageControllerIntegrationTests {
     }
 
     @Test
+    void testRateLimit_getMessagesByChat() throws Exception {
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(get("/api/messages/chat/{chatId}", chatAB.getChatId()))
+                    .andExpect(status().isOk());
+        }
+        mockMvc.perform(get("/api/messages/chat/{chatId}", chatAB.getChatId()))
+                .andExpect(status().isTooManyRequests());
+    }
+
+    @Test
     void getMessagesByChat_WithPagination_Success() throws Exception {
         // Add more messages to test pagination
         for (int i = 0; i < 5; i++) {
@@ -316,6 +351,7 @@ public class MessageControllerIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(2)));
     }
+
     @Test
     void getMessageById_Success() throws Exception {
         mockMvc.perform(get("/api/messages/{messageId}", messageFromA.getMessageId()))
@@ -421,6 +457,21 @@ public class MessageControllerIntegrationTests {
         assertTrue(savedReaction.isPresent());
         assertEquals(MessageReact.LIKE, savedReaction.get().getReactionType());
     }
+    @Test
+    void testRateLimit_reactToMessage() throws Exception {
+        UpdateMessageReactDTO updateDTO = new UpdateMessageReactDTO();
+        updateDTO.setMessageReact(MessageReact.LIKE);
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(put("/api/messages/{messageId}/reaction", messageFromB.getMessageId())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(updateDTO)))
+                    .andExpect(status().isOk());
+        }
+        mockMvc.perform(put("/api/messages/{messageId}/reaction", messageFromB.getMessageId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isTooManyRequests());
+    }
 
     @Test
     void reactToMessage_UpdateExistingReaction_Success() throws Exception {
@@ -496,6 +547,25 @@ public class MessageControllerIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.file").value(true))
                 .andExpect(jsonPath("$.content").value("file://test_image.jpg"));
+    }
+
+    @Test
+    void testRateLimit_sendFileMessage() throws Exception {
+        SendMessageDTO sendMessageDTO = new SendMessageDTO();
+        sendMessageDTO.setChatId(chatAB.getChatId());
+        sendMessageDTO.setContent("file://test_image.jpg");
+        sendMessageDTO.setFile(true);
+
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(post("/api/messages/send")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(sendMessageDTO)))
+                    .andExpect(status().isOk());
+        }
+        mockMvc.perform(post("/api/messages/send")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(sendMessageDTO)))
+                .andExpect(status().isTooManyRequests());
     }
 
     @Test

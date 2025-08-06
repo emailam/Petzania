@@ -10,12 +10,14 @@ import com.example.registrationmodule.model.enumeration.AdminRole;
 import com.example.registrationmodule.service.IAdminService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -25,6 +27,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.containsString;
@@ -37,6 +40,9 @@ public class AdminControllerIntegrationTests {
     private MockMvc mockMvc;
     private IAdminService adminService;
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
     private final String DEFAULT_PASSWORD = "Password123#";
     private String superAdminToken;
     private String adminToken;
@@ -50,13 +56,20 @@ public class AdminControllerIntegrationTests {
 
     @BeforeEach
     public void setup() throws Exception {
-        Admin superAdmin = TestDataUtil.createSuperAdminA();
+        Admin superAdmin = TestDataUtil.createSuperAdmin("superAdminA");
         adminService.saveAdmin(superAdmin);
         superAdminToken = obtainAdminToken(superAdmin.getUsername(), DEFAULT_PASSWORD);
 
-        Admin admin = TestDataUtil.createAdminA();
+        Admin admin = TestDataUtil.createAdmin("adminA");
         adminService.saveAdmin(admin);
         adminToken = obtainAdminToken(admin.getUsername(), DEFAULT_PASSWORD);
+    }
+    @AfterEach
+    public void cleanup(){
+        Set<String> rateLimitKeys = redisTemplate.keys("rate_limit:*");
+        if (!rateLimitKeys.isEmpty()) {
+            redisTemplate.delete(rateLimitKeys);
+        }
     }
 
     @Test
@@ -151,7 +164,7 @@ public class AdminControllerIntegrationTests {
     @Test
     public void testCreateAdmin_UsernameAlreadyExists_ShouldReturnConflict() throws Exception {
         AdminDTO adminDTO = new AdminDTO();
-        adminDTO.setUsername("admin");
+        adminDTO.setUsername("adminA");
         adminDTO.setPassword("ValidPass123!");
         adminDTO.setAdminRole(AdminRole.ADMIN);
 
@@ -165,7 +178,7 @@ public class AdminControllerIntegrationTests {
 
     @Test
     public void testGetAdminById_AdminExists_ShouldReturnAdmin() throws Exception {
-        Admin admin = TestDataUtil.createAdminB();
+        Admin admin = TestDataUtil.createAdmin("adminB");
         Admin savedAdmin = adminService.saveAdmin(admin);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/admin/{id}", savedAdmin.getAdminId())
@@ -178,7 +191,7 @@ public class AdminControllerIntegrationTests {
 
     @Test
     public void testGetAdminById_Unauthorized_ShouldReturnUnAuthorized() throws Exception {
-        Admin admin = TestDataUtil.createAdminB();
+        Admin admin = TestDataUtil.createAdmin("adminB");
         Admin savedAdmin = adminService.saveAdmin(admin);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/admin/{id}", savedAdmin.getAdminId())
@@ -188,7 +201,7 @@ public class AdminControllerIntegrationTests {
 
     @Test
     public void testDeleteAdminById_AsSuperAdmin_ShouldReturnNoContent() throws Exception {
-        Admin adminToDelete = TestDataUtil.createAdminB();
+        Admin adminToDelete = TestDataUtil.createAdmin("adminB");
         Admin savedAdmin = adminService.saveAdmin(adminToDelete);
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/admin/delete/{id}", savedAdmin.getAdminId())
@@ -199,7 +212,7 @@ public class AdminControllerIntegrationTests {
 
     @Test
     public void testDeleteAdminById_AsRegularAdmin_ShouldReturnForbidden() throws Exception {
-        Admin adminToDelete = TestDataUtil.createAdminB();
+        Admin adminToDelete = TestDataUtil.createAdmin("adminB");
         Admin savedAdmin = adminService.saveAdmin(adminToDelete);
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/admin/delete/{id}", savedAdmin.getAdminId())
@@ -210,7 +223,7 @@ public class AdminControllerIntegrationTests {
 
     @Test
     public void testAdminLogin_ValidCredentials_ShouldReturnOk() throws Exception {
-        Admin admin = TestDataUtil.createAdminB();
+        Admin admin = TestDataUtil.createAdmin("adminB");
         adminService.saveAdmin(admin);
 
         LoginAdminDTO loginAdminDTO = new LoginAdminDTO();
@@ -227,7 +240,7 @@ public class AdminControllerIntegrationTests {
 
     @Test
     public void testAdminLogin_TooManyAttempts_ShouldReturnTooManyRequests() throws Exception {
-        Admin admin = TestDataUtil.createAdminB();
+        Admin admin = TestDataUtil.createAdmin("adminB");
         adminService.saveAdmin(admin);
 
         LoginAdminDTO loginAdminDTO = new LoginAdminDTO();
@@ -252,7 +265,7 @@ public class AdminControllerIntegrationTests {
     @Test
     public void testRefreshToken_ValidToken_ShouldReturnNewToken() throws Exception {
         // First login to get a refresh token
-        Admin admin = TestDataUtil.createAdminB();
+        Admin admin = TestDataUtil.createAdmin("adminB");
         adminService.saveAdmin(admin);
 
         LoginAdminDTO loginAdminDTO = new LoginAdminDTO();
@@ -294,7 +307,7 @@ public class AdminControllerIntegrationTests {
     @Test
     public void testAdminLogout_ValidRequest_ShouldReturnOk() throws Exception {
         // First login to get tokens
-        Admin admin = TestDataUtil.createAdminB();
+        Admin admin = TestDataUtil.createAdmin("adminB");
         adminService.saveAdmin(admin);
 
         LoginAdminDTO loginAdminDTO = new LoginAdminDTO();
@@ -323,7 +336,7 @@ public class AdminControllerIntegrationTests {
 
     @Test
     public void testAdminLogout_AlreadyLoggedOut_ShouldReturnConflict() throws Exception {
-        Admin admin = TestDataUtil.createAdminB();
+        Admin admin = TestDataUtil.createAdmin("adminB");
         adminService.saveAdmin(admin);
 
         LoginAdminDTO loginAdminDTO = new LoginAdminDTO();

@@ -1,5 +1,6 @@
 package com.example.friends.and.chats.module.controller;
 
+import com.example.friends.and.chats.module.annotation.RateLimit;
 import com.example.friends.and.chats.module.model.dto.friend.BlockDTO;
 import com.example.friends.and.chats.module.model.dto.friend.FollowDTO;
 import com.example.friends.and.chats.module.model.dto.friend.FriendDTO;
@@ -27,6 +28,7 @@ public class FriendController {
 
     @Operation(summary = "Send friend request", description = "Send a friend request to another user by their ID")
     @PostMapping("/send-request/{receiverId}")
+    @RateLimit
     public ResponseEntity<FriendRequestDTO> sendFriendRequest(@PathVariable UUID receiverId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         return ResponseEntity.status(HttpStatus.CREATED).body(friendService.sendFriendRequest(userPrincipal.getUserId(), receiverId));
@@ -34,6 +36,7 @@ public class FriendController {
 
     @Operation(summary = "Accept friend request", description = "Accept a pending friend request by request ID")
     @PostMapping("/accept-request/{requestId}")
+    @RateLimit
     public ResponseEntity<FriendDTO> acceptFriendRequest(@PathVariable UUID requestId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         return ResponseEntity.status(HttpStatus.CREATED).body(friendService.acceptFriendRequest(requestId, userPrincipal.getUserId()));
@@ -41,6 +44,7 @@ public class FriendController {
 
     @Operation(summary = "Decline friend request", description = "Decline a pending friend request by request ID")
     @PutMapping("/cancel-request/{requestId}")
+    @RateLimit
     public ResponseEntity<String> declineFriendRequest(@PathVariable UUID requestId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         friendService.cancelFriendRequest(requestId, userPrincipal.getUserId());
@@ -49,6 +53,7 @@ public class FriendController {
 
     @Operation(summary = "Remove friend", description = "Remove an existing friend by friend ID")
     @DeleteMapping("/remove/{friendId}")
+    @RateLimit
     public ResponseEntity<String> removeFriend(@PathVariable UUID friendId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         friendService.removeFriend(userPrincipal.getUserId(), friendId);
@@ -57,6 +62,7 @@ public class FriendController {
 
     @Operation(summary = "Follow user", description = "Follow another user by their ID")
     @PostMapping("/follow/{userId}")
+    @RateLimit
     public ResponseEntity<FollowDTO> followUser(@PathVariable UUID userId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         return ResponseEntity.status(HttpStatus.CREATED).body(friendService.followUser(userPrincipal.getUserId(), userId));
@@ -64,6 +70,7 @@ public class FriendController {
 
     @Operation(summary = "Unfollow user", description = "Unfollow a user by their ID")
     @PutMapping("/unfollow/{userId}")
+    @RateLimit
     public ResponseEntity<String> unfollowUser(@PathVariable UUID userId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         friendService.unfollowUser(userPrincipal.getUserId(), userId);
@@ -72,6 +79,7 @@ public class FriendController {
 
     @Operation(summary = "Block user", description = "Block a user by their ID")
     @PostMapping("/block/{userId}")
+    @RateLimit
     public ResponseEntity<BlockDTO> blockUser(@PathVariable UUID userId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         return ResponseEntity.status(HttpStatus.CREATED).body(friendService.blockUser(userPrincipal.getUserId(), userId));
@@ -79,6 +87,7 @@ public class FriendController {
 
     @Operation(summary = "Unblock user", description = "Unblock a previously blocked user by their ID")
     @PutMapping("/unblock/{userId}")
+    @RateLimit
     public ResponseEntity<String> unblockUser(@PathVariable UUID userId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         friendService.unblockUser(userPrincipal.getUserId(), userId);
@@ -87,6 +96,7 @@ public class FriendController {
 
     @Operation(summary = "Get friends list", description = "Retrieve all friends for a user")
     @GetMapping("/get-friends/{userId}")
+    @RateLimit
     public ResponseEntity<Page<FriendDTO>> getFriends(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -100,6 +110,7 @@ public class FriendController {
 
     @Operation(summary = "Get following users", description = "Retrieve a paginated list of users a user is following")
     @GetMapping("/get-following/{userId}")
+    @RateLimit
     public ResponseEntity<Page<FollowDTO>> getFollowing(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -113,6 +124,7 @@ public class FriendController {
 
     @Operation(summary = "Get followers", description = "Retrieve a paginated list of users following a user")
     @GetMapping("/get-followers/{userId}")
+    @RateLimit
     public ResponseEntity<Page<FollowDTO>> getFollowers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -126,6 +138,7 @@ public class FriendController {
 
     @Operation(summary = "Get all received friend requests", description = "Returns a list of received friend requests for the current user")
     @GetMapping("/received-requests")
+    @RateLimit
     public ResponseEntity<Page<FriendRequestDTO>> getReceivedFriendRequests(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -139,6 +152,7 @@ public class FriendController {
 
     @Operation(summary = "Get blocked users", description = "Retrieve a list of users blocked by the current user")
     @GetMapping("/get-blocked-users")
+    @RateLimit
     public ResponseEntity<Page<BlockDTO>> getBlockedUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -151,6 +165,7 @@ public class FriendController {
 
     @Operation(summary = "Get number of following users", description = "Returns the total number of users a specific user is following")
     @GetMapping("/get-number-of-following/{userId}")
+    @RateLimit
     public ResponseEntity<Integer> getNumberOfFollowing(@PathVariable("userId") UUID userId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         int count = friendService.getFollowingCount(userId);
@@ -159,6 +174,7 @@ public class FriendController {
 
     @Operation(summary = "Get number of followers", description = "Returns the total number of users following a specific user")
     @GetMapping("/get-number-of-followers/{userId}")
+    @RateLimit
     public ResponseEntity<Integer> getNumberOfFollowers(@PathVariable("userId") UUID userId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         int count = friendService.getFollowersCount(userId);
@@ -167,6 +183,7 @@ public class FriendController {
 
     @Operation(summary = "Get number of blocked users", description = "Returns the total number of users blocked by the current user")
     @GetMapping("/get-number-of-blocked-users")
+    @RateLimit
     public ResponseEntity<Integer> getNumberOfBlockedUsers() {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         int count = friendService.getBlockedUsersCount(userPrincipal.getUserId());
@@ -175,6 +192,7 @@ public class FriendController {
 
     @Operation(summary = "Get number of friends", description = "Returns the total number of friends a user has")
     @GetMapping("/get-number-of-friends/{userId}")
+    @RateLimit
     public ResponseEntity<Integer> getNumberOfFriends(@PathVariable("userId") UUID userId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         return ResponseEntity.ok(friendService.getNumberOfFriends(userId));
@@ -182,6 +200,7 @@ public class FriendController {
 
     @Operation(summary = "Check Whether The Two Users Are Friends")
     @GetMapping("/is-friend/{id}")
+    @RateLimit
     public ResponseEntity<Boolean> isFriend(@PathVariable("id") UUID userId2) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId1 = userPrincipal.getUserId();
@@ -191,6 +210,7 @@ public class FriendController {
 
     @Operation(summary = "Check Whether There is Exists Blocking Between The Two Users")
     @GetMapping("/is-blocking-exists/{id}")
+    @RateLimit
     public ResponseEntity<Boolean> isBlockingExists(@PathVariable("id") UUID userId2) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId1 = userPrincipal.getUserId();
@@ -200,6 +220,7 @@ public class FriendController {
 
     @Operation(summary = "Check Whether The First User is Following This User")
     @GetMapping("/is-following/{id}")
+    @RateLimit
     public ResponseEntity<Boolean> isFollowingExists(@PathVariable("id") UUID followed) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID follower = userPrincipal.getUserId();
@@ -210,6 +231,7 @@ public class FriendController {
 
     @Operation(summary = "Check Whether There exists a Friend Request")
     @GetMapping("/is-friend-request-exists/{id}")
+    @RateLimit
     public ResponseEntity<UUID> isFriendRequestExists(@PathVariable("id") UUID receiver) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID sender = userPrincipal.getUserId();

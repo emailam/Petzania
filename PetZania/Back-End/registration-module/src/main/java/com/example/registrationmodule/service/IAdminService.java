@@ -13,9 +13,9 @@ public interface IAdminService {
     Admin saveAdmin(Admin admin);
     void deleteById(UUID adminId);
     ResponseLoginDTO login(LoginAdminDTO loginAdminDTO);
-    public void logout(AdminLogoutDTO adminLogoutDTO);
+    void logout(AdminLogoutDTO adminLogoutDTO);
 
-    public TokenDTO refreshToken(String refreshToken);
+    TokenDTO refreshToken(String refreshToken);
 
     List<AdminDTO> getAllAdmins();
 }

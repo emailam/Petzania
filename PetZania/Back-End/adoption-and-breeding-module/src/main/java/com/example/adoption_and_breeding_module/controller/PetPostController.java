@@ -1,5 +1,6 @@
 package com.example.adoption_and_breeding_module.controller;
 
+import com.example.adoption_and_breeding_module.annotation.RateLimit;
 import com.example.adoption_and_breeding_module.model.dto.CreatePetPostDTO;
 import com.example.adoption_and_breeding_module.model.dto.PetPostDTO;
 import com.example.adoption_and_breeding_module.model.dto.PetPostFilterDTO;
@@ -28,6 +29,7 @@ public class PetPostController {
 
     @Operation(summary = "Create a new pet post")
     @PostMapping
+    @RateLimit
     public ResponseEntity<PetPostDTO> createPetPost(@Valid @RequestBody CreatePetPostDTO createPetPostDTO) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID ownerId = userPrincipal.getUserId();
@@ -37,6 +39,7 @@ public class PetPostController {
 
     @Operation(summary = "Get all pet posts created by a specific user")
     @GetMapping(path = "/user/{userId}")
+    @RateLimit
     public ResponseEntity<Page<PetPostDTO>> getAllPetPostsByUserId(@PathVariable(name = "userId") UUID userId,
                                                                    @RequestParam(defaultValue = "0") int page,
                                                                    @RequestParam(defaultValue = "20") int size) {
@@ -48,6 +51,7 @@ public class PetPostController {
 
     @Operation(summary = "Get a pet post by its ID")
     @GetMapping(path = "/{petPostId}")
+    @RateLimit
     public ResponseEntity<PetPostDTO> getPetPostById(@PathVariable(name = "petPostId") UUID petPostId) {
         PetPostDTO petPostDTO = petPostService.getPetPostById(petPostId);
         return ResponseEntity.ok(petPostDTO);
@@ -56,6 +60,7 @@ public class PetPostController {
 
     @Operation(summary = "Get filtered pet posts based on search criteria")
     @PostMapping(path = "/filtered")
+    @RateLimit
     public ResponseEntity<Page<PetPostDTO>> getFilteredPosts(
             @RequestBody PetPostFilterDTO filter,
             @RequestParam(defaultValue = "0") int page,
@@ -69,6 +74,7 @@ public class PetPostController {
 
     @Operation(summary = "Update an existing pet post by ID")
     @PatchMapping(path = "/{petPostId}")
+    @RateLimit
     public ResponseEntity<PetPostDTO> updatePetPostById(@PathVariable(name = "petPostId") UUID petPostId,
                                                         @Valid @RequestBody UpdatePetPostDTO updatePetPostDTO) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
@@ -79,6 +85,7 @@ public class PetPostController {
 
     @Operation(summary = "Delete a pet post by ID")
     @DeleteMapping(path = "/{petPostId}")
+    @RateLimit
     public ResponseEntity<Void> deletePetPostById(@PathVariable(name = "petPostId") UUID petPostId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();
@@ -88,6 +95,7 @@ public class PetPostController {
 
     @Operation(summary = "Toggle react status for a pet post by the current user")
     @PutMapping("/{petPostId}/react")
+    @RateLimit
     public ResponseEntity<PetPostDTO> toggleReact(@PathVariable(name = "petPostId") UUID petPostId) {
         UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
         UUID userId = userPrincipal.getUserId();

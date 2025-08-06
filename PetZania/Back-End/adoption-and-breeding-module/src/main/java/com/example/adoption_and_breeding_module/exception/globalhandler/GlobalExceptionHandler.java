@@ -1,6 +1,11 @@
 package com.example.adoption_and_breeding_module.exception.globalhandler;
 
 import com.example.adoption_and_breeding_module.exception.*;
+import com.example.adoption_and_breeding_module.exception.BlockingExist;
+import com.example.adoption_and_breeding_module.exception.PetPostNotFound;
+import com.example.adoption_and_breeding_module.exception.UserAccessDenied;
+import com.example.adoption_and_breeding_module.exception.UserNotFound;
+import com.example.adoption_and_breeding_module.exception.ratelimit.RateLimitExceeded;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -85,5 +90,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AdminNotFound.class)
     public ResponseEntity<Map<String, Object>> handleAdminNotFoundException(AdminNotFound ex) {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(RateLimitExceeded.class)
+    public ResponseEntity<Map<String, Object>> handleRateLimitExceededException(RateLimitExceeded ex) {
+        return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);
     }
 }

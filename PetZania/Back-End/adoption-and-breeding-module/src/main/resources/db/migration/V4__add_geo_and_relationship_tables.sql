@@ -1,8 +1,9 @@
 -- V4__add_geo_and_relationship_tables.sql
 
--- 1) Add geo‐coordinates to users
+-- 1) Add geo-coordinates to users
 ALTER TABLE users
-    ADD COLUMN latitude  DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+    ADD COLUMN latitude  DOUBLE PRECISION NOT NULL DEFAULT 0.0;
+ALTER TABLE users
     ADD COLUMN longitude DOUBLE PRECISION NOT NULL DEFAULT 0.0;
 
 -- 2) Create follows table
@@ -34,13 +35,14 @@ CREATE TABLE friendships (
                              CONSTRAINT uk_friendship_user1_user2
                                  UNIQUE (user1_id, user2_id)
 );
-CREATE INDEX idx_friendship_user1           ON friendships(user1_id);
-CREATE INDEX idx_friendship_user2           ON friendships(user2_id);
-CREATE INDEX idx_friendship_user1_user2     ON friendships(user1_id, user2_id);
+CREATE INDEX idx_friendship_user1       ON friendships(user1_id);
+CREATE INDEX idx_friendship_user2       ON friendships(user2_id);
+CREATE INDEX idx_friendship_user1_user2 ON friendships(user1_id, user2_id);
 
--- 4) Add geo‐coordinates to pet_posts
+-- 4) Add geo-coordinates to pet_posts
 ALTER TABLE pet_posts
-    ADD COLUMN latitude  DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+    ADD COLUMN latitude  DOUBLE PRECISION NOT NULL DEFAULT 0.0;
+ALTER TABLE pet_posts
     ADD COLUMN longitude DOUBLE PRECISION NOT NULL DEFAULT 0.0;
 
 -- 5) Create pet_post_interests join table

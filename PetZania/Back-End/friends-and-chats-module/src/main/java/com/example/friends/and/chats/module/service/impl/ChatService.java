@@ -1,6 +1,6 @@
 package com.example.friends.and.chats.module.service.impl;
 
-import com.example.friends.and.chats.module.exception.RateLimitExceeded;
+import com.example.friends.and.chats.module.exception.ratelimit.RateLimitExceeded;
 import com.example.friends.and.chats.module.exception.chat.ChatNotFound;
 import com.example.friends.and.chats.module.exception.chat.UserChatNotFound;
 import com.example.friends.and.chats.module.exception.user.ForbiddenOperation;
@@ -18,8 +18,6 @@ import com.example.friends.and.chats.module.repository.UserChatRepository;
 import com.example.friends.and.chats.module.repository.UserRepository;
 import com.example.friends.and.chats.module.service.IChatService;
 import com.example.friends.and.chats.module.service.IDTOConversionService;
-import io.github.resilience4j.ratelimiter.RequestNotPermitted;
-import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -44,7 +42,6 @@ public class ChatService implements IChatService {
     private final IDTOConversionService dtoConversionService;
 
     @Override
-    @RateLimiter(name = CHAT_RATE_LIMITER, fallbackMethod = "rateLimitFallbackCreate")
     public ChatDTO createChatIfNotExists(UUID user1Id, UUID user2Id) {
         if (user1Id.equals(user2Id)) {
             throw new IllegalArgumentException("Cannot create a chat with yourself");
@@ -82,12 +79,7 @@ public class ChatService implements IChatService {
         return dtoConversionService.mapToChatDTO(chat);
     }
 
-    private ChatDTO rateLimitFallbackCreate(UUID user1Id, UUID user2Id, RequestNotPermitted t) {
-        throw new RateLimitExceeded("Too many requests for chat creation; please retry later.");
-    }
-
     @Override
-    @RateLimiter(name = CHAT_RATE_LIMITER, fallbackMethod = "rateLimitFallbackGet")
     public List<ChatDTO> getChatsForUser(UUID userId) {
         if (!userRepository.existsById(userId)) {
             throw new UserNotFound("User not found with id: " + userId);
@@ -104,12 +96,7 @@ public class ChatService implements IChatService {
                 .collect(Collectors.toList());
     }
 
-    private List<ChatDTO> rateLimitFallbackGet(UUID userId, RequestNotPermitted t) {
-        throw new RateLimitExceeded("Too many requests for fetching chats; please retry later.");
-    }
-
     @Override
-    @RateLimiter(name = CHAT_RATE_LIMITER, fallbackMethod = "rateLimitFallbackUpdate")
     public UserChatDTO partialUpdateUserChat(UUID chatId, UUID userId, UpdateUserChatDTO updateUserChatDTO) {
         return userChatRepository.findByChat_ChatIdAndUser_UserId(chatId, userId).map(existingUserChat -> {
             Optional.ofNullable(updateUserChatDTO.getPinned()).ifPresent(existingUserChat::setPinned);
@@ -121,13 +108,8 @@ public class ChatService implements IChatService {
         }).orElseThrow(() -> new UserChatNotFound("User chat does not exist"));
     }
 
-    private UserChatDTO rateLimitFallbackUpdate(UUID chatId, UUID userId, UpdateUserChatDTO updateUserChatDTO,
-                                                RequestNotPermitted t) {
-        throw new RateLimitExceeded("Too many update requests; please retry later.");
-    }
 
     @Override
-    @RateLimiter(name = CHAT_RATE_LIMITER, fallbackMethod = "rateLimitFallbackDelete")
     public void deleteUserChatById(UUID userChatId, UUID userId) {
         UserChat chat = userChatRepository.findById(userChatId)
                 .orElseThrow(() -> new UserChatNotFound("User chat does not exist"));
@@ -138,9 +120,6 @@ public class ChatService implements IChatService {
         userChatRepository.deleteById(userChatId);
     }
 
-    private void rateLimitFallbackDelete(UUID userChatId, UUID userId, RequestNotPermitted t) {
-        throw new RateLimitExceeded("Too many delete requests; please retry later.");
-    }
 
     @Override
     public ChatDTO getChatById(UUID chatId, UUID userId) {
