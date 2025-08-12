@@ -46,6 +46,9 @@ spring:
       expiration:
         86400000
 
+  flyway:
+    enabled: true
+
 feed:
   weights:
     recency:              700

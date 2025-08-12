@@ -18,7 +18,7 @@ import java.util.UUID;
 import java.util.function.Function;
 
 @Service
-@PropertySource("classpath:application.yml")
+//@PropertySource("classpath:application.yml")
 public class JWTService {
     @Value("${spring.jwt.secret-key}")
     private String secretKey;

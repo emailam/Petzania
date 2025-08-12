@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
 @Configuration
-@PropertySource("classpath:application.yml")
+//@PropertySource("classpath:application.yml")
 @Slf4j
 public class EmailConfig {
 
