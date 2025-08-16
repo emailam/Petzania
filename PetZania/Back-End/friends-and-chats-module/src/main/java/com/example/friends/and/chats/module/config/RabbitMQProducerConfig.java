@@ -92,22 +92,22 @@ public class RabbitMQProducerConfig {
     }
 
     @Bean
-    public Binding friendAddedBinding(Queue friendAddedQueueAdoptionModule, TopicExchange friendExchange) {
+    public Binding friendAddedAdoptionModuleBinding(Queue friendAddedQueueAdoptionModule, TopicExchange friendExchange) {
         return BindingBuilder.bind(friendAddedQueueAdoptionModule).to(friendExchange).with("friend.added");
     }
 
     @Bean
-    public Binding friendRemovedBinding(Queue friendRemovedQueueAdoptionModule, TopicExchange friendExchange) {
+    public Binding friendRemovedAdoptionModuleBinding(Queue friendRemovedQueueAdoptionModule, TopicExchange friendExchange) {
         return BindingBuilder.bind(friendRemovedQueueAdoptionModule).to(friendExchange).with("friend.removed");
     }
 
     @Bean
-    public Binding followAddedBinding(Queue followAddedQueueAdoptionModule, TopicExchange followExchange) {
+    public Binding followAddedAdoptionModuleBinding(Queue followAddedQueueAdoptionModule, TopicExchange followExchange) {
         return BindingBuilder.bind(followAddedQueueAdoptionModule).to(followExchange).with("follow.added");
     }
 
     @Bean
-    public Binding followRemovedBinding(Queue followRemovedQueueAdoptionModule, TopicExchange followExchange) {
+    public Binding followRemovedAdoptionModuleBinding(Queue followRemovedQueueAdoptionModule, TopicExchange followExchange) {
         return BindingBuilder.bind(followRemovedQueueAdoptionModule).to(followExchange).with("follow.removed");
     }
 

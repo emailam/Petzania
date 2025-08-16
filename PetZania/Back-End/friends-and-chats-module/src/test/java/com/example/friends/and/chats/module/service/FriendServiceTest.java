@@ -5,10 +5,8 @@ import com.example.friends.and.chats.module.model.dto.friend.FriendDTO;
 import com.example.friends.and.chats.module.model.dto.friend.FriendRequestDTO;
 import com.example.friends.and.chats.module.model.entity.*;
 import com.example.friends.and.chats.module.repository.*;
-import com.example.friends.and.chats.module.service.impl.FriendService;
+import com.example.friends.and.chats.module.service.impl.*;
 import com.example.friends.and.chats.module.service.IDTOConversionService;
-import com.example.friends.and.chats.module.service.impl.BlockPublisher;
-import com.example.friends.and.chats.module.service.impl.NotificationPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -40,6 +38,10 @@ class FriendServiceTest {
     private BlockPublisher blockPublisher;
     @Mock
     private NotificationPublisher notificationPublisher;
+    @Mock
+    private FollowProducer followProducer;
+    @Mock
+    private FriendProducer friendProducer;
 
     @InjectMocks
     private FriendService friendService;

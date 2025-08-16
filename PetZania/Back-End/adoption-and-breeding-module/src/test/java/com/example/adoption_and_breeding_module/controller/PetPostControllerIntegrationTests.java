@@ -155,7 +155,6 @@ public class PetPostControllerIntegrationTests {
                 .reactedUsers(new HashSet<>(Set.of(userA)))
                 .build());
     }
-
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();

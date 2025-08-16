@@ -14,13 +14,17 @@ spring:
       password: superadmin
 
   jpa:
-#    show-sql: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
+
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
         format_sql: true
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
 
   h2:
     console:
@@ -45,9 +49,6 @@ spring:
     token:
       expiration:
         86400000
-
-  flyway:
-    enabled: true
 
 feed:
   weights:
@@ -76,3 +77,4 @@ logging:
   level:
     org.springframework.cache: DEBUG
     org.springframework.data.redis.cache: DEBUG
+    org.springframework.beans: DEBUG
