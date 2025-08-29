@@ -40,6 +40,13 @@ spring:
     secret-key:
       ${SPRING_JWT_SECRET_KEY}
 
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+    cache:
+      type: redis
+
 server:
   error:
     include-message: always

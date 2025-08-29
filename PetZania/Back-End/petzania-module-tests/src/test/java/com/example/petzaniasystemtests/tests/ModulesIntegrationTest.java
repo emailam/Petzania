@@ -5,10 +5,7 @@ import com.example.petzaniasystemtests.builders.TestDataBuilder;
 import com.example.petzaniasystemtests.utils.JwtTokenExtractor;
 import io.restassured.response.Response;
 import org.awaitility.Awaitility;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.*;
 
 import java.time.Duration;
 import java.util.*;
@@ -24,10 +21,16 @@ public class ModulesIntegrationTest extends BaseSystemTest {
     private static UUID userXXXId;
     private static final String USER_EMAIL_XXX = "interservice@test.com";
     private static final String PASSWORD_XXX = "Password123!";
+
+    @AfterEach
+    void clearRedis() throws Exception {
+        redis.execInContainer("redis-cli", "FLUSHALL");
+    }
     @Test
     @Order(1)
     @DisplayName("Should propagate user registration to all modules")
     void testUserRegistration_PropagatedToAllModules() throws Exception {
+
         // Test Case 1: Register a new user and verify propagation to all modules
         String username = "testuser_reg_" + System.currentTimeMillis();
         String email = username + "@example.com";
