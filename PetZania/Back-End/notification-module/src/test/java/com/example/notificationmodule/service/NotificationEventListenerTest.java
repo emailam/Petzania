@@ -15,6 +15,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import com.rabbitmq.client.Channel;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageProperties;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -84,11 +87,15 @@ class NotificationEventListenerTest {
     @DisplayName("Should process notification event successfully")
     void shouldProcessNotificationEventSuccessfully() {
         // Arrange
+        Channel mockChannel = mock(Channel.class);
+        Message mockMessage = mock(Message.class);
+        when(mockMessage.getMessageProperties()).thenReturn(mock(MessageProperties.class));
+        when(mockMessage.getMessageProperties().getDeliveryTag()).thenReturn(123L);
         when(notificationRepository.save(any(Notification.class))).thenReturn(savedNotification);
         when(dtoConversionService.toDTO(savedNotification)).thenReturn(notificationDTO);
 
         // Act
-        notificationEventListener.onNotificationReceived(notificationEvent);
+        notificationEventListener.onNotificationReceived(notificationEvent, mockChannel, mockMessage);
 
         // Assert
         ArgumentCaptor<Notification> notificationCaptor = ArgumentCaptor.forClass(Notification.class);
@@ -107,11 +114,15 @@ class NotificationEventListenerTest {
     @DisplayName("Should handle repository exception gracefully")
     void shouldHandleRepositoryException() {
         // Arrange
+        Channel mockChannel = mock(Channel.class);
+        Message mockMessage = mock(Message.class);
+        when(mockMessage.getMessageProperties()).thenReturn(mock(MessageProperties.class));
+        when(mockMessage.getMessageProperties().getDeliveryTag()).thenReturn(123L);
         when(notificationRepository.save(any(Notification.class)))
                 .thenThrow(new RuntimeException("Database error"));
 
         // Act - Should not throw exception
-        notificationEventListener.onNotificationReceived(notificationEvent);
+        notificationEventListener.onNotificationReceived(notificationEvent, mockChannel, mockMessage);
 
         // Assert
         verify(notificationRepository).save(any(Notification.class));
@@ -122,13 +133,17 @@ class NotificationEventListenerTest {
     @DisplayName("Should handle WebSocket exception gracefully")
     void shouldHandleWebSocketException() {
         // Arrange
+        Channel mockChannel = mock(Channel.class);
+        Message mockMessage = mock(Message.class);
+        when(mockMessage.getMessageProperties()).thenReturn(mock(MessageProperties.class));
+        when(mockMessage.getMessageProperties().getDeliveryTag()).thenReturn(123L);
         when(notificationRepository.save(any(Notification.class))).thenReturn(savedNotification);
         when(dtoConversionService.toDTO(savedNotification)).thenReturn(notificationDTO);
         doThrow(new RuntimeException("WebSocket error"))
                 .when(webSocketService).sendNotificationToUser(any(), any());
 
         // Act - Should not throw exception
-        notificationEventListener.onNotificationReceived(notificationEvent);
+        notificationEventListener.onNotificationReceived(notificationEvent, mockChannel, mockMessage);
 
         // Assert
         verify(notificationRepository).save(any(Notification.class));
@@ -143,6 +158,10 @@ class NotificationEventListenerTest {
                 NotificationType.FRIEND_REQUEST_WITHDRAWN
         );
         // Arrange
+        Channel mockChannel = mock(Channel.class);
+        Message mockMessage = mock(Message.class);
+        when(mockMessage.getMessageProperties()).thenReturn(mock(MessageProperties.class));
+        when(mockMessage.getMessageProperties().getDeliveryTag()).thenReturn(123L);
         NotificationEvent eventWithNullAttributes = NotificationEvent.builder()
                 .recipientId(recipientId)
                 .type(NotificationType.NEW_FOLLOWER)
@@ -155,7 +174,7 @@ class NotificationEventListenerTest {
         when(dtoConversionService.toDTO(savedNotification)).thenReturn(notificationDTO);
 
         // Act
-        notificationEventListener.onNotificationReceived(eventWithNullAttributes);
+        notificationEventListener.onNotificationReceived(eventWithNullAttributes, mockChannel, mockMessage);
 
         // Assert
         ArgumentCaptor<Notification> notificationCaptor = ArgumentCaptor.forClass(Notification.class);
@@ -174,10 +193,14 @@ class NotificationEventListenerTest {
         );
         // Test each notification type
         for (NotificationType type : NotificationType.values()) {
-            if(deletionTypes.contains(type)){
+            if (deletionTypes.contains(type)) {
                 continue;
             }
             // Arrange
+            Channel mockChannel = mock(Channel.class);
+            Message mockMessage = mock(Message.class);
+            when(mockMessage.getMessageProperties()).thenReturn(mock(MessageProperties.class));
+            when(mockMessage.getMessageProperties().getDeliveryTag()).thenReturn(123L);
             NotificationEvent event = NotificationEvent.builder()
                     .recipientId(recipientId)
                     .type(type)
@@ -189,7 +212,7 @@ class NotificationEventListenerTest {
             when(dtoConversionService.toDTO(savedNotification)).thenReturn(notificationDTO);
 
             // Act
-            notificationEventListener.onNotificationReceived(event);
+            notificationEventListener.onNotificationReceived(event, mockChannel, mockMessage);
 
             // Assert
             ArgumentCaptor<Notification> notificationCaptor = ArgumentCaptor.forClass(Notification.class);
@@ -205,12 +228,16 @@ class NotificationEventListenerTest {
     @DisplayName("Should handle conversion service exception")
     void shouldHandleConversionServiceException() {
         // Arrange
+        Channel mockChannel = mock(Channel.class);
+        Message mockMessage = mock(Message.class);
+        when(mockMessage.getMessageProperties()).thenReturn(mock(MessageProperties.class));
+        when(mockMessage.getMessageProperties().getDeliveryTag()).thenReturn(123L);
         when(notificationRepository.save(any(Notification.class))).thenReturn(savedNotification);
         when(dtoConversionService.toDTO(savedNotification))
                 .thenThrow(new RuntimeException("Conversion error"));
 
         // Act - Should not throw exception
-        notificationEventListener.onNotificationReceived(notificationEvent);
+        notificationEventListener.onNotificationReceived(notificationEvent, mockChannel, mockMessage);
 
         // Assert
         verify(notificationRepository).save(any(Notification.class));
