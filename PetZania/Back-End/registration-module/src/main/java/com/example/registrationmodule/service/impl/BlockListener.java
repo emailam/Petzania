@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
+import static com.example.registrationmodule.constant.Constants.*;
+
 @Service
 @AllArgsConstructor
 @Transactional
@@ -28,7 +30,7 @@ public class BlockListener {
         return userRepository.findById(userId).orElseThrow(() -> new UserNotFound("User not found with ID: " + userId));
     }
 
-    @RabbitListener(queues = "userBlockedQueueRegistrationModule", ackMode = "MANUAL")
+    @RabbitListener(queues = USER_BLOCKED_QUEUE_REGISTRATION_MODULE, ackMode = ACK_MODE)
     public void onUserBlocked(BlockEvent blockEvent, Channel channel, Message message) {
         try {
             if (!blockRepository.existsByBlocker_UserIdAndBlocked_UserId(blockEvent.getBlockerId(), blockEvent.getBlockedId())) {
@@ -55,7 +57,7 @@ public class BlockListener {
         }
     }
 
-    @RabbitListener(queues = "userUnBlockedQueueRegistrationModule", ackMode = "MANUAL")
+    @RabbitListener(queues = USER_UNBLOCKED_QUEUE_REGISTRATION_MODULE, ackMode = ACK_MODE)
     public void onUserUnBlocked(BlockEvent blockEvent, Channel channel, Message message) {
         try {
             if (blockRepository.existsByBlocker_UserIdAndBlocked_UserId(blockEvent.getBlockerId(), blockEvent.getBlockedId())) {

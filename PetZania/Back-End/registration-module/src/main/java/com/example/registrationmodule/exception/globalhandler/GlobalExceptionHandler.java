@@ -23,6 +23,7 @@ public class GlobalExceptionHandler {
     private static final String STATUS_STRING = "status";
     private static final String ERROR_STRING = "error";
     private static final String MESSAGE_STRING = "message";
+    private static final String FIELD = "field";
 
     private ResponseEntity<Map<String, Object>> buildErrorResponse(Exception ex, HttpStatus status) {
         Map<String, Object> errorResponse = new HashMap<>();
@@ -44,7 +45,7 @@ public class GlobalExceptionHandler {
                 .stream()
                 .map(fieldError -> {
                     Map<String, String> errorDetails = new HashMap<>();
-                    errorDetails.put("field", fieldError.getField());
+                    errorDetails.put(FIELD, fieldError.getField());
                     errorDetails.put(MESSAGE_STRING, fieldError.getDefaultMessage());
                     return errorDetails;
                 })
@@ -158,6 +159,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handlePetNotFound(PetNotFound ex) {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
     }
+
     @ExceptionHandler(InvalidMediaFile.class)
     public ResponseEntity<Map<String, Object>> handleInvalidMediaFile(InvalidMediaFile ex) {
         return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
