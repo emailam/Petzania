@@ -1,23 +1,15 @@
-package com.example.friends.and.chats.module.config;
+package com.example.registrationmodule.config.rabbitmq;
 
 import org.springframework.amqp.core.*;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static com.example.friends.and.chats.module.constant.Constants.*;
+import static com.example.registrationmodule.constant.Constants.*;
+
 
 @Configuration
-public class RabbitMQConsumerConfig {
-    @Bean
-    public TopicExchange userExchange() {
-        return new TopicExchange(USER_EXCHANGE);
-    }
-
-    @Bean
-    public TopicExchange userRetryExchange() {
-        return new TopicExchange(USER_RETRY_EXCHANGE);
-    }
-
+public class FriendsModuleProducerConfig {
     @Bean
     public Queue userRegisteredQueueFriendsModule() {
         return QueueBuilder
@@ -66,7 +58,6 @@ public class RabbitMQConsumerConfig {
         return BindingBuilder.bind(userDeletedQueueFriendsModule).to(userExchange).with(USER_DELETED);
     }
 
-    // Retry bindings
     @Bean
     public Binding userRegistrationFriendsModuleRetryBinding(Queue userRegisteredQueueFriendsModuleRetry, TopicExchange userRetryExchange) {
         return BindingBuilder.bind(userRegisteredQueueFriendsModuleRetry).to(userRetryExchange).with(USER_REGISTERED_FRIENDS_RETRY);
@@ -77,7 +68,6 @@ public class RabbitMQConsumerConfig {
         return BindingBuilder.bind(userDeletedQueueFriendsModuleRetry).to(userRetryExchange).with(USER_DELETED_FRIENDS_RETRY);
     }
 
-    // Return from retry bindings
     @Bean
     public Binding userRegistrationFriendsModuleRetryReturnBinding(Queue userRegisteredQueueFriendsModule, TopicExchange userExchange) {
         return BindingBuilder.bind(userRegisteredQueueFriendsModule).to(userExchange).with(USER_REGISTERED_FRIENDS);

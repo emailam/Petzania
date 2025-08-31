@@ -1,24 +1,13 @@
-package com.example.registrationmodule.config;
+package com.example.friends.and.chats.module.config.rabbitmq;
 
 import org.springframework.amqp.core.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static com.example.registrationmodule.constant.Constants.*;
+import static com.example.friends.and.chats.module.constant.Constants.*;
 
 @Configuration
-public class RabbitMQConsumerConfig {
-
-    @Bean
-    public TopicExchange blockExchange() {
-        return new TopicExchange(BLOCK_EXCHANGE);
-    }
-
-    @Bean
-    public TopicExchange blockRetryExchange() {
-        return new TopicExchange(BLOCK_RETRY_EXCHANGE);
-    }
-
+public class RegistrationModuleProducerConfig {
     @Bean
     public Queue userBlockedQueueRegistrationModule() {
         return QueueBuilder
@@ -57,18 +46,17 @@ public class RabbitMQConsumerConfig {
                 .build();
     }
 
-    // Main bindings
     @Bean
     public Binding userBlockingRegistrationBinding(Queue userBlockedQueueRegistrationModule, TopicExchange blockExchange) {
         return BindingBuilder.bind(userBlockedQueueRegistrationModule).to(blockExchange).with(BLOCK_ADD);
     }
+
 
     @Bean
     public Binding userUnBlockingRegistrationBinding(Queue userUnBlockedQueueRegistrationModule, TopicExchange blockExchange) {
         return BindingBuilder.bind(userUnBlockedQueueRegistrationModule).to(blockExchange).with(BLOCK_DELETE);
     }
 
-    // Retry bindings
     @Bean
     public Binding userBlockingRegistrationRetryBinding(Queue userBlockedQueueRegistrationModuleRetry, TopicExchange blockRetryExchange) {
         return BindingBuilder.bind(userBlockedQueueRegistrationModuleRetry).to(blockRetryExchange).with(USER_BLOCKED_REGISTRATION_RETRY);

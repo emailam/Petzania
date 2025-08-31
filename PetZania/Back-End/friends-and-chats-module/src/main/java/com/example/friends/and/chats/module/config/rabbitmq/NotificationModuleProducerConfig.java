@@ -1,22 +1,16 @@
-package com.example.adoption_and_breeding_module.config;
+package com.example.friends.and.chats.module.config.rabbitmq;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static com.example.adoption_and_breeding_module.constant.Constants.*;
+import static com.example.friends.and.chats.module.constant.Constants.*;
 
 @Configuration
-public class RabbitMQProducerConfig {
-    @Bean
-    public Jackson2JsonMessageConverter jsonMessageConverter() {
-        return new Jackson2JsonMessageConverter();
-    }
-
+public class NotificationModuleProducerConfig {
     @Bean
     public TopicExchange notificationExchange() {
         return new TopicExchange(NOTIFICATION_EXCHANGE);
@@ -24,7 +18,7 @@ public class RabbitMQProducerConfig {
 
     @Bean
     public Queue notificationsQueue() {
-        return new Queue(NOTIFICATIONS_QUEUE, true);
+        return new Queue(NOTIFICATION_QUEUE, true);
     }
 
     @Bean
