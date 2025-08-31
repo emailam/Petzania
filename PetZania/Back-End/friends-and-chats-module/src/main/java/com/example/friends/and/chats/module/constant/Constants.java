@@ -30,6 +30,7 @@ public final class Constants {
     public static final String USER_UNBLOCKED_QUEUE_REGISTRATION_MODULE_RETRY = "userUnBlockedQueueRegistrationModule.retry";
 
     // RabbitMQ Arguments
+    public static final String ACK_MODE = "MANUAL";
     public static final int MESSAGE_TTL_VALUE = 30000;
     public static final String X_DEAD_LETTER_EXCHANGE = "x-dead-letter-exchange";
     public static final String X_DEAD_LETTER_ROUTING_KEY = "x-dead-letter-routing-key";
@@ -47,7 +48,10 @@ public final class Constants {
     public static final String USER_REGISTERED_FRIENDS = "user.registered.friends";
     public static final String USER_UNBLOCKED_ADOPTION = "user.unblocked.adoption";
     public static final String USER_UNBLOCKED_REGISTRATION = "user.unblocked.registration";
-
+    public static final String NOTIFICATION_FRIEND_REQUEST_RECEIVED = "notification.friend_request_received";
+    public static final String NOTIFICATION_FRIEND_REQUEST_ACCEPTED = "notification.friend_request_accepted";
+    public static final String NOTIFICATION_NEW_FOLLOWER = "notification.new_follower";
+    public static final String NOTIFICATION_FRIEND_REQUEST_CANCELLED = "notification.friend_request_cancelled";
     // Retry Routing Keys
     public static final String USER_BLOCKED_ADOPTION_RETRY = "user.blocked.adoption.retry";
     public static final String USER_BLOCKED_REGISTRATION_RETRY = "user.blocked.registration.retry";
@@ -55,5 +59,16 @@ public final class Constants {
     public static final String USER_REGISTERED_FRIENDS_RETRY = "user.registered.friends.retry";
     public static final String USER_UNBLOCKED_ADOPTION_RETRY = "user.unblocked.adoption.retry";
     public static final String USER_UNBLOCKED_REGISTRATION_RETRY = "user.unblocked.registration.retry";
+    // Rate Limit
+    public static final int RATE_LIMIT_DEFAULT_REQUESTS = 10;
+    public static final int RATE_LIMIT_DEFAULT_DURATION = 60;
+    // JWT
+    public static final String AUTHORIZATION_HEADER = "Authorization";
+    public static final String STARTING_WITH_STRING = "Bearer ";
+    public static final String ROLE_USER = "ROLE_USER";
+    public static final String ROLE_ADMIN = "ROLE_ADMIN";
+    public static final String ROLE_SUPER_ADMIN = "ROLE_SUPER_ADMIN";
+    public static final String ANONYMOUS = "anonymous";
+    public static final int START_INDEX = 7;
 
 }

@@ -11,6 +11,8 @@ import com.rabbitmq.client.Channel;
 import org.springframework.amqp.core.Message;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.example.friends.and.chats.module.constant.Constants.*;
+
 @Service
 @AllArgsConstructor
 @Transactional
@@ -18,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UserListener {
     private final UserRepository userRepository;
 
-    @RabbitListener(queues = "userRegisteredQueueFriendsModule", ackMode = "MANUAL")
+    @RabbitListener(queues = USER_REGISTERED_QUEUE_FRIENDS_MODULE, ackMode = ACK_MODE)
     public void onUserRegistered(UserEvent user, Channel channel, Message message) {
         try {
             if (!userRepository.existsById(user.getUserId()) && !userRepository.existsByUsername(user.getUsername()) && !userRepository.existsByEmail(user.getEmail())) {
@@ -40,7 +42,7 @@ public class UserListener {
         }
     }
 
-    @RabbitListener(queues = "userDeletedQueueFriendsModule", ackMode = "MANUAL")
+    @RabbitListener(queues = USER_DELETED_QUEUE_FRIENDS_MODULE, ackMode = ACK_MODE)
     public void onUserDeleted(UserEvent user, Channel channel, Message message) {
         try {
             if (userRepository.existsById(user.getUserId())) {

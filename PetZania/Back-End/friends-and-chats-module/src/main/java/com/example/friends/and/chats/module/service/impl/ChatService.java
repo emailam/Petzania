@@ -1,6 +1,5 @@
 package com.example.friends.and.chats.module.service.impl;
 
-import com.example.friends.and.chats.module.exception.ratelimit.RateLimitExceeded;
 import com.example.friends.and.chats.module.exception.chat.ChatNotFound;
 import com.example.friends.and.chats.module.exception.chat.UserChatNotFound;
 import com.example.friends.and.chats.module.exception.user.ForbiddenOperation;
@@ -32,9 +31,6 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Transactional
 public class ChatService implements IChatService {
-
-    private static final String CHAT_RATE_LIMITER = "chatServiceRateLimiter";
-
     private final ChatRepository chatRepository;
     private final UserChatRepository userChatRepository;
     private final BlockRepository blockRepository;

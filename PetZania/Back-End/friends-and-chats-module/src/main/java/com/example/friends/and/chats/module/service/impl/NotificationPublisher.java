@@ -7,14 +7,18 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
+
+import static com.example.friends.and.chats.module.constant.Constants.*;
 
 @Service
 public class NotificationPublisher {
     private final RabbitTemplate rabbitTemplate;
-    String exchange = "notificationExchange";
+    private static final String exchange = NOTIFICATION_EXCHANGE;
+    private static final String friendRequestReceivedRoutingKey = NOTIFICATION_FRIEND_REQUEST_RECEIVED;
+    private static final String friendRequestAcceptedRoutingKey = NOTIFICATION_FRIEND_REQUEST_ACCEPTED;
+    private static final String newFollowerRoutingKey = NOTIFICATION_NEW_FOLLOWER;
+    private static final String friendRequestCancelledRoutingKey = NOTIFICATION_FRIEND_REQUEST_CANCELLED;
 
     @Autowired
     public NotificationPublisher(RabbitTemplate rabbitTemplate) {
@@ -23,8 +27,6 @@ public class NotificationPublisher {
     }
 
     public void sendFriendRequestNotification(UUID senderId, UUID receiverId, UUID requestId, String senderUsername) {
-        String routingKey = "notification.friend_request_received";
-
         NotificationEvent event = NotificationEvent.builder()
                 .initiatorId(senderId)
                 .recipientId(receiverId)
@@ -35,12 +37,10 @@ public class NotificationPublisher {
 
         System.out.println("Sent friend request notification from " + senderId + " to recipient: " + receiverId);
         System.out.println("Event: " + event);
-        rabbitTemplate.convertAndSend(exchange, routingKey, event);
+        rabbitTemplate.convertAndSend(exchange, friendRequestReceivedRoutingKey, event);
     }
 
     public void sendFriendRequestAcceptedNotification(UUID senderId, UUID receiverId, UUID friendshipId, String receiverUsername) {
-        String routingKey = "notification.friend_request_accepted";
-
         NotificationEvent event = NotificationEvent.builder()
                 .initiatorId(receiverId)
                 .recipientId(senderId)
@@ -52,12 +52,10 @@ public class NotificationPublisher {
 
         System.out.println("Sent friend request accepted notification from " + receiverId + " to recipient: " + senderId);
         System.out.println("Event: " + event);
-        rabbitTemplate.convertAndSend(exchange, routingKey, event);
+        rabbitTemplate.convertAndSend(exchange, friendRequestAcceptedRoutingKey, event);
     }
 
     public void sendNewFollowerNotification(UUID followerId, UUID followedId, UUID followId, String followerUsername) {
-        String routingKey = "notification.new_follower";
-
         NotificationEvent event = NotificationEvent.builder()
                 .initiatorId(followerId)
                 .recipientId(followedId)
@@ -68,12 +66,10 @@ public class NotificationPublisher {
 
         System.out.println("Sent new follower notification from " + followerId + " to recipient: " + followedId);
         System.out.println("Event: " + event);
-        rabbitTemplate.convertAndSend(exchange, routingKey, event);
+        rabbitTemplate.convertAndSend(exchange, newFollowerRoutingKey, event);
     }
 
     public void sendFriendRequestCancelled(UUID friendRequestId) {
-        String routingKey = "notification.friend_request_cancelled";
-
         NotificationEvent event = NotificationEvent.builder()
                 .entityId(friendRequestId)
                 .type(NotificationType.FRIEND_REQUEST_WITHDRAWN)
@@ -81,6 +77,6 @@ public class NotificationPublisher {
 
         System.out.println("Friend request cancelled " + friendRequestId);
         System.out.println("Event: " + event);
-        rabbitTemplate.convertAndSend(exchange, routingKey, event);
+        rabbitTemplate.convertAndSend(exchange, friendRequestCancelledRoutingKey, event);
     }
 }

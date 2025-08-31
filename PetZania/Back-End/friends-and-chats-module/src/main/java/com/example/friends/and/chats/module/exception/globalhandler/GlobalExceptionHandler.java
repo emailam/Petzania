@@ -26,6 +26,7 @@ public class GlobalExceptionHandler {
     private static final String STATUS_STRING = "status";
     private static final String ERROR_STRING = "error";
     private static final String MESSAGE_STRING = "message";
+    private static final String FIELD = "field";
 
     private ResponseEntity<Map<String, Object>> buildErrorResponse(Exception ex, HttpStatus status) {
         Map<String, Object> errorResponse = new HashMap<>();
@@ -47,7 +48,7 @@ public class GlobalExceptionHandler {
                 .stream()
                 .map(fieldError -> {
                     Map<String, String> errorDetails = new HashMap<>();
-                    errorDetails.put("field", fieldError.getField());
+                    errorDetails.put(FIELD, fieldError.getField());
                     errorDetails.put(MESSAGE_STRING, fieldError.getDefaultMessage());
                     return errorDetails;
                 })
@@ -86,7 +87,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleAuthenticatedUserNotFoundException(AuthenticatedUserNotFound ex) {
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND);
     }
-  
+
     @ExceptionHandler(InvalidOperation.class)
     public ResponseEntity<Map<String, Object>> handleInvalidOperationException(InvalidOperation ex) {
         return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
@@ -133,15 +134,15 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BlockingAlreadyExist.class)
-    public ResponseEntity<Map<String, Object>> handleBlockingAlreadyExistException(BlockingAlreadyExist ex){
+    public ResponseEntity<Map<String, Object>> handleBlockingAlreadyExistException(BlockingAlreadyExist ex) {
         return buildErrorResponse(ex, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(FriendshipAlreadyExist.class)
-    public ResponseEntity<Map<String, Object>>handleFriendshipAlreadyExistException(FriendshipAlreadyExist ex){
+    public ResponseEntity<Map<String, Object>> handleFriendshipAlreadyExistException(FriendshipAlreadyExist ex) {
         return buildErrorResponse(ex, HttpStatus.CONFLICT);
     }
-  
+
     @ExceptionHandler(UserAccessDenied.class)
     public ResponseEntity<Map<String, Object>> handleUserAccessDeniedException(UserAccessDenied ex) {
         return buildErrorResponse(ex, HttpStatus.FORBIDDEN);
@@ -161,6 +162,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleInvalidMessageStatusTransitionException(InvalidMessageStatusTransition ex) {
         return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
     }
+
     @ExceptionHandler(RateLimitExceeded.class)
     public ResponseEntity<Map<String, Object>> handleRateLimitExceededException(RateLimitExceeded ex) {
         return buildErrorResponse(ex, HttpStatus.TOO_MANY_REQUESTS);

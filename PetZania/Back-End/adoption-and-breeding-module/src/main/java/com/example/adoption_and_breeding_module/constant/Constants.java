@@ -26,11 +26,12 @@ public final class Constants {
     public static final String USER_UNBLOCKED_QUEUE_ADOPTION_MODULE_RETRY = "userUnBlockedQueueAdoptionModule.retry";
 
     // RabbitMQ Arguments
+    public static final String ACK_MODE = "MANUAL";
     public static int MESSAGE_TTL_VALUE = 30000;
     public static final String X_DEAD_LETTER_EXCHANGE = "x-dead-letter-exchange";
     public static final String X_DEAD_LETTER_ROUTING_KEY = "x-dead-letter-routing-key";
     public static final String X_MESSAGE_TTL = "x-message-ttl";
-
+    
     // Main Routing Keys
     public static final String BLOCK_ADD = "block.add";
     public static final String BLOCK_DELETE = "block.delete";
@@ -51,8 +52,6 @@ public final class Constants {
     // Rate Limit
     public static final int RATE_LIMIT_DEFAULT_REQUESTS = 10;
     public static final int RATE_LIMIT_DEFAULT_DURATION = 60;
-    // Ack Mode
-    public static final String ACK_MODE = "MANUAL";
     // JWT
     public static final String AUTHORIZATION_HEADER = "Authorization";
     public static final String STARTING_WITH_STRING = "Bearer ";
