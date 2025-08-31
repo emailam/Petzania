@@ -13,7 +13,7 @@ public final class Constants {
     public static final String USER_EXCHANGE = "userExchange";
     public static final String USER_RETRY_EXCHANGE = "userRetryExchange";
     // ===== Main Queues' Names =====
-    public static final String NOTIFICATION_QUEUE = "notificationsQueue";
+    public static final String NOTIFICATIONS_QUEUE = "notificationsQueue";
     public static final String USER_BLOCKED_QUEUE_REGISTRATION_MODULE = "userBlockedQueueRegistrationModule";
     public static final String USER_BLOCKED_QUEUE_ADOPTION_MODULE = "userBlockedQueueAdoptionModule";
     public static final String USER_DELETED_QUEUE_FRIENDS_MODULE = "userDeletedQueueFriendsModule";

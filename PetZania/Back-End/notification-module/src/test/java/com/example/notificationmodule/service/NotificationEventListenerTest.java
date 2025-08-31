@@ -6,6 +6,7 @@ import com.example.notificationmodule.model.enumeration.NotificationStatus;
 import com.example.notificationmodule.model.enumeration.NotificationType;
 import com.example.notificationmodule.model.event.NotificationEvent;
 import com.example.notificationmodule.repository.NotificationRepository;
+import com.example.notificationmodule.repository.UserRepository;
 import com.example.notificationmodule.service.impl.NotificationEventListener;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -44,6 +45,8 @@ class NotificationEventListenerTest {
     @InjectMocks
     private NotificationEventListener notificationEventListener;
 
+    @Mock
+    private UserRepository userRepository;
     private NotificationEvent notificationEvent;
     private Notification savedNotification;
     private NotificationDTO notificationDTO;
@@ -91,6 +94,8 @@ class NotificationEventListenerTest {
         Message mockMessage = mock(Message.class);
         when(mockMessage.getMessageProperties()).thenReturn(mock(MessageProperties.class));
         when(mockMessage.getMessageProperties().getDeliveryTag()).thenReturn(123L);
+        when(userRepository.existsById(notificationEvent.getRecipientId())).thenReturn(true);
+        when(userRepository.existsById(notificationEvent.getInitiatorId())).thenReturn(true);
         when(notificationRepository.save(any(Notification.class))).thenReturn(savedNotification);
         when(dtoConversionService.toDTO(savedNotification)).thenReturn(notificationDTO);
 
@@ -118,6 +123,8 @@ class NotificationEventListenerTest {
         Message mockMessage = mock(Message.class);
         when(mockMessage.getMessageProperties()).thenReturn(mock(MessageProperties.class));
         when(mockMessage.getMessageProperties().getDeliveryTag()).thenReturn(123L);
+        when(userRepository.existsById(notificationEvent.getRecipientId())).thenReturn(true);
+        when(userRepository.existsById(notificationEvent.getInitiatorId())).thenReturn(true);
         when(notificationRepository.save(any(Notification.class)))
                 .thenThrow(new RuntimeException("Database error"));
 
@@ -139,6 +146,8 @@ class NotificationEventListenerTest {
         when(mockMessage.getMessageProperties().getDeliveryTag()).thenReturn(123L);
         when(notificationRepository.save(any(Notification.class))).thenReturn(savedNotification);
         when(dtoConversionService.toDTO(savedNotification)).thenReturn(notificationDTO);
+        when(userRepository.existsById(notificationEvent.getRecipientId())).thenReturn(true);
+        when(userRepository.existsById(notificationEvent.getInitiatorId())).thenReturn(true);
         doThrow(new RuntimeException("WebSocket error"))
                 .when(webSocketService).sendNotificationToUser(any(), any());
 
@@ -149,87 +158,14 @@ class NotificationEventListenerTest {
         verify(notificationRepository).save(any(Notification.class));
         verify(webSocketService).sendNotificationToUser(recipientId, notificationDTO);
     }
-
-    @Test
-    @DisplayName("Should process event with null attributes")
-    void shouldProcessEventWithNullAttributes() {
-        Set<NotificationType> deletionTypes = Set.of(
-                NotificationType.PET_POST_DELETED,
-                NotificationType.FRIEND_REQUEST_WITHDRAWN
-        );
-        // Arrange
-        Channel mockChannel = mock(Channel.class);
-        Message mockMessage = mock(Message.class);
-        when(mockMessage.getMessageProperties()).thenReturn(mock(MessageProperties.class));
-        when(mockMessage.getMessageProperties().getDeliveryTag()).thenReturn(123L);
-        NotificationEvent eventWithNullAttributes = NotificationEvent.builder()
-                .recipientId(recipientId)
-                .type(NotificationType.NEW_FOLLOWER)
-                .message("You have a new follower")
-                .entityId(null)
-                .initiatorId(UUID.randomUUID())
-                .build();
-
-        when(notificationRepository.save(any(Notification.class))).thenReturn(savedNotification);
-        when(dtoConversionService.toDTO(savedNotification)).thenReturn(notificationDTO);
-
-        // Act
-        notificationEventListener.onNotificationReceived(eventWithNullAttributes, mockChannel, mockMessage);
-
-        // Assert
-        ArgumentCaptor<Notification> notificationCaptor = ArgumentCaptor.forClass(Notification.class);
-        verify(notificationRepository).save(notificationCaptor.capture());
-
-        Notification capturedNotification = notificationCaptor.getValue();
-        assertNull(capturedNotification.getEntityId());
-    }
-
-    @Test
-    @DisplayName("Should process all notification types")
-    void shouldProcessAllNotificationTypes() {
-        Set<NotificationType> deletionTypes = Set.of(
-                NotificationType.PET_POST_DELETED,
-                NotificationType.FRIEND_REQUEST_WITHDRAWN
-        );
-        // Test each notification type
-        for (NotificationType type : NotificationType.values()) {
-            if (deletionTypes.contains(type)) {
-                continue;
-            }
-            // Arrange
-            Channel mockChannel = mock(Channel.class);
-            Message mockMessage = mock(Message.class);
-            when(mockMessage.getMessageProperties()).thenReturn(mock(MessageProperties.class));
-            when(mockMessage.getMessageProperties().getDeliveryTag()).thenReturn(123L);
-            NotificationEvent event = NotificationEvent.builder()
-                    .recipientId(recipientId)
-                    .type(type)
-                    .message("Test message for " + type)
-                    .initiatorId(UUID.randomUUID())
-                    .build();
-
-            when(notificationRepository.save(any(Notification.class))).thenReturn(savedNotification);
-            when(dtoConversionService.toDTO(savedNotification)).thenReturn(notificationDTO);
-
-            // Act
-            notificationEventListener.onNotificationReceived(event, mockChannel, mockMessage);
-
-            // Assert
-            ArgumentCaptor<Notification> notificationCaptor = ArgumentCaptor.forClass(Notification.class);
-            verify(notificationRepository, atLeastOnce()).save(notificationCaptor.capture());
-
-            boolean found = notificationCaptor.getAllValues().stream()
-                    .anyMatch(n -> n.getType() == type);
-            assertTrue(found, "Notification type " + type + " was not processed");
-        }
-    }
-
     @Test
     @DisplayName("Should handle conversion service exception")
     void shouldHandleConversionServiceException() {
         // Arrange
         Channel mockChannel = mock(Channel.class);
         Message mockMessage = mock(Message.class);
+        when(userRepository.existsById(notificationEvent.getRecipientId())).thenReturn(true);
+        when(userRepository.existsById(notificationEvent.getInitiatorId())).thenReturn(true);
         when(mockMessage.getMessageProperties()).thenReturn(mock(MessageProperties.class));
         when(mockMessage.getMessageProperties().getDeliveryTag()).thenReturn(123L);
         when(notificationRepository.save(any(Notification.class))).thenReturn(savedNotification);

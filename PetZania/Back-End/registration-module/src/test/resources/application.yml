@@ -229,6 +229,7 @@ resilience4j.ratelimiter:
 
 logging:
   level:
+    org.springframework.amqp.rabbit.core.RabbitAdmin: DEBUG
     org.springframework.cache: DEBUG
     org.springframework.data.redis.cache: DEBUG
     org.springframework.security: DEBUG

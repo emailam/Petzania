@@ -18,7 +18,7 @@ public class NotificationModuleProducerConfig {
 
     @Bean
     public Queue notificationsQueue() {
-        return new Queue(NOTIFICATION_QUEUE, true);
+        return new Queue(NOTIFICATIONS_QUEUE, true);
     }
 
     @Bean
