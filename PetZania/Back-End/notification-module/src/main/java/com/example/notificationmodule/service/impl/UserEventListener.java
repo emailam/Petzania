@@ -12,6 +12,7 @@ import com.rabbitmq.client.Channel;
 import org.springframework.amqp.core.Message;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.example.notificationmodule.constant.Constants.*;
 
 @Service
 @AllArgsConstructor
@@ -21,7 +22,7 @@ public class UserEventListener {
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
 
-    @RabbitListener(queues = "userRegisteredQueueNotificationModule", ackMode = "MANUAL")
+    @RabbitListener(queues = USER_REGISTERED_QUEUE_NOTIFICATION_MODULE, ackMode = ACK_MODE)
     public void onUserRegistered(UserEvent user, Channel channel, Message message) {
         try {
             if (!userRepository.existsById(user.getUserId()) && !userRepository.existsByUsername(user.getUsername()) && !userRepository.existsByEmail(user.getEmail())) {
@@ -44,7 +45,7 @@ public class UserEventListener {
         }
     }
 
-    @RabbitListener(queues = "userDeletedQueueNotificationModule", ackMode = "MANUAL")
+    @RabbitListener(queues = USER_DELETED_QUEUE_NOTIFICATION_MODULE, ackMode = ACK_MODE)
     public void onUserDeleted(UserEvent user, Channel channel, Message message) {
         try {
             if (userRepository.existsById(user.getUserId())) {

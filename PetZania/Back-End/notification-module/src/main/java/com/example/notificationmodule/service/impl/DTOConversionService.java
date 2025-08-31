@@ -5,9 +5,6 @@ import com.example.notificationmodule.model.entity.Notification;
 import com.example.notificationmodule.service.IDTOConversionService;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @Service
 public class DTOConversionService implements IDTOConversionService {
     @Override

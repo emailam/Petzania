@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import com.rabbitmq.client.Channel;
 import org.springframework.amqp.core.Message;
 
+import static com.example.notificationmodule.constant.Constants.*;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -23,7 +25,7 @@ public class NotificationEventListener {
     private final IDTOConversionService dtoConversionService;
 
     @Transactional
-    @RabbitListener(queues = "notificationsQueue", ackMode = "MANUAL")
+    @RabbitListener(queues = NOTIFICATIONS_QUEUE, ackMode = ACK_MODE)
     public void onNotificationReceived(NotificationEvent event, Channel channel, Message message) {
         try {
             if (event.getType() == NotificationType.PET_POST_DELETED || event.getType() == NotificationType.FRIEND_REQUEST_WITHDRAWN) {
