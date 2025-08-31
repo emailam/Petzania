@@ -41,9 +41,24 @@ public final class Constants {
     public static final String USER_REGISTERED = "user.registered";
     public static final String USER_REGISTERED_ADOPTION = "user.registered.adoption";
     public static final String USER_UNBLOCKED_ADOPTION = "user.unblocked.adoption";
+    public static final String NOTIFICATION_PET_POST_LIKED = "notification.pet_post_liked";
+    public static final String NOTIFICATION_PET_POST_DELETED = "notification.pet_post_deleted";
     // Retry Routing Keys
     public static final String USER_BLOCKED_ADOPTION_RETRY = "user.blocked.adoption.retry";
     public static final String USER_DELETED_ADOPTION_RETRY = "user.deleted.adoption.retry";
     public static final String USER_REGISTERED_ADOPTION_RETRY = "user.registered.adoption.retry";
     public static final String USER_UNBLOCKED_ADOPTION_RETRY = "user.unblocked.adoption.retry";
+    // Rate Limit
+    public static final int RATE_LIMIT_DEFAULT_REQUESTS = 10;
+    public static final int RATE_LIMIT_DEFAULT_DURATION = 60;
+    // Ack Mode
+    public static final String ACK_MODE = "MANUAL";
+    // JWT
+    public static final String AUTHORIZATION_HEADER = "Authorization";
+    public static final String STARTING_WITH_STRING = "Bearer ";
+    public static final String ROLE_USER = "ROLE_USER";
+    public static final String ROLE_ADMIN = "ROLE_ADMIN";
+    public static final String ROLE_SUPER_ADMIN = "ROLE_SUPER_ADMIN";
+    public static final String ANONYMOUS = "anonymous";
+    public static final int START_INDEX = 7;
 }

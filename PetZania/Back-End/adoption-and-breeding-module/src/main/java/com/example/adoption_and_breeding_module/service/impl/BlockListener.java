@@ -14,6 +14,8 @@ import com.rabbitmq.client.Channel;
 import org.springframework.amqp.core.Message;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.example.adoption_and_breeding_module.constant.Constants.*;
+
 import java.util.UUID;
 
 @Service
@@ -29,7 +31,7 @@ public class BlockListener {
                 .orElseThrow(() -> new UserNotFound("User not found with ID: " + userId));
     }
 
-    @RabbitListener(queues = "userBlockedQueueAdoptionModule", ackMode = "MANUAL")
+    @RabbitListener(queues = USER_BLOCKED_QUEUE_ADOPTION_MODULE, ackMode = ACK_MODE)
     public void onUserBlocked(BlockEvent blockEvent, Channel channel, Message message) {
         try {
             if (!blockRepository.existsByBlocker_UserIdAndBlocked_UserId(blockEvent.getBlockerId(), blockEvent.getBlockedId())) {
@@ -55,7 +57,7 @@ public class BlockListener {
         }
     }
 
-    @RabbitListener(queues = "userUnBlockedQueueAdoptionModule", ackMode = "MANUAL")
+    @RabbitListener(queues = USER_UNBLOCKED_QUEUE_ADOPTION_MODULE, ackMode = ACK_MODE)
     public void onUserUnBlocked(BlockEvent blockEvent, Channel channel, Message message) {
         try {
             if (blockRepository.existsByBlocker_UserIdAndBlocked_UserId(blockEvent.getBlockerId(), blockEvent.getBlockedId())) {
@@ -66,7 +68,7 @@ public class BlockListener {
         } catch (Exception ex) {
             log.error("Error processing user unblocked event: {}", blockEvent, ex);
             try {
-                channel.basicNack(message.getMessageProperties().getDeliveryTag(), false ,false);
+                channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
             } catch (Exception nackErr) {
                 log.error("Error nacking message for event: {}", blockEvent, nackErr);
             }
