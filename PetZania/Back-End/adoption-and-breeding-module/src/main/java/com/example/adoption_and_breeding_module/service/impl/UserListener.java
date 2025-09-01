@@ -3,6 +3,7 @@ package com.example.adoption_and_breeding_module.service.impl;
 import com.example.adoption_and_breeding_module.model.event.UserEvent;
 import com.example.adoption_and_breeding_module.model.entity.User;
 import com.example.adoption_and_breeding_module.repository.UserRepository;
+import com.example.adoption_and_breeding_module.util.QueueUtils;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -19,6 +20,7 @@ import static com.example.adoption_and_breeding_module.constant.Constants.*;
 @Slf4j
 public class UserListener {
     private final UserRepository userRepository;
+    private final QueueUtils queueUtils;
 
     @RabbitListener(queues = USER_REGISTERED_QUEUE_ADOPTION_MODULE, ackMode = ACK_MODE)
     public void onUserRegistered(UserEvent user, Channel channel, Message message) {
@@ -36,7 +38,14 @@ public class UserListener {
         } catch (Exception ex) {
             log.error("Error processing user registered event: {}", user, ex);
             try {
-                channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+                int retryCount = queueUtils.getRetryCount(message, USER_REGISTERED_QUEUE_ADOPTION_MODULE_RETRY);
+                if (retryCount >= MAX_RETRIES) {
+                    // simply drop the message
+                    channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+                    log.info("Max retries reached for the event: {}", user);
+                } else {
+                    channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+                }
             } catch (Exception nackErr) {
                 log.error("Error nacking message for event: {}", user, nackErr);
             }
@@ -54,7 +63,14 @@ public class UserListener {
         } catch (Exception ex) {
             log.error("Error processing user deleted event: {}", user, ex);
             try {
-                channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+                int retryCount = queueUtils.getRetryCount(message, USER_DELETED_QUEUE_ADOPTION_MODULE_RETRY);
+                if (retryCount >= MAX_RETRIES) {
+                    // simply drop the message
+                    channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+                    log.info("Max retries reached for the event: {}", user);
+                } else {
+                    channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+                }
             } catch (Exception nackErr) {
                 log.error("Error nacking message for event: {}", user, nackErr);
             }

@@ -6,6 +6,7 @@ import com.example.adoption_and_breeding_module.model.entity.User;
 import com.example.adoption_and_breeding_module.model.event.BlockEvent;
 import com.example.adoption_and_breeding_module.repository.BlockRepository;
 import com.example.adoption_and_breeding_module.repository.UserRepository;
+import com.example.adoption_and_breeding_module.util.QueueUtils;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -25,6 +26,7 @@ import java.util.UUID;
 public class BlockListener {
     private final UserRepository userRepository;
     private final BlockRepository blockRepository;
+    private final QueueUtils queueUtils;
 
     public User getUser(UUID userId) {
         return userRepository.findById(userId)
@@ -50,7 +52,14 @@ public class BlockListener {
         } catch (Exception ex) {
             log.error("Error processing user blocked event: {}", blockEvent, ex);
             try {
-                channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+                int retryCount = queueUtils.getRetryCount(message, USER_BLOCKED_QUEUE_ADOPTION_MODULE_RETRY);
+                if (retryCount >= MAX_RETRIES) {
+                    // simply drop the message
+                    channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+                    log.info("Max retries reached for the event: {}", blockEvent);
+                } else {
+                    channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+                }
             } catch (Exception nackErr) {
                 log.error("Error nacking message for event: {}", blockEvent, nackErr);
             }
@@ -68,7 +77,14 @@ public class BlockListener {
         } catch (Exception ex) {
             log.error("Error processing user unblocked event: {}", blockEvent, ex);
             try {
-                channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+                int retryCount = queueUtils.getRetryCount(message, USER_UNBLOCKED_QUEUE_ADOPTION_MODULE_RETRY);
+                if (retryCount >= MAX_RETRIES) {
+                    // simply drop the message
+                    channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+                    log.info("Max retries reached for the event: {}", blockEvent);
+                } else {
+                    channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+                }
             } catch (Exception nackErr) {
                 log.error("Error nacking message for event: {}", blockEvent, nackErr);
             }
