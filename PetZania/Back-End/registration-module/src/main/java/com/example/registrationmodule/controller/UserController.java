@@ -45,7 +45,6 @@ public class UserController {
 
     @Operation(summary = "Resend verification OTP")
     @PostMapping("/resend-otp")
-    @RateLimit
     public ResponseEntity<String> resendOTP(@RequestBody @Valid EmailDTO emailDTO) {
         userService.sendVerificationCode(emailDTO.getEmail());
         return ResponseEntity.ok("A new OTP was sent");
@@ -69,7 +68,6 @@ public class UserController {
 
     @Operation(summary = "Login user")
     @PostMapping("/login")
-    @RateLimit
     public ResponseEntity<ResponseLoginDTO> login(@RequestBody @Valid LoginUserDTO loginUserDTO) {
         ResponseLoginDTO token = userService.login(loginUserDTO);
         return ResponseEntity.status(HttpStatus.OK).body(token);
@@ -78,14 +76,12 @@ public class UserController {
 
     @Operation(summary = "Refresh authentication token")
     @PostMapping("/refresh-token")
-    @RateLimit
     public ResponseEntity<TokenDTO> refreshToken(@RequestBody RefreshTokenDTO refreshTokenDTO) {
         return ResponseEntity.status(HttpStatus.OK).body(userService.refreshToken(refreshTokenDTO.getRefreshToken()));
     }
 
     @Operation(summary = "Register new user")
     @PostMapping("/signup")
-    @RateLimit
     public ResponseEntity<SignUpResponseDTO> signup(@RequestBody @Valid RegisterUserDTO registerUserDTO) {
         UserProfileDTO userProfileDTO = userService.registerUser(registerUserDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(new SignUpResponseDTO("User registered successfully", userProfileDTO));
@@ -113,7 +109,6 @@ public class UserController {
 
     @Operation(summary = "Verify OTP code")
     @PutMapping("/verify")
-    @RateLimit
     public ResponseEntity<String> verifyCode(@RequestBody @Valid OTPValidationDTO otpValidationDTO) {
         userService.verifyCode(otpValidationDTO);
         return ResponseEntity.ok("OTP verification successful");
@@ -138,7 +133,6 @@ public class UserController {
 
     @Operation(summary = "Send OTP for password reset")
     @PutMapping("/send-reset-password-otp")
-    @RateLimit
     public ResponseEntity<String> sendResetOTP(@RequestBody EmailDTO emailDTO) {
         userService.sendResetPasswordOTP(emailDTO);
         return ResponseEntity.ok("OTP sent successfully");
@@ -146,7 +140,6 @@ public class UserController {
 
     @Operation(summary = "Verify OTP for password reset")
     @PutMapping("/verify-reset-otp")
-    @RateLimit
     public ResponseEntity<String> verifyResetOTP(@RequestBody OTPValidationDTO otpValidationDTO) {
         userService.verifyResetOTP(otpValidationDTO.getEmail(), otpValidationDTO.getOtp());
         return ResponseEntity.ok("OTP verification successful");
@@ -154,7 +147,6 @@ public class UserController {
 
     @Operation(summary = "Reset password using OTP")
     @PutMapping("/reset-password")
-    @RateLimit
     public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordDTO resetPasswordDTO) {
         userService.resetPassword(resetPasswordDTO.getEmail(), resetPasswordDTO.getOtp(), resetPasswordDTO.getPassword());
         return ResponseEntity.ok("Password changed successfully");

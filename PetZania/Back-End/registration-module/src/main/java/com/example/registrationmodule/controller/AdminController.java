@@ -28,14 +28,12 @@ public class AdminController {
 
     @Operation(summary = "Refresh access token using a refresh token")
     @PostMapping("/admin/refresh-token")
-    @RateLimit
     public ResponseEntity<TokenDTO> refreshToken(@RequestBody RefreshTokenDTO refreshTokenDTO){
         return ResponseEntity.status(HttpStatus.OK).body(adminService.refreshToken(refreshTokenDTO.getRefreshToken()));
     }
 
     @Operation(summary = "Admin login and generate tokens")
     @PostMapping("/admin/login")
-    @RateLimit
     public ResponseEntity<ResponseLoginDTO> login(@RequestBody @Valid LoginAdminDTO loginAdminDTO) {
         ResponseLoginDTO token = adminService.login(loginAdminDTO);
         return ResponseEntity.status(HttpStatus.OK).body(token);

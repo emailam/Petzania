@@ -6980,10 +6980,10 @@ public class ModulesIntegrationTest extends BaseSystemTest {
     void testUserSearchIntegration() throws Exception {
         // Create users with searchable patterns
         String[] searchUsers = {
-                "searchableAlpha@test.com",
-                "searchableBeta@test.com",
-                "searchableGamma@test.com",
-                "differentUserx@test.com"
+                "abcde1@gmail.com",
+                "abcde2@gmail.com",
+                "abcde3@gmail.com",
+                "abcde4@gmail.com"
         };
 
         List<String> tokens = new ArrayList<>();
@@ -7002,7 +7002,7 @@ public class ModulesIntegrationTest extends BaseSystemTest {
         Response searchResponse = given()
                 .header("Authorization", "Bearer " + tokens.get(0))
                 .when()
-                .get(registrationBaseUrl + "/api/user/auth/users/searchable")
+                .get(registrationBaseUrl + "/api/user/auth/users/abcde")
                 .then()
                 .statusCode(200)
                 .body("content", hasSize(greaterThanOrEqualTo(3)))

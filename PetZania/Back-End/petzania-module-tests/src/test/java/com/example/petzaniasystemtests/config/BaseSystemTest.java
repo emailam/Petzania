@@ -241,6 +241,9 @@ public class BaseSystemTest {
                 .then()
                 .statusCode(201);
 
+        // Wait
+        Thread.sleep(2000);
+
         // Get OTP from database
         String otp = getOtpFromDatabase(email);
 
