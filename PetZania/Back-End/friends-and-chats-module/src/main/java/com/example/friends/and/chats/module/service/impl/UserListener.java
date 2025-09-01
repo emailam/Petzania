@@ -44,7 +44,7 @@ public class UserListener {
                     log.info("Max retries reached for the event: {}", user);
                 } else {
                     channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
-                    log.info("This is the retry number: {}", retryCount);
+                    log.info("This is the retry number: {} for event: {}", retryCount, user);
                 }
             } catch (Exception nackErr) {
                 log.error("Error nacking message for event: {}", user, nackErr);
@@ -70,7 +70,7 @@ public class UserListener {
                     log.info("Max retries reached for the event: {}", user);
                 } else {
                     channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
-                    log.info("This is the retry number: {}", retryCount);
+                    log.info("This is the retry number: {} for event: {}", retryCount, user);
                 }
             } catch (Exception nackErr) {
                 log.error("Error nacking message for event: {}", user, nackErr);

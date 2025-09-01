@@ -59,7 +59,7 @@ public class BlockListener {
                     log.info("Max retries reached for the event: {}", blockEvent);
                 } else {
                     channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
-                    log.info("This is the retry number: {}", retryCount);
+                    log.info("This is the retry number: {} for event: {}", retryCount, blockEvent);
                 }
             } catch (Exception nackErr) {
                 log.error("Error nacking message for event: {}", blockEvent, nackErr);
@@ -85,7 +85,7 @@ public class BlockListener {
                     log.info("Max retries reached for the event: {}", blockEvent);
                 } else {
                     channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
-                    log.info("This is the retry number: {}", retryCount);
+                    log.info("This is the retry number: {} for event: {}", retryCount, blockEvent);
                 }
             } catch (Exception nackErr) {
                 log.error("Error nacking message for event: {}", blockEvent, nackErr);
