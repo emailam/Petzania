@@ -35,7 +35,7 @@ public final class Constants {
     public static final String X_DEAD_LETTER_EXCHANGE = "x-dead-letter-exchange";
     public static final String X_DEAD_LETTER_ROUTING_KEY = "x-dead-letter-routing-key";
     public static final String X_MESSAGE_TTL = "x-message-ttl";
-
+    public static final int MAX_RETRIES = 3;
     // Main Routing Keys
     public static final String BLOCK_ADD = "block.add";
     public static final String BLOCK_DELETE = "block.delete";
