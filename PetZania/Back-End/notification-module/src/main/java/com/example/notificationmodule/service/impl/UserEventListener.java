@@ -4,6 +4,7 @@ import com.example.notificationmodule.model.entity.User;
 import com.example.notificationmodule.model.event.UserEvent;
 import com.example.notificationmodule.repository.NotificationRepository;
 import com.example.notificationmodule.repository.UserRepository;
+import com.example.notificationmodule.util.QueueUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import static com.example.notificationmodule.constant.Constants.*;
 public class UserEventListener {
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
+    private final QueueUtils queueUtils;
 
     @RabbitListener(queues = USER_REGISTERED_QUEUE_NOTIFICATION_MODULE, ackMode = ACK_MODE)
     public void onUserRegistered(UserEvent user, Channel channel, Message message) {
@@ -38,7 +40,14 @@ public class UserEventListener {
         } catch (Exception ex) {
             log.error("Error processing user registered event: {}", user, ex);
             try {
-                channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+                int retryCount = queueUtils.getRetryCount(message, USER_REGISTERED_QUEUE_NOTIFICATION_MODULE_RETRY);
+                if (retryCount >= MAX_RETRIES) {
+                    // simply drop the message
+                    channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+                    log.info("Max retries reached for the event: {}", user);
+                } else {
+                    channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+                }
             } catch (Exception nackErr) {
                 log.error("Error nacking message for event: {}", user, nackErr);
             }
@@ -58,7 +67,14 @@ public class UserEventListener {
         } catch (Exception ex) {
             log.error("Error processing user deleted event: {}", user, ex);
             try {
-                channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+                int retryCount = queueUtils.getRetryCount(message, USER_DELETED_QUEUE_NOTIFICATION_MODULE_RETRY);
+                if (retryCount >= MAX_RETRIES) {
+                    // simply drop the message
+                    channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+                    log.info("Max retries reached for the event: {}", user);
+                } else {
+                    channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+                }
             } catch (Exception nackErr) {
                 log.error("Error nacking message for event: {}", user, nackErr);
             }
