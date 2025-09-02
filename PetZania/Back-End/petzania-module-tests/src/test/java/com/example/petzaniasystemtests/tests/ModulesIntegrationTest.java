@@ -429,6 +429,7 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                 .statusCode(201)
                 .extract().response();
 
+        Thread.sleep(3000);
         Response notificationResponse = given()
                 .spec(getAuthenticatedSpec(user2Token))
                 .when()
@@ -466,6 +467,7 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                 .then()
                 .statusCode(201);
 
+        Thread.sleep(3000);
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
@@ -484,6 +486,7 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                 .statusCode(200)
                 .body("reacts", equalTo(1));
 
+        Thread.sleep(3000);
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
