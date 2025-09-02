@@ -6743,13 +6743,14 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                 .then()
                 .statusCode(200);
 
+        Thread.sleep(4000);
         // Verify deleted user's token no longer works
         given()
                 .header("Authorization", "Bearer " + deleteUserToken)
                 .when()
                 .get(friendsBaseUrl + "/api/friends/get-number-of-friends/" + deleteUserId)
                 .then()
-                .statusCode(anyOf(is(401), is(403)));
+                .statusCode(403);
 
         // Verify keepUser's friend count decreased
         given()
