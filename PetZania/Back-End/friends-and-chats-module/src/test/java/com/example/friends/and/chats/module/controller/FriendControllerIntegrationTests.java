@@ -481,11 +481,10 @@ public class FriendControllerIntegrationTests {
     void getNumberOfFriends_Success() throws Exception {
         friendService.createFriendship(userA, userB);
         friendService.createFriendship(userC, userA);
-        friendService.createFriendship(userA, userC);
 
         mockMvc.perform(get("/api/friends/get-number-of-friends/{userId}", userA.getUserId()))
                 .andExpect(status().isOk())
-                .andExpect(content().string("3"));
+                .andExpect(content().string("2"));
     }
 
     @Test

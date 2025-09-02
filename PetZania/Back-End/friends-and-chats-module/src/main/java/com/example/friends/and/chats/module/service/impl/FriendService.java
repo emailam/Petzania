@@ -12,6 +12,7 @@ import com.example.friends.and.chats.module.service.IDTOConversionService;
 import com.example.friends.and.chats.module.service.IFriendService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -62,7 +63,7 @@ public class FriendService implements IFriendService {
         User user1 = getUser(senderId);
         User user2 = getUser(receiverId);
         if (friendshipRepository.existsByUser1AndUser2(user1, user2)) {
-            throw new FriendshipAlreadyExist("Friendship Already exists between both users");
+            throw new FriendshipAlreadyExist("Friendship already exists between both users");
         }
     }
 
@@ -102,18 +103,24 @@ public class FriendService implements IFriendService {
 
     @Override
     public Friendship createFriendship(User user1, User user2) {
+        if (isFriendshipExists(user1, user2)) {
+            throw new FriendshipAlreadyExist("Friendship already exists between both users");
+        }
         // Ensure consistent ordering to prevent duplicate entries
         if (user1.getUserId().compareTo(user2.getUserId()) > 0) {
             User temp = user1;
             user1 = user2;
             user2 = temp;
         }
-
-        return friendshipRepository.save(Friendship.builder()
-                .user1(user1)
-                .user2(user2)
-                .createdAt(new Timestamp(System.currentTimeMillis()))
-                .build());
+        try {
+            return friendshipRepository.save(Friendship.builder()
+                    .user1(user1)
+                    .user2(user2)
+                    .createdAt(new Timestamp(System.currentTimeMillis()))
+                    .build());
+        } catch (DataIntegrityViolationException e) {
+            throw new FriendshipAlreadyExist("Friendship already exists between both users");
+        }
     }
 
     @Override
