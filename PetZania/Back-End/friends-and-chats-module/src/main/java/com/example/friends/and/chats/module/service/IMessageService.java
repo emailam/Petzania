@@ -31,4 +31,5 @@ public interface IMessageService {
     void removeReaction(UUID messageId, UUID userId);
 
     List<MessageReactionDTO> getReactionsForMessage(UUID messageId, UUID userId);
+    long getTotalUnreadCount(UUID userId);
 }

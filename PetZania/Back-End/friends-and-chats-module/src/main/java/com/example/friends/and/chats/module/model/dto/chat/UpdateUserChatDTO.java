@@ -11,6 +11,5 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UpdateUserChatDTO {
     private Boolean pinned;
-    private Integer unread;
     private Boolean muted;
 }

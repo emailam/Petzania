@@ -8,6 +8,7 @@ import com.example.friends.and.chats.module.exception.user.UserNotFound;
 import com.example.friends.and.chats.module.model.dto.chat.ChatDTO;
 import com.example.friends.and.chats.module.model.dto.chat.UpdateUserChatDTO;
 import com.example.friends.and.chats.module.model.dto.chat.UserChatDTO;
+import com.example.friends.and.chats.module.model.dto.message.UnreadCountUpdateDTO;
 import com.example.friends.and.chats.module.model.entity.Chat;
 import com.example.friends.and.chats.module.model.entity.User;
 import com.example.friends.and.chats.module.model.entity.UserChat;
@@ -19,7 +20,9 @@ import com.example.friends.and.chats.module.service.IChatService;
 import com.example.friends.and.chats.module.service.IDTOConversionService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,12 +33,14 @@ import java.util.stream.Collectors;
 @Service
 @AllArgsConstructor
 @Transactional
+@Slf4j
 public class ChatService implements IChatService {
     private final ChatRepository chatRepository;
     private final UserChatRepository userChatRepository;
     private final BlockRepository blockRepository;
     private final UserRepository userRepository;
     private final IDTOConversionService dtoConversionService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Override
     public ChatDTO createChatIfNotExists(UUID user1Id, UUID user2Id) {
@@ -48,7 +53,7 @@ public class ChatService implements IChatService {
         User user2 = userRepository.findById(user2Id)
                 .orElseThrow(() -> new UserNotFound("User 2 not found"));
 
-        if(blockRepository.existsByBlockerAndBlocked(user1,user2) || blockRepository.existsByBlockerAndBlocked(user2,user1)){
+        if (blockRepository.existsByBlockerAndBlocked(user1, user2) || blockRepository.existsByBlockerAndBlocked(user2, user1)) {
             throw new ForbiddenOperation("Operation Cannot be performed due to an existing block relationship");
         }
 
@@ -96,7 +101,6 @@ public class ChatService implements IChatService {
     public UserChatDTO partialUpdateUserChat(UUID chatId, UUID userId, UpdateUserChatDTO updateUserChatDTO) {
         return userChatRepository.findByChat_ChatIdAndUser_UserId(chatId, userId).map(existingUserChat -> {
             Optional.ofNullable(updateUserChatDTO.getPinned()).ifPresent(existingUserChat::setPinned);
-            Optional.ofNullable(updateUserChatDTO.getUnread()).ifPresent(existingUserChat::setUnread);
             Optional.ofNullable(updateUserChatDTO.getMuted()).ifPresent(existingUserChat::setMuted);
 
             UserChat updatedUserChat = userChatRepository.save(existingUserChat);
@@ -112,8 +116,23 @@ public class ChatService implements IChatService {
         if (!chat.getUser().getUserId().equals(userId)) {
             throw new UserAccessDenied("You can only delete your chats");
         }
+        int unreadCount = chat.getUnread();
+        UUID chatId = chat.getChat().getChatId();
 
         userChatRepository.deleteById(userChatId);
+        if (unreadCount > 0) {
+            long totalUnread = userChatRepository.getTotalUnreadCount(userId);
+
+            UnreadCountUpdateDTO unreadCountUpdateDTO = new UnreadCountUpdateDTO();
+            unreadCountUpdateDTO.setTotalUnreadCount(totalUnread);
+            unreadCountUpdateDTO.setUserChatUnreadCount(0);
+            unreadCountUpdateDTO.setUserChatId(userChatId);
+
+            messagingTemplate.convertAndSend(
+                    "/topic/" + userId + "/unread-count",
+                    unreadCountUpdateDTO
+            );
+        }
     }
 
 

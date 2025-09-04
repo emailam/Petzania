@@ -5,6 +5,7 @@ import com.example.friends.and.chats.module.model.dto.message.SendMessageDTO;
 import com.example.friends.and.chats.module.model.dto.message.UpdateMessageContentDTO;
 import com.example.friends.and.chats.module.model.dto.message.UpdateMessageReactDTO;
 import com.example.friends.and.chats.module.model.dto.message.UpdateMessageStatusDTO;
+import com.example.friends.and.chats.module.model.dto.message.UnreadCountUpdateDTO;
 import com.example.friends.and.chats.module.model.entity.Chat;
 import com.example.friends.and.chats.module.model.entity.Message;
 import com.example.friends.and.chats.module.model.entity.MessageReaction;
@@ -15,12 +16,18 @@ import com.example.friends.and.chats.module.model.enumeration.MessageStatus;
 import com.example.friends.and.chats.module.model.principal.UserPrincipal;
 import com.example.friends.and.chats.module.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
+import org.springframework.core.Ordered;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -37,9 +44,9 @@ import java.util.*;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
@@ -83,7 +90,26 @@ public class MessageControllerIntegrationTests {
     private MockMvc mockMvc;
 
     @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
+    private TestSimpMessagingTemplate getTestMessagingTemplate() {
+        return (TestSimpMessagingTemplate) messagingTemplate;
+    }
+
+    @TestConfiguration
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    static class TestConfig {
+        @Bean
+        @Primary
+        public SimpMessagingTemplate testSimpMessagingTemplate() {
+            return new MessageControllerIntegrationTests.TestSimpMessagingTemplate();
+        }
+    }
+
+    @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private EntityManager entityManager;
 
     @Autowired
     private ChatRepository chatRepository;
@@ -111,8 +137,11 @@ public class MessageControllerIntegrationTests {
     private User userB;
     private User userC;
     private Chat chatAB;
+    private Chat chatBC;
     private UserChat userAChatAB;
     private UserChat userBChatAB;
+    private UserChat userBChatBC;
+    private UserChat userCChatBC;
     private Message messageFromA;
     private Message messageFromB;
     private Message replyMessage;
@@ -141,6 +170,10 @@ public class MessageControllerIntegrationTests {
                 .user2(userB)
                 .build());
 
+        chatBC = chatRepository.save(Chat.builder()
+                .user1(userB)
+                .user2(userC)
+                .build());
 
         // Create UserChat entries
         userAChatAB = userChatRepository.save(UserChat.builder()
@@ -154,6 +187,22 @@ public class MessageControllerIntegrationTests {
         userBChatAB = userChatRepository.save(UserChat.builder()
                 .chat(chatAB)
                 .user(userB)
+                .pinned(false)
+                .unread(0)
+                .muted(false)
+                .build());
+
+        userBChatBC = userChatRepository.save(UserChat.builder()
+                .chat(chatBC)
+                .user(userB)
+                .pinned(false)
+                .unread(0)
+                .muted(false)
+                .build());
+
+        userCChatBC = userChatRepository.save(UserChat.builder()
+                .chat(chatBC)
+                .user(userC)
                 .pinned(false)
                 .unread(0)
                 .muted(false)
@@ -215,6 +264,602 @@ public class MessageControllerIntegrationTests {
     }
 
     @Test
+    void testDeleteUserChat_WithUnreadMessages_UpdatesTotalUnreadCount() throws Exception {
+        // Setup: Create multiple chats with unread messages
+        // Chat AB already exists from setup
+
+        // Create another chat between userA and userC
+        Chat chatAC = chatRepository.save(Chat.builder()
+                .user1(userA)
+                .user2(userC)
+                .build());
+
+        UserChat userAChatAC = userChatRepository.save(UserChat.builder()
+                .chat(chatAC)
+                .user(userA)
+                .pinned(false)
+                .unread(0)
+                .muted(false)
+                .build());
+
+        UserChat userCChatAC = userChatRepository.save(UserChat.builder()
+                .chat(chatAC)
+                .user(userC)
+                .pinned(false)
+                .unread(0)
+                .muted(false)
+                .build());
+
+        // Reset WebSocket template to track new messages
+        TestSimpMessagingTemplate testTemplate = (TestSimpMessagingTemplate) messagingTemplate;
+        testTemplate.reset();
+
+        // Send messages to userA in both chats
+        // 3 messages from B to A in chatAB
+        for (int i = 1; i <= 3; i++) {
+            SendMessageDTO msg = new SendMessageDTO();
+            msg.setChatId(chatAB.getChatId());
+            msg.setContent("Message from B " + i);
+            msg.setFile(false);
+
+            mockMvc.perform(post("/api/messages/send")
+                            .with(user(new UserPrincipal(userB)))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(msg)))
+                    .andExpect(status().isOk());
+        }
+        entityManager.flush();
+        entityManager.clear();
+
+        // Verify WebSocket notification was sent with updated count
+        List<String> destinations = testTemplate.getSentDestinations();
+        List<Object> payloads = testTemplate.getSentPayloads();
+        // Should have received an unread-count update
+        assertTrue(destinations.contains("/topic/" + userA.getUserId() + "/unread-count"));
+        int index = destinations.lastIndexOf("/topic/" + userA.getUserId() + "/unread-count");
+        UnreadCountUpdateDTO unreadCountUpdateDTO = (UnreadCountUpdateDTO) payloads.get(index);
+        assertEquals(3L, unreadCountUpdateDTO.getTotalUnreadCount());
+        assertEquals(3, unreadCountUpdateDTO.getUserChatUnreadCount());
+        assertEquals(userAChatAB.getUserChatId(), unreadCountUpdateDTO.getUserChatId());
+
+        // 2 messages from C to A in chatAC
+        for (int i = 1; i <= 2; i++) {
+            SendMessageDTO msg = new SendMessageDTO();
+            msg.setChatId(chatAC.getChatId());
+            msg.setContent("Message from C " + i);
+            msg.setFile(false);
+
+            mockMvc.perform(post("/api/messages/send")
+                            .with(user(new UserPrincipal(userC)))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(msg)))
+                    .andExpect(status().isOk());
+        }
+        entityManager.flush();
+        entityManager.clear();
+
+        destinations = testTemplate.getSentDestinations();
+        payloads = testTemplate.getSentPayloads();
+        assertTrue(destinations.contains("/topic/" + userA.getUserId() + "/unread-count"));
+        index = destinations.lastIndexOf("/topic/" + userA.getUserId() + "/unread-count");
+        unreadCountUpdateDTO = (UnreadCountUpdateDTO) payloads.get(index);
+        assertEquals(5L, unreadCountUpdateDTO.getTotalUnreadCount());
+        assertEquals(2, unreadCountUpdateDTO.getUserChatUnreadCount());
+        assertEquals(userAChatAC.getUserChatId(), unreadCountUpdateDTO.getUserChatId());
+
+        // Verify userA has 5 total unread messages (3 from B + 2 from C)
+        mockMvc.perform(get("/api/messages/unread-count")
+                        .with(user(new UserPrincipal(userA))))
+                .andExpect(status().isOk())
+                .andExpect(content().string("5"));
+
+        // Get the updated userAChatAB to get its ID
+        userAChatAB = userChatRepository.findByChat_ChatIdAndUser_UserId(
+                chatAB.getChatId(), userA.getUserId()).orElseThrow();
+
+
+        // Act: Delete userA's chat with B (which has 3 unread messages)
+        mockMvc.perform(delete("/api/chats/user/{userChatId}", userAChatAB.getUserChatId())
+                        .with(user(new UserPrincipal(userA))))
+                .andExpect(status().isNoContent());
+
+        // Assert: Total unread count should now be 2 (only messages from C remain)
+        mockMvc.perform(get("/api/messages/unread-count")
+                        .with(user(new UserPrincipal(userA))))
+                .andExpect(status().isOk())
+                .andExpect(content().string("2"));
+
+
+        // Should have received an unread-count update
+        destinations = testTemplate.getSentDestinations();
+        payloads = testTemplate.getSentPayloads();
+        assertTrue(destinations.contains("/topic/" + userA.getUserId() + "/unread-count"));
+        index = destinations.lastIndexOf("/topic/" + userA.getUserId() + "/unread-count");
+        unreadCountUpdateDTO = (UnreadCountUpdateDTO) payloads.get(index);
+        assertEquals(2L, unreadCountUpdateDTO.getTotalUnreadCount());
+        assertEquals(0, unreadCountUpdateDTO.getUserChatUnreadCount());
+        assertEquals(userAChatAB.getUserChatId(), unreadCountUpdateDTO.getUserChatId());
+
+        // Verify the UserChat is actually deleted
+        assertFalse(userChatRepository.existsById(userAChatAB.getUserChatId()));
+
+        // Verify chat with C still exists and has correct unread count
+        UserChat remainingChat = userChatRepository.findByChat_ChatIdAndUser_UserId(
+                chatAC.getChatId(), userA.getUserId()).orElseThrow();
+        assertEquals(2, remainingChat.getUnread());
+    }
+
+    @Test
+    void testDeleteUserChat_WithNoUnreadMessages_NoUnreadCountNotification() throws Exception {
+        // Setup: UserA has no unread messages in chatAB
+        // (Initial state from setup has 0 unread)
+
+        // Reset WebSocket template
+        TestSimpMessagingTemplate testTemplate = (TestSimpMessagingTemplate) messagingTemplate;
+        testTemplate.reset();
+
+        // Act: Delete userA's chat with B (which has 0 unread messages)
+        mockMvc.perform(delete("/api/chats/user/{userChatId}", userAChatAB.getUserChatId())
+                        .with(user(new UserPrincipal(userA))))
+                .andExpect(status().isNoContent());
+
+        // Assert: No unread-count notification should be sent
+        List<String> destinations = testTemplate.getSentDestinations();
+        assertFalse(destinations.contains("/topic/" + userA.getUserId() + "/unread-count"),
+                "Should not send unread count notification when deleting chat with 0 unread messages");
+
+        // Verify total unread count is still 0
+        mockMvc.perform(get("/api/messages/unread-count")
+                        .with(user(new UserPrincipal(userA))))
+                .andExpect(status().isOk())
+                .andExpect(content().string("0"));
+    }
+
+    @Test
+    void testDeleteUserChat_OtherUserUnaffected() throws Exception {
+        // Reset WebSocket template
+        TestSimpMessagingTemplate testTemplate = (TestSimpMessagingTemplate) messagingTemplate;
+        testTemplate.reset();
+
+        // Setup: Both users have unread messages
+        // Send message from A to B
+        mockMvc.perform(post("/api/messages/send")
+                        .with(user(new UserPrincipal(userA)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                SendMessageDTO.builder()
+                                        .chatId(chatAB.getChatId())
+                                        .content("From A to B")
+                                        .isFile(false)
+                                        .build())))
+                .andExpect(status().isOk());
+
+        entityManager.flush();
+        entityManager.clear();
+        // Verify WebSocket notification was sent with updated count
+        List<String> destinations = testTemplate.getSentDestinations();
+        List<Object> payloads = testTemplate.getSentPayloads();
+        // Should have received an unread-count update
+        assertTrue(destinations.contains("/topic/" + userB.getUserId() + "/unread-count"));
+        int index = destinations.lastIndexOf("/topic/" + userB.getUserId() + "/unread-count");
+        UnreadCountUpdateDTO unreadCountUpdateDTO = (UnreadCountUpdateDTO) payloads.get(index);
+        assertEquals(1L, unreadCountUpdateDTO.getTotalUnreadCount());
+        assertEquals(1, unreadCountUpdateDTO.getUserChatUnreadCount());
+        assertEquals(userBChatAB.getUserChatId(), unreadCountUpdateDTO.getUserChatId());
+
+        // Send message from B to A
+        mockMvc.perform(post("/api/messages/send")
+                        .with(user(new UserPrincipal(userB)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                SendMessageDTO.builder()
+                                        .chatId(chatAB.getChatId())
+                                        .content("From B to A")
+                                        .isFile(false)
+                                        .build())))
+                .andExpect(status().isOk());
+
+        entityManager.flush();
+        entityManager.clear();
+        // Verify WebSocket notification was sent with updated count
+        destinations = testTemplate.getSentDestinations();
+        payloads = testTemplate.getSentPayloads();
+        // Should have received an unread-count update
+        assertTrue(destinations.contains("/topic/" + userA.getUserId() + "/unread-count"));
+        index = destinations.lastIndexOf("/topic/" + userA.getUserId() + "/unread-count");
+        unreadCountUpdateDTO = (UnreadCountUpdateDTO) payloads.get(index);
+        assertEquals(1L, unreadCountUpdateDTO.getTotalUnreadCount());
+        assertEquals(1, unreadCountUpdateDTO.getUserChatUnreadCount());
+        assertEquals(userAChatAB.getUserChatId(), unreadCountUpdateDTO.getUserChatId());
+
+        // Verify both have 1 unread message
+        assertEquals(1, userChatRepository.findById(userAChatAB.getUserChatId()).orElseThrow().getUnread());
+        assertEquals(1, userChatRepository.findById(userBChatAB.getUserChatId()).orElseThrow().getUnread());
+
+        // Act: UserA deletes their chat
+        mockMvc.perform(delete("/api/chats/user/{userChatId}", userAChatAB.getUserChatId())
+                        .with(user(new UserPrincipal(userA))))
+                .andExpect(status().isNoContent());
+
+        entityManager.flush();
+        entityManager.clear();
+        // Verify WebSocket notification was sent with updated count
+        destinations = testTemplate.getSentDestinations();
+        payloads = testTemplate.getSentPayloads();
+        // Should have received an unread-count update
+        assertTrue(destinations.contains("/topic/" + userA.getUserId() + "/unread-count"));
+        index = destinations.lastIndexOf("/topic/" + userA.getUserId() + "/unread-count");
+        unreadCountUpdateDTO = (UnreadCountUpdateDTO) payloads.get(index);
+        assertEquals(0L, unreadCountUpdateDTO.getTotalUnreadCount());
+        assertEquals(0, unreadCountUpdateDTO.getUserChatUnreadCount());
+        assertEquals(userAChatAB.getUserChatId(), unreadCountUpdateDTO.getUserChatId());
+
+        // Assert: UserB's unread count is unaffected
+        UserChat userBChat = userChatRepository.findById(userBChatAB.getUserChatId()).orElseThrow();
+        assertEquals(1, userBChat.getUnread(), "UserB's unread count should remain unchanged");
+
+        // UserB can still see their total unread count
+        mockMvc.perform(get("/api/messages/unread-count")
+                        .with(user(new UserPrincipal(userB))))
+                .andExpect(status().isOk())
+                .andExpect(content().string("1"));
+    }
+
+    @Test
+    void testSendMessage_IncreasesReceiverUnreadCount() throws Exception {
+        // Setup: userA sends to userB
+        setupSecurityContext(userA);
+
+        SendMessageDTO sendMessageDTO = new SendMessageDTO();
+        sendMessageDTO.setChatId(chatAB.getChatId());
+        sendMessageDTO.setContent("Hello B!");
+        sendMessageDTO.setFile(false);
+
+        // Reset WebSocket template
+        TestSimpMessagingTemplate testTemplate = (TestSimpMessagingTemplate) messagingTemplate;
+        testTemplate.reset();
+
+        // Act
+        mockMvc.perform(post("/api/messages/send")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(sendMessageDTO)))
+                .andExpect(status().isOk());
+
+        entityManager.flush();
+        entityManager.clear();
+
+        // Verify WebSocket notification was sent with updated count
+        List<String> destinations = testTemplate.getSentDestinations();
+        List<Object> payloads = testTemplate.getSentPayloads();
+
+        // Should have received an unread-count update
+        assertTrue(destinations.contains("/topic/" + userB.getUserId() + "/unread-count"));
+        int index = destinations.lastIndexOf("/topic/" + userB.getUserId() + "/unread-count");
+        UnreadCountUpdateDTO unreadCountUpdateDTO = (UnreadCountUpdateDTO) payloads.get(index);
+        assertEquals(1L, unreadCountUpdateDTO.getTotalUnreadCount());
+        assertEquals(1, unreadCountUpdateDTO.getUserChatUnreadCount());
+        assertEquals(userBChatAB.getUserChatId(), unreadCountUpdateDTO.getUserChatId());
+
+        // Assert: Check userB's unread count
+        UserChat updatedUserBChat = userChatRepository.findByChat_ChatIdAndUser_UserId(
+                chatAB.getChatId(), userB.getUserId()).orElseThrow();
+        assertEquals(1, updatedUserBChat.getUnread());
+    }
+
+    @Test
+    void testMultipleMessages_CorrectlyIncrementsUnreadCount() throws Exception {
+        // Setup: userA sends multiple messages to userB
+        setupSecurityContext(userA);
+
+        // Reset WebSocket template
+        TestSimpMessagingTemplate testTemplate = (TestSimpMessagingTemplate) messagingTemplate;
+        testTemplate.reset();
+
+        // Send 6 messages
+        for (int i = 1; i <= 6; i++) {
+            SendMessageDTO sendMessageDTO = new SendMessageDTO();
+            sendMessageDTO.setChatId(chatAB.getChatId());
+            sendMessageDTO.setContent("Message " + i);
+            sendMessageDTO.setFile(false);
+
+            mockMvc.perform(post("/api/messages/send")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(sendMessageDTO)))
+                    .andExpect(status().isOk());
+
+            entityManager.flush();
+            entityManager.clear();
+
+            // Verify WebSocket notification was sent with updated count
+            List<String> destinations = testTemplate.getSentDestinations();
+            List<Object> payloads = testTemplate.getSentPayloads();
+
+            // Should have received an unread-count update
+            assertTrue(destinations.contains("/topic/" + userB.getUserId() + "/unread-count"));
+            int index = destinations.lastIndexOf("/topic/" + userB.getUserId() + "/unread-count");
+            UnreadCountUpdateDTO unreadCountUpdateDTO = (UnreadCountUpdateDTO) payloads.get(index);
+            assertEquals(i, unreadCountUpdateDTO.getTotalUnreadCount());
+            assertEquals(i, unreadCountUpdateDTO.getUserChatUnreadCount());
+            assertEquals(userBChatAB.getUserChatId(), unreadCountUpdateDTO.getUserChatId());
+        }
+        // Assert: userB should have 6 unread messages
+        UserChat updatedUserBChat = userChatRepository.findByChat_ChatIdAndUser_UserId(
+                chatAB.getChatId(), userB.getUserId()).orElseThrow();
+        assertEquals(6, updatedUserBChat.getUnread());
+
+        // Get total unread count for userB
+        mockMvc.perform(get("/api/messages/unread-count").with(user(new UserPrincipal(userB))))
+                .andExpect(status().isOk())
+                .andExpect(content().string("6"));
+    }
+
+    @Test
+    void testReadMessage_DecreasesUnreadCount() throws Exception {
+        // Setup: userA sends message to userB
+        setupSecurityContext(userA);
+        Message message = messageRepository.save(Message.builder()
+                .chat(chatAB)
+                .sender(userA)
+                .content("Unread message")
+                .status(MessageStatus.SENT)
+                .isFile(false)
+                .isEdited(false)
+                .build());
+
+        // Reset WebSocket template
+        TestSimpMessagingTemplate testTemplate = (TestSimpMessagingTemplate) messagingTemplate;
+        testTemplate.reset();
+
+
+        // Manually increment unread count (simulating what would happen)
+        userBChatAB.setUnread(1);
+        userChatRepository.save(userBChatAB);
+
+
+        UpdateMessageStatusDTO statusUpdate = new UpdateMessageStatusDTO();
+
+        statusUpdate.setMessageStatus(MessageStatus.DELIVERED);
+        mockMvc.perform(patch("/api/messages/{messageId}/status", message.getMessageId()).with(user(new UserPrincipal(userB)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(statusUpdate)))
+                .andExpect(status().isOk());
+
+        statusUpdate.setMessageStatus(MessageStatus.READ);
+        mockMvc.perform(patch("/api/messages/{messageId}/status", message.getMessageId()).with(user(new UserPrincipal(userB)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(statusUpdate)))
+                .andExpect(status().isOk());
+
+        entityManager.flush();
+        entityManager.clear();
+        // Assert: unread count decreased
+        UserChat updatedUserBChat = userChatRepository.findById(userBChatAB.getUserChatId()).orElseThrow();
+        assertEquals(0, updatedUserBChat.getUnread());
+
+        // Verify WebSocket notification was sent with updated count
+        List<String> destinations = testTemplate.getSentDestinations();
+        List<Object> payloads = testTemplate.getSentPayloads();
+
+        // Should have received an unread-count update
+        assertTrue(destinations.contains("/topic/" + userB.getUserId() + "/unread-count"));
+        int index = destinations.lastIndexOf("/topic/" + userB.getUserId() + "/unread-count");
+        UnreadCountUpdateDTO unreadCountUpdateDTO = (UnreadCountUpdateDTO) payloads.get(index);
+        assertEquals(0, unreadCountUpdateDTO.getTotalUnreadCount());
+        assertEquals(0, unreadCountUpdateDTO.getUserChatUnreadCount());
+        assertEquals(userBChatAB.getUserChatId(), unreadCountUpdateDTO.getUserChatId());
+    }
+
+    @Test
+    void testDeleteUnreadMessage_DecreasesReceiverUnreadCount() throws Exception {
+        // Setup: userA sends message to userB
+        setupSecurityContext(userA);
+        Message message = messageRepository.save(Message.builder()
+                .chat(chatAB)
+                .sender(userA)
+                .content("Message to delete")
+                .status(MessageStatus.SENT) // Not READ
+                .isFile(false)
+                .isEdited(false)
+                .build());
+
+        // Manually set unread count
+        userBChatAB.setUnread(1);
+        userChatRepository.save(userBChatAB);
+
+        // Act: userA deletes the unread message
+        TestSimpMessagingTemplate testSimpMessagingTemplate = (TestSimpMessagingTemplate) messagingTemplate;
+        testSimpMessagingTemplate.reset();
+        mockMvc.perform(delete("/api/messages/{messageId}", message.getMessageId()))
+                .andExpect(status().isNoContent());
+
+        entityManager.flush();
+        entityManager.clear();
+        // Assert: userB's unread count decreased
+        UserChat updatedUserBChat = userChatRepository.findById(userBChatAB.getUserChatId()).orElseThrow();
+        assertEquals(0, updatedUserBChat.getUnread());
+
+        // Verify WebSocket notification was sent with updated count
+        List<String> destinations = testSimpMessagingTemplate.getSentDestinations();
+        List<Object> payloads = testSimpMessagingTemplate.getSentPayloads();
+
+        // Should have received an unread-count update
+        assertTrue(destinations.contains("/topic/" + userB.getUserId() + "/unread-count"));
+        int index = destinations.lastIndexOf("/topic/" + userB.getUserId() + "/unread-count");
+        UnreadCountUpdateDTO unreadCountUpdateDTO = (UnreadCountUpdateDTO) payloads.get(index);
+        assertEquals(0, unreadCountUpdateDTO.getTotalUnreadCount());
+        assertEquals(0, unreadCountUpdateDTO.getUserChatUnreadCount());
+        assertEquals(userBChatAB.getUserChatId(), unreadCountUpdateDTO.getUserChatId());
+    }
+
+    @Test
+    void testDeleteReadMessage_DoesNotChangeUnreadCount() throws Exception {
+        // Setup: message already read
+        setupSecurityContext(userA);
+        Message message = messageRepository.save(Message.builder()
+                .chat(chatAB)
+                .sender(userA)
+                .content("Already read message")
+                .status(MessageStatus.READ) // Already READ
+                .isFile(false)
+                .isEdited(false)
+                .build());
+
+        // unread count is 0
+        assertEquals(0, userBChatAB.getUnread());
+
+        // Act: delete the read message
+        TestSimpMessagingTemplate testSimpMessagingTemplate = (TestSimpMessagingTemplate) messagingTemplate;
+        testSimpMessagingTemplate.reset();
+
+        mockMvc.perform(delete("/api/messages/{messageId}", message.getMessageId()))
+                .andExpect(status().isNoContent());
+
+        entityManager.flush();
+        entityManager.clear();
+        // Assert: unread count still 0
+        UserChat updatedUserBChat = userChatRepository.findById(userBChatAB.getUserChatId()).orElseThrow();
+        assertEquals(0, updatedUserBChat.getUnread());
+
+        // Assert: No unread count notification sent
+        assertFalse(testSimpMessagingTemplate.getSentDestinations().contains("/topic/" + userB.getUserId() + "/unread-count"));
+    }
+
+    @Test
+    void testTotalUnreadCount_AcrossMultipleChats() throws Exception {
+        // Setup: userB has unread messages in multiple chats
+        setupSecurityContext(userA);
+
+        // Reset WebSocket template
+        TestSimpMessagingTemplate testTemplate = (TestSimpMessagingTemplate) messagingTemplate;
+        testTemplate.reset();
+
+        // Send 2 messages in chatAB
+        for (int i = 0; i < 2; i++) {
+            SendMessageDTO msg = new SendMessageDTO();
+            msg.setChatId(chatAB.getChatId());
+            msg.setContent("Message from A");
+            msg.setFile(false);
+
+            mockMvc.perform(post("/api/messages/send")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(msg)))
+                    .andExpect(status().isOk());
+        }
+        entityManager.flush();
+        entityManager.clear();
+
+        // Verify WebSocket notification was sent with updated count
+        List<String> destinations = testTemplate.getSentDestinations();
+        List<Object> payloads = testTemplate.getSentPayloads();
+
+        // Should have received an unread-count update
+        assertTrue(destinations.contains("/topic/" + userB.getUserId() + "/unread-count"));
+        int index = destinations.lastIndexOf("/topic/" + userB.getUserId() + "/unread-count");
+        UnreadCountUpdateDTO unreadCountUpdateDTO = (UnreadCountUpdateDTO) payloads.get(index);
+        assertEquals(2L, unreadCountUpdateDTO.getTotalUnreadCount());
+        assertEquals(2, unreadCountUpdateDTO.getUserChatUnreadCount());
+        assertEquals(userBChatAB.getUserChatId(), unreadCountUpdateDTO.getUserChatId());
+
+        // Send 3 messages in chatBC (from userC to userB)
+        setupSecurityContext(userC);
+        for (int i = 0; i < 3; i++) {
+            SendMessageDTO msg = new SendMessageDTO();
+            msg.setChatId(chatBC.getChatId());
+            msg.setContent("Message from C");
+            msg.setFile(false);
+
+            mockMvc.perform(post("/api/messages/send")
+                            .with(user(new UserPrincipal(userC)))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(msg)))
+                    .andExpect(status().isOk());
+        }
+        entityManager.flush();
+        entityManager.clear();
+
+        // Verify WebSocket notification was sent with updated count
+        destinations = testTemplate.getSentDestinations();
+        payloads = testTemplate.getSentPayloads();
+
+        // Should have received an unread-count update
+        assertTrue(destinations.contains("/topic/" + userB.getUserId() + "/unread-count"));
+        index = destinations.lastIndexOf("/topic/" + userB.getUserId() + "/unread-count");
+        unreadCountUpdateDTO = (UnreadCountUpdateDTO) payloads.get(index);
+        assertEquals(5L, unreadCountUpdateDTO.getTotalUnreadCount());
+        assertEquals(3, unreadCountUpdateDTO.getUserChatUnreadCount());
+        assertEquals(userBChatBC.getUserChatId(), unreadCountUpdateDTO.getUserChatId());
+
+        // Assert: userB has total 5 unread messages
+        mockMvc.perform(get("/api/messages/unread-count")
+                        .with(user(new UserPrincipal(userB))))
+                .andExpect(status().isOk())
+                .andExpect(content().string("5"));
+    }
+
+    @Test
+    void testMessageStatusTransitions_OnlyREADDecreasesCount() throws Exception {
+        // Setup: unread message
+        setupSecurityContext(userA);
+        Message message = messageRepository.save(Message.builder()
+                .chat(chatAB)
+                .sender(userA)
+                .content("Test status transitions")
+                .status(MessageStatus.SENT)
+                .isFile(false)
+                .isEdited(false)
+                .build());
+
+        userBChatAB.setUnread(1);
+        userChatRepository.save(userBChatAB);
+
+        // Act 1: Change to DELIVERED (should NOT decrease count)
+        UpdateMessageStatusDTO statusUpdate = new UpdateMessageStatusDTO();
+        statusUpdate.setMessageStatus(MessageStatus.DELIVERED);
+
+        mockMvc.perform(patch("/api/messages/{messageId}/status", message.getMessageId())
+                        .with(user(new UserPrincipal(userB)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(statusUpdate)))
+                .andExpect(status().isOk());
+
+        // Assert: unread count still 1
+        UserChat chat1 = userChatRepository.findById(userBChatAB.getUserChatId()).orElseThrow();
+        assertEquals(1, chat1.getUnread());
+
+        // Act 2: Change to READ (should decrease count)
+        statusUpdate.setMessageStatus(MessageStatus.READ);
+
+        // Reset WebSocket template
+        TestSimpMessagingTemplate testTemplate = (TestSimpMessagingTemplate) messagingTemplate;
+        testTemplate.reset();
+
+        mockMvc.perform(patch("/api/messages/{messageId}/status", message.getMessageId())
+                        .with(user(new UserPrincipal(userB)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(statusUpdate)))
+                .andExpect(status().isOk());
+
+        entityManager.flush();
+        entityManager.clear();
+
+        // Verify WebSocket notification was sent with updated count
+        List<String> destinations = testTemplate.getSentDestinations();
+        List<Object> payloads = testTemplate.getSentPayloads();
+
+        // Should have received an unread-count update
+        assertTrue(destinations.contains("/topic/" + userB.getUserId() + "/unread-count"));
+        int index = destinations.lastIndexOf("/topic/" + userB.getUserId() + "/unread-count");
+        UnreadCountUpdateDTO unreadCountUpdateDTO = (UnreadCountUpdateDTO) payloads.get(index);
+        assertEquals(0, unreadCountUpdateDTO.getTotalUnreadCount());
+        assertEquals(0, unreadCountUpdateDTO.getUserChatUnreadCount());
+        assertEquals(userBChatAB.getUserChatId(), unreadCountUpdateDTO.getUserChatId());
+
+        // Assert: unread count now 0
+        UserChat chat2 = userChatRepository.findById(userBChatAB.getUserChatId()).orElseThrow();
+        assertEquals(0, chat2.getUnread());
+    }
+
+    @Test
     void sendMessage_Success() throws Exception {
         SendMessageDTO sendMessageDTO = new SendMessageDTO();
         sendMessageDTO.setChatId(chatAB.getChatId());
@@ -230,9 +875,11 @@ public class MessageControllerIntegrationTests {
                 .andExpect(jsonPath("$.chatId").value(chatAB.getChatId().toString()))
                 .andExpect(jsonPath("$.status").value("SENT"));
 
+        entityManager.flush();
+        entityManager.clear();
+
         // Verify message was saved
         assertEquals(4, messageRepository.count());
-
     }
 
     @Test
@@ -268,6 +915,9 @@ public class MessageControllerIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").value("Reply to message"))
                 .andExpect(jsonPath("$.replyToMessageId").value(messageFromB.getMessageId().toString()));
+
+        entityManager.flush();
+        entityManager.clear();
 
         // Verify message was saved with reply reference
         assertEquals(4, messageRepository.count());
@@ -457,6 +1107,7 @@ public class MessageControllerIntegrationTests {
         assertTrue(savedReaction.isPresent());
         assertEquals(MessageReact.LIKE, savedReaction.get().getReactionType());
     }
+
     @Test
     void testRateLimit_reactToMessage() throws Exception {
         UpdateMessageReactDTO updateDTO = new UpdateMessageReactDTO();
