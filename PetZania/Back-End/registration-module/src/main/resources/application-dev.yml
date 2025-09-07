@@ -19,9 +19,9 @@ spring:
     baseline-on-migrate: true
 
   datasource:
-    username: postgres
-    password: l234kasmvUo@
-    url: jdbc:postgresql://localhost:5433/registration
+    username: development
+    password: development
+    url: jdbc:postgresql://localhost:5433/registration_dev
 
   jpa:
     hibernate:
