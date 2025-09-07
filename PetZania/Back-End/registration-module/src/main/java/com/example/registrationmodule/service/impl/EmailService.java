@@ -4,9 +4,11 @@ import com.example.registrationmodule.model.dto.EmailRequestDTO;
 import com.example.registrationmodule.service.IEmailService;
 import com.sendgrid.SendGrid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 @Service
+@Profile("!dev")
 @Slf4j
 public class EmailService implements IEmailService {
     private final SendGrid sendGrid;
@@ -16,6 +18,7 @@ public class EmailService implements IEmailService {
 
     @Override
     public void sendEmail(EmailRequestDTO request) {
+        log.info("(prod) Attempting to send email to : {}", request.getTo());
 //        log.info("Attempting to send email to: {}", request.getTo());
 //        log.info("Email subject: {}", request.getSubject());
 //        log.info("Email from: {}", request.getFrom());

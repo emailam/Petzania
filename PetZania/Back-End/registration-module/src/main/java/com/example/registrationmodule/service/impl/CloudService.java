@@ -13,6 +13,7 @@ import com.example.registrationmodule.service.ICloudService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,6 +23,7 @@ import java.util.*;
 
 @Service
 @AllArgsConstructor
+@Profile("!dev")
 @Transactional
 public class CloudService implements ICloudService {
     private final MediaRepository mediaRepository;
