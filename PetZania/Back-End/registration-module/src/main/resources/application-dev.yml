@@ -46,7 +46,7 @@ spring:
 
   access:
     token:
-      expiration: 900000
+      expiration: 9000000
 
   refresh:
     token:
