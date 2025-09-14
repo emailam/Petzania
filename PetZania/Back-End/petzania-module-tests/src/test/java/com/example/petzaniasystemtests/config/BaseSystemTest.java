@@ -41,10 +41,11 @@ public class BaseSystemTest {
         // Debug print to verify SendGrid key is loaded
         System.out.println("SENDGRID KEY: " + dotenv.get("SPRING_SENDGRID_KEY"));
         System.out.println("Postgres Passowrd: " + dotenv.get("DB_PASSWORD"));
+        System.out.println("Rabbit MQ: " + dotenv.get("RABBITMQ_PORT"));
     }
 
     @Container
-    protected static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:latest")
+    protected static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14-alpine")
             .withNetwork(network)
             .withNetworkAliases("postgres")
             .withDatabaseName("postgres")
@@ -54,14 +55,14 @@ public class BaseSystemTest {
             .withInitScript("init-test-db.sql")
             .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(2)));
     @Container
-    protected static RabbitMQContainer rabbitmq = new RabbitMQContainer("rabbitmq:3.12-management-alpine")
+    protected static RabbitMQContainer rabbitmq = new RabbitMQContainer("rabbitmq:3.13.7-management-alpine")
             .withNetwork(network)
             .withNetworkAliases("rabbitmq")
             .withExposedPorts(Integer.parseInt(dotenv.get("RABBITMQ_PORT")), 15672)
             .withUser(dotenv.get("RABBITMQ_USERNAME"), dotenv.get("RABBITMQ_PASSWORD"))
             .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(2)));
     @Container
-    protected static GenericContainer<?> redis = new GenericContainer<>("redis:7-alpine")
+    protected static GenericContainer<?> redis = new GenericContainer<>("redis:8-alpine")
             .withNetwork(network)
             .withNetworkAliases("redis")
             .withExposedPorts(Integer.parseInt(dotenv.get("REDIS_PORT", "6379")))
@@ -116,6 +117,8 @@ public class BaseSystemTest {
             .withNetworkAliases("friends-service")
             .withExposedPorts(Integer.parseInt(dotenv.get("FRIENDS_SERVER_PORT", "8081")))
             .withEnv("SPRING_PROFILES_ACTIVE", "test")
+            .withEnv("REDIS_HOST", dotenv.get("REDIS_HOST"))
+            .withEnv("REDIS_PORT", dotenv.get("REDIS_PORT"))
             .withEnv("RABBITMQ_HOST", dotenv.get("RABBITMQ_HOST"))
             .withEnv("RABBITMQ_PORT", dotenv.get("RABBITMQ_PORT"))
             .withEnv("RABBITMQ_USERNAME", dotenv.get("RABBITMQ_USERNAME"))
@@ -144,6 +147,8 @@ public class BaseSystemTest {
             .withEnv("SPRING_PROFILES_ACTIVE", "test")
             .withEnv("RABBITMQ_HOST", dotenv.get("RABBITMQ_HOST"))
             .withEnv("RABBITMQ_PORT", dotenv.get("RABBITMQ_PORT"))
+            .withEnv("REDIS_HOST", dotenv.get("REDIS_HOST"))
+            .withEnv("REDIS_PORT", dotenv.get("REDIS_PORT"))
             .withEnv("RABBITMQ_USERNAME", dotenv.get("RABBITMQ_USERNAME"))
             .withEnv("RABBITMQ_PASSWORD", dotenv.get("RABBITMQ_PASSWORD"))
             .withEnv("DB_USERNAME", dotenv.get("DB_USERNAME"))
@@ -171,6 +176,8 @@ public class BaseSystemTest {
             .withEnv("SPRING_PROFILES_ACTIVE", "test")
             .withEnv("RABBITMQ_HOST", dotenv.get("RABBITMQ_HOST"))
             .withEnv("RABBITMQ_PORT", dotenv.get("RABBITMQ_PORT"))
+            .withEnv("REDIS_HOST", dotenv.get("REDIS_HOST"))
+            .withEnv("REDIS_PORT", dotenv.get("REDIS_PORT"))
             .withEnv("RABBITMQ_USERNAME", dotenv.get("RABBITMQ_USERNAME"))
             .withEnv("RABBITMQ_PASSWORD", dotenv.get("RABBITMQ_PASSWORD"))
             .withEnv("DB_USERNAME", dotenv.get("DB_USERNAME"))
@@ -234,6 +241,9 @@ public class BaseSystemTest {
                 .post(registrationBaseUrl + "/api/user/auth/signup")
                 .then()
                 .statusCode(201);
+
+        // Wait
+        Thread.sleep(2000);
 
         // Get OTP from database
         String otp = getOtpFromDatabase(email);

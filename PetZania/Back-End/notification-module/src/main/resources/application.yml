@@ -40,6 +40,13 @@ spring:
     secret-key:
       ${SPRING_JWT_SECRET_KEY}
 
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+    cache:
+      type: redis
+
 server:
   error:
     include-message: always
@@ -54,9 +61,6 @@ logging:
     org.springframework.amqp: DEBUG
     org.springframework.security: DEBUG
     org.springframework.web.servlet.DispatcherServlet: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
 management:
   endpoints:

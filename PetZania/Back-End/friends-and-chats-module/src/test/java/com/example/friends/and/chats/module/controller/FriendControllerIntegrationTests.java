@@ -27,6 +27,7 @@ import java.util.UUID;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.util.AssertionErrors.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -372,10 +373,7 @@ public class FriendControllerIntegrationTests {
         friendService.createFriendship(userA, userB);
         friendService.followUser(userA.getUserId(), userB.getUserId());
         friendService.followUser(userB.getUserId(), userA.getUserId());
-        friendshipRepository.save(Friendship.builder()
-                .user1(userA)
-                .user2(userB)
-                .build());
+
 
         User tempA = userA;
         User tempB = userB;
@@ -385,7 +383,9 @@ public class FriendControllerIntegrationTests {
             tempB = temp;
         }
 
-        mockMvc.perform(post("/api/friends/block/{userId}", userB.getUserId()))
+
+        mockMvc.perform(post("/api/friends/block/{userId}", userB.getUserId())
+                        .with(user(new UserPrincipal(userA))))
                 .andExpect(status().isCreated());
         assertFalse("", followRepository.existsByFollowerAndFollowed(userA, userB));
         assertFalse("", followRepository.existsByFollowerAndFollowed(userB, userA));
@@ -481,11 +481,10 @@ public class FriendControllerIntegrationTests {
     void getNumberOfFriends_Success() throws Exception {
         friendService.createFriendship(userA, userB);
         friendService.createFriendship(userC, userA);
-        friendService.createFriendship(userA, userC);
 
         mockMvc.perform(get("/api/friends/get-number-of-friends/{userId}", userA.getUserId()))
                 .andExpect(status().isOk())
-                .andExpect(content().string("3"));
+                .andExpect(content().string("2"));
     }
 
     @Test

@@ -6,9 +6,14 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import static com.example.registrationmodule.constant.Constants.*;
+
 @Service
 public class UserPublisher {
     private final RabbitTemplate rabbitTemplate;
+    private final String exchange = USER_EXCHANGE;
+    private final String userRegisteredRoutingKey = USER_REGISTERED;
+    private final String userDeletedRoutingKey = USER_DELETED;
 
     @Autowired
     public UserPublisher(RabbitTemplate rabbitTemplate) {
@@ -17,16 +22,12 @@ public class UserPublisher {
     }
 
     public void sendUserRegisteredMessage(UserEvent user) {
-        String exchange = "userExchange";
-        String routingKey = "user.registered";
         System.out.println("Sending a message " + user + " is added");
-        rabbitTemplate.convertAndSend(exchange, routingKey, user);
+        rabbitTemplate.convertAndSend(exchange, userRegisteredRoutingKey, user);
     }
 
     public void sendUserDeletedMessage(UserEvent user) {
-        String exchange = "userExchange";
-        String routingKey = "user.deleted";
         System.out.println("Sending a message " + user + " is deleted");
-        rabbitTemplate.convertAndSend(exchange, routingKey, user);
+        rabbitTemplate.convertAndSend(exchange, userDeletedRoutingKey, user);
     }
 }

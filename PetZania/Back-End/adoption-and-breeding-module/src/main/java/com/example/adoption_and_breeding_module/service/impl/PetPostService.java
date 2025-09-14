@@ -132,7 +132,6 @@ public class PetPostService implements IPetPostService {
             throw new BlockingExist("Operation blocked due to existing block relationship");
         }
 
-        System.out.println("yarab ala2y el error");
         Set<User> reactedUsers = post.getReactedUsers();
         int reacts = post.getReacts();
         if (reactedUsers.contains(user)) {

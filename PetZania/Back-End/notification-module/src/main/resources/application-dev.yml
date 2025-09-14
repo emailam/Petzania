@@ -1,0 +1,70 @@
+spring:
+  application:
+    name: notification-module
+
+  rabbitmq:
+    host: localhost
+    port: 5673
+    username: guest
+    password: guest
+
+  super:
+    admin:
+      username: superadmin
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  datasource:
+    username: development
+    password: development
+    url: jdbc:postgresql://localhost:5433/notifications_dev
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  security:
+    user:
+      name: admin
+      password: 1234
+
+  jwt:
+    secret-key:
+      5uaW4pgDs9KTX3rB99jvF7WyusLOnPA7DyM3gyRkZXQ9=
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+server:
+  error:
+    include-message: always
+    include-binding-errors: always
+  port: 8083
+
+logging:
+  level:
+    com.example.notificationmodule: DEBUG
+    org.springframework.web.socket: DEBUG
+    org.springframework.messaging: DEBUG
+    org.springframework.amqp: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web.servlet.DispatcherServlet: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always

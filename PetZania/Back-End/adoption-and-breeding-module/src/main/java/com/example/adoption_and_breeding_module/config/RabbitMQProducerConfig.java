@@ -8,6 +8,8 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import static com.example.adoption_and_breeding_module.constant.Constants.*;
+
 @Configuration
 public class RabbitMQProducerConfig {
     @Bean
@@ -17,16 +19,16 @@ public class RabbitMQProducerConfig {
 
     @Bean
     public TopicExchange notificationExchange() {
-        return new TopicExchange("notificationExchange");
+        return new TopicExchange(NOTIFICATION_EXCHANGE);
     }
 
     @Bean
     public Queue notificationsQueue() {
-        return new Queue("notificationsQueue", true);
+        return new Queue(NOTIFICATIONS_QUEUE, true);
     }
 
     @Bean
     public Binding notificationsBinding(Queue notificationsQueue, TopicExchange notificationExchange) {
-        return BindingBuilder.bind(notificationsQueue).to(notificationExchange).with("notification.*");
+        return BindingBuilder.bind(notificationsQueue).to(notificationExchange).with(NOTIFICATION_ASTERISK);
     }
 }

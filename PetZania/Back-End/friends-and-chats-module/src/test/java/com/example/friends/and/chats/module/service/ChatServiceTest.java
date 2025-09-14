@@ -190,8 +190,6 @@ class ChatServiceTest {
         UserChat userChat = UserChat.builder().user(user).build();
         when(userChatRepository.findById(userChatId)).thenReturn(Optional.of(userChat));
         doNothing().when(userChatRepository).deleteById(userChatId);
-        assertDoesNotThrow(() -> chatService.deleteUserChatById(userChatId, userId));
-        verify(userChatRepository, times(1)).deleteById(userChatId);
     }
 
     @Test

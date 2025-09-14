@@ -1,6 +1,8 @@
 package com.example.friends.and.chats.module.service.impl;
 
+import ch.qos.logback.classic.spi.IThrowableProxy;
 import com.example.friends.and.chats.module.exception.chat.ChatNotFound;
+import com.example.friends.and.chats.module.exception.chat.UserChatNotFound;
 import com.example.friends.and.chats.module.exception.message.InvalidMessageStatusTransition;
 import com.example.friends.and.chats.module.exception.message.MessageNotFound;
 import com.example.friends.and.chats.module.exception.message.MessageNotUpdatable;
@@ -17,6 +19,7 @@ import com.example.friends.and.chats.module.service.IDTOConversionService;
 import com.example.friends.and.chats.module.service.IMessageService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -27,6 +30,7 @@ import java.util.*;
 @Service
 @AllArgsConstructor
 @Transactional
+@Slf4j
 public class MessageService implements IMessageService {
     private final UserRepository userRepository;
     private final ChatRepository chatRepository;
@@ -36,6 +40,14 @@ public class MessageService implements IMessageService {
     private final MessageReactionRepository messageReactionRepository;
     private final IDTOConversionService dtoConversionService;
     private final SimpMessagingTemplate messagingTemplate;
+
+    private void notifyUserWithUnreadCount(UUID userId, UnreadCountUpdateDTO unreadCountUpdateDTO) {
+        log.info("Notifying user: {} with unread count update dto: {}", userId, unreadCountUpdateDTO);
+        messagingTemplate.convertAndSend(
+                "/topic/" + userId.toString() + "/unread-count",
+                unreadCountUpdateDTO
+        );
+    }
 
     @Override
     public MessageDTO sendMessage(SendMessageDTO sendMessageDTO, UUID senderId) {
@@ -80,13 +92,25 @@ public class MessageService implements IMessageService {
                 .isEdited(false)
                 .build();
 
-        Message saved = messageRepository.save(message);
+        log.info("Saving the message: {}", message);
+        Message saved = messageRepository.saveAndFlush(message);
         MessageDTO savedDTO = dtoConversionService.mapToMessageDTO(saved);
+
+        userChatRepository.incrementUnreadCount(chat.getChatId(), receiver.getUserId());
+        long totalUnread = userChatRepository.getTotalUnreadCount(receiver.getUserId());
+        log.info("Updated unread count: {} for user: {} and with id: {}", totalUnread, receiver.getUsername(), receiver.getUserId());
 
         messagingTemplate.convertAndSend(
                 "/topic/" + receiver.getUserId().toString() + "/messages",
                 new MessageEventDTO(savedDTO, EventType.SEND)
         );
+
+        UserChat receiverUserChat = userChatRepository.findByChat_ChatIdAndUser_UserId(chat.getChatId(), receiver.getUserId()).orElseThrow(() -> new UserChatNotFound("User chat not found"));
+        UnreadCountUpdateDTO unreadCountUpdateDTO = new UnreadCountUpdateDTO();
+        unreadCountUpdateDTO.setTotalUnreadCount(totalUnread);
+        unreadCountUpdateDTO.setUserChatUnreadCount(receiverUserChat.getUnread());
+        unreadCountUpdateDTO.setUserChatId(receiverUserChat.getUserChatId());
+        notifyUserWithUnreadCount(receiver.getUserId(), unreadCountUpdateDTO);
         return savedDTO;
     }
 
@@ -121,6 +145,7 @@ public class MessageService implements IMessageService {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new MessageNotFound("Message not found"));
 
+
         Optional<UserChat> userChat = userChatRepository.findByChat_ChatIdAndUser_UserId(message.getChat().getChatId(), userId);
         if (userChat.isEmpty()) {
             throw new UserAccessDenied("You can only delete messages in your own chats");
@@ -138,11 +163,23 @@ public class MessageService implements IMessageService {
         }
 
         MessageDTO deletedMessageDTO = dtoConversionService.mapToMessageDTO(message);
+        boolean wasUnread = !message.getStatus().equals(MessageStatus.READ);
         messagingTemplate.convertAndSend(
                 "/topic/" + receiver.getUserId().toString() + "/messages",
                 new MessageEventDTO(deletedMessageDTO, EventType.DELETE)
         );
 
+        if (wasUnread) {
+            userChatRepository.decrementUnreadCount(message.getChat().getChatId(), receiver.getUserId());
+            long totalUnread = userChatRepository.getTotalUnreadCount(receiver.getUserId());
+
+            UserChat receiverUserChat = userChatRepository.findByChat_ChatIdAndUser_UserId(message.getChat().getChatId(), receiver.getUserId()).orElseThrow(() -> new UserChatNotFound("User chat not found"));
+            UnreadCountUpdateDTO unreadCountUpdateDTO = new UnreadCountUpdateDTO();
+            unreadCountUpdateDTO.setTotalUnreadCount(totalUnread);
+            unreadCountUpdateDTO.setUserChatUnreadCount(receiverUserChat.getUnread());
+            unreadCountUpdateDTO.setUserChatId(receiverUserChat.getUserChatId());
+            notifyUserWithUnreadCount(receiver.getUserId(), unreadCountUpdateDTO);
+        }
         messageRepository.deleteById(messageId);
     }
 
@@ -227,6 +264,17 @@ public class MessageService implements IMessageService {
                 new MessageEventDTO(updatedMessageDTO, EventType.UPDATE_STATUS)
         );
 
+        if (newStatus == MessageStatus.READ) {
+            userChatRepository.decrementUnreadCount(message.getChat().getChatId(), userId);
+            long totalUnread = userChatRepository.getTotalUnreadCount(userId);
+
+            UserChat readerUserChat = userChatRepository.findByChat_ChatIdAndUser_UserId(message.getChat().getChatId(), userId).orElseThrow(() -> new UserChatNotFound("User chat not found"));
+            UnreadCountUpdateDTO unreadCountUpdateDTO = new UnreadCountUpdateDTO();
+            unreadCountUpdateDTO.setTotalUnreadCount(totalUnread);
+            unreadCountUpdateDTO.setUserChatUnreadCount(readerUserChat.getUnread());
+            unreadCountUpdateDTO.setUserChatId(readerUserChat.getUserChatId());
+            notifyUserWithUnreadCount(userId, unreadCountUpdateDTO);
+        }
         return updatedMessageDTO;
     }
 
@@ -322,5 +370,12 @@ public class MessageService implements IMessageService {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new MessageNotFound("Message not found"));
         return message.getChat().getChatId();
+    }
+
+    @Override
+    public long getTotalUnreadCount(UUID userId) {
+        long result = userChatRepository.getTotalUnreadCount(userId);
+        log.info("Total unread count for user: {} equals: {}", userId, result);
+        return result;
     }
 }

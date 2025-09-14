@@ -5,10 +5,7 @@ import com.example.petzaniasystemtests.builders.TestDataBuilder;
 import com.example.petzaniasystemtests.utils.JwtTokenExtractor;
 import io.restassured.response.Response;
 import org.awaitility.Awaitility;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.*;
 
 import java.time.Duration;
 import java.util.*;
@@ -24,10 +21,16 @@ public class ModulesIntegrationTest extends BaseSystemTest {
     private static UUID userXXXId;
     private static final String USER_EMAIL_XXX = "interservice@test.com";
     private static final String PASSWORD_XXX = "Password123!";
+
+    @AfterEach
+    void clearRedis() throws Exception {
+        redis.execInContainer("redis-cli", "FLUSHALL");
+    }
     @Test
     @Order(1)
     @DisplayName("Should propagate user registration to all modules")
     void testUserRegistration_PropagatedToAllModules() throws Exception {
+
         // Test Case 1: Register a new user and verify propagation to all modules
         String username = "testuser_reg_" + System.currentTimeMillis();
         String email = username + "@example.com";
@@ -426,6 +429,7 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                 .statusCode(201)
                 .extract().response();
 
+        Thread.sleep(3000);
         Response notificationResponse = given()
                 .spec(getAuthenticatedSpec(user2Token))
                 .when()
@@ -463,6 +467,7 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                 .then()
                 .statusCode(201);
 
+        Thread.sleep(3000);
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
@@ -481,6 +486,7 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                 .statusCode(200)
                 .body("reacts", equalTo(1));
 
+        Thread.sleep(3000);
         given()
                 .spec(getAuthenticatedSpec(user1Token))
                 .when()
@@ -6737,13 +6743,14 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                 .then()
                 .statusCode(200);
 
+        Thread.sleep(4000);
         // Verify deleted user's token no longer works
         given()
                 .header("Authorization", "Bearer " + deleteUserToken)
                 .when()
                 .get(friendsBaseUrl + "/api/friends/get-number-of-friends/" + deleteUserId)
                 .then()
-                .statusCode(anyOf(is(401), is(403)));
+                .statusCode(403);
 
         // Verify keepUser's friend count decreased
         given()
@@ -6977,10 +6984,10 @@ public class ModulesIntegrationTest extends BaseSystemTest {
     void testUserSearchIntegration() throws Exception {
         // Create users with searchable patterns
         String[] searchUsers = {
-                "searchableAlpha@test.com",
-                "searchableBeta@test.com",
-                "searchableGamma@test.com",
-                "differentUserx@test.com"
+                "abcde1@gmail.com",
+                "abcde2@gmail.com",
+                "abcde3@gmail.com",
+                "abcde4@gmail.com"
         };
 
         List<String> tokens = new ArrayList<>();
@@ -6999,7 +7006,7 @@ public class ModulesIntegrationTest extends BaseSystemTest {
         Response searchResponse = given()
                 .header("Authorization", "Bearer " + tokens.get(0))
                 .when()
-                .get(registrationBaseUrl + "/api/user/auth/users/searchable")
+                .get(registrationBaseUrl + "/api/user/auth/users/abcde")
                 .then()
                 .statusCode(200)
                 .body("content", hasSize(greaterThanOrEqualTo(3)))

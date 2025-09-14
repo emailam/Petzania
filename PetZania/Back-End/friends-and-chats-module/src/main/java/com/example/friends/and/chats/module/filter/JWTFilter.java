@@ -21,6 +21,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Objects;
 
+import static com.example.friends.and.chats.module.constant.Constants.*;
+
 @AllArgsConstructor
 @Component
 public class JWTFilter extends OncePerRequestFilter {
@@ -30,21 +32,21 @@ public class JWTFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         // you get the token from the client side in the following format "Bearer Token"
-        String authenticationHeader = request.getHeader("Authorization");
+        String authenticationHeader = request.getHeader(AUTHORIZATION_HEADER);
         String token = null;
         String email = null;
         String role = null;
 
 
-        if (authenticationHeader != null && authenticationHeader.startsWith("Bearer ")) {
+        if (authenticationHeader != null && authenticationHeader.startsWith(STARTING_WITH_STRING)) {
             // System.out.println("I entered the JWT filter");
-            token = authenticationHeader.substring(7);
+            token = authenticationHeader.substring(START_INDEX);
             email = jwtService.extractEmail(token);
             role = jwtService.extractRole(token);
         }
 
         if (token != null && email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            if (Objects.equals(role, "ROLE_USER")) {
+            if (Objects.equals(role, ROLE_USER)) {
                 // User authentication
                 UserPrincipal userDetails = (UserPrincipal) context.getBean(MyUserDetailsService.class).loadUserByEmail(email);
                 userDetails.setGrantedAuthority(new SimpleGrantedAuthority(role));
@@ -54,7 +56,7 @@ public class JWTFilter extends OncePerRequestFilter {
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
-            } else if (Objects.equals(role, "ROLE_ADMIN") || Objects.equals(role, "ROLE_SUPER_ADMIN")) {
+            } else if (Objects.equals(role, ROLE_ADMIN) || Objects.equals(role, ROLE_SUPER_ADMIN)) {
                 // Admin authentication
                 AdminPrincipal adminDetails = (AdminPrincipal) context.getBean(MyUserDetailsService.class).loadAdminByUsername(email);
                 adminDetails.setGrantedAuthority(new SimpleGrantedAuthority(role));

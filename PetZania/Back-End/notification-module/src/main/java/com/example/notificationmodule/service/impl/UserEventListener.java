@@ -4,38 +4,82 @@ import com.example.notificationmodule.model.entity.User;
 import com.example.notificationmodule.model.event.UserEvent;
 import com.example.notificationmodule.repository.NotificationRepository;
 import com.example.notificationmodule.repository.UserRepository;
+import com.example.notificationmodule.util.QueueUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.rabbitmq.client.Channel;
+import org.springframework.amqp.core.Message;
+import lombok.extern.slf4j.Slf4j;
+
+import static com.example.notificationmodule.constant.Constants.*;
 
 @Service
 @AllArgsConstructor
 @Transactional
+@Slf4j
 public class UserEventListener {
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
+    private final QueueUtils queueUtils;
 
-    @RabbitListener(queues = "userRegisteredQueueNotificationModule")
-    public void onUserRegistered(UserEvent user) {
-        if (!userRepository.existsById(user.getUserId()) && !userRepository.existsByUsername(user.getUsername()) && !userRepository.existsByEmail(user.getEmail())) {
-            User newUser = User.builder()
-                    .userId(user.getUserId())
-                    .email(user.getEmail())
-                    .username(user.getUsername())
-                    .build();
-            userRepository.save(newUser);
-            System.out.println("received registered user: " + user);
+    @RabbitListener(queues = USER_REGISTERED_QUEUE_NOTIFICATION_MODULE, ackMode = ACK_MODE)
+    public void onUserRegistered(UserEvent user, Channel channel, Message message) {
+        try {
+            if (!userRepository.existsById(user.getUserId()) && !userRepository.existsByUsername(user.getUsername()) && !userRepository.existsByEmail(user.getEmail())) {
+                User newUser = User.builder()
+                        .userId(user.getUserId())
+                        .email(user.getEmail())
+                        .username(user.getUsername())
+                        .build();
+                userRepository.save(newUser);
+                log.info("received registered user: {}", user);
+            }
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        } catch (Exception ex) {
+            log.error("Error processing user registered event: {}", user, ex);
+            try {
+                int retryCount = queueUtils.getRetryCount(message, USER_REGISTERED_QUEUE_NOTIFICATION_MODULE_RETRY);
+                if (retryCount >= MAX_RETRIES) {
+                    // simply drop the message
+                    channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+                    log.info("Max retries reached for the event: {}", user);
+                } else {
+                    channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+                    log.info("This is the retry number: {} for event: {}", retryCount, user);
+                }
+            } catch (Exception nackErr) {
+                log.error("Error nacking message for event: {}", user, nackErr);
+            }
         }
     }
 
-    @RabbitListener(queues = "userDeletedQueueNotificationModule")
-    public void onUserDeleted(UserEvent user) {
-        if (userRepository.existsById(user.getUserId())) {
-            notificationRepository.deleteByRecipientId(user.getUserId());
-            notificationRepository.deleteByInitiatorId(user.getUserId());
-            userRepository.deleteById(user.getUserId());
-            System.out.println("received deleted user: " + user);
+    @RabbitListener(queues = USER_DELETED_QUEUE_NOTIFICATION_MODULE, ackMode = ACK_MODE)
+    public void onUserDeleted(UserEvent user, Channel channel, Message message) {
+        try {
+            if (userRepository.existsById(user.getUserId())) {
+                notificationRepository.deleteByRecipientId(user.getUserId());
+                notificationRepository.deleteByInitiatorId(user.getUserId());
+                userRepository.deleteById(user.getUserId());
+                log.info("received deleted user: {}", user);
+            }
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        } catch (Exception ex) {
+            log.error("Error processing user deleted event: {}", user, ex);
+            try {
+                int retryCount = queueUtils.getRetryCount(message, USER_DELETED_QUEUE_NOTIFICATION_MODULE_RETRY);
+                if (retryCount >= MAX_RETRIES) {
+                    // simply drop the message
+                    channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+                    log.info("Max retries reached for the event: {}", user);
+                } else {
+                    channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+                    log.info("This is the retry number: {} for event: {}", retryCount, user);
+                }
+            } catch (Exception nackErr) {
+                log.error("Error nacking message for event: {}", user, nackErr);
+            }
         }
     }
 }

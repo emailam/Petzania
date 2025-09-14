@@ -8,6 +8,13 @@ spring:
         username: ${RABBITMQ_USERNAME}
         password: ${RABBITMQ_PASSWORD}
 
+    data:
+        redis:
+            host: ${REDIS_HOST}
+            port: ${REDIS_PORT}
+        cache:
+            type: redis
+
     super:
         admin:
             username: ${SUPER_ADMIN_USERNAME}

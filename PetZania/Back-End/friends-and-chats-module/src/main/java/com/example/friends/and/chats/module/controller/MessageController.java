@@ -27,6 +27,16 @@ public class MessageController {
 
     private final IMessageService messageService;
 
+
+    @Operation(summary = "Get total unread count of messages")
+    @GetMapping("/unread-count")
+    @RateLimit
+    public ResponseEntity<Long> getTotalUnreadCount() {
+        UUID userId = SecurityUtils.getCurrentUser().getUserId();
+        long count = messageService.getTotalUnreadCount(userId);
+        return ResponseEntity.ok(count);
+    }
+
     @Operation(summary = "Send a new message in a chat")
     @PostMapping("/send")
     @RateLimit

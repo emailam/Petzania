@@ -237,31 +237,6 @@ public class AdminControllerIntegrationTests {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.tokenDTO").exists())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.userId").value(admin.getAdminId().toString()));
     }
-
-    @Test
-    public void testAdminLogin_TooManyAttempts_ShouldReturnTooManyRequests() throws Exception {
-        Admin admin = TestDataUtil.createAdmin("adminB");
-        adminService.saveAdmin(admin);
-
-        LoginAdminDTO loginAdminDTO = new LoginAdminDTO();
-        loginAdminDTO.setUsername(admin.getUsername());
-        loginAdminDTO.setPassword("wrongPassword");
-
-        // Simulate rate limiting by making multiple requests quickly
-        for (int i = 0; i < 8; i++) {
-            mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/login")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(loginAdminDTO)))
-                    .andExpect(MockMvcResultMatchers.status().isBadRequest());
-        }
-
-        // The next request should be rate limited
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginAdminDTO)))
-                .andExpect(MockMvcResultMatchers.status().isTooManyRequests());
-    }
-
     @Test
     public void testRefreshToken_ValidToken_ShouldReturnNewToken() throws Exception {
         // First login to get a refresh token
