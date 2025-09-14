@@ -7369,7 +7369,7 @@ public class ModulesIntegrationTest extends BaseSystemTest {
                 "jdbc:postgresql://localhost:%d/adoption_breeding",
                 postgres.getMappedPort(5432)
         );
-        return DriverManager.getConnection(url, "postgres", "admin");
+        return DriverManager.getConnection(url, "postgres", DATA_BASE_PASSWORD);
     }
 
     /** Returns all followed IDs for a given follower (table "follow", cols follower_id, followed_id) */

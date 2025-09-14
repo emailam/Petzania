@@ -36,6 +36,7 @@ public class BaseSystemTest {
         .ignoreIfMalformed()
         .ignoreIfMissing()
         .load();
+    protected static final String DATA_BASE_PASSWORD = dotenv.get("DB_PASSWORD");
 
     static {
         // Debug print to verify SendGrid key is loaded
