@@ -39,7 +39,6 @@ public class JWTFilter extends OncePerRequestFilter {
 
 
         if (authenticationHeader != null && authenticationHeader.startsWith(STARTING_WITH_STRING)) {
-            // System.out.println("I entered the JWT filter");
             token = authenticationHeader.substring(START_INDEX);
             email = jwtService.extractEmail(token);
             role = jwtService.extractRole(token);

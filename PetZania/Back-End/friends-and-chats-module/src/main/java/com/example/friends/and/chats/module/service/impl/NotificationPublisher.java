@@ -2,6 +2,7 @@ package com.example.friends.and.chats.module.service.impl;
 
 import com.example.friends.and.chats.module.model.enumeration.NotificationType;
 import com.example.friends.and.chats.module.model.event.NotificationEvent;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import java.util.UUID;
 import static com.example.friends.and.chats.module.constant.Constants.*;
 
 @Service
+@Slf4j
 public class NotificationPublisher {
     private final RabbitTemplate rabbitTemplate;
     private static final String exchange = NOTIFICATION_EXCHANGE;
@@ -35,8 +37,8 @@ public class NotificationPublisher {
                 .message(senderUsername + " sent you a friend request")
                 .build();
 
-        System.out.println("Sent friend request notification from " + senderId + " to recipient: " + receiverId);
-        System.out.println("Event: " + event);
+        log.info("Sent friend request notification from {} to recipient: {}", senderId, receiverId);
+        log.info("Event: {}", event);
         rabbitTemplate.convertAndSend(exchange, friendRequestReceivedRoutingKey, event);
     }
 
@@ -50,8 +52,8 @@ public class NotificationPublisher {
                 .build();
 
 
-        System.out.println("Sent friend request accepted notification from " + receiverId + " to recipient: " + senderId);
-        System.out.println("Event: " + event);
+        log.info("Sent friend request accepted notification from {} to recipient: {}", receiverId, senderId);
+        log.info("Event: {}", event);
         rabbitTemplate.convertAndSend(exchange, friendRequestAcceptedRoutingKey, event);
     }
 
@@ -64,8 +66,8 @@ public class NotificationPublisher {
                 .message(followerUsername + " started following you")
                 .build();
 
-        System.out.println("Sent new follower notification from " + followerId + " to recipient: " + followedId);
-        System.out.println("Event: " + event);
+        log.info("Sent new follower notification from {} to recipient: {}", followerId, followedId);
+        log.info("Event: {}", event);
         rabbitTemplate.convertAndSend(exchange, newFollowerRoutingKey, event);
     }
 
@@ -75,8 +77,8 @@ public class NotificationPublisher {
                 .type(NotificationType.FRIEND_REQUEST_WITHDRAWN)
                 .build();
 
-        System.out.println("Friend request cancelled " + friendRequestId);
-        System.out.println("Event: " + event);
+        log.info("Friend request cancelled {}", friendRequestId);
+        log.info("Event: {}", event);
         rabbitTemplate.convertAndSend(exchange, friendRequestCancelledRoutingKey, event);
     }
 }
