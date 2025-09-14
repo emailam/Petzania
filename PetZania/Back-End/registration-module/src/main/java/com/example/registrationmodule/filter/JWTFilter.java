@@ -11,12 +11,14 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -26,6 +28,7 @@ import static com.example.registrationmodule.constant.Constants.*;
 
 @AllArgsConstructor
 @Component
+@Slf4j
 public class JWTFilter extends OncePerRequestFilter {
     private final JWTService jwtService;
     private final ApplicationContext context;
@@ -41,7 +44,6 @@ public class JWTFilter extends OncePerRequestFilter {
 
 
         if (authenticationHeader != null && authenticationHeader.startsWith(STARTING_WITH_STRING)) {
-            // System.out.println("I entered the JWT filter");
             token = authenticationHeader.substring(START_INDEX);
             email = jwtService.extractEmail(token);
             role = jwtService.extractRole(token);
@@ -59,7 +61,7 @@ public class JWTFilter extends OncePerRequestFilter {
                 UserPrincipal userDetails = (UserPrincipal) context.getBean(MyUserDetailsService.class).loadUserByEmail(email);
                 userDetails.setGrantedAuthority(new SimpleGrantedAuthority(role));
 
-                System.out.println("this is the user details " + userDetails.getEmail());
+                log.info("this is the user details " + userDetails.getEmail());
                 if (jwtService.validateTokenForUser(token, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -70,7 +72,7 @@ public class JWTFilter extends OncePerRequestFilter {
                 AdminPrincipal adminDetails = (AdminPrincipal) context.getBean(MyUserDetailsService.class).loadAdminByUsername(email);
                 adminDetails.setGrantedAuthority(new SimpleGrantedAuthority(role));
 
-                System.out.println("this is the admin details " + adminDetails.getUsername());
+                log.info("this is the admin details " + adminDetails.getUsername());
                 if (jwtService.validateTokenForAdmin(token, adminDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(adminDetails, null, adminDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

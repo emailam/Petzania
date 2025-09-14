@@ -13,6 +13,7 @@ import com.example.registrationmodule.service.IEmailService;
 import com.example.registrationmodule.service.IUserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,6 +34,7 @@ import java.util.UUID;
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class UserService implements IUserService {
 
     private final IDTOConversionService converter;
@@ -54,7 +56,7 @@ public class UserService implements IUserService {
     public UserProfileDTO registerUser(RegisterUserDTO registerUserDTO) {
         // convert to regular user.
         User user = converter.mapToUser(registerUserDTO);
-        System.out.println("Sending an email to the user...");
+        log.info("Sending an email to the user...");
         if (userRepository.findByUsernameIgnoreCase(user.getUsername()).isPresent()) {
             throw new UsernameAlreadyExists("Username '" + user.getUsername() + "' already exists");
         } else if (userRepository.findByEmailIgnoreCase(user.getEmail()).isPresent()) {
@@ -72,11 +74,11 @@ public class UserService implements IUserService {
 
         // send verification code.
         try {
-            System.out.println("About to send verification code to: " + user.getEmail());
+            log.info("About to send verification code to: {}", user.getEmail());
             sendVerificationCode(user.getEmail());
-            System.out.println("Verification code sent successfully");
+            log.info("Verification code sent successfully");
         } catch (Exception e) {
-            System.err.println("Failed to send verification code: " + e.getMessage());
+            log.error("Failed to send verification code: " + e.getMessage());
             e.printStackTrace();
             // Don't throw the exception here to avoid breaking the registration flow
             // The user is already saved, we just couldn't send the email
@@ -84,6 +86,7 @@ public class UserService implements IUserService {
 
         return converter.mapToUserProfileDto(user);
     }
+
     @Override
     public Page<UserProfileDTO> getUsers(UUID requesterId, int page, int size, String sortBy, String direction) {
         Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
@@ -160,7 +163,7 @@ public class UserService implements IUserService {
 
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getEmail(), loginUserDTO.getPassword()));
         if (authentication.isAuthenticated()) {
-            System.out.println("valid credentials");
+            log.info("valid credentials");
             if (!user.isVerified()) {
                 throw new UserNotVerified("User is not verified");
             }
@@ -180,10 +183,11 @@ public class UserService implements IUserService {
 
             return new ResponseLoginDTO(message, tokenDTO, loginTimes + 1, userId);
         } else {
-            System.out.println("invalid credentials");
+            log.error("invalid credentials");
             throw new InvalidUserCredentials("Email or password is incorrect");
         }
     }
+
     @Override
     public TokenDTO refreshToken(String refreshToken) {
         if (refreshToken == null) {
@@ -381,8 +385,7 @@ public class UserService implements IUserService {
         if (user.isBlocked()) {
             throw new UserIsBlocked("User is blocked");
         }
-
-        System.out.println("User email is: " + email);
+        log.info("User email is: {}", email);
 //        String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
         String otp = "780023";
         user.setVerificationCode(otp);
@@ -401,15 +404,15 @@ public class UserService implements IUserService {
                         "Petzania Team."
         );
 
-        System.out.println("Email sender configured as: " + emailSender);
-        System.out.println("About to send email with OTP: " + otp);
+        log.info("Email sender configured as: {}", emailSender);
+        log.info("About to send email with OTP: {}", otp);
 
         // send the email.
         emailService.sendEmail(emailRequestDTO);
 
         // save the user in the database.
         userRepository.save(user);
-        System.out.println("User saved with verification code");
+        log.info("User saved with verification code");
     }
 
     @Override

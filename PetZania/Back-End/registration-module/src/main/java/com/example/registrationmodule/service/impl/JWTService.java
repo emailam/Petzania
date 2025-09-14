@@ -6,6 +6,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,7 @@ import java.util.UUID;
 import java.util.function.Function;
 
 @Service
-//@PropertySource("classpath:application.yml")
+@Slf4j
 public class JWTService {
     @Value("${spring.jwt.secret-key}")
     private String secretKey;
@@ -51,7 +52,7 @@ public class JWTService {
                 .compact();
     }
 
-    private Key getKey() {
+    public Key getKey() {
         // Replace with a secure key
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
@@ -99,7 +100,13 @@ public class JWTService {
 
 
     public boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+        try {
+            return extractExpiration(token).before(new Date());
+        } catch (io.jsonwebtoken.ExpiredJwtException ex) {
+            // If the JWT is expired
+            log.error("This token {} is expired", token);
+            return true;
+        }
     }
 
     public Date extractExpiration(String token) {

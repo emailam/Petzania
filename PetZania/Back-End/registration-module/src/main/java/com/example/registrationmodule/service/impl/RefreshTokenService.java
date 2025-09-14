@@ -5,6 +5,7 @@ import com.example.registrationmodule.repository.RevokedRefreshTokenRepository;
 import com.example.registrationmodule.service.IRefreshTokenService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -16,6 +17,7 @@ import java.util.Date;
 @Service
 @Transactional
 @AllArgsConstructor
+@Slf4j
 public class RefreshTokenService implements IRefreshTokenService {
     private final RevokedRefreshTokenRepository revokedRefreshTokenRepository;
     private final JWTService jwtService;
@@ -24,7 +26,7 @@ public class RefreshTokenService implements IRefreshTokenService {
     @Override
     @CachePut(value = CACHE_NAME, key = "#token", unless = "#result == null")
     public boolean saveToken(String token) {
-        System.out.println("Saving in the database");
+        log.info("Saving in the database");
         Date expirationTime = jwtService.extractExpiration(token);
         RevokedRefreshToken revokedRefreshToken = new RevokedRefreshToken();
         revokedRefreshToken.setToken(token);
@@ -37,7 +39,7 @@ public class RefreshTokenService implements IRefreshTokenService {
     @Override
     @Cacheable(value = CACHE_NAME, key = "#token", unless = "#result == null")
     public boolean isTokenRevoked(String token) {
-        System.out.println("Fetching from database");
+        log.info("Fetching from database");
         return revokedRefreshTokenRepository.findByToken(token).isPresent();
     }
 

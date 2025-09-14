@@ -7,6 +7,7 @@ import com.example.registrationmodule.service.IUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,11 +16,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/user/auth")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "User Authentication", description = "Operations related to user authentication and account management")
 public class UserController {
     private final IUserService userService;
@@ -31,8 +34,8 @@ public class UserController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Object principal = authentication.getPrincipal();
         if (principal instanceof UserPrincipal userPrincipal) {
-            System.out.println("authenticated user's email= " + ((UserPrincipal) principal).getEmail());
-            System.out.println("logged out user's email= " + logoutDTO.getEmail());
+            log.info("authenticated user's email= " + ((UserPrincipal) principal).getEmail());
+            log.info("logged out user's email= " + logoutDTO.getEmail());
             if (!userPrincipal.getEmail().equals(logoutDTO.getEmail())) {
                 throw new AccessDeniedException("Undoable operation");
             }
@@ -96,8 +99,8 @@ public class UserController {
         Object principal = authentication.getPrincipal();
 
         if (principal instanceof UserPrincipal userPrincipal) {
-            System.out.println(((UserPrincipal) principal).getUserId());
-            System.out.println(userId);
+            log.info(String.valueOf(((UserPrincipal) principal).getUserId()));
+            log.info(String.valueOf(userId));
             if (!userPrincipal.getUserId().equals(userId)) {
                 throw new AccessDeniedException("You can only update your own profile");
             }
@@ -156,17 +159,17 @@ public class UserController {
     @DeleteMapping("/delete")
     @RateLimit
     public ResponseEntity<String> deleteUser(@Valid @RequestBody EmailDTO emailDTO) throws AccessDeniedException {
-         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-         Object principal = authentication.getPrincipal();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
 
-         if (principal instanceof UserPrincipal userPrincipal) {
-             if (!userPrincipal.getEmail().equals(emailDTO.getEmail())) {
-                 throw new AccessDeniedException("You can delete your own account");
-             }
-         }
+        if (principal instanceof UserPrincipal userPrincipal) {
+            if (!userPrincipal.getEmail().equals(emailDTO.getEmail())) {
+                throw new AccessDeniedException("You can delete your own account");
+            }
+        }
 
-         userService.deleteUser(emailDTO);
-         return ResponseEntity.ok("User deleted successfully");
+        userService.deleteUser(emailDTO);
+        return ResponseEntity.ok("User deleted successfully");
     }
 
     @Operation(summary = "Delete all users")
