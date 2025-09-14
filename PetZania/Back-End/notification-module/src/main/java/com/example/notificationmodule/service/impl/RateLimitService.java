@@ -25,8 +25,6 @@ public class RateLimitService {
         if (count >= maxRequests) {
             return false; // Rate limit exceeded
         }
-
-        System.out.println(key);
         // Increment counter
         redisTemplate.opsForValue().increment(key);
         return true;

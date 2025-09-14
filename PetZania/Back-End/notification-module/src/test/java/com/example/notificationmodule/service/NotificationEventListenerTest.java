@@ -87,6 +87,105 @@ class NotificationEventListenerTest {
     }
 
     @Test
+    @DisplayName("Should delete by entityId and ACK on PET_POST_DELETED event")
+    void shouldDeleteByEntityIdOnPetPostDeleted() throws Exception {
+        Channel mockChannel = mock(Channel.class);
+        Message mockMessage = mock(Message.class);
+        MessageProperties props = mock(MessageProperties.class);
+        long deliveryTag = 345L;
+        when(mockMessage.getMessageProperties()).thenReturn(props);
+        when(props.getDeliveryTag()).thenReturn(deliveryTag);
+
+        NotificationEvent deletedEvent = NotificationEvent.builder()
+                .entityId(UUID.randomUUID())
+                .type(NotificationType.PET_POST_DELETED)
+                .build();
+
+        notificationEventListener.onNotificationReceived(deletedEvent, mockChannel, mockMessage);
+
+        verify(notificationRepository).deleteByEntityId(deletedEvent.getEntityId());
+        verify(mockChannel).basicAck(deliveryTag, false);
+        verifyNoMoreInteractions(notificationRepository, webSocketService, dtoConversionService);
+    }
+    @Test
+    @DisplayName("Should ACK and skip for self-notifications (initiator == recipient)")
+    void shouldAckAndSkipForSelfNotification() throws Exception {
+        Channel mockChannel = mock(Channel.class);
+        Message mockMessage = mock(Message.class);
+        MessageProperties props = mock(MessageProperties.class);
+        long deliveryTag = 1234L;
+        UUID userId = UUID.randomUUID();
+        when(mockMessage.getMessageProperties()).thenReturn(props);
+        when(props.getDeliveryTag()).thenReturn(deliveryTag);
+
+        NotificationEvent selfEvent = NotificationEvent.builder()
+                .initiatorId(userId)
+                .recipientId(userId)
+                .type(NotificationType.FRIEND_REQUEST_ACCEPTED)
+                .build();
+
+        notificationEventListener.onNotificationReceived(selfEvent, mockChannel, mockMessage);
+
+        verify(mockChannel).basicAck(deliveryTag, false);
+        verifyNoMoreInteractions(notificationRepository, webSocketService, dtoConversionService);
+    }
+    @Test
+    @DisplayName("Should ACK and skip if recipient or initiator does not exist")
+    void shouldAckAndSkipIfUsersNotExist() throws Exception {
+        Channel mockChannel = mock(Channel.class);
+        Message mockMessage = mock(Message.class);
+        MessageProperties props = mock(MessageProperties.class);
+        long deliveryTag = 2222L;
+        when(mockMessage.getMessageProperties()).thenReturn(props);
+        when(props.getDeliveryTag()).thenReturn(deliveryTag);
+
+        // Recipient or initiator does not exist
+        when(userRepository.existsById(any(UUID.class))).thenReturn(false);
+
+        NotificationEvent event = NotificationEvent.builder()
+                .recipientId(UUID.randomUUID())
+                .initiatorId(UUID.randomUUID())
+                .type(NotificationType.NEW_FOLLOWER)
+                .message("A message")
+                .entityId(UUID.randomUUID())
+                .build();
+
+        notificationEventListener.onNotificationReceived(event, mockChannel, mockMessage);
+
+        verify(mockChannel).basicAck(deliveryTag, false);
+        verifyNoMoreInteractions(notificationRepository, webSocketService, dtoConversionService);
+    }
+    @Test
+    @DisplayName("Should handle NACK failure gracefully in exception block")
+    void shouldHandleNackExceptionGracefully() throws Exception {
+        Channel mockChannel = mock(Channel.class);
+        Message mockMessage = mock(Message.class);
+        MessageProperties props = mock(MessageProperties.class);
+        long deliveryTag = 999L;
+        when(mockMessage.getMessageProperties()).thenReturn(props);
+        when(props.getDeliveryTag()).thenReturn(deliveryTag);
+
+        when(userRepository.existsById(any(UUID.class))).thenReturn(true);
+
+        // First exception in save
+        when(notificationRepository.save(any(Notification.class))).thenThrow(new RuntimeException("first error"));
+        // Second exception in basicNack
+        doThrow(new RuntimeException("second error"))
+                .when(mockChannel).basicNack(eq(deliveryTag), eq(false), eq(false));
+
+        NotificationEvent event = NotificationEvent.builder()
+                .recipientId(UUID.randomUUID())
+                .initiatorId(UUID.randomUUID())
+                .entityId(UUID.randomUUID())
+                .type(NotificationType.PET_POST_LIKED)
+                .build();
+
+        // Should not throw, but catches both exceptions
+        notificationEventListener.onNotificationReceived(event, mockChannel, mockMessage);
+
+        verify(mockChannel).basicNack(deliveryTag, false, false);
+    }
+    @Test
     @DisplayName("Should process notification event successfully")
     void shouldProcessNotificationEventSuccessfully() {
         // Arrange
