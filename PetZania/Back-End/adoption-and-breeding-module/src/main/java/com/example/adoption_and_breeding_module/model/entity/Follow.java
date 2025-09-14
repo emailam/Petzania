@@ -1,5 +1,6 @@
 package com.example.adoption_and_breeding_module.model.entity;
 
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,32 +17,33 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 @Data
-@Table(name = "blocks",
+@Table(name = "follows",
         indexes = {
-        // Composite index for blocker + blocked
-        @Index(name = "idx_block_blocker_blocked", columnList = "blocker_id, blocked_id"),
-        // Index for finding blocked users
-        @Index(name = "idx_blocked_users", columnList = "blocker_id")},
+        // Index for finding all followers of a user
+        @Index(name = "idx_follow_followed", columnList = "followed_id"),
+        // Index for finding all users followed by a user
+        @Index(name = "idx_follow_follower", columnList = "follower_id")},
 
         uniqueConstraints = @UniqueConstraint(
-                name = "uk_block_blocker_blocked",
-                columnNames = {"blocker_id","blocked_id"})
+                name = "uk_follow_follower_followed",
+                columnNames = {"follower_id","followed_id"})
 )
-public class Block {
+public class Follow {
     @Id
-    @Column(name = "block_id", nullable = false, updatable = false)
-    private UUID blockId;
+    @Column(name = "id", nullable = false, updatable = false)
+    private UUID id;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "blocker_id", referencedColumnName = "user_id")
+    @JoinColumn(name = "follower_id", referencedColumnName = "user_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
-    private User blocker;
+    private User follower;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "blocked_id", referencedColumnName = "user_id")
+    @JoinColumn(name = "followed_id", referencedColumnName = "user_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
-    private User blocked;
+    private User followed;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Timestamp createdAt;
+
 }

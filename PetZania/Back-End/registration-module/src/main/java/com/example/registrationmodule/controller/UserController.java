@@ -156,17 +156,17 @@ public class UserController {
     @DeleteMapping("/delete")
     @RateLimit
     public ResponseEntity<String> deleteUser(@Valid @RequestBody EmailDTO emailDTO) throws AccessDeniedException {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Object principal = authentication.getPrincipal();
+         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+         Object principal = authentication.getPrincipal();
 
-        if (principal instanceof UserPrincipal userPrincipal) {
-            if (!userPrincipal.getEmail().equals(emailDTO.getEmail())) {
-                throw new AccessDeniedException("You can delete your own account");
-            }
-        }
+         if (principal instanceof UserPrincipal userPrincipal) {
+             if (!userPrincipal.getEmail().equals(emailDTO.getEmail())) {
+                 throw new AccessDeniedException("You can delete your own account");
+             }
+         }
 
-        userService.deleteUser(emailDTO);
-        return ResponseEntity.ok("User deleted successfully");
+         userService.deleteUser(emailDTO);
+         return ResponseEntity.ok("User deleted successfully");
     }
 
     @Operation(summary = "Delete all users")

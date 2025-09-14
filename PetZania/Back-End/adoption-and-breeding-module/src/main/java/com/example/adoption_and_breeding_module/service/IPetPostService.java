@@ -4,9 +4,11 @@ import com.example.adoption_and_breeding_module.model.dto.CreatePetPostDTO;
 import com.example.adoption_and_breeding_module.model.dto.PetPostDTO;
 import com.example.adoption_and_breeding_module.model.dto.PetPostFilterDTO;
 import com.example.adoption_and_breeding_module.model.dto.UpdatePetPostDTO;
+import com.example.adoption_and_breeding_module.model.enumeration.InterestType;
 import org.springframework.data.domain.Page;
 
 import java.util.UUID;
+import java.util.Map;
 
 public interface IPetPostService {
 
@@ -20,6 +22,8 @@ public interface IPetPostService {
 
     PetPostDTO toggleReact(UUID postId, UUID userId);
 
+    void markInterest(UUID postId, UUID userId, InterestType interestType);
+    void removeInterest(UUID postId, UUID userId);
 
     Page<PetPostDTO> getFilteredPosts(UUID userId, PetPostFilterDTO filter, int page, int size);
 

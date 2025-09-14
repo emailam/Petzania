@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface FriendshipRepository extends JpaRepository<Friendship, UUID> {
@@ -22,4 +23,5 @@ public interface FriendshipRepository extends JpaRepository<Friendship, UUID> {
             "WHERE f.user1.userId = :userId OR f.user2.userId = :userId")
     int countFriendsByUserId(UUID userId);
 
+    Optional<Friendship> findByUser1AndUser2(User user, User friend);
 }

@@ -1,5 +1,6 @@
 package com.example.adoption_and_breeding_module.model.event;
 
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -24,4 +25,8 @@ public class UserEvent {
     @Email
     @NotBlank
     private String email;
+
+    private Double latitude;
+
+    private Double longitude;
 }

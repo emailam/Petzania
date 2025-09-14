@@ -47,11 +47,21 @@ spring:
 
 feed:
     weights:
-        recency: 0.4
-        totalReacts: 0.3
-        petCategoryAffinity: 0.25
-        postCategoryAffinity: 0.2
+        recency:              700
+        totalReacts:          300
+        petCategoryAffinity:  400
+        postCategoryAffinity: 300
+        friendBoost:          5000
+        followeeBoost:        3000
+        distance:             750
+        speciesAffinity:      500
+        breedAffinity:        350
+        postTypeAffinity:     300
+        authorAffinity:       200
     freshness-window-hours: 96
+
+post:
+  expiration-days: 30
 
 server:
     port: ${ADOPTION_SERVER_PORT}

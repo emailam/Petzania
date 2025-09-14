@@ -2,7 +2,9 @@ package com.example.adoption_and_breeding_module.model.entity;
 import com.example.adoption_and_breeding_module.model.enumeration.PetPostStatus;
 import com.example.adoption_and_breeding_module.model.enumeration.PetPostType;
 import com.example.adoption_and_breeding_module.validator.NotToxicText;
+import com.example.adoption_and_breeding_module.validator.ValidEnum;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -13,10 +15,8 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor @Builder
 @Table(name = "pet_posts", indexes = {
         @Index(name = "idx_post_owner", columnList = "owner_id"),
         @Index(name = "idx_post_pet", columnList = "pet_id"),
@@ -24,10 +24,12 @@ import java.util.UUID;
         @Index(name = "idx_post_type", columnList = "post_type"),
         @Index(name = "idx_post_created", columnList = "created_at")
 })
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class PetPost {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "post_id", nullable = false)
+    @EqualsAndHashCode.Include
+    @Column(name = "post_id", nullable = false, updatable = false)
     private UUID postId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -40,10 +42,9 @@ public class PetPost {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Pet pet;
 
-
     @Enumerated(EnumType.STRING)
     @Builder.Default
-    @Column(name = "post_status", nullable = false)
+    @Column(name = "post_status", nullable = false, length = 20)
     PetPostStatus postStatus = PetPostStatus.PENDING;
 
     @JoinTable(
@@ -51,7 +52,7 @@ public class PetPost {
             joinColumns = @JoinColumn(name = "post_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id"),
             uniqueConstraints = @UniqueConstraint(columnNames = {"post_id", "user_id"})
-    )
+    )   
     @ManyToMany(fetch = FetchType.EAGER)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @Builder.Default
@@ -64,11 +65,16 @@ public class PetPost {
     @Column(name = "description", length = 2000)
     private String description;
 
-    @Column(name = "location", nullable = false)
-    private String location;
+    @Column(name = "latitude", nullable = false)
+    @Builder.Default
+    private Double latitude = 0.0;
+
+    @Column(name = "longitude", nullable = false)
+    @Builder.Default
+    private Double longitude = 0.0;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "post_type", nullable = false)
+    @Column(name = "post_type", nullable = false, length = 20)
     private PetPostType postType;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -77,8 +83,9 @@ public class PetPost {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
+
     @Transient
-    private double score;
+    private long score;
 
     @PrePersist
     public void onCreate() {

@@ -12,15 +12,15 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 @Data
-public class BlockEvent {
+public class FriendEvent {
     @org.hibernate.validator.constraints.UUID
-    private UUID blockId;
+    private UUID friendshipId;
 
     @org.hibernate.validator.constraints.UUID
-    private UUID blockerId;
+    private UUID user1Id;
 
     @org.hibernate.validator.constraints.UUID
-    private UUID blockedId;
+    private UUID user2Id;
 
     private Timestamp createdAt;
-}
+} 
