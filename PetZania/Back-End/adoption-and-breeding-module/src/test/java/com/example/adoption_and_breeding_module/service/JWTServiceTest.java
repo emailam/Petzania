@@ -1,7 +1,8 @@
-package com.example.friends.and.chats.module.service;
-import com.example.friends.and.chats.module.service.impl.JWTService;
-import com.example.friends.and.chats.module.model.principal.UserPrincipal;
-import com.example.friends.and.chats.module.model.principal.AdminPrincipal;
+package com.example.adoption_and_breeding_module.service;
+
+import com.example.adoption_and_breeding_module.model.principal.AdminPrincipal;
+import com.example.adoption_and_breeding_module.model.principal.UserPrincipal;
+import com.example.adoption_and_breeding_module.service.impl.JWTService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.junit.jupiter.api.BeforeEach;
@@ -81,7 +82,7 @@ public class JWTServiceTest {
     @Test
     void shouldDetectExpiredToken() {
         String subject = "user@expired.com";
-        String token = generateToken(new HashMap<>(), subject, -3600); // already expired
+        String token = generateToken(new HashMap<>(), subject, -1000); // already expired
         assertTrue(jwtService.isTokenExpired(token));
     }
 }
