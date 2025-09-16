@@ -1,6 +1,7 @@
 package com.example.adoption_and_breeding_module.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -8,6 +9,7 @@ import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RateLimitService {
     private final RedisTemplate<String, String> redisTemplate;
 
@@ -26,7 +28,7 @@ public class RateLimitService {
             return false; // Rate limit exceeded
         }
 
-        System.out.println(key);
+        log.info(key);
         // Increment counter
         redisTemplate.opsForValue().increment(key);
         return true;

@@ -8,6 +8,7 @@ import com.example.adoption_and_breeding_module.repository.FriendshipRepository;
 import com.example.adoption_and_breeding_module.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,7 @@ import java.util.UUID;
 @Service
 @AllArgsConstructor
 @Transactional
+@Slf4j
 public class FriendListener {
     private final UserRepository userRepository;
     private final FriendshipRepository friendshipRepository;
@@ -38,7 +40,7 @@ public class FriendListener {
                     .createdAt(event.getCreatedAt())
                     .build();
             friendshipRepository.save(friendship);
-            System.out.println("Friendship added: " + event);
+            log.info("Friendship added: " + event);
         }
     }
 
@@ -47,7 +49,7 @@ public class FriendListener {
         UUID friendshipId = event.getFriendshipId();
         if(friendshipRepository.existsById(friendshipId)) {
             friendshipRepository.deleteById(friendshipId);
-            System.out.println("Friendship removed: " + event);
+            log.info("Friendship removed: " + event);
         }
     }
 } 
