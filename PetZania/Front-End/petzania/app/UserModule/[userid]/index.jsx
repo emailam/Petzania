@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Dimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { useActionSheet } from '@expo/react-native-action-sheet';
+import BottomSheet, { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import ImageViewing from 'react-native-image-viewing';
 import LottieView from 'lottie-react-native';
 import UserPosts from '@/components/AdoptionBreedingModule/UserPosts';
@@ -39,7 +39,11 @@ export default function UserProfile() {
     const { userid } = useLocalSearchParams();
     const router = useRouter();
     const { user: currentUser } = useContext(UserContext);
-    const { showActionSheetWithOptions } = useActionSheet();
+    
+    // Bottom Sheet setup
+    const bottomSheetModalRef = useRef(null);
+    const snapPoints = ['30%'];
+    
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [friendshipStatus, setFriendshipStatus] = useState('none');
@@ -205,7 +209,8 @@ export default function UserProfile() {
             if (friendshipStatus === 'none') {
                 // Send friend request
                 const response = await sendFriendRequest(userid);
-                setFriendshipStatus('pending');
+                handleFollowUser(); // Auto-follow when sending request
+                setFriendshipStatus('pending');``
                 setFriendRequestId(response.id);
 
                 Toast.show({
@@ -213,7 +218,8 @@ export default function UserProfile() {
                     text1: 'Friend Request Sent',
                     text2: `Friend request sent to ${user?.name || 'user'}`,
                     position: 'top',
-                    visibilityTime: 3000,                });
+                    visibilityTime: 3000,
+                  });
             } else if (friendshipStatus === 'friends') {
                 // Remove friend
                 Alert.alert(
@@ -446,51 +452,9 @@ export default function UserProfile() {
         }
     };
 
-    const handleMoreOptions = () => {
-        // Build options array based on block status
-        const options = [];
-
-        // Only show follow/unfollow if user is not blocked
-        if (!isBlocked) {
-            options.push(isFollowingUser ? 'Unfollow User' : 'Follow User');
-        }
-
-        // Show Block/Unblock based on current status
-        options.push(isBlocked ? 'Unblock User' : 'Block User');
-        options.push('Cancel');
-
-        const cancelButtonIndex = options.length - 1;
-        const destructiveButtonIndex = options.length - 2;
-
-        showActionSheetWithOptions(
-            {
-              options,
-              cancelButtonIndex,
-              destructiveButtonIndex,
-              title: 'More Options',
-            },
-            (buttonIndex) => {
-                if (isBlocked) {
-                    // When user is blocked, only block/unblock option is available
-                    switch (buttonIndex) {
-                        case 0:
-                            handleUnblockUser();
-                            break;
-                    }
-                } else {
-                    // When user is not blocked, both follow and block options are available
-                    switch (buttonIndex) {
-                        case 0:
-                            handleFollowUser();
-                            break;
-                        case 1:
-                            handleBlockUser();
-                            break;
-                    }
-                }
-            }
-        );
-    };
+    const handleMoreOptions = useCallback(() => {
+        bottomSheetModalRef.current?.present();
+    }, []);
 
     const handleFollowUser = async () => {
         try {
@@ -635,7 +599,7 @@ export default function UserProfile() {
             case 'pending':
                 return {
                     icon: 'hourglass',
-                    text: 'Pending',
+                    text: 'Requested',
                     style: styles.pendingButton,
                     textStyle: styles.pendingButtonText,
                 };
@@ -722,7 +686,7 @@ export default function UserProfile() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.headerContainer}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
           <TouchableOpacity
             style={styles.profileImageContainer}
             onPress={handleImagePress}
@@ -745,7 +709,9 @@ export default function UserProfile() {
           </TouchableOpacity>
 
           <View style={styles.userInfoContainer}>
-            <Text style={styles.name}>{user?.name || 'Unknown User'}</Text>
+            <Text style={styles.name} numberOfLines={2} ellipsizeMode="tail">
+              {user?.name || 'Unknown User'}
+            </Text>
           </View>
         </View>
 
@@ -930,36 +896,84 @@ export default function UserProfile() {
 
       {/* Tab Content */}
       {activeTab === 'posts' && (
-        <View style={styles.tabContent}>
-          <View style = {styles.tabSection}>
-            <UserPosts userId={userid} />
-          </View>
+        <View style = {styles.tabSection}>
+          <UserPosts userId={userid} />
         </View>
       )}
 
       {activeTab === 'pets' && (
-        <View style={styles.tabContent}>
-          {/* Pets Section */}
-          <View style={styles.tabSection}>
-            {user?.myPets && user?.myPets.length > 0 ? (
-              user.myPets.map((pet) => (
-                <PetCard
-                  key={pet.petId}
-                  pet={pet}
-                />
-              ))
-            ) : (
-              <View style={styles.noContentContainer}>
-                <MaterialIcons name="pets" size={64} color="#999" />
-                <Text style={styles.noContentText}>No pets yet</Text>
-                <Text style={styles.noContentSubText}>
-                  {isOwnProfile ? "Add your first pet!" : `${user?.name || 'User'} hasn't added any pets yet`}
-                </Text>
-              </View>
-            )}
+        <View style={styles.tabSection}>
+          {user?.myPets && user?.myPets.length > 0 ? (
+            user.myPets.map((pet) => (
+              <PetCard
+                key={pet.petId}
+                pet={pet}
+                marginHorizontal={0}
+              />
+            ))
+          ) : (
+            <View style={styles.noContentContainer}>
+              <MaterialIcons name="pets" size={64} color="#999" />
+              <Text style={styles.noContentText}>No pets yet</Text>
+              <Text style={styles.noContentSubText}>
+                {isOwnProfile ? "Add your first pet!" : `${user?.name || 'User'} hasn't added any pets yet`}
+              </Text>
             </View>
-        </View>
+          )}
+          </View>
       )}
+
+      {/* More Options Bottom Sheet */}
+      <BottomSheetModal
+        ref={bottomSheetModalRef}
+        snapPoints={snapPoints}
+        enablePanDownToClose
+        backdropComponent={({ style }) => (
+          <View style={[style, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]} />
+        )}
+      >
+        <BottomSheetView style={styles.bottomSheetContent}>
+          <Text style={styles.bottomSheetTitle}>More Options</Text>
+          
+          {/* Follow/Unfollow Option - Only show if not blocked */}
+          {!isBlocked && (
+            <TouchableOpacity
+              style={styles.bottomSheetOption}
+              onPress={() => {
+                bottomSheetModalRef.current?.close();
+                handleFollowUser();
+              }}
+            >
+              <Ionicons 
+                name={isFollowingUser ? "person-remove" : "person-add"} 
+                size={20} 
+                color="#333" 
+              />
+              <Text style={styles.bottomSheetOptionText}>
+                {isFollowingUser ? 'Unfollow User' : 'Follow User'}
+              </Text>
+            </TouchableOpacity>
+          )}
+          
+          {/* Block/Unblock Option */}
+          <TouchableOpacity
+            style={[styles.bottomSheetOption, styles.destructiveOption]}
+            onPress={() => {
+              bottomSheetModalRef.current?.close();
+              isBlocked ? handleUnblockUser() : handleBlockUser();
+            }}
+          >
+            <Ionicons 
+              name={isBlocked ? "shield-checkmark" : "shield"} 
+              size={20} 
+              color="#f44336" 
+            />
+            <Text style={[styles.bottomSheetOptionText, styles.destructiveText]}>
+              {isBlocked ? 'Unblock User' : 'Block User'}
+            </Text>
+          </TouchableOpacity>
+        </BottomSheetView>
+      </BottomSheetModal>
 
       <ImageViewing
         images={[{ uri: user?.profilePictureURL || '' }]}
@@ -1042,7 +1056,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#9188E5',
   },
   defaultProfileImage: {
@@ -1050,7 +1064,7 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     backgroundColor: '#f0f0f0',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#9188E5',
     justifyContent: 'center',
     alignItems: 'center',
@@ -1062,12 +1076,15 @@ const styles = StyleSheet.create({
   },
   userInfoContainer: {
     marginLeft: 16,
+    flex: 1,
+    paddingRight: 16,
   },
   name: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 4,
+    flexWrap: 'wrap',
   },
   actionButtonsContainer: {
     flexDirection: 'row',
@@ -1082,6 +1099,7 @@ const styles = StyleSheet.create({
     gap: 6,
     flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   // Friend Button States
   addFriendButton: {
@@ -1295,18 +1313,15 @@ const styles = StyleSheet.create({
   activeTabText: {
     color: '#9188E5',
   },
-  tabContent: {
-    flex: 1,
-  },
   // Updated Pets Section Styles
   tabSection: {
-    paddingVertical: 20,
+    marginHorizontal: 8,
   },
   petGridImage: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#9188E5',
     marginBottom: 8,
   },
@@ -1315,7 +1330,7 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     backgroundColor: '#f0f0f0',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#9188E5',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1358,14 +1373,13 @@ const styles = StyleSheet.create({
   },
   petCard: {
     alignItems: 'center',
-    marginRight: 16,
     width: 80,
   },
   petImage: {
     width: 70,
     height: 70,
     borderRadius: 35,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#9188E5',
     marginBottom: 8,
   },
@@ -1374,7 +1388,7 @@ const styles = StyleSheet.create({
     height: 70,
     borderRadius: 35,
     backgroundColor: '#f0f0f0',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#9188E5',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1393,5 +1407,38 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 16,
     color: '#999',
+  },
+  // Bottom Sheet Styles
+  bottomSheetContent: {
+    padding: 20,
+    paddingBottom: 30,
+  },
+  bottomSheetTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  bottomSheetOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    backgroundColor: '#f8f9fa',
+    marginBottom: 12,
+    gap: 12,
+  },
+  destructiveOption: {
+    backgroundColor: '#fef2f2',
+  },
+  bottomSheetOptionText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+  },
+  destructiveText: {
+    color: '#f44336',
   },
 });

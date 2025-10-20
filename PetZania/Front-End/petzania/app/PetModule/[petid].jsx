@@ -26,9 +26,24 @@ import { updatePet, deletePet, getPetById } from '@/services/petService';
 import Toast from 'react-native-toast-message';
 
 export default function PetDetails() {
-    const { petId } = useLocalSearchParams();
+    const { petId, petData } = useLocalSearchParams();
     const { pets, setPets } = useContext(PetContext);
     const { user: currentUser } = useContext(UserContext);
+
+    const petIndex = pets.findIndex((pet) => pet.petId === petId);
+    
+    // Safely parse pet data with error handling
+    const parsedPetData = (() => {
+        if (!petData) return null;
+        try {
+            return JSON.parse(petData);
+        } catch (error) {
+            console.error('Error parsing petData:', error);
+            return null;
+        }
+    })();
+    
+    const [pet, setPet] = useState(() => pets[petIndex] || parsedPetData || null);
 
     const showSuccessMessage = (message) => {
         Toast.show({
@@ -52,8 +67,6 @@ export default function PetDetails() {
     }
 
     const router = useRouter();
-    const petIndex = pets.findIndex((pet) => pet.petId === petId);
-    const [pet, setPet] = useState(() => pets[petIndex] || null);
     const [petLoading, setPetLoading] = useState(!pet); // Loading if pet not found in context
 
     // Check if the current user owns this pet
@@ -92,6 +105,7 @@ export default function PetDetails() {
     const breedOptions = species
         ? (PET_BREEDS[species]?.map(b => ({ label: b.name, value: b.name })) || [])
         : [];    // Fetch pet data if not found in context
+
     useEffect(() => {
         const fetchPetData = async () => {
             if (!pet && petId) {
@@ -143,6 +157,7 @@ export default function PetDetails() {
         setPet((prev) => prev ? { ...prev, [key]: value } : null);
         setErrors((prev) => ({ ...prev, [key]: '' }));
     };
+
     const pickImage = async (replaceIndex = null) => {
         if (replaceIndex === 0 && images.length >= 1) {
             // Replace the profile picture (first image)
