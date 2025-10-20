@@ -13,6 +13,7 @@ import com.example.registrationmodule.service.ICloudService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,6 +26,7 @@ import java.util.*;
 @AllArgsConstructor
 @Profile("!dev")
 @Transactional
+@Slf4j
 public class CloudService implements ICloudService {
     private final MediaRepository mediaRepository;
     private final AmazonS3 s3Client;
@@ -37,7 +39,7 @@ public class CloudService implements ICloudService {
         if (validate) {
             validateFile(file);
         }
-        System.out.println(cloudStorageConfig.getMaxSize().get("image"));
+        log.info(String.valueOf(cloudStorageConfig.getMaxSize().get("image")));
         String originalFilename = Optional.ofNullable(file.getOriginalFilename()).orElse("file");
         String sanitizedFilename = sanitizeFilename(originalFilename);
         String format = extractFileFormat(originalFilename);

@@ -16,10 +16,12 @@ import jakarta.persistence.criteria.Predicate;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 public class PetPostSpecification {
 
-    public static Specification<PetPost> withFilters(PetPostFilterDTO filter) {
+    public static Specification<PetPost> withFilters(PetPostFilterDTO filter, long expirationDays) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -51,6 +53,15 @@ public class PetPostSpecification {
                 predicates.add(cb.greaterThanOrEqualTo(
                         root.get("pet").get("dateOfBirth"), dobAfter));
             }
+
+            // Expiration filter: only include posts where the most recent of updatedAt or createdAt is within expirationDays
+            Instant expirationThreshold = Instant.now().minus(expirationDays, ChronoUnit.DAYS);
+            Expression<Instant> updatedAt = root.get("updatedAt");
+            Expression<Instant> createdAt = root.get("createdAt");
+            // If updatedAt is null, use createdAt; otherwise use updatedAt
+            predicates.add(cb.greaterThanOrEqualTo(
+                cb.coalesce(updatedAt, createdAt), expirationThreshold
+            ));
 
 
             return cb.and(predicates.toArray(new Predicate[0]));

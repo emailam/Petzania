@@ -61,7 +61,8 @@ spring:
         ${REFRESH_TOKEN_EXPIRATION}
 
   sendgrid:
-    key: ${SPRING_SENDGRID_KEY}
+    key:
+      ${SPRING_SENDGRID_KEY}
 
 
   email:
@@ -82,11 +83,11 @@ spring:
       text: ${SPRING_AWS_MAX_SIZE_TEXT}
       application-pdf: ${SPRING_AWS_MAX_SIZE_PDF}
     allowed-types:
-        - image/jpeg
-        - image/png
-        - video/mp4
-        - text/plain
-        - application/pdf
+      - image/jpeg
+      - image/png
+      - video/mp4
+      - text/plain
+      - application/pdf
 
 server:
   error:

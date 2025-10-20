@@ -31,6 +31,8 @@ public class UserListener {
                 newUser.setUserId(user.getUserId());
                 newUser.setUsername(user.getUsername());
                 newUser.setEmail(user.getEmail());
+                newUser.setLatitude(user.getLatitude() != null ? user.getLatitude() : 0.0);
+                newUser.setLongitude(user.getLongitude() != null ? user.getLongitude() : 0.0);
                 userRepository.save(newUser);
                 log.info("Received registered user: {}", user);
             }
@@ -52,7 +54,6 @@ public class UserListener {
             }
         }
     }
-
     @RabbitListener(queues = USER_DELETED_QUEUE_ADOPTION_MODULE, ackMode = ACK_MODE)
     public void onUserDeleted(UserEvent user, Channel channel, Message message) {
         try {

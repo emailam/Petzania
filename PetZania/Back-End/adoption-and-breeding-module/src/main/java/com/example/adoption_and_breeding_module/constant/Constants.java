@@ -9,10 +9,16 @@ public final class Constants {
     // ===== Exchanges =====
     public static final String BLOCK_EXCHANGE = "blockExchange";
     public static final String BLOCK_RETRY_EXCHANGE = "blockRetryExchange";
+    public static final String FOLLOW_EXCHANGE = "followExchange";
+    public static final String FRIEND_EXCHANGE = "friendExchange";
     public static final String NOTIFICATION_EXCHANGE = "notificationExchange";
     public static final String USER_EXCHANGE = "userExchange";
     public static final String USER_RETRY_EXCHANGE = "userRetryExchange";
     // ===== Main Queues' Names =====
+    public static final String FRIEND_ADDED_QUEUE_ADOPTION_MODULE = "friendAddedQueueAdoptionModule";
+    public static final String FRIEND_REMOVED_QUEUE_ADOPTION_MODULE = "friendRemovedQueueAdoptionModule";
+    public static final String FOLLOW_ADDED_QUEUE_ADOPTION_MODULE = "followAddedQueueAdoptionModule";
+    public static final String FOLLOW_REMOVED_QUEUE_ADOPTION_MODULE = "followRemovedQueueAdoptionModule";
     public static final String NOTIFICATIONS_QUEUE = "notificationsQueue";
     public static final String USER_BLOCKED_QUEUE_ADOPTION_MODULE = "userBlockedQueueAdoptionModule";
     public static final String USER_DELETED_QUEUE_ADOPTION_MODULE = "userDeletedQueueAdoptionModule";
@@ -45,6 +51,10 @@ public final class Constants {
     public static final String USER_UNBLOCKED_ADOPTION = "user.unblocked.adoption";
     public static final String NOTIFICATION_PET_POST_LIKED = "notification.pet_post_liked";
     public static final String NOTIFICATION_PET_POST_DELETED = "notification.pet_post_deleted";
+    public static final String FRIEND_ADDED = "friend.added";
+    public static final String FRIEND_REMOVED = "friend.removed";
+    public static final String FOLLOW_ADDED = "follow.added";
+    public static final String FOLLOW_REMOVED = "follow.removed";
     // Retry Routing Keys
     public static final String USER_BLOCKED_ADOPTION_RETRY = "user.blocked.adoption.retry";
     public static final String USER_DELETED_ADOPTION_RETRY = "user.deleted.adoption.retry";

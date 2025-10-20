@@ -3,13 +3,16 @@ package com.example.adoption_and_breeding_module.model.entity;
 import com.example.adoption_and_breeding_module.model.enumeration.Gender;
 import com.example.adoption_and_breeding_module.model.enumeration.PetSpecies;
 import com.example.adoption_and_breeding_module.validator.NotToxicText;
+import com.example.adoption_and_breeding_module.validator.ValidEnum;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.time.Period;
@@ -30,7 +33,7 @@ import java.time.Period;
 public class Pet {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "pet_id", nullable = false)
+    @Column(name = "pet_id", nullable = false, updatable = false)
     private UUID petId;
 
     @Column(name = "name", nullable = false)
@@ -46,22 +49,28 @@ public class Pet {
     @Column(name = "date_of_birth", nullable = false)
     private LocalDate dateOfBirth;
 
-    @Column(name = "breed", nullable = false)
+    @Column(name = "breed", nullable = false, length = 32)
     private String breed;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "species", nullable = false)
+    @Column(name = "species", nullable = false, length = 20)
     private PetSpecies species;
 
-    @ElementCollection
-    @CollectionTable(name = "pets_vaccines_urls", joinColumns = @JoinColumn(name = "pet_id"))
-    @Column(name = "vaccine_url")
-    private List<String> myVaccinesURLs;
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+            name = "pets_vaccines_urls",
+            joinColumns = @JoinColumn(name = "pet_id")
+    )
+    @Column(name = "vaccine_url", length = 500)
+    private List<String> myVaccinesURLs = new ArrayList<>();
 
-    @ElementCollection
-    @CollectionTable(name = "pets_pictures_urls", joinColumns = @JoinColumn(name = "pet_id"))
-    @Column(name = "picture_url")
-    private List<String> myPicturesURLs;
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+            name = "pets_pictures_urls",
+            joinColumns = @JoinColumn(name = "pet_id")
+    )
+    @Column(name = "picture_url", length = 500)
+    private List<String> myPicturesURLs = new ArrayList<>();
 
     // === Age calculation method ===
     public int getAgeInMonths() {

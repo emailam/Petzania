@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("api")
 @Tag(name = "Admin", description = "Endpoints for admin management and authentication")
+@Slf4j
 public class AdminController {
     private final IAdminService adminService;
     private final IDTOConversionService dtoConversionService;
@@ -53,7 +55,7 @@ public class AdminController {
     public ResponseEntity<AdminDTO> createAdmin(@RequestBody @Valid AdminDTO adminDto) {
         Admin admin = dtoConversionService.mapToAdmin(adminDto);
         Admin createdAdmin = adminService.saveAdmin(admin);
-        System.out.println(admin);
+        log.info("Admin: {}", admin);
         return new ResponseEntity<>(
                 dtoConversionService.mapToAdminDTO(createdAdmin),
                 HttpStatus.CREATED

@@ -8,11 +8,17 @@ public final class Constants {
 
     // ===== Exchanges =====
     public static final String BLOCK_EXCHANGE = "blockExchange";
+    public static final String FRIEND_EXCHANGE = "friendExchange";
+    public static final String FOLLOW_EXCHANGE = "followExchange";
     public static final String BLOCK_RETRY_EXCHANGE = "blockRetryExchange";
     public static final String NOTIFICATION_EXCHANGE = "notificationExchange";
     public static final String USER_EXCHANGE = "userExchange";
     public static final String USER_RETRY_EXCHANGE = "userRetryExchange";
     // ===== Main Queues' Names =====
+    public static final String FRIEND_ADDED_QUEUE_ADOPTION_MODULE = "friendAddedQueueAdoptionModule";
+    public static final String FRIEND_REMOVED_QUEUE_ADOPTION_MODULE = "friendRemovedQueueAdoptionModule";
+    public static final String FOLLOW_ADDED_QUEUE_ADOPTION_MODULE = "followAddedQueueAdoptionModule";
+    public static final String FOLLOW_REMOVED_QUEUE_ADOPTION_MODULE = "followRemovedQueueAdoptionModule";
     public static final String NOTIFICATIONS_QUEUE = "notificationsQueue";
     public static final String USER_BLOCKED_QUEUE_REGISTRATION_MODULE = "userBlockedQueueRegistrationModule";
     public static final String USER_BLOCKED_QUEUE_ADOPTION_MODULE = "userBlockedQueueAdoptionModule";
@@ -59,6 +65,10 @@ public final class Constants {
     public static final String USER_REGISTERED_FRIENDS_RETRY = "user.registered.friends.retry";
     public static final String USER_UNBLOCKED_ADOPTION_RETRY = "user.unblocked.adoption.retry";
     public static final String USER_UNBLOCKED_REGISTRATION_RETRY = "user.unblocked.registration.retry";
+    public static final String FRIEND_ADDED = "friend.added";
+    public static final String FRIEND_REMOVED = "friend.removed";
+    public static final String FOLLOW_ADDED = "follow.added";
+    public static final String FOLLOW_REMOVED = "follow.removed";
     // Rate Limit
     public static final int RATE_LIMIT_DEFAULT_REQUESTS = 10;
     public static final int RATE_LIMIT_DEFAULT_DURATION = 60;

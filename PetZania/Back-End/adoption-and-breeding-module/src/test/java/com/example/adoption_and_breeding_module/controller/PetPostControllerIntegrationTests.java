@@ -3,15 +3,16 @@ package com.example.adoption_and_breeding_module.controller;
 
 import com.example.adoption_and_breeding_module.TestDataUtil;
 import com.example.adoption_and_breeding_module.model.dto.*;
-import com.example.adoption_and_breeding_module.model.entity.Block;
-import com.example.adoption_and_breeding_module.model.entity.Pet;
-import com.example.adoption_and_breeding_module.model.entity.PetPost;
-import com.example.adoption_and_breeding_module.model.entity.User;
+import com.example.adoption_and_breeding_module.model.entity.*;
 import com.example.adoption_and_breeding_module.model.enumeration.*;
 import com.example.adoption_and_breeding_module.model.principal.UserPrincipal;
 import com.example.adoption_and_breeding_module.repository.BlockRepository;
 import com.example.adoption_and_breeding_module.repository.PetPostRepository;
 import com.example.adoption_and_breeding_module.repository.UserRepository;
+import com.example.adoption_and_breeding_module.repository.projection.BreedScore;
+import com.example.adoption_and_breeding_module.repository.projection.OwnerScore;
+import com.example.adoption_and_breeding_module.repository.projection.PostTypeScore;
+import com.example.adoption_and_breeding_module.repository.projection.SpeciesScore;
 import com.example.adoption_and_breeding_module.service.impl.FeedScorer;
 import com.example.adoption_and_breeding_module.util.SecurityUtils;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -29,13 +30,18 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.MediaType;
+import com.example.adoption_and_breeding_module.repository.PetRepository;
+import com.example.adoption_and_breeding_module.repository.FriendshipRepository;
+import com.example.adoption_and_breeding_module.repository.FollowRepository;
+import com.example.adoption_and_breeding_module.repository.PetPostInterestRepository;
+import com.example.adoption_and_breeding_module.model.enumeration.InterestType;
+import jakarta.persistence.EntityManager;
 
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -63,13 +69,26 @@ public class PetPostControllerIntegrationTests {
     private UserRepository userRepository;
     @Autowired
     private PetPostRepository petPostRepository;
+
+    @Autowired
+    private PetRepository petRepository;
+
     @Autowired
     private BlockRepository blockRepository;
     @Autowired
     private FeedScorer feedScorer;
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
-    double EPSILON = 1e-6;
+
+    @Autowired
+    private EntityManager entityManager;
+
+    @Autowired
+    private FriendshipRepository friendshipRepository;
+    @Autowired
+    private FollowRepository followRepository;
+    @Autowired
+    private PetPostInterestRepository petPostInterestRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule())
@@ -107,7 +126,7 @@ public class PetPostControllerIntegrationTests {
 
         // Create test pet
         testPet = TestDataUtil.createTestPet("Buddy", PetSpecies.DOG, Gender.MALE, 24); // 2 years old
-
+        petRepository.save(testPet);
         // Create test posts
         adoptionPost = petPostRepository.save(PetPost.builder()
                 .owner(userA)
@@ -115,23 +134,27 @@ public class PetPostControllerIntegrationTests {
                 .postType(PetPostType.ADOPTION)
                 .postStatus(PetPostStatus.PENDING)
                 .description("Looking for a loving home")
-                .location("New York")
+                .latitude(40.7128)
+                .longitude(-74.0060)
                 .reacts(0)
                 .reactedUsers(new HashSet<>())
                 .build());
 
+        Pet testPet2 = TestDataUtil.createTestPet("Luna", PetSpecies.CAT, Gender.FEMALE, 36);
+        petRepository.save(testPet2);
+
         breedingPost = petPostRepository.save(PetPost.builder()
                 .owner(userB)
-                .pet(TestDataUtil.createTestPet("Luna", PetSpecies.CAT, Gender.FEMALE, 36)) // 3 years old
+                .pet(testPet2)
                 .postType(PetPostType.BREEDING)
                 .postStatus(PetPostStatus.PENDING)
                 .description("Purebred Persian cat for breeding")
-                .location("Los Angeles")
+                .latitude(34.0522)
+                .longitude(-118.2437)
                 .reacts(1)
                 .reactedUsers(new HashSet<>(Set.of(userA)))
                 .build());
     }
-
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
@@ -151,7 +174,8 @@ public class PetPostControllerIntegrationTests {
         createDTO.setPetDTO(petDTO);
         createDTO.setDescription("Friendly dog needs home");
         createDTO.setPostType(PetPostType.ADOPTION);
-        createDTO.setLocation("Brazil");
+        createDTO.setLatitude(-14.2350);
+        createDTO.setLongitude(-51.9253);
 
         mockMvc.perform(post("/api/pet-posts")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -165,7 +189,8 @@ public class PetPostControllerIntegrationTests {
                 .andExpect(jsonPath("$.postStatus").value("PENDING"))
                 .andExpect(jsonPath("$.reacts").value(0))
                 .andExpect(jsonPath("$.createdAt").exists())
-                .andExpect(jsonPath("$.location").exists()); // Location should be set by service
+                .andExpect(jsonPath("$.latitude").exists())
+                .andExpect(jsonPath("$.longitude").exists());
 
         // Verify post was saved
         assertEquals(3, petPostRepository.count());
@@ -180,7 +205,8 @@ public class PetPostControllerIntegrationTests {
         createDTO.setPetDTO(petDTO);
         createDTO.setDescription("Friendly dog needs home");
         createDTO.setPostType(PetPostType.ADOPTION);
-        createDTO.setLocation("Brazil");
+        createDTO.setLatitude(5.0);
+        createDTO.setLongitude(5.0);
         for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
             mockMvc.perform(post("/api/pet-posts")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -239,12 +265,14 @@ public class PetPostControllerIntegrationTests {
         CreatePetPostDTO createDTO = new CreatePetPostDTO();
         createDTO.setPetDTO(petDTO);
         createDTO.setPostType(PetPostType.ADOPTION);
-        createDTO.setLocation("China");
+        createDTO.setLatitude(35.8617);
+        createDTO.setLongitude(104.1954);
 
         mockMvc.perform(post("/api/pet-posts")
                         .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)           // ← add this
                         .content(objectMapper.writeValueAsString(createDTO)))
-                .andExpect(status().isBadRequest()); // AuthenticatedUserNotFound
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -255,8 +283,7 @@ public class PetPostControllerIntegrationTests {
                 .andExpect(jsonPath("$.petDTO.name").value("Buddy"))
                 .andExpect(jsonPath("$.petDTO.petId").value(testPet.getPetId().toString()))
                 .andExpect(jsonPath("$.petDTO.age").value("2 years"))
-                .andExpect(jsonPath("$.postType").value("ADOPTION"))
-                .andExpect(jsonPath("$.location").value("New York"));
+                .andExpect(jsonPath("$.postType").value("ADOPTION"));
     }
 
     @Test
@@ -334,7 +361,8 @@ public class PetPostControllerIntegrationTests {
                         .pet(TestDataUtil.createTestPet("Young Dog", PetSpecies.DOG, Gender.MALE, 6)) // 6 months
                         .postType(PetPostType.ADOPTION)
                         .postStatus(PetPostStatus.PENDING)
-                        .location("Chicago")
+                        .latitude(35.8617)
+                        .longitude(104.1954)
                         .reacts(5)
                         .build(),
                 PetPost.builder()
@@ -342,7 +370,8 @@ public class PetPostControllerIntegrationTests {
                         .pet(TestDataUtil.createTestPet("Old Cat", PetSpecies.CAT, Gender.FEMALE, 120)) // 10 years
                         .postType(PetPostType.BREEDING)
                         .postStatus(PetPostStatus.PENDING)
-                        .location("Miami")
+                        .latitude(35.8617)
+                        .longitude(104.1954)
                         .reacts(10)
                         .build(),
                 PetPost.builder()
@@ -350,7 +379,8 @@ public class PetPostControllerIntegrationTests {
                         .pet(TestDataUtil.createTestPet("Luna", PetSpecies.RABBIT, Gender.FEMALE, 18)) // 1.5 years
                         .postType(PetPostType.BREEDING)
                         .postStatus(PetPostStatus.COMPLETED)
-                        .location("Tampa")
+                        .latitude(35.8617)
+                        .longitude(104.1954)
                         .reacts(7)
                         .build()
         ));
@@ -424,13 +454,21 @@ public class PetPostControllerIntegrationTests {
         updatePetDTO.setName("Buddy Updated");
         updatePetDTO.setDescription("Updated pet description");
         updatePetDTO.setBreed("Golden Retriever");
-        updatePetDTO.setMyVaccinesURLs(List.of("new-vaccine1.jpg", "new-vaccine2.jpg"));
-        updatePetDTO.setMyPicturesURLs(List.of("new-pic1.jpg", "new-pic2.jpg"));
+        updatePetDTO.setMyVaccinesURLs(List.of(
+                "https://example.com/new-vaccine1.jpg",
+                "https://example.com/new-vaccine2.jpg"
+        ));
+
+        updatePetDTO.setMyPicturesURLs(List.of(
+                "https://example.com/new-pic1.jpg",
+                "https://example.com/new-pic2.jpg"
+        ));
 
         UpdatePetPostDTO updateDTO = new UpdatePetPostDTO();
         updateDTO.setUpdatePetDTO(updatePetDTO);
         updateDTO.setDescription("Updated post description");
-        updateDTO.setLocation("China");
+        updateDTO.setLatitude(35.8617);
+        updateDTO.setLongitude(104.1954);
         updateDTO.setPostStatus(PetPostStatus.COMPLETED);
 
         mockMvc.perform(patch("/api/pet-posts/{petPostId}", adoptionPost.getPostId())
@@ -442,7 +480,6 @@ public class PetPostControllerIntegrationTests {
                 .andExpect(jsonPath("$.petDTO.breed").value("Golden Retriever"))
                 .andExpect(jsonPath("$.petDTO.myVaccinesURLs", hasSize(2)))
                 .andExpect(jsonPath("$.description").value("Updated post description"))
-                .andExpect(jsonPath("$.location").value("China"))
                 .andExpect(jsonPath("$.postStatus").value("COMPLETED"))
                 .andExpect(jsonPath("$.updatedAt").exists());
     }
@@ -619,7 +656,8 @@ public class PetPostControllerIntegrationTests {
                     .postType(PetPostType.ADOPTION)
                     .postStatus(PetPostStatus.PENDING)
                     .description("Test post " + i)
-                    .location("Test Location " + i)
+                    .latitude(10.0)
+                    .longitude(20.0)
                     .reacts(i % 5) // Different react counts for sorting
                     .reactedUsers(new HashSet<>())
                     .score(0).build()));
@@ -693,7 +731,8 @@ public class PetPostControllerIntegrationTests {
         createDTO.setPetDTO(petDTO);
         createDTO.setDescription("Test with émojis 🐕 and special chars: <script>alert('test')</script>");
         createDTO.setPostType(PetPostType.ADOPTION);
-        createDTO.setLocation("China");
+        createDTO.setLatitude(35.8617);
+        createDTO.setLongitude(104.1954);
 
         mockMvc.perform(post("/api/pet-posts")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -729,7 +768,8 @@ public class PetPostControllerIntegrationTests {
 
         CreatePetPostDTO dto = CreatePetPostDTO.builder()
                 .petDTO(petDTO)
-                .location("Cairo")
+                .latitude(35.8617)
+                .longitude(104.1954)
                 .description("Nice post")
                 .postType(PetPostType.ADOPTION)
                 .build();
@@ -756,7 +796,8 @@ public class PetPostControllerIntegrationTests {
 
         CreatePetPostDTO dto = CreatePetPostDTO.builder()
                 .petDTO(petDTO)
-                .location("Alexandria")
+                .latitude(35.8617)
+                .longitude(104.1954)
                 .description("Great pet")
                 .postType(PetPostType.ADOPTION)
                 .build();
@@ -834,7 +875,8 @@ public class PetPostControllerIntegrationTests {
 
         CreatePetPostDTO dto = CreatePetPostDTO.builder()
                 .petDTO(petDTO)
-                .location("Alexandria")
+                .latitude(35.8617)
+                .longitude(104.1954)
                 .description("My dog had a horrible accident and needs adoption.")
                 .postType(PetPostType.ADOPTION)
                 .build();
@@ -846,87 +888,173 @@ public class PetPostControllerIntegrationTests {
     }
 
     @Test
+    void markInterestedAndRemoveInterest_Success() throws Exception {
+        // Mark as interested
+        mockMvc.perform(put("/api/pet-posts/{petPostId}/interested", adoptionPost.getPostId()))
+                .andExpect(status().isOk());
+
+        // Mark as not interested (should overwrite interest)
+        mockMvc.perform(put("/api/pet-posts/{petPostId}/not-interested", adoptionPost.getPostId()))
+                .andExpect(status().isOk());
+
+        // Remove interest
+        mockMvc.perform(delete("/api/pet-posts/{petPostId}/interest", adoptionPost.getPostId()))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void markInterested_NotFoundCases() throws Exception {
+        UUID nonExistentId = UUID.randomUUID();
+        // Mark interest on non-existent post
+        mockMvc.perform(put("/api/pet-posts/{petPostId}/interested", nonExistentId))
+                .andExpect(status().isNotFound());
+        // Remove interest on non-existent post
+        mockMvc.perform(delete("/api/pet-posts/{petPostId}/interest", nonExistentId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void removeInterest_NotFoundInterest() throws Exception {
+        // Try to remove interest when none exists
+        mockMvc.perform(delete("/api/pet-posts/{petPostId}/interest", adoptionPost.getPostId()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void testFilteredPostsSortedByScore() throws Exception {
         // 1. Create additional users
         User userD = userRepository.save(TestDataUtil.createTestUser("userD"));
         User userE = userRepository.save(TestDataUtil.createTestUser("userE"));
 
-        Pet dog1 = TestDataUtil.createTestPet("Dog1", PetSpecies.DOG, Gender.MALE, 12);
-        Pet cat1 = TestDataUtil.createTestPet("Cat1", PetSpecies.CAT, Gender.FEMALE, 24);
+        // 2. Set up friendships and followings for userA
+        // userA friends: userB, userC
+        friendshipRepository.save(Friendship.builder()
+                .id(UUID.randomUUID()).user1(userA).user2(userB).createdAt(new Timestamp(System.currentTimeMillis())).build());
+        friendshipRepository.save(com.example.adoption_and_breeding_module.model.entity.Friendship.builder()
+                .id(UUID.randomUUID()).user1(userA).user2(userC).createdAt(new Timestamp(System.currentTimeMillis())).build());
+        // userA follows: userD
+        followRepository.save(Follow.builder()
+                .id(UUID.randomUUID()).follower(userA).followed(userD).createdAt(new Timestamp(System.currentTimeMillis())).build());
 
-        // 2. Build new test posts (mutable collections)
+        // 3. Build new test posts with variety in location, type, owner, and reacts
         List<PetPost> newPosts = new ArrayList<>();
-
+        // Close to userA, by friend userB
         newPosts.add(PetPost.builder()
-                .owner(userC)
-                .pet(dog1)
+                .owner(userB)
+                .pet(TestDataUtil.createTestPet("DogFriend", PetSpecies.DOG, Gender.MALE, 10))
                 .postType(PetPostType.ADOPTION)
                 .postStatus(PetPostStatus.PENDING)
-                .description("Recent post, 0 reacts")
-                .location("Cairo")
-                .reacts(0)
-                .reactedUsers(new HashSet<>())
-                .createdAt(Instant.now())
+                .description("By friend, close location, 3 reacts")
+                .latitude(userA.getLatitude() + 0.01)
+                .longitude(userA.getLongitude() + 0.01)
+                .reacts(3)
+                .reactedUsers(new HashSet<>(Arrays.asList(userA, userC, userD)))
+                .createdAt(Instant.now().minus(Duration.ofHours(2)))
                 .build());
-
-        newPosts.add(PetPost.builder()
-                .owner(userC)
-                .pet(dog1)
-                .postType(PetPostType.ADOPTION)
-                .postStatus(PetPostStatus.PENDING)
-                .description("12h old, 2 reacts")
-                .location("Cairo")
-                .reacts(2)
-                .reactedUsers(new HashSet<>(Arrays.asList(userA, userB)))
-                .createdAt(Instant.now().minus(Duration.ofHours(12)))
-                .build());
-
+        // By followee userD, far from userA
         newPosts.add(PetPost.builder()
                 .owner(userD)
-                .pet(cat1)
+                .pet(TestDataUtil.createTestPet("CatFollowee", PetSpecies.CAT, Gender.FEMALE, 20))
                 .postType(PetPostType.BREEDING)
                 .postStatus(PetPostStatus.PENDING)
-                .description("3d old, 5 reacts")
-                .location("Giza")
-                .reacts(5)
-                .reactedUsers(new HashSet<>(Arrays.asList(userA, userB, userC, userD, userE)))
-                .createdAt(Instant.now().minus(Duration.ofDays(3)))
+                .description("By followee, far location, 2 reacts")
+                .latitude(0.0)
+                .longitude(0.0)
+                .reacts(2)
+                .reactedUsers(new HashSet<>(Arrays.asList(userB, userE)))
+                .createdAt(Instant.now().minus(Duration.ofHours(10)))
                 .build());
-
+        // By neither friend nor followee, but high affinity (species userA liked most)
         newPosts.add(PetPost.builder()
                 .owner(userE)
-                .pet(cat1)
-                .postType(PetPostType.BREEDING)
+                .pet(TestDataUtil.createTestPet("DogAffinity", PetSpecies.DOG, Gender.FEMALE, 8))
+                .postType(PetPostType.ADOPTION)
                 .postStatus(PetPostStatus.PENDING)
-                .description("36h old, 1 react")
-                .location("Giza")
+                .description("High affinity species, 1 react")
+                .latitude(userA.getLatitude() + 1.0)
+                .longitude(userA.getLongitude() + 1.0)
                 .reacts(1)
                 .reactedUsers(new HashSet<>(Collections.singletonList(userA)))
-                .createdAt(Instant.now().minus(Duration.ofHours(36)))
+                .createdAt(Instant.now().minus(Duration.ofHours(20)))
                 .build());
-
-        // 3. Persist only the new posts
+        // By neither friend nor followee, old post, many reacts
+        newPosts.add(PetPost.builder()
+                .owner(userC)
+                .pet(TestDataUtil.createTestPet("RabbitPopular", PetSpecies.RABBIT, Gender.MALE, 30))
+                .postType(PetPostType.BREEDING)
+                .postStatus(PetPostStatus.PENDING)
+                .description("Old, popular, not friend/followee")
+                .latitude(userA.getLatitude() + 5.0)
+                .longitude(userA.getLongitude() + 5.0)
+                .reacts(10)
+                .reactedUsers(new HashSet<>(Arrays.asList(userA, userB, userC, userD, userE)))
+                .createdAt(Instant.now().minus(Duration.ofDays(5)))
+                .build());
+        // By friend userC, close, recent, 0 reacts
+        newPosts.add(PetPost.builder()
+                .owner(userC)
+                .pet(TestDataUtil.createTestPet("DogFriendRecent", PetSpecies.DOG, Gender.FEMALE, 6))
+                .postType(PetPostType.ADOPTION)
+                .postStatus(PetPostStatus.PENDING)
+                .description("By friend, close, recent, 0 reacts")
+                .latitude(userA.getLatitude() + 0.02)
+                .longitude(userA.getLongitude() + 0.02)
+                .reacts(0)
+                .reactedUsers(new HashSet<>())
+                .createdAt(Instant.now().minus(Duration.ofMinutes(30)))
+                .build());
+        // Persist new posts
         List<PetPost> savedNew = newPosts.stream()
                 .map(petPostRepository::save)
-                .collect(Collectors.toList());
-
-        // 4. Combine with the two posts from @BeforeEach
+                .toList();
+        // Add the two posts from @BeforeEach
         List<PetPost> allPosts = new ArrayList<>(savedNew);
         allPosts.add(adoptionPost);
         allPosts.add(breedingPost);
 
-        // 5. Score & sort in-memory
-        feedScorer.scoreAndSort(allPosts, userA.getUserId());
+        // Add interest: userA marks DogAffinity as INTERESTED
+        PetPost dogAffinityPost = allPosts.stream()
+                .filter(p -> "DogAffinity".equals(p.getPet().getName()))
+                .findFirst().orElseThrow();
+        petPostInterestRepository.save(
+                PetPostInterest.builder()
+                        .id(new PetPostInterestId(userA.getUserId(), dogAffinityPost.getPostId()))
+                        .user(userA)
+                        .post(dogAffinityPost)
+                        .interestType(InterestType.INTERESTED)
+                        .build()
+        );
 
-        // Map of postId -> expected score
-        Map<UUID, Double> expectedScores = allPosts.stream()
+        // Prepare interest maps for scoring
+        Map<PetSpecies, Long> interestSpecies = petPostInterestRepository.scoreBySpecies(userA.getUserId()).stream()
+                .collect(Collectors.toMap(SpeciesScore::getSpecies, SpeciesScore::getScore));
+        Map<String, Long> interestBreed = petPostInterestRepository.scoreByBreed(userA.getUserId()).stream()
+                .collect(Collectors.toMap(BreedScore::getBreed, BreedScore::getScore));
+        Map<PetPostType, Long> interestPostType = petPostInterestRepository.scoreByPostType(userA.getUserId()).stream()
+                .collect(Collectors.toMap(PostTypeScore::getPostType, PostTypeScore::getScore));
+        Map<UUID, Long> interestOwner = petPostInterestRepository.scoreByOwner(userA.getUserId()).stream()
+                .collect(Collectors.toMap(OwnerScore::getOwnerId, OwnerScore::getScore));
+
+        // Score & sort in-memory using userA's context, with interest
+        feedScorer.scoreAndSort(
+                allPosts,
+                userA.getLatitude(),
+                userA.getLongitude(),
+                petPostRepository.countByReactedUsersUserId(userA.getUserId()),
+                petPostRepository.countReactsBySpecies(userA.getUserId()).stream().collect(Collectors.toMap(e -> e.getSpecies(), e -> e.getCnt())),
+                petPostRepository.countReactsByPostType(userA.getUserId()).stream().collect(Collectors.toMap(e -> e.getPostType(), e -> e.getCnt())),
+                friendshipRepository.findUser2_UserIdByUser1_UserId(userA.getUserId()),
+                followRepository.findFollowed_UserIdByFollower_UserId(userA.getUserId()),
+                interestSpecies,
+                interestBreed,
+                interestPostType,
+                interestOwner
+        );
+        Map<UUID, Long> expectedScores = allPosts.stream()
                 .collect(Collectors.toMap(PetPost::getPostId, PetPost::getScore));
-
-        // 6. Call the endpoint with SCORE sorting
         PetPostFilterDTO filter = new PetPostFilterDTO();
         filter.setSortBy(PetPostSortBy.SCORE);
         filter.setSortDesc(true);
-
         MvcResult result = mockMvc.perform(post("/api/pet-posts/filtered")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(filter))
@@ -934,26 +1062,62 @@ public class PetPostControllerIntegrationTests {
                         .param("size", String.valueOf(allPosts.size())))
                 .andExpect(status().isOk())
                 .andReturn();
-
-        // 7. Extract returned post IDs and verify descending scores
         JsonNode content = objectMapper.readTree(result.getResponse().getContentAsString())
                 .get("content");
-
-        List<Double> returnedScores = new ArrayList<>();
+        List<Long> returnedScores = new ArrayList<>();
         for (JsonNode node : content) {
             UUID id = UUID.fromString(node.get("postId").asText());
             returnedScores.add(expectedScores.get(id));
         }
-
         for (int i = 0; i < returnedScores.size() - 1; i++) {
-            double curr = returnedScores.get(i);
-            double next = returnedScores.get(i + 1);
+            Long curr = returnedScores.get(i);
+            Long next = returnedScores.get(i + 1);
             assertTrue(
-                    curr + EPSILON >= next,
-                    String.format("Score %.6f should be >= %.6f (with epsilon)", curr, next)
+                    curr >= next,
+                    String.format("Score %d should be >= %d", curr, next)
             );
         }
+    }
 
+    @Test
+    void userDeletionShouldCascadeToPetPosts() {
+        User user = userRepository.save(TestDataUtil.createTestUser("cascadeUser"));
+        Pet pet1 = petRepository.save(TestDataUtil.createTestPet("CascadePet1", PetSpecies.DOG, Gender.MALE, 12));
+        Pet pet2 = petRepository.save(TestDataUtil.createTestPet("CascadePet2", PetSpecies.CAT, Gender.FEMALE, 24));
+        PetPost post1 = petPostRepository.save(PetPost.builder()
+                .owner(user)
+                .pet(pet1)
+                .postType(PetPostType.ADOPTION)
+                .postStatus(PetPostStatus.PENDING)
+                .description("Cascade test post 1")
+                .latitude(35.8617)
+                .longitude(104.1954)
+                .reacts(0)
+                .reactedUsers(new HashSet<>())
+                .build());
+        PetPost post2 = petPostRepository.save(PetPost.builder()
+                .owner(user)
+                .pet(pet2)
+                .postType(PetPostType.BREEDING)
+                .postStatus(PetPostStatus.PENDING)
+                .description("Cascade test post 2")
+                .latitude(35.8617)
+                .longitude(104.1954)
+                .reacts(0)
+                .reactedUsers(new HashSet<>())
+                .build());
+
+        entityManager.flush();
+        entityManager.clear();
+
+        assertTrue(petPostRepository.existsById(post1.getPostId()));
+        assertTrue(petPostRepository.existsById(post2.getPostId()));
+
+        userRepository.deleteById(user.getUserId());
+        entityManager.flush();
+
+        assertFalse(petPostRepository.existsById(post1.getPostId()));
+        assertFalse(petPostRepository.existsById(post2.getPostId()));
     }
 
 }

@@ -5,6 +5,7 @@ import com.example.adoption_and_breeding_module.model.dto.CreatePetPostDTO;
 import com.example.adoption_and_breeding_module.model.dto.PetPostDTO;
 import com.example.adoption_and_breeding_module.model.dto.PetPostFilterDTO;
 import com.example.adoption_and_breeding_module.model.dto.UpdatePetPostDTO;
+import com.example.adoption_and_breeding_module.model.enumeration.InterestType;
 import com.example.adoption_and_breeding_module.model.principal.UserPrincipal;
 import com.example.adoption_and_breeding_module.service.IPetPostService;
 import com.example.adoption_and_breeding_module.util.SecurityUtils;
@@ -100,5 +101,32 @@ public class PetPostController {
         UUID userId = userPrincipal.getUserId();
         PetPostDTO updatedPost = petPostService.toggleReact(petPostId, userId);
         return ResponseEntity.ok(updatedPost);
+    }
+
+    @Operation(summary = "Mark a pet post as interested")
+    @PutMapping("/{petPostId}/interested")
+    public ResponseEntity<Void> markInterested(@PathVariable(name = "petPostId") UUID petPostId) {
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId = userPrincipal.getUserId();
+        petPostService.markInterest(petPostId, userId, InterestType.INTERESTED);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Mark a pet post as not interested")
+    @PutMapping("/{petPostId}/not-interested")
+    public ResponseEntity<Void> markNotInterested(@PathVariable(name = "petPostId") UUID petPostId) {
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId = userPrincipal.getUserId();
+        petPostService.markInterest(petPostId, userId, InterestType.NOT_INTERESTED);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Remove interest mark from a pet post")
+    @DeleteMapping("/{petPostId}/interest")
+    public ResponseEntity<Void> removeInterest(@PathVariable(name = "petPostId") UUID petPostId) {
+        UserPrincipal userPrincipal = SecurityUtils.getCurrentUser();
+        UUID userId = userPrincipal.getUserId();
+        petPostService.removeInterest(petPostId, userId);
+        return ResponseEntity.noContent().build();
     }
 }
