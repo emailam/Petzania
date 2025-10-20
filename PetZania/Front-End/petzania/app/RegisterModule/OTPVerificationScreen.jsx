@@ -7,7 +7,7 @@ import { useLocalSearchParams } from "expo-router";
 
 
 export default function OTPVerificationScreen() {
-  const { isRegister, email } = useLocalSearchParams();
+  const { isRegister, email, password } = useLocalSearchParams();
   return (
     <SafeAreaView style={styles.safeArea}>
 
@@ -18,11 +18,11 @@ export default function OTPVerificationScreen() {
           <Text style={styles.emailText}>{email}</Text> for verification.
         </Text>
 
-        <OTPForm CELL_COUNT={6} isRegister={isRegister} email={email} />
+        <OTPForm CELL_COUNT={6} isRegister={isRegister} email={email} password={password} />
 
         <Text style={styles.footerText}>Didn't receive any code?</Text>
 
-        <RequestOTP RESEND_COOLDOWN = {60} email = {email} isRegister = {isRegister}/>
+        <RequestOTP RESEND_COOLDOWN = {60} email = {email} isRegister = {isRegister} />
       </View>
     </SafeAreaView>
   );

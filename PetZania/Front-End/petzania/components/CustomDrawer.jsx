@@ -96,7 +96,9 @@ export default function CustomDrawer(props) {
               />
             </View>
             <View style={styles.userInfoText}>
-              <Text style={styles.name}>{user?.name || 'Guest'}</Text>
+              <Text style={styles.name} numberOfLines={2} ellipsizeMode="tail">
+                {user?.name || 'Unknown User'}
+              </Text>
               <Text style={styles.username}>@{user?.username || 'CreamOfSomeYoungGuy69'}</Text>
             </View>
             <View style={styles.profileArrow}>
