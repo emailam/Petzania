@@ -1,10 +1,8 @@
-import React, { useCallback, useContext } from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
-  SafeAreaView,
   RefreshControl,
   ActivityIndicator,
   TouchableOpacity,
@@ -43,6 +41,19 @@ const UserPosts = ({ userId }) => {
 
   // Flatten pages and ensure only valid posts are mapped
   const posts = data?.pages.flatMap((page) => (Array.isArray(page.posts) ? page.posts : [])).filter(Boolean) || [];
+  
+  // Create 2-column layout using useMemo for performance
+  const postsInColumns = useMemo(() => {
+    const columns = [];
+    for (let i = 0; i < posts.length; i += 2) {
+      columns.push({
+        left: posts[i] || null,
+        right: posts[i + 1] || null,
+        key: `row-${i}`
+      });
+    }
+    return columns;
+  }, [posts]);
   
   const handlePostUpdate = useCallback(async (postId, updatedData) => {
     try {
@@ -96,8 +107,8 @@ const UserPosts = ({ userId }) => {
         </View>
         <Text style={styles.errorText}>Something went wrong</Text>
         <Text style={styles.errorSubtext}>Unable to load posts</Text>
-        <TouchableOpacity 
-          style={styles.retryButton} 
+        <TouchableOpacity
+          style={styles.retryButton}
           onPress={refetch}
           activeOpacity={0.8}
         >
@@ -108,72 +119,91 @@ const UserPosts = ({ userId }) => {
   }
 
   return (
-      <ScrollView
-        style={styles.scrollView}
-        refreshControl={
-          <RefreshControl 
-            refreshing={isRefetching} 
-            onRefresh={refetch}
-            tintColor="#9188E5"
-            colors={['#9188E5']}
-          />
-        }
-      >
-        {posts.length === 0 ? (
-          <EmptyState
-            iconName="document-text-outline"
-            title="No posts yet"
-            subtitle={isOwnProfile 
-              ? 'Start sharing your pets to find them loving homes!'
-              : "This user hasn't shared any posts yet."
-            }
-            style={styles.emptyStateContainer}
-          />
-        ) : (
-          <>
-            {posts.map((post) => (
-              <PostCard
-                showAdvancedFeatures={isOwnProfile}
-                post={post}
-                onPostUpdate={isOwnProfile ? handlePostUpdate : undefined}
-                onPostDelete={isOwnProfile ? handlePostDelete : undefined}
-                onPostLikeToggle={handlePostLike}
-                onPostDetails={() => {}}
-                key={post.postId}
-              />
-            ))}
-
-            {hasNextPage && (
-              <TouchableOpacity
-                onPress={fetchNextPage}
-                disabled={isFetchingNextPage}
-                activeOpacity={0.8}
-                style={styles.loadMoreWrapper}
-              >
-                <View style={styles.loadMoreButton}>
-                  {isFetchingNextPage ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <Text style={styles.loadMoreText}>Load More</Text>
+    <View style={styles.container}>
+      {posts.length === 0 ? (
+        <EmptyState
+          iconName="document-text-outline"
+          title="No posts yet"
+          subtitle={isOwnProfile 
+            ? 'Start sharing your pets to find them loving homes!'
+            : "This user hasn't shared any posts yet."
+          }
+          style={styles.emptyStateContainer}
+        />
+      ) : (
+        <>
+          {/* 2-Column Posts Grid */}
+          <View>
+            {postsInColumns.map((row) => (
+              <View key={row.key} style={styles.postRow}>
+                <View style={styles.postColumn}>
+                  {row.left && (
+                    <PostCard
+                      post={row.left}
+                      showAdvancedFeatures={isOwnProfile}
+                      onPostUpdate={isOwnProfile ? handlePostUpdate : undefined}
+                      onPostDelete={isOwnProfile ? handlePostDelete : undefined}
+                      onPostLikeToggle={handlePostLike}
+                      onPostDetails={() => {}}
+                    />
                   )}
                 </View>
-              </TouchableOpacity>
-            )}
-          </>
-        )}
-      </ScrollView>
+                <View style={styles.postColumn}>
+                  {row.right && (
+                    <PostCard
+                      post={row.right}
+                      showAdvancedFeatures={isOwnProfile}
+                      onPostUpdate={isOwnProfile ? handlePostUpdate : undefined}
+                      onPostDelete={isOwnProfile ? handlePostDelete : undefined}
+                      onPostLikeToggle={handlePostLike}
+                      onPostDetails={() => {}}
+                    />
+                  )}
+                </View>
+              </View>
+            ))}
+          </View>
+
+          {hasNextPage && (
+            <TouchableOpacity
+              onPress={fetchNextPage}
+              disabled={isFetchingNextPage}
+              activeOpacity={0.8}
+              style={styles.loadMoreWrapper}
+            >
+              <View style={styles.loadMoreButton}>
+                {isFetchingNextPage ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.loadMoreText}>Load More</Text>
+                )}
+              </View>
+            </TouchableOpacity>
+          )}
+        </>
+      )}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollView: {
+  container: {
     flex: 1,
+  },
+  postRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  postColumn: {
+    flex: 1,
+    marginHorizontal: 4,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFF',
+    backgroundColor: '#F9FAFB',
   },
   loadingText: {
     marginTop: 16,
@@ -191,7 +221,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFF',
+    backgroundColor: '#F9FAFB',
     paddingHorizontal: 32,
   },
   errorIconContainer: {

@@ -4,11 +4,46 @@ import { Image } from 'expo-image';
 import Foundation from '@expo/vector-icons/Foundation';
 import { useRouter } from "expo-router";
 
-export default function PetCard({ pet, marginHorizontal = 10 }) {
+export default function PetCard({ pet, marginHorizontal = 8 }) {
     const router = useRouter();
 
     const showPetInfo = (pet) => {
-        router.push({ pathname: `/PetModule/${pet.petId}` });
+        try {
+            console.log('PetCard: Navigating to pet details for pet:', pet.petId);
+            
+            // Validate required fields
+            if (!pet || !pet.petId) {
+                console.error('PetCard: Invalid pet data - missing petId');
+                return;
+            }
+            
+            // Create a clean copy of pet data without potential circular references
+            const cleanPetData = {
+                petId: pet.petId,
+                name: pet.name || '',
+                species: pet.species || '',
+                breed: pet.breed || '',
+                gender: pet.gender || '',
+                dateOfBirth: pet.dateOfBirth || null,
+                description: pet.description || '',
+                myPicturesURLs: Array.isArray(pet.myPicturesURLs) ? pet.myPicturesURLs : [],
+                userId: pet.userId || '',
+            };
+            
+
+            
+            const serializedData = JSON.stringify(cleanPetData);
+            
+            router.push({ 
+                pathname: `/PetModule/${pet.petId}`, 
+                params: { petData: serializedData } 
+            });
+        } catch (error) {
+            console.error('PetCard: Error serializing pet data:', error);
+            console.error('PetCard: Pet object that caused error:', pet);
+            // Fallback: navigate without petData parameter
+            router.push(`/PetModule/${pet.petId}`);
+        }
     };
 
     const formatSpecies = (species) => {
@@ -52,7 +87,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#fff",
         elevation: 2,
         marginVertical: 8,
-        padding: 16,
+        padding: 8,
     },
     leftContainer: {
         flexDirection: "row",
