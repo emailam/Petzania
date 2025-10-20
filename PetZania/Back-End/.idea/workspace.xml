@@ -5,16 +5,33 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="aeca1ffb-0884-4a26-9d15-e67eb5c2d7c7" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../../.idea/Petzania.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../.idea/compiler.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../.idea/encodings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../.idea/jarRepositories.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../.idea/workspace.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/api/axiosInstance8081.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/api/axiosInstance8081.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/api/axiosInstance8082.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/api/axiosInstance8082.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/api/axiosInstance8083.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/api/axiosInstance8083.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Front-End/petzania/app.json" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/app.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/app/(drawer)/(stack)/Chat/[chatid].jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/app/(drawer)/(stack)/Chat/[chatid].jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/constants/PETBREEDS.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/constants/PETBREEDS.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/app/PetModule/[petid].jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/app/PetModule/[petid].jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/app/UserModule/[userid]/index.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/app/UserModule/[userid]/index.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/app/index.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/app/index.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/components/AdoptionBreedingModule/FilterModal.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/components/AdoptionBreedingModule/FilterModal.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/components/AdoptionBreedingModule/PostDetailsModal.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/components/AdoptionBreedingModule/PostDetailsModal.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/components/AdoptionBreedingModule/UserPosts.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/components/AdoptionBreedingModule/UserPosts.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Front-End/petzania/plugins/with-network-security-config.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/plugins/with-network-security-config.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Front-End/petzania/services/userService.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Front-End/petzania/services/userService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Petzania System Analysis.docx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../package-lock.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../package.json" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -153,6 +170,11 @@
       <workItem from="1751466666850" duration="1873000" />
       <workItem from="1751505589066" duration="55000" />
       <workItem from="1751743686245" duration="1826000" />
+      <workItem from="1751764294261" duration="756000" />
+      <workItem from="1751889995791" duration="33000" />
+      <workItem from="1751890069274" duration="741000" />
+      <workItem from="1751898904709" duration="156000" />
+      <workItem from="1752760262017" duration="494000" />
     </task>
     <servers />
   </component>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="Notifications" uuid="d0477a39-859f-435f-8c54-2979ed7ed6cd">
+    <data-source source="LOCAL" name="notifications@157.230.114.107" uuid="e391085d-fca0-4123-a2f9-2aee5ae8cb10">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
