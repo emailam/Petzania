@@ -8,6 +8,7 @@ import com.example.adoption_and_breeding_module.repository.FollowRepository;
 import com.example.adoption_and_breeding_module.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,7 @@ import java.util.UUID;
 @Service
 @AllArgsConstructor
 @Transactional
+@Slf4j
 public class FollowListener {
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
@@ -38,7 +40,7 @@ public class FollowListener {
                     .createdAt(event.getCreatedAt())
                     .build();
             followRepository.save(follow);
-            System.out.println("Follow added: " + event);
+            log.info("Follow added: " + event);
         }
     }
 
@@ -47,7 +49,7 @@ public class FollowListener {
         UUID followId = event.getFollowId();
         if(followRepository.existsById(followId)) {
             followRepository.deleteById(followId);
-            System.out.println("Follow removed: " + event);
+            log.info("Follow removed: " + event);
         }
     }
 } 

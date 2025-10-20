@@ -2,6 +2,7 @@ package com.example.adoption_and_breeding_module.service.impl;
 
 import com.example.adoption_and_breeding_module.model.enumeration.NotificationType;
 import com.example.adoption_and_breeding_module.model.event.NotificationEvent;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import java.util.UUID;
 import static com.example.adoption_and_breeding_module.constant.Constants.*;
 
 @Service
+@Slf4j
 public class NotificationPublisher {
     private final RabbitTemplate rabbitTemplate;
     String exchange = NOTIFICATION_EXCHANGE;
@@ -32,7 +34,7 @@ public class NotificationPublisher {
                 .type(NotificationType.PET_POST_LIKED)
                 .message(initiatorUsername + " liked your post")
                 .build();
-        System.out.println("Sending a notification: " + event);
+        log.info("Sending a notification: " + event);
         rabbitTemplate.convertAndSend(exchange, routingKey, event);
     }
 
@@ -42,7 +44,7 @@ public class NotificationPublisher {
                 .entityId(postId)
                 .type(NotificationType.PET_POST_DELETED)
                 .build();
-        System.out.println("Sending an event, post with id: " + postId + " is deleted");
+        log.info("Sending an event, post with id: " + postId + " is deleted");
         rabbitTemplate.convertAndSend(exchange, routingKey, event);
     }
 }

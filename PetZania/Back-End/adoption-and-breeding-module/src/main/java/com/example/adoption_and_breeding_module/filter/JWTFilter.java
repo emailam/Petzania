@@ -30,7 +30,7 @@ public class JWTFilter extends OncePerRequestFilter {
     private final ApplicationContext context;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         // you get the token from the client side in the following format "Bearer Token"
         String authenticationHeader = request.getHeader(AUTHORIZATION_HEADER);
         String token = null;

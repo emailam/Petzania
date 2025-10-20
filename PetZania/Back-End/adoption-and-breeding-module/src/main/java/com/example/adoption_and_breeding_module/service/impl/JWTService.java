@@ -18,29 +18,23 @@ import java.util.function.Function;
 @Service
 @PropertySource("classpath:application.yml")
 public class JWTService {
+
     @Value("${spring.jwt.secret-key}")
     private String secretKey;
 
-    private Key getKey() {
-        // Replace with a secure key
+    private final java.time.Clock clock;
+    public JWTService() {
+        this(java.time.Clock.systemUTC());
+    }
+    // For tests you can inject a fixed clock
+    public JWTService(java.time.Clock clock) {
+        this.clock = clock;
+    }
+
+    public Key getKey() {// Replace with a secure key
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
-
-    public String extractEmail(String token) {
-        return extractClaim(token, Claims::getSubject);
-    }
-
-    public String extractRole(String token) {
-        Claims claims = extractAllClaims(token);
-        return claims.get("role", String.class);
-    }
-
-    private <T> T extractClaim(String token, Function<Claims, T> claimResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimResolver.apply(claims);
-    }
-
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getKey())
@@ -48,31 +42,32 @@ public class JWTService {
                 .parseClaimsJws(token)
                 .getBody();
     }
-
-    public boolean validateTokenForUser(String token, UserPrincipal userDetails) {
-        final String extractedEmail = extractEmail(token);
-        if (extractedEmail.equals(userDetails.getEmail()) && !isTokenExpired(token)) {
-            return true;
-        } else {
-            return false;
-        }
+    public String extractEmail(String token) {
+        return extractClaim(token, io.jsonwebtoken.Claims::getSubject);
     }
 
-    public boolean validateTokenForAdmin(String token, AdminPrincipal adminDetails) {
-        final String extractedUsername = extractEmail(token);
-        if (extractedUsername.equals(adminDetails.getUsername()) && !isTokenExpired(token)) {
-            return true;
-        } else {
-            return false;
-        }
+    public String extractRole(String token) {
+        return extractAllClaims(token).get("role", String.class);
     }
 
+    private <T> T extractClaim(String token, java.util.function.Function<io.jsonwebtoken.Claims, T> f) {
+        return f.apply(extractAllClaims(token));
+    }
 
     public boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+        try {
+            var exp = extractClaim(token, io.jsonwebtoken.Claims::getExpiration);
+            return exp.toInstant().isBefore(java.time.Instant.now(clock));
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            return true;
+        }
     }
 
-    public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+    public boolean validateTokenForUser(String token, com.example.adoption_and_breeding_module.model.principal.UserPrincipal u) {
+        return u.getEmail().equals(extractEmail(token)) && !isTokenExpired(token);
+    }
+
+    public boolean validateTokenForAdmin(String token, com.example.adoption_and_breeding_module.model.principal.AdminPrincipal a) {
+        return a.getUsername().equals(extractEmail(token)) && !isTokenExpired(token);
     }
 }

@@ -709,7 +709,7 @@ public class PetPostControllerIntegrationTests {
                         .param("page", "0")
                         .param("size", "3"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].postId").value(adoptionPost.getPostId().toString())); // Oldest post
+                .andExpect(jsonPath("$.content[0].createdAt").value(adoptionPost.getCreatedAt().toString())); // Oldest post
     }
 
     @Test
