@@ -230,7 +230,7 @@ export default function ChatIndex() {
     // Update unread indicator helper
     const updateUnreadIndicator = async (chatId, hasUnread) => {
         console.log(`🔄 updateUnreadIndicator called for chat ${chatId} with hasUnread: ${hasUnread}`);
-        
+
         try {
             const userChat = userChats.get(chatId);
             if (!userChat) {
@@ -243,7 +243,7 @@ export default function ChatIndex() {
                 source: 'real-time message',
                 currentUserChatUnread: userChat.unread || 0
             });
-            
+
             // Update ChatContext immediately for real-time UI updates
             console.log(`📊 Setting ChatContext indicator for chat ${chatId} to: ${hasUnread}`);
             setChatUnreadIndicator(chatId, hasUnread);

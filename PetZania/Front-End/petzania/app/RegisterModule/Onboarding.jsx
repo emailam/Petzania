@@ -1,4 +1,4 @@
-import { Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Text, TouchableOpacity, StyleSheet, View } from "react-native";
 import { Image } from 'expo-image';
 import Onboarding from "react-native-onboarding-swiper";
 import { useRouter } from "expo-router";
@@ -23,6 +23,21 @@ export default function OnboardingScreen() {
     </TouchableOpacity>
   );
 
+  const DotComponent = ({ selected }) => {
+    let backgroundColor = selected ? "#9188E5" : "#C4C4C4";
+    return (
+      <View
+        style={{
+          width: 9,
+          height: 9,
+          marginHorizontal: 3,
+          backgroundColor,
+          borderRadius: 5,
+        }}
+      />
+    );
+  }
+
   return (
     <Onboarding
       onDone={handleDone}
@@ -32,6 +47,7 @@ export default function OnboardingScreen() {
       SkipButtonComponent={SkipButton}
       NextButtonComponent={NextButton}
       DoneButtonComponent={NextButton}
+      DotComponent={DotComponent}
       bottomBarHeight={100}
       titleStyles={{ fontFamily: "Inter-Bold", fontSize: 26 }}
       subTitleStyles={{ fontFamily: "Inter-Medium", fontSize: 16 }}
@@ -75,7 +91,7 @@ const styles = StyleSheet.create({
   },
   skipButtonText: {
     fontSize: 18,
-    fontFamily: "Inter-Medium",
+    fontFamily: "Inter-Bold",
     color: "#9188E5",
   },
   nextButton: {

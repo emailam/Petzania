@@ -40,7 +40,7 @@ export default function ChatDetailScreen() {
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
   const [messagesPerPage] = useState(50);
-  
+
   // UI state
   const [showMessageActions, setShowMessageActions] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState(null);
@@ -1276,8 +1276,8 @@ export default function ChatDetailScreen() {
             source={otherUser?.profilePictureURL ? { uri: otherUser.profilePictureURL } : defaultImage}
             style={styles.userAvatar}
           />
-          <View>
-            <Text style={styles.headerTitle}>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.headerTitle} numberOfLines={2} ellipsizeMode="tail">
               {otherUser?.name || 'Loading...'}
             </Text>
             <Text style={styles.headerSubtitle}>
@@ -1561,41 +1561,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  // Header Styles
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
-  },
-  backButton: {
-    marginRight: 12,
-    padding: 8,
-  },
-  headerInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  userAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-  },
   loadEarlierContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -1791,13 +1756,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  headerTextContainer: {
+    flex: 1,
+    marginLeft: 4,
+  },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#000000',
+    flexWrap: 'wrap',
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#666666',
     marginTop: 2,
   },

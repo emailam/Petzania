@@ -263,6 +263,7 @@ const styles = StyleSheet.create({
     },
     profileSection: {
         backgroundColor: '#fff',
+        justifyContent: 'center',
         alignItems: 'center',
         paddingVertical: 30,
         marginBottom: 20,
@@ -280,6 +281,8 @@ const styles = StyleSheet.create({
     },
     profileName: {
         fontSize: 22,
+        flexWrap: 'wrap',
+        textAlign: 'center',
         fontWeight: '600',
         color: '#000',
         marginBottom: 5,
