@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { Text, View, ActivityIndicator } from 'react-native';
 import 'react-native-reanimated';
+import { Provider as PaperProvider } from 'react-native-paper';
 
 import CustomHeader from '@/components/CustomHeader';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -50,74 +51,76 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
-        <ErrorBoundary>
-          <SafeAreaProvider>
-            <AppProviders>
-              <SafeAreaView style={{ flex: 1 }}>
-                <ThemeProvider value={DefaultTheme}>
-                  <Stack>
-                    <Stack.Screen name="index" options={{ headerShown: false }} />
-                    <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-                    {/* Registration Module Screens */}
-                    <Stack.Screen name="RegisterModule/Onboarding" options={{ headerShown: false }} />
-                    <Stack.Screen name="RegisterModule/RegisterScreen" options={{ headerShown: false }} />
-                    <Stack.Screen name="RegisterModule/OTPVerificationScreen" options={{ headerShown: false }} />
-                    <Stack.Screen name="RegisterModule/ResetPasswordScreen" options={{ headerShown: false }} />
-                    <Stack.Screen name="RegisterModule/ForgotPasswordScreen" options={{ headerShown: false }} />
-                    <Stack.Screen name="RegisterModule/LoginScreen" options={{ headerShown: false }} />
-                    {/* Profile Setup Screens */}
-                    <Stack.Screen
-                      name="RegisterModule/ProfileSetUp1"
-                      options={{
-                        headerTitle: () => (
-                          <View>
-                            <CustomHeader title="Profile Set Up" subtitle="Add your details 1 of 3"/>
-                          </View>
-                        ),
-                        headerBackTitle: "",
-                        headerTintColor: "#9188E5",
-                        headerStyle: { backgroundColor: "#FFF" },
-                      }}
-                    />
-                    <Stack.Screen
-                      name="RegisterModule/ProfileSetUp2"
-                      options={{
-                        headerTitle: () => (
-                          <View>
-                            <CustomHeader title="Profile Set Up" subtitle="Add your pets 2 of 3"/>
-                          </View>
-                        ),
-                        headerBackTitle: "",
-                        headerTintColor: "#9188E5",
-                        headerStyle: { backgroundColor: "#FFF" },
-                      }}
-                    />
-                    <Stack.Screen
-                      name="RegisterModule/ProfileSetUp3"
-                      options={{
-                        headerTitle: () => (
-                          <View>
-                            <CustomHeader title="Profile Set Up" subtitle="Finalize your profile 3 of 3"/>
-                          </View>
-                        ),
-                        headerBackTitle: "",
-                        headerTintColor: "#9188E5",
-                        headerStyle: { backgroundColor: "#FFF" },
-                      }}
-                    />
+        <PaperProvider>
+          <ErrorBoundary>
+            <SafeAreaProvider>
+              <AppProviders>
+                <SafeAreaView style={{ flex: 1 }}>
+                  <ThemeProvider value={DefaultTheme}>
+                    <Stack>
+                      <Stack.Screen name="index" options={{ headerShown: false }} />
+                      <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+                      {/* Registration Module Screens */}
+                      <Stack.Screen name="RegisterModule/Onboarding" options={{ headerShown: false }} />
+                      <Stack.Screen name="RegisterModule/RegisterScreen" options={{ headerShown: false }} />
+                      <Stack.Screen name="RegisterModule/OTPVerificationScreen" options={{ headerShown: false }} />
+                      <Stack.Screen name="RegisterModule/ResetPasswordScreen" options={{ headerShown: false }} />
+                      <Stack.Screen name="RegisterModule/ForgotPasswordScreen" options={{ headerShown: false }} />
+                      <Stack.Screen name="RegisterModule/LoginScreen" options={{ headerShown: false }} />
+                      {/* Profile Setup Screens */}
+                      <Stack.Screen
+                        name="RegisterModule/ProfileSetUp1"
+                        options={{
+                          headerTitle: () => (
+                            <View>
+                              <CustomHeader title="Profile Set Up" subtitle="Add your details 1 of 3"/>
+                            </View>
+                          ),
+                          headerBackTitle: "",
+                          headerTintColor: "#9188E5",
+                          headerStyle: { backgroundColor: "#FFF" },
+                        }}
+                      />
+                      <Stack.Screen
+                        name="RegisterModule/ProfileSetUp2"
+                        options={{
+                          headerTitle: () => (
+                            <View>
+                              <CustomHeader title="Profile Set Up" subtitle="Add your pets 2 of 3"/>
+                            </View>
+                          ),
+                          headerBackTitle: "",
+                          headerTintColor: "#9188E5",
+                          headerStyle: { backgroundColor: "#FFF" },
+                        }}
+                      />
+                      <Stack.Screen
+                        name="RegisterModule/ProfileSetUp3"
+                        options={{
+                          headerTitle: () => (
+                            <View>
+                              <CustomHeader title="Profile Set Up" subtitle="Finalize your profile 3 of 3"/>
+                            </View>
+                          ),
+                          headerBackTitle: "",
+                          headerTintColor: "#9188E5",
+                          headerStyle: { backgroundColor: "#FFF" },
+                        }}
+                      />
 
-                    {/* Module Screens */}
-                    <Stack.Screen name="PetModule" options={{ headerShown: false }} />
-                    <Stack.Screen name="UserModule" options={{ headerShown: false }} />
-                  </Stack>
-                  <StatusBar style="auto" />
-                  <NotificationToast />
-                </ThemeProvider>
-              </SafeAreaView>
-            </AppProviders>
-            <Toast />
-          </SafeAreaProvider>
-        </ErrorBoundary>
+                      {/* Module Screens */}
+                      <Stack.Screen name="PetModule" options={{ headerShown: false }} />
+                      <Stack.Screen name="UserModule" options={{ headerShown: false }} />
+                    </Stack>
+                    <StatusBar style="auto" />
+                    <NotificationToast />
+                  </ThemeProvider>
+                </SafeAreaView>
+              </AppProviders>
+              <Toast />
+            </SafeAreaProvider>
+          </ErrorBoundary>
+        </PaperProvider>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );

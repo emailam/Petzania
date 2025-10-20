@@ -29,10 +29,10 @@ const ToggleLike = memo(({
           activeOpacity={0.7}
           {...props}
         >
-          <Ionicons 
-            name={liked ? 'heart' : 'heart-outline'} 
-            size={20} 
-            color={liked ? '#FF3040' : '#666'} 
+          <Ionicons
+            name={liked ? 'heart' : 'heart-outline'}
+            size={22}
+            color={liked ? '#FF3040' : '#666'}
           />
         </TouchableOpacity>
       </View>
@@ -43,12 +43,11 @@ const ToggleLike = memo(({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    gap: 4,
   },
   likeButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: '#f8f8f8',
     justifyContent: 'center',
     alignItems: 'center',

@@ -5,13 +5,17 @@ import {
   useClearByFocusCell,
 } from "react-native-confirmation-code-field";
 import Button from "@/components/Button";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { responsive } from "@/utilities/responsive";
 
 import { useRouter } from "expo-router";
 
-import { verifyOTP, verifyResetOTP } from "@/services/userService";
+import { UserContext } from "@/context/UserContext";
+import { PetContext } from "@/context/PetContext";
+
+import { loginUser, verifyOTP, verifyResetOTP, getUserById } from "@/services/userService";
+
 
 import Toast from 'react-native-toast-message';
 
@@ -38,31 +42,45 @@ const showToastError = (message) => {
   });
 };
 
-export default function OTPForm({ CELL_COUNT, isRegister, email }) {
+export default function OTPForm({ CELL_COUNT, isRegister, email, password }) {
   const [value, setValue] = useState("");
   const ref = useBlurOnFulfill({ value, cellCount: CELL_COUNT });
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({ value, setValue });
   const [errorMessage, setErrorMessage] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
+  const { setUser } = useContext(UserContext);
+  const { setPets } = useContext(PetContext);
+
+
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
 
-  // ✅ Case 1: Register - verify OTP and go to Login
+  // ✅ Case 1: Register - verify OTP and auto sign-in
   const handleVerifyAccount = async () => {
     setIsLoading(true);
     try {
       const response = await verifyOTP(email, value);
 
       if (response) {
-        showToastSuccess(response.message || "Account verified successfully!");
         setErrorMessage(null);
+
         if(isRegister === "true"){
-          router.replace("/RegisterModule/LoginScreen");
-          return;
+          try {
+            await loginUser({ email, password });
+
+            showToastSuccess("Account verified successfully!");
+            router.replace("/RegisterModule/ProfileSetUp1");
+          } catch (loginError) {
+            console.error("Auto sign-in failed:", loginError);
+            // If auto sign-in fails, redirect to login with message
+            showToastError("Account verified! Please log in to continue.");
+            router.replace("/RegisterModule/LoginScreen");
+          }
+        } else {
+          router.replace("/RegisterModule/ProfileSetUp1");
         }
-        router.replace("/RegisterModule/ProfileSetUp1");
       } else {
         showToastError(response.message || "Verification failed.");
         setSuccessMessage(null);

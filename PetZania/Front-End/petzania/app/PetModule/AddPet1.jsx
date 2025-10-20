@@ -18,6 +18,8 @@ import { useRouter } from 'expo-router';
 import { ActivityIndicator } from 'react-native-paper';
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import ImageViewing from 'react-native-image-viewing';
+import CustomInput from '@/components/CustomInput';
+import ImageUploadInput from '@/components/ImageUploadInput';
 
 import { uploadFiles } from '@/services/uploadService';
 
@@ -35,30 +37,81 @@ const AddPet1 = () => {
     const { pet, setPet } = useContext(PetContext);
     const [images, setImages] = useState(pet.images || []);
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [error, setError] = useState('');
+    const [errors, setErrors] = useState({
+        name: '',
+        images: ''
+    });
+    const [isFormComplete, setIsFormComplete] = useState(false);
     const [showImageViewer, setShowImageViewer] = useState(false);
     const [viewerIndex, setViewerIndex] = useState(0);
     const router = useRouter();
 
     useEffect(() => {
-        setPet({});
+        // Only reset if no existing pet data
+        if (!pet.name && !pet.images?.length) {
+            setPet({});
+        }
+        // Sync images with pet context if they exist
+        if (pet.images?.length && !images.length) {
+            setImages(pet.images);
+        }
     }, []);
+
+    // Helper function to set individual field errors
+    const setError = (field, message) => {
+        setErrors(prev => ({
+            ...prev,
+            [field]: message
+        }));
+    };
+
+    // Clear individual field errors
+    const clearError = (field) => {
+        setErrors(prev => ({
+            ...prev,
+            [field]: ''
+        }));
+    };
+
+    // Check if form is complete and valid
+    useEffect(() => {
+        const nameValid = pet?.name;
+        
+        // Form is complete when name is valid
+        const formValid = nameValid && !errors.name;
+        
+        setIsFormComplete(formValid);
+    }, [pet?.name, errors]);
 
     const pickImage = async () => {
         setLoading(true);
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'],
-            allowsMultipleSelection: true,
-            quality: 0.7,
-            selectionLimit: 6,
-        });
-        if (!result.canceled) {
-            setLoading(false);
-            const uris = result.assets.map(asset => asset.uri);
-            const newImages = [...images, ...uris];
-            setImages(newImages);
-            setCurrentIndex(0);
-        } else {
+        clearError('images'); // Clear any previous image errors
+        
+        try {
+            let result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ['images'],
+                allowsMultipleSelection: true,
+                quality: 0.7,
+                selectionLimit: 6,
+            });
+            
+            if (!result.canceled) {
+                const uris = result.assets.map(asset => asset.uri);
+                const newImages = [...images, ...uris];
+                setImages(newImages);
+                
+                // Update pet context with images
+                setPet(prev => ({
+                    ...prev,
+                    images: newImages
+                }));
+                
+                setCurrentIndex(0);
+            }
+        } catch (error) {
+            console.error('Error picking images:', error);
+            setError('images', 'Failed to select images. Please try again.');
+        } finally {
             setLoading(false);
         }
     };
@@ -67,6 +120,13 @@ const AddPet1 = () => {
         const indexToDelete = images.findIndex(uri => uri === uriToDelete);
         const updatedImages = images.filter(uri => uri !== uriToDelete);
         setImages(updatedImages);
+        
+        // Update pet context
+        setPet(prev => ({
+            ...prev,
+            images: updatedImages
+        }));
+        
         // Handle currentIndex adjustment based on which image was deleted
         if (updatedImages.length === 0) {
             setCurrentIndex(0);
@@ -95,13 +155,23 @@ const AddPet1 = () => {
     };
 
     const goToNextStep = async () => {
+        // Validate all fields before proceeding
+        let hasErrors = false;
+
+        // Validate name
         if (!pet?.name?.trim()) {
-            setError("Pet's name is required!");
+            setError('name', "Pet's name is required");
+            hasErrors = true;
+        } else if (pet.name.trim().length < 2) {
+            setError('name', 'Name must be at least 2 characters');
+            hasErrors = true;
+        }
+
+        if (hasErrors) {
             return;
         }
 
         setLoading(true);
-        setError('');
 
         try {
             if (images.length > 0) {
@@ -126,10 +196,12 @@ const AddPet1 = () => {
 
         } catch (error) {
             console.error('Error uploading images:', error);
-            setError('Something went wrong while uploading. Please try again.');
+            setError('images', 'Something went wrong while uploading. Please try again.');
         } finally {
             setLoading(false);
-            router.push('/PetModule/AddPet2');
+            if (!errors.images) {
+                router.push('/PetModule/AddPet2');
+            }
         }
     };
 
@@ -159,6 +231,13 @@ const AddPet1 = () => {
                     const [selected] = newImages.splice(index, 1);
                     newImages.unshift(selected);
                     setImages(newImages);
+                    
+                    // Update pet context
+                    setPet(prev => ({
+                        ...prev,
+                        images: newImages
+                    }));
+                    
                     setCurrentIndex(0);
                 } else if ((buttonIndex === 1 && index === 0) || (buttonIndex === 2 && index !== 0)) {
                     // Add More Photos
@@ -238,30 +317,27 @@ const AddPet1 = () => {
                             <Text style={styles.noteText}>
                                 The selected image will be used as the default pet image.
                             </Text>
-
-                            {/* Add the Add More Photos button if less than 6 images */}
-                            {images.length > 0 && images.length < 6 && (
-                                <TouchableOpacity
-                                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 15, backgroundColor: '#f8f8ff', borderRadius: 12, borderWidth: 2, borderColor: '#9188E5', borderStyle: 'dashed', paddingVertical: 12, paddingHorizontal: 24 }}
-                                    onPress={pickImage}
-                                    disabled={loading}
-                                >
-                                    <AntDesign name="plus" size={24} color="#9188E5" />
-                                    <Text style={{ color: '#9188E5', fontSize: 16, fontWeight: '600', marginLeft: 8 }}>Add More Photos</Text>
-                                </TouchableOpacity>
-                            )}
                         </>
                     ) : (
-                        <TouchableOpacity onPress={pickImage} style={{ marginBottom: 15 }} disabled={loading}>
-                            {loading ? (
-                                <ActivityIndicator size="large" color="#9188E5" />
-                            ) : (
-                                <Image
-                                    source={defaultImage}
-                                    style={styles.mainImage}
-                                />
-                            )}
-                        </TouchableOpacity>
+                        <ImageUploadInput
+                            defaultImage={defaultImage}
+                            onImageChange={(imageUri) => {
+                                if (imageUri) {
+                                    const newImages = [imageUri];
+                                    setImages(newImages);
+                                    setPet(prev => ({
+                                        ...prev,
+                                        images: newImages
+                                    }));
+                                    setCurrentIndex(0);
+                                    clearError('images');
+                                }
+                            }}
+                            size={180}
+                            isUploading={loading}
+                            style={{ marginVertical: 20 }}
+                            allowsMultipleSelection={true}
+                        />
                     )}
                 </View>
                 <View style={styles.inputContainer}>
@@ -269,22 +345,32 @@ const AddPet1 = () => {
                         What's your pet's name?
                         <Text style={{ fontSize: 18, color: 'red' }}>*</Text>
                     </Text>
-                    <TextInput
-                        style={[styles.input, error ? styles.inputError : null]}
-                        placeholder="Pet's name"
-                        placeholderTextColor="#999"
+                    <CustomInput
+                        style={[errors.name ? styles.inputError : null]}
+                        placeholder="Buddy"
+                        maxLength={50}
+                        error={!!errors.name}
                         value={pet.name || ''}
                         onChangeText={(name) => {
                             setPet({ ...pet, name });
-                            setError('');
+                            clearError('name');
                         }}
                         returnKeyType="done"
+                        mode="outlined"
                     />
-                    {error ? <Text style={styles.errorText}>{error}</Text> : null}
+                    {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
+                    {errors.images ? <Text style={styles.errorText}>{errors.images}</Text> : null}
                 </View>
             </ScrollView>
             <View style={styles.buttonContainer}>
-                <Button title="Next" borderRadius={10} fontSize={16} onPress={goToNextStep} loading={loading} />
+                <Button
+                    title="Next"
+                    borderRadius={10}
+                    fontSize={16}
+                    onPress={goToNextStep}
+                    loading={loading}
+                    disabled={!isFormComplete || loading}
+                />
             </View>
 
             {/* Image Viewer Modal */}
@@ -321,9 +407,9 @@ const styles = StyleSheet.create({
         position: 'relative',
     },
     carouselImage: {
-        width: 220,
-        height: 220,
-        borderRadius: 110,
+        width: 180,
+        height: 180,
+        borderRadius: 90,
         borderWidth: 2,
         borderColor: '#9188E5',
         alignSelf: 'center',
@@ -336,14 +422,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 10,
         color: '#333',
-    },
-    input: {
-        height: 50,
-        borderWidth: 1,
-        borderColor: '#9188E5',
-        borderRadius: 10,
-        paddingHorizontal: 16,
-        fontSize: 16,
     },
     inputError: {
         borderColor: 'red',
@@ -393,6 +471,61 @@ const styles = StyleSheet.create({
         marginTop: 10,
         textAlign: 'center',
         paddingHorizontal: 20,
+    },
+    uploadContainer: {
+        width: 220,
+        height: 220,
+        borderRadius: 110,
+        borderWidth: 2,
+        borderColor: '#9188E5',
+        borderStyle: 'dashed',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f8f8ff',
+    },
+    uploadImageContainer: {
+        width: 220,
+        height: 220,
+        borderRadius: 110,
+        position: 'relative',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    blurredImage: {
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+    },
+    uploadOverlay: {
+        position: 'absolute',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        borderRadius: 110,
+        width: '100%',
+        height: '100%',
+    },
+    uploadText: {
+        color: '#9188E5',
+        fontSize: 16,
+        fontWeight: '600',
+        marginTop: 8,
+    },
+    uploadSubtext: {
+        color: '#9188E5',
+        fontSize: 14,
+        fontWeight: '400',
+        marginTop: 4,
+    },
+    loadingContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        color: '#9188E5',
+        fontSize: 16,
+        fontWeight: '600',
+        marginTop: 10,
     },
 });
 

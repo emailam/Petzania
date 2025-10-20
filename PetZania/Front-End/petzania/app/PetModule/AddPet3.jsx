@@ -6,21 +6,24 @@ import { PET_BREEDS } from '@/constants/PETBREEDS';
 import Button from '@/components/Button';
 import PetSelectionCard from '@/components/PetSelectionCard';
 import { useRouter } from 'expo-router';
+import CustomInput from '@/components/CustomInput';
 
 export default function AddPet3() {
     const { pet, setPet } = useContext(PetContext);
     const router = useRouter();
 
-    const [error, setError] = useState(''); // <-- Add error state
+    const [error, setError] = useState('');
+    const [breed, setBreed] = useState(pet.breed || '');
+
 
     const handleSelectPet = (name) => {
-        setError(''); // clear error when user selects
-        setPet({ ...pet, breed: name });
+        setError('');
+        breed === name ? setBreed('') : setBreed(name);
     };
 
     const handleManualInput = (text) => {
         setError(''); // clear error when user types
-        setPet({ ...pet, breed: text });
+        setBreed(text);
     };
 
     const allBreeds = PET_BREEDS[pet.species] || [];
@@ -28,16 +31,17 @@ export default function AddPet3() {
     const renderItem = ({ item }) => (
         <PetSelectionCard
             item={item}
-            isSelected={pet.breed === item.name}
+            isSelected={breed === item.name}
             onPress={handleSelectPet}
         />
     );
 
     const goToNextStep = () => {
-        if (!pet.breed.trim()) {
+        if (!breed.trim()) {
             setError('Please enter or select a breed.');
             return;
         }
+        pet.breed = breed;
         router.push('/PetModule/AddPet4');
     };
 
@@ -53,12 +57,13 @@ export default function AddPet3() {
 
             <View style={styles.buttonContainer}>
                 <Text style={styles.orText}>Or enter it manually</Text>
-                <TextInput
-                    placeholder="Enter pet breed"
+                <CustomInput
                     style={styles.input}
-                    value={!allBreeds.some(p => p.name === pet.breed) ? pet.breed : ''}
+                    label="Pet breed"
+                    placeholder={"e.g., Golden Retriever"}
+                    value={!allBreeds.some(p => p.name === breed) ? breed : ''}
                     onChangeText={handleManualInput}
-                    placeholderTextColor="#999"
+                    error={error}
                 />
                 {error ? <Text style={styles.error}>{error}</Text> : null}
                 <Button title="Next" borderRadius={10} fontSize={16} onPress={goToNextStep} />
@@ -83,14 +88,7 @@ const styles = StyleSheet.create({
         color: '#666',
     },
     input: {
-        height: 50,
-        borderColor: '#9188E5',
-        borderWidth: 1,
-        borderRadius: 10,
-        paddingHorizontal: 16,
         marginBottom: 10,
-        fontSize: 16,
-        backgroundColor : '#fff'
     },
     buttonContainer: {
         padding: 20,

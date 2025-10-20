@@ -7,7 +7,8 @@ import {
   Dimensions,
   ActivityIndicator,
   ScrollView,
-  BackHandler
+  BackHandler,
+  Image as RNImage
 } from 'react-native';
 import { Image } from 'expo-image';
 import {
@@ -92,7 +93,10 @@ const PostDetailsModal = memo(({
 
   const goToPetProfile = () => {
     bottomSheetModalRef.current?.dismiss();
-    router.push({ pathname: `/PetModule/${post.petDTO.petId}` });
+    router.push({
+      pathname: `/PetModule/${post.petDTO.petId}`,
+      params: { petData: JSON.stringify(post.petDTO) },
+    });
   };
 
   useEffect(() => {
@@ -387,7 +391,7 @@ const PostDetailsModal = memo(({
 
         {/* Image Viewer Modal */}
         <ImageViewing
-          images={hasImages ? imageViewerImages : [{ uri: Image.resolveAssetSource(require('@/assets/images/Defaults/default-pet.png')).uri }]}
+          images={hasImages ? imageViewerImages : [{ uri: RNImage.resolveAssetSource(require('@/assets/images/Defaults/default-pet.png')).uri }]}
           imageIndex={imageViewerIndex}
           visible={imageViewerVisible}
           onRequestClose={() => setImageViewerVisible(false)}

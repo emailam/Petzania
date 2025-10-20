@@ -54,12 +54,6 @@ export function useToggleLike() {
 
   return useMutation({
     mutationFn: toggleLike,
-    onSuccess: (data, variables) => {
-      // Invalidate all posts queries
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
-      queryClient.invalidateQueries({ queryKey: ['user-posts-infinite'] });
-      queryClient.invalidateQueries({ queryKey: ['post', variables.postId] });
-    },
     onError: (error) => {
       console.error('Toggle like failed:', error.response?.data?.message || error.message);
     },

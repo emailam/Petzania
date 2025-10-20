@@ -1,4 +1,4 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
+
 import React from "react";
 import Button from "@/components/Button";
 import { useRouter } from "expo-router";
@@ -6,12 +6,19 @@ import FormInput from "@/components/FormInput";
 import { useAuthForm } from "@/components/useForm";
 import { ScrollView , StyleSheet, Text } from "react-native"
 import { responsive } from "@/utilities/responsive";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import { sendResetPasswordOTP } from '@/services/userService';
 
 export default function ForgotPasswordForm() {
-    const {control , handleSubmit , formState:{errors , isSubmitting} , setError} = useAuthForm("forgotPassword");
+    const {control , handleSubmit , formState:{errors , isSubmitting, isValid}, watch, setError} = useAuthForm("forgotPassword");
     const router = useRouter();
+
+    // Watch the email field to check if it has content
+    const email = watch("email");
+
+    // Check if form is complete and valid (using Paper's built-in validation)
+    const isComplete = email && email.trim() !== '' && !errors.email && isValid;
 
     const goToRegisterScreen = () => {
       router.replace('/RegisterModule/RegisterScreen');
@@ -19,6 +26,7 @@ export default function ForgotPasswordForm() {
 
     const SendResetPasswordOTP = async (data) => {
       try {
+        data.email = data.email.toLowerCase();
         const response = await sendResetPasswordOTP(data.email);
 
         if (response) {
@@ -33,12 +41,17 @@ export default function ForgotPasswordForm() {
           });
         }
       } catch (error) {
-        // Handle network or other unexpected errors.
-        console.error("Error sending reset password request:", error);
-        setError("email", {
-          type: "manual",
-          message: "Network error. Please try again later.",
-        });
+        if (error.status === 404) {
+          setError("email", {
+            type: "manual",
+            message: "Email not found. Please check your email address or create an account.",
+          });
+        } else {
+          setError("email", {
+            type: "manual",
+            message: error.message || "Network error. Please try again later.",
+          });
+        }
       }
     };
 
@@ -48,16 +61,23 @@ export default function ForgotPasswordForm() {
               control={control}
               name="email"
               errors={errors}
-              placeholder="example@gmail.com"
-              icon={<Ionicons name="person" size={24} color="#8188E5" />}
+              placeholder="example@example.com"
+              label={"Email"}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              maxLength={100}
+              returnKeyType="done"
+              onSubmitEditing={handleSubmit(SendResetPasswordOTP)}
+              icon={<MaterialIcons name="email" size={24} color="#9188E5" />}
             />
             <Button
-                title="Reset Password"
-                onPress={handleSubmit(SendResetPasswordOTP)}
-                width={responsive.buttons.width.primary}
-                borderRadius={12}
-                fontSize={responsive.fonts.body}
-                loading={isSubmitting}
+              title="Reset Password"
+              onPress={handleSubmit(SendResetPasswordOTP)}
+              width={responsive.buttons.width.primary}
+              borderRadius={12}
+              fontSize={responsive.fonts.body}
+              loading={isSubmitting}
+              disabled={isSubmitting || !isComplete}
             />
 
             <Text style={styles.link} onPress={goToRegisterScreen}>Create an account</Text>

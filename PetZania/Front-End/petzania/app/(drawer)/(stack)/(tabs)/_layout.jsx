@@ -46,8 +46,8 @@ export default function TabLayout() {
   // Debug logging for unread indicators (only when they change)
   React.useEffect(() => {
     console.log('🏷️ TabLayout unread indicators updated:', { 
-      notifications: unreadCount, 
-      chat: hasUnreadMessages 
+      notifications: unreadCount,
+      chat: hasUnreadMessages
     });
   }, [unreadCount, hasUnreadMessages]);
 
