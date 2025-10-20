@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import PostCard from './PostCard';
 import FilterModal from '@/components/AdoptionBreedingModule/FilterModal';
+import SortModal from '@/components/AdoptionBreedingModule/SortModal';
 import EmptyState from '@/components/EmptyState';
 import LottieView from 'lottie-react-native';
 import {
@@ -40,6 +41,7 @@ export default function PostScreen({ postType }) {
   });
 
   const [isFilterModalVisible, setFilterModalVisible] = useState(false);
+  const [isSortModalVisible, setSortModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const toggleLikeMutation = useToggleLike();
@@ -61,7 +63,13 @@ export default function PostScreen({ postType }) {
   } = useFetchPosts({ petPostType: postType, ...filters });
 
   const posts = data?.pages.flatMap(page => (Array.isArray(page.posts) ? page.posts : [])) || [];
-  
+
+  // Ensure even number of items for 2-column layout
+  const postsWithPlaceholder = posts.length % 2 === 1 
+    ? [...posts, { isPlaceholder: true, postId: 'placeholder' }]
+    : posts;
+    
+
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // Handlers
   const handlePostLike = useCallback(
@@ -85,10 +93,21 @@ export default function PostScreen({ postType }) {
 
   const handleFilterPress = useCallback(() => setFilterModalVisible(true), []);
   const handleCloseFilters = useCallback(() => setFilterModalVisible(false), []);
+
+  const handleSortPress = useCallback(() => setSortModalVisible(true), []);
+  const handleCloseSort = useCallback(() => setSortModalVisible(false), []);
+
   const handleApplyFilters = useCallback(newFilters => {
     setFilters(newFilters);
     setFilterModalVisible(false);
     toast.show({ type: 'success', text1: 'Filters applied' });
+  }, []);
+
+  const handleApplySort = useCallback(newFilters => {
+    console.log('Applying sort:', newFilters);
+    setFilters(newFilters);
+    setSortModalVisible(false);
+    toast.show({ type: 'success', text1: 'Sort applied' });
   }, []);
 
   const handleRefresh = useCallback(async () => {
@@ -97,23 +116,29 @@ export default function PostScreen({ postType }) {
     setRefreshing(false);
   }, [refetch]);
 
-  const renderPost = useCallback(({ item }) => (
-    <View style={[styles.cardWrapper, isLargeScreen && styles.cardWrapperLarge]}>
-      <PostCard
-        showAdvancedFeatures={false}
-        post={item}
-        onPostUpdate={() => {}}
-        onPostDelete={() => {}}
-        onPostLikeToggle={handlePostLike}
-        getUsers={handleGetUserById}
-      />
-    </View>
-  ), [handlePostLike, handleGetUserById, isLargeScreen]);
+  const renderPost = useCallback(({ item }) => {
+    // Render empty space for placeholder items
+    if (item.isPlaceholder) {
+      return <View style={styles.cardWrapper} />;
+    }
+
+    return (
+      <View style={styles.cardWrapper}>
+        <PostCard
+          showAdvancedFeatures={false}
+          post={item}
+          onPostUpdate={() => {}}
+          onPostDelete={() => {}}
+          onPostLikeToggle={handlePostLike}
+          getUsers={handleGetUserById}
+        />
+      </View>
+    );
+  }, [handlePostLike, handleGetUserById]);
 
   // CHANGED BUTTON: solid purple, white text/icon
   const renderFooter = useCallback(() => {
     if (!hasNextPage) return null;
-    
     return (
       <TouchableOpacity
         onPress={fetchNextPage}
@@ -163,34 +188,43 @@ export default function PostScreen({ postType }) {
     );
   }, [postType]);
 
+  // Check if filters are active (excluding sort settings)
+  const hasActiveFilters = useCallback(() => {
+    return (filters.species !== 'ALL') ||
+           (filters.breed !== 'ALL') ||
+           (filters.minAge !== 0) ||
+           (filters.maxAge !== 1000);
+  }, [filters]);
+
+  // Check if sort is non-default
+  const hasActiveSort = useCallback(() => {
+    return (filters.sortBy !== 'SCORE') || (filters.sortDesc !== true);
+  }, [filters]);
+
   const renderHeader = useCallback(() => (
     <View style={[styles.header, isLargeScreen && styles.headerLarge]}>
       <View style={styles.headerContent}>
-        <Text style={[styles.headerTitle, isSmallScreen && styles.headerTitleSmall]}>
-          {title}
-        </Text>
         <TouchableOpacity
-          style={styles.filterButton}
+          style={[styles.filterButton, { marginRight: 12 }]}
           onPress={handleFilterPress}
           activeOpacity={0.8}
         >
-          <Ionicons name="filter" size={20} color="#9188E5" />
+          <Ionicons name="funnel-outline" size={20} color="#9188E5" />
           <Text style={styles.filterButtonText}>Filter</Text>
-          {Object.keys(filters).some(key => 
-            (key === 'species' && filters[key] !== 'ALL') ||
-            (key === 'breed' && filters[key] !== 'ALL') ||
-            (key === 'minAge' && filters[key] !== 0) ||
-            (key === 'maxAge' && filters[key] !== 1000)
-          ) && <View style={styles.filterBadge} />}
+          {hasActiveFilters() && <View style={styles.filterBadge} />}
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={handleSortPress}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="swap-vertical-outline" size={20} color="#9188E5" />
+          <Text style={styles.filterButtonText}>Sort</Text>
+          {hasActiveSort() && <View style={styles.filterBadge} />}
         </TouchableOpacity>
       </View>
-      {posts.length > 0 && (
-        <Text style={styles.postCount}>
-          {posts.length} {posts.length === 1 ? 'pet' : 'pets'} available
-        </Text>
-      )}
     </View>
-  ), [title, isLargeScreen, isSmallScreen, handleFilterPress, filters, posts.length]);
+  ), [isLargeScreen, handleFilterPress, handleSortPress, hasActiveFilters, hasActiveSort]);
 
   // CONDITIONAL RETURNS MUST COME AFTER ALL HOOKS
   // Loading state
@@ -231,23 +265,18 @@ export default function PostScreen({ postType }) {
   return (
     <View style={styles.container}>
       <FlatList
-        data={[{ type: 'landing' }, { type: 'header' }, ...posts]}
-        renderItem={({ item, index }) => {
-          if (item.type === 'landing') {
-            return <LandingImages />;
-          }
-          if (item.type === 'header') {
-            return renderHeader();
-          }
-          return renderPost({ item });
-        }}
-        keyExtractor={(item, index) => {
-          if (item.type === 'landing') return 'landing';
-          if (item.type === 'header') return 'header';
-          return item.postId;
-        }}
-        stickyHeaderIndices={[1]}
+        data={postsWithPlaceholder}
+        numColumns={2}
+        renderItem={renderPost}
+        ListHeaderComponent={
+          <>
+            <LandingImages />
+            {renderHeader()}
+          </>
+        }
+        keyExtractor={(item) => item.postId}
         contentContainerStyle={[
+          styles.listContent,
           posts.length === 0 && styles.listContentEmpty
         ]}
         ListFooterComponent={renderFooter}
@@ -260,19 +289,28 @@ export default function PostScreen({ postType }) {
           />
         }
         showsVerticalScrollIndicator={false}
-        initialNumToRender={5}
-        maxToRenderPerBatch={5}
+        initialNumToRender={6}
+        maxToRenderPerBatch={6}
         windowSize={10}
         removeClippedSubviews={true}
+        columnWrapperStyle={styles.row}
       />
       {posts.length === 0 && renderEmpty()}
 
       {/* Filter Modal */}
       <FilterModal
         visible={isFilterModalVisible}
-        initialFilters={{ ...filters, petPostType: postType }}
+        initialFilters={filters}
         onApply={handleApplyFilters}
         onClose={handleCloseFilters}
+      />
+
+      {/* Sort Modal */}
+      <SortModal
+        visible={isSortModalVisible}
+        initialFilters={filters}
+        onApply={handleApplySort}
+        onClose={handleCloseSort}
       />
     </View>
   );
@@ -341,7 +379,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
     ...Platform.select({
@@ -355,13 +393,13 @@ const styles = StyleSheet.create({
         elevation: 2,
       },
     }),
+    position: 'sticky',
   },
   headerLarge: {
     paddingHorizontal: 24,
   },
   headerContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
   },
   headerTitle: {
@@ -404,11 +442,14 @@ const styles = StyleSheet.create({
   listContentEmpty: {
     flex: 1,
   },
-  cardWrapper: {
-    marginBottom: 8,
+  row: {
+    justifyContent: 'space-evenly',
+    paddingHorizontal: 8,
   },
-  cardWrapperLarge: {
-    alignItems: 'center',
+  cardWrapper: {
+    flex: 1,
+    marginHorizontal: 6,
+    marginBottom: 8,
   },
   emptyStateContainer: {
     flex: 1,
@@ -425,8 +466,6 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     paddingVertical: 12,
     borderRadius: 12,
-    // borderWidth: 1,
-    // borderColor: '#E5E7EB', // Remove border for strong solid
     gap: 8,
   },
   loadMoreText: {
