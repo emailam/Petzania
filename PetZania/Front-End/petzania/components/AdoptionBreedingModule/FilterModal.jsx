@@ -15,21 +15,17 @@ import {
   BottomSheetBackdrop,
 } from '@gorhom/bottom-sheet';
 
-import { Ionicons } from '@expo/vector-icons';
-
 const { width } = Dimensions.get('window');
 
 const FilterModal = memo(({ visible, onClose, onApply, initialFilters = {} }) => {
   const bottomSheetModalRef = useRef(null);
 
-  // Initialize filters with default values
+  // Initialize filters with default values (removed sorting fields)
   const [filters, setFilters] = useState({
     species: initialFilters.species || 'ALL',
     breed: initialFilters.breed || 'ALL',
     minAge: initialFilters.minAge || 0,
     maxAge: initialFilters.maxAge || 1000,
-    sortBy: initialFilters.sortBy || 'CREATED_AT',
-    sortDesc: initialFilters.sortDesc !== undefined ? initialFilters.sortDesc : true,
   });
 
   // Handle modal visibility changes
@@ -40,8 +36,6 @@ const FilterModal = memo(({ visible, onClose, onApply, initialFilters = {} }) =>
         breed: initialFilters.breed || 'ALL',
         minAge: initialFilters.minAge || 0,
         maxAge: initialFilters.maxAge || 1000,
-        sortBy: initialFilters.sortBy || 'CREATED_AT',
-        sortDesc: initialFilters.sortDesc !== undefined ? initialFilters.sortDesc : true,
       });
       bottomSheetModalRef.current?.present();
     } else {
@@ -96,11 +90,6 @@ const FilterModal = memo(({ visible, onClose, onApply, initialFilters = {} }) =>
     { value: 'TURTLE', label: 'Turtle', icon: 'shield-outline' }
   ], []);
 
-  const sortOptions = useMemo(() => [
-    { value: 'CREATED_AT', label: 'Date' },
-    { value: 'REACTS', label: 'Likes' }
-  ], []);
-
   // Handle filter changes
   const handleFilterChange = useCallback((key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -114,11 +103,6 @@ const FilterModal = memo(({ visible, onClose, onApply, initialFilters = {} }) =>
     }));
   }, []);
 
-  // Handle sort order toggle
-  const handleSortOrderToggle = useCallback(() => {
-    setFilters(prev => ({ ...prev, sortDesc: !prev.sortDesc }));
-  }, []);
-
   // Handle age input change with validation
   const handleAgeChange = useCallback((key, value) => {
     // Allow empty string or valid numbers
@@ -129,15 +113,13 @@ const FilterModal = memo(({ visible, onClose, onApply, initialFilters = {} }) =>
     }
   }, []);
 
-  // Reset all filters
-  const handleReset = useCallback(() => {
+  // Clear all filters
+  const handleClearAll = useCallback(() => {
     setFilters({
       species: 'ALL',
       breed: 'ALL',
       minAge: 0,
       maxAge: 1000,
-      sortBy: 'SCORE',
-      sortDesc: true,
     });
   }, []);
 
@@ -154,9 +136,15 @@ const FilterModal = memo(({ visible, onClose, onApply, initialFilters = {} }) =>
       return;
     }
     
-    onApply(filters);
+    // Merge with existing filters (including sort settings)
+    const updatedFilters = {
+      ...initialFilters,
+      ...filters,
+    };
+    
+    onApply(updatedFilters);
     bottomSheetModalRef.current?.dismiss();
-  }, [filters, onApply]);
+  }, [filters, initialFilters, onApply]);
 
   // Render option button
   const renderOptionButton = useCallback((option, isSelected, onPress, style = {}) => (
@@ -208,96 +196,71 @@ const FilterModal = memo(({ visible, onClose, onApply, initialFilters = {} }) =>
         {/* Header */}
         <View style={styles.modalHeader}>
           <Text style={styles.modalTitle}>Filters</Text>
-          <TouchableOpacity onPress={handleReset} activeOpacity={0.7}>
-            <Text style={styles.resetText}>Reset</Text>
+          <TouchableOpacity onPress={handleClearAll} activeOpacity={0.7}>
+            <Text style={styles.clearAllText}>Clear All</Text>
           </TouchableOpacity>
         </View>
 
-          {/* Species Filter */}
-          <Text style={styles.filterLabel}>Species</Text>
-          <FlatList
-            data={species}
-            renderItem={renderSpeciesItem}
-            keyExtractor={(item) => item.value}
-            numColumns={3}
-            scrollEnabled={false}
-            contentContainerStyle={styles.speciesFlatList}
-            columnWrapperStyle={styles.speciesRow}
-          />
+        {/* Species Filter */}
+        <Text style={styles.filterLabel}>Species</Text>
+        <FlatList
+          data={species}
+          renderItem={renderSpeciesItem}
+          keyExtractor={(item) => item.value}
+          numColumns={3}
+          scrollEnabled={false}
+          contentContainerStyle={styles.speciesFlatList}
+          columnWrapperStyle={styles.speciesRow}
+        />
 
-          {/* Breed */}
-          <Text style={styles.filterLabel}>Breed</Text>
+        {/* Breed */}
+        <Text style={styles.filterLabel}>Breed</Text>
+        <TextInput
+          style={[styles.input, isSmallScreen && styles.inputSmall]}
+          placeholder="Enter breed or leave empty for all"
+          value={filters.breed === 'ALL' ? '' : filters.breed}
+          onChangeText={(text) => handleFilterChange('breed', text || 'ALL')}
+          placeholderTextColor="#999"
+        />
+
+        {/* Age Range */}
+        <Text style={styles.filterLabel}>Age Range (years)</Text>
+        <View style={styles.rangeRow}>
           <TextInput
-            style={[styles.input, isSmallScreen && styles.inputSmall]}
-            placeholder="Enter breed or leave empty for all"
-            value={filters.breed === 'ALL' ? '' : filters.breed}
-            onChangeText={(text) => handleFilterChange('breed', text || 'ALL')}
+            style={[styles.input, styles.rangeInput, isSmallScreen && styles.inputSmall]}
+            placeholder="Min"
+            value={filters.minAge !== null ? String(filters.minAge) : ''}
+            onChangeText={(text) => handleAgeChange('minAge', text)}
+            keyboardType="numeric"
             placeholderTextColor="#999"
           />
+          <TextInput
+            style={[styles.input, styles.rangeInput, isSmallScreen && styles.inputSmall]}
+            placeholder="Max"
+            value={filters.maxAge !== null ? String(filters.maxAge) : ''}
+            onChangeText={(text) => handleAgeChange('maxAge', text)}
+            keyboardType="numeric"
+            placeholderTextColor="#999"
+          />
+        </View>
 
-          {/* Age Range */}
-          <Text style={styles.filterLabel}>Age Range (years)</Text>
-          <View style={styles.rangeRow}>
-            <TextInput
-              style={[styles.input, styles.rangeInput, isSmallScreen && styles.inputSmall]}
-              placeholder="Min"
-              value={filters.minAge !== null ? String(filters.minAge) : ''}
-              onChangeText={(text) => handleAgeChange('minAge', text)}
-              keyboardType="numeric"
-              placeholderTextColor="#999"
-            />
-            <TextInput
-              style={[styles.input, styles.rangeInput, isSmallScreen && styles.inputSmall]}
-              placeholder="Max"
-              value={filters.maxAge !== null ? String(filters.maxAge) : ''}
-              onChangeText={(text) => handleAgeChange('maxAge', text)}
-              keyboardType="numeric"
-              placeholderTextColor="#999"
-            />
-          </View>
-
-          {/* Sort Options */}
-          <Text style={styles.filterLabel}>Sort By</Text>
-          <View style={styles.optionsRow}>
-            {sortOptions.map(sort =>
-              renderOptionButton(
-                sort,
-                filters.sortBy === sort.value,
-                () => handleFilterChange('sortBy', sort.value)
-              )
-            )}
-          </View>
-
-          {/* Sort Order */}
-          <TouchableOpacity 
-            style={styles.sortOrderContainer}
-            onPress={handleSortOrderToggle}
-            activeOpacity={0.7}
+        {/* Action Buttons */}
+        <View style={[styles.modalButtons, isSmallScreen && styles.modalButtonsSmall]}>
+          <TouchableOpacity
+            style={[styles.button, styles.cancelButton]}
+            onPress={handleCancel}
+            activeOpacity={0.8}
           >
-            <View style={[styles.optionButton, filters.sortDesc && styles.optionSelected]}>
-              <Text style={[styles.optionText, filters.sortDesc && styles.optionTextSelected]}>
-                {filters.sortDesc ? 'Newest/Most First' : 'Oldest/Least First'}
-              </Text>
-            </View>
+            <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
-
-          {/* Action Buttons */}
-          <View style={[styles.modalButtons, isSmallScreen && styles.modalButtonsSmall]}>
-            <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
-              onPress={handleCancel}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.button, styles.applyButton]}
-              onPress={handleApply}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.applyButtonText}>Apply Filters</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={[styles.button, styles.applyButton]}
+            onPress={handleApply}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.applyButtonText}>Apply Filters</Text>
+          </TouchableOpacity>
+        </View>
       </BottomSheetScrollView>
     </BottomSheetModal>
   );
@@ -336,7 +299,7 @@ const styles = {
     fontWeight: '600',
     color: '#333'
   },
-  resetText: {
+  clearAllText: {
     fontSize: 16,
     color: '#9188E5',
     fontWeight: '500'
@@ -453,9 +416,6 @@ const styles = {
     color: '#fff',
     fontWeight: '600'
   },
-  sortOrderContainer: {
-    marginTop: 8,
-  }
 };
 
 export default FilterModal;
