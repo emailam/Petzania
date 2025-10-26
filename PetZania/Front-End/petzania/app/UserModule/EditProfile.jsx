@@ -1,7 +1,6 @@
 import { StyleSheet, View, TouchableOpacity, Text, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
-import { Image } from 'expo-image';
 import React, { useState, useContext, useEffect } from 'react';
-import { AntDesign, MaterialIcons } from '@expo/vector-icons';
+import {  MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Button from '@/components/Button';
 import CustomInput from '@/components/CustomInput';
@@ -182,7 +181,6 @@ const EditProfile = () => {
                         }}
                         size={180}
                         isUploading={isLoading}
-                        style={{ marginVertical: 20 }}
                         currentImage={image}
                     />
                 </View>

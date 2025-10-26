@@ -2,7 +2,7 @@ import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, RefreshCon
 import { Image } from 'expo-image';
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 
-import { Ionicons } from '@expo/vector-icons'
+import { Ionicons } from '@expo/vector-icons';
 import Entypo from '@expo/vector-icons/Entypo';
 
 import { useRouter } from 'expo-router'
@@ -11,7 +11,7 @@ import { acceptFriendRequest, cancelFriendRequest } from '@/services/friendsServ
 import { useNotifications } from '@/context/NotificationContext'
 import { getUserById } from '@/services/userService';
 import EmptyState from '@/components/EmptyState';
-import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import BottomSheet from '@/components/BottomSheet';
 
 export default function index() {
     const defaultImage = require('@/assets/images/Defaults/default-user.png');
@@ -27,7 +27,7 @@ export default function index() {
     const [selectedNotification, setSelectedNotification] = useState(null);
 
     // Bottom sheet ref
-    const bottomSheetModalRef = useRef(null);
+    const bottomSheetRef = useRef(null);
 
     const fetchNotifications = async (pageNum = 0, isRefresh = false) => {
         try {
@@ -252,7 +252,7 @@ export default function index() {
 
     const handleNotificationLongPress = async (notification) => {
         setSelectedNotification(notification);
-        bottomSheetModalRef.current?.present();
+        bottomSheetRef.current?.present();
     };
 
     const handleMarkAsRead = async () => {
@@ -266,7 +266,7 @@ export default function index() {
                 )
             );
             decrementUnreadCount(1);
-            bottomSheetModalRef.current?.dismiss();
+            bottomSheetRef.current?.dismiss();
             setSelectedNotification(null);
         } catch (error) {
             console.error('Error marking notification as read:', error);
@@ -294,7 +294,7 @@ export default function index() {
                             if (!selectedNotification.isRead) {
                                 decrementUnreadCount(1);
                             }
-                            bottomSheetModalRef.current?.dismiss();
+                            bottomSheetRef.current?.dismiss();
                             setSelectedNotification(null);
                         } catch (error) {
                             console.error('Error deleting notification:', error);
@@ -305,18 +305,6 @@ export default function index() {
             ]
         );
     };
-
-    const renderBackdrop = useCallback(
-        (props) => (
-            <BottomSheetBackdrop
-                {...props}
-                disappearsOnIndex={-1}
-                appearsOnIndex={0}
-                opacity={0.5}
-            />
-        ),
-        []
-    );
 
     const handleAcceptFriend = async (notification) => {
         Alert.alert(
@@ -448,7 +436,7 @@ export default function index() {
                 onScroll={({ nativeEvent }) => {
                     const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
                     const paddingToBottom = 20;
-                    if (layoutMeasurement.height + contentOffset.y >= 
+                    if (layoutMeasurement.height + contentOffset.y >=
                         contentSize.height - paddingToBottom) {
                         loadMore();
                     }
@@ -572,51 +560,43 @@ export default function index() {
             </ScrollView>
 
             {/* Bottom Sheet Modal for notification actions */}
-            <BottomSheetModal
-                ref={bottomSheetModalRef}
+            <BottomSheet
+                ref={bottomSheetRef}
                 index={0}
                 snapPoints={['30%']}
-                backdropComponent={renderBackdrop}
-                enablePanDownToClose={true}
-                handleIndicatorStyle={styles.bottomSheetIndicator}
-                backgroundStyle={styles.bottomSheetBackground}
             >
-                <BottomSheetView style={styles.bottomSheetContent}>
-                    <View style={styles.bottomSheetHeader}>
-                        <Text style={styles.bottomSheetTitle}>Notification Actions</Text>
-                    </View>
+                <View style={styles.bottomSheetHeader}>
+                    <Text style={styles.bottomSheetTitle}>Notification Actions</Text>
+                </View>
 
-                    <View style={styles.bottomSheetActions}>
-                        {selectedNotification && !selectedNotification.isRead && (
-                            <TouchableOpacity
-                                style={styles.bottomSheetAction}
-                                onPress={handleMarkAsRead}
-                            >
-                                <View style={styles.actionIconContainer}>
-                                    <Ionicons name="checkmark-circle" size={24} color="#34C759" />
-                                </View>
-                                <View style={styles.actionTextContainer}>
-                                    <Text style={styles.actionTitle}>Mark as Read</Text>
-                                    <Text style={styles.actionSubtitle}>Remove from unread notifications</Text>
-                                </View>
-                            </TouchableOpacity>
-                        )}
-
+                <View style={styles.bottomSheetActions}>
+                    {selectedNotification && !selectedNotification.isRead && (
                         <TouchableOpacity
                             style={styles.bottomSheetAction}
-                            onPress={handleDeleteNotification}
+                            onPress={handleMarkAsRead}
                         >
                             <View style={styles.actionIconContainer}>
-                                <Ionicons name="trash-outline" size={24} color="#FF3B30" />
+                                <Ionicons name="checkmark-circle" size={24} color="#9188E5" />
                             </View>
                             <View style={styles.actionTextContainer}>
-                                <Text style={[styles.actionTitle, { color: '#FF3B30' }]}>Delete</Text>
-                                <Text style={styles.actionSubtitle}>Remove this notification permanently</Text>
+                                <Text style={styles.actionText}>Mark as Read</Text>
                             </View>
                         </TouchableOpacity>
-                    </View>
-                </BottomSheetView>
-            </BottomSheetModal>
+                    )}
+
+                    <TouchableOpacity
+                        style={styles.bottomSheetAction}
+                        onPress={handleDeleteNotification}
+                    >
+                        <View style={styles.actionIconContainer}>
+                            <Ionicons name="trash-outline" size={24} color="#FF3B30" />
+                        </View>
+                        <View style={styles.actionTextContainer}>
+                            <Text style={[styles.actionText, styles.removeText]}>Remove Notification</Text>
+                        </View>
+                    </TouchableOpacity>
+                </View>
+            </BottomSheet>
         </View>
     )
 }
@@ -810,7 +790,7 @@ const styles = StyleSheet.create({
     unreadDot: {
         position: 'absolute',
         top: 16,
-        right: 60, // Moved left to avoid overlapping with three dots button
+        right: 10,
         width: 8,
         height: 8,
         borderRadius: 4,
@@ -829,14 +809,6 @@ const styles = StyleSheet.create({
         paddingVertical: 20,
     },
     // Bottom Sheet Styles
-    bottomSheetIndicator: {
-        backgroundColor: '#ccc',
-    },
-    bottomSheetBackground: {
-        backgroundColor: '#fff',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-    },
     bottomSheetContent: {
         flex: 1,
         paddingHorizontal: 20,
@@ -845,7 +817,7 @@ const styles = StyleSheet.create({
         paddingVertical: 16,
         borderBottomWidth: 1,
         borderBottomColor: '#f0f0f0',
-        marginBottom: 16,
+        marginBottom: 8,
     },
     bottomSheetTitle: {
         fontSize: 18,
@@ -861,28 +833,26 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 8,
         borderRadius: 12,
-        marginBottom: 12,
+        marginBottom: 8,
     },
     actionIconContainer: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#fff',
-        justifyContent: 'center',
         alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
     },
     actionTextContainer: {
         flex: 1,
     },
-    actionTitle: {
+    actionText: {
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: '500',
         color: '#333',
-        marginBottom: 2,
     },
-    actionSubtitle: {
-        fontSize: 14,
-        color: '#666',
+    removeText: {
+        color: '#FF3B30',
     },
     moreOptionsButton: {
         padding: 8,

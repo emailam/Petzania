@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Dimensions
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import BottomSheet, { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import  { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import BottomSheet from '@/components/BottomSheet';
 import ImageViewing from 'react-native-image-viewing';
 import LottieView from 'lottie-react-native';
 import UserPosts from '@/components/AdoptionBreedingModule/UserPosts';
@@ -39,11 +40,8 @@ export default function UserProfile() {
     const { userid } = useLocalSearchParams();
     const router = useRouter();
     const { user: currentUser } = useContext(UserContext);
-    
-    // Bottom Sheet setup
-    const bottomSheetModalRef = useRef(null);
-    const snapPoints = ['30%'];
-    
+
+    const bottomSheetRef = useRef(null);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [friendshipStatus, setFriendshipStatus] = useState('none');
@@ -453,7 +451,7 @@ export default function UserProfile() {
     };
 
     const handleMoreOptions = useCallback(() => {
-        bottomSheetModalRef.current?.present();
+        bottomSheetRef.current?.present();
     }, []);
 
     const handleFollowUser = async () => {
@@ -710,7 +708,7 @@ export default function UserProfile() {
 
           <View style={styles.userInfoContainer}>
             <Text style={styles.name} numberOfLines={2} ellipsizeMode="tail">
-              {user?.name || 'Unknown User'}
+              {user?.name || user?.username || 'Unknown User'}
             </Text>
           </View>
         </View>
@@ -924,56 +922,55 @@ export default function UserProfile() {
       )}
 
       {/* More Options Bottom Sheet */}
-      <BottomSheetModal
-        ref={bottomSheetModalRef}
-        snapPoints={snapPoints}
-        enablePanDownToClose
-        backdropComponent={({ style }) => (
-          <View style={[style, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]} />
-        )}
+      <BottomSheet
+        ref={bottomSheetRef}
+        snapPoints={['30%']}
       >
-        <BottomSheetView style={styles.bottomSheetContent}>
-          <Text style={styles.bottomSheetTitle}>More Options</Text>
-          
+          <View style={styles.bottomSheetHeader}>
+            <Text style={styles.bottomSheetTitle}>More Options</Text>
+          </View>
           {/* Follow/Unfollow Option - Only show if not blocked */}
           {!isBlocked && (
             <TouchableOpacity
-              style={styles.bottomSheetOption}
+              style={styles.bottomSheetAction}
               onPress={() => {
-                bottomSheetModalRef.current?.close();
+                bottomSheetRef.current?.close();
                 handleFollowUser();
               }}
             >
-              <Ionicons 
-                name={isFollowingUser ? "person-remove" : "person-add"} 
-                size={20} 
-                color="#333" 
-              />
-              <Text style={styles.bottomSheetOptionText}>
+              <View style={styles.actionIconContainer}>
+                <Ionicons
+                  name={isFollowingUser ? "person-remove" : "person-add"} 
+                  size={20}
+                  color="#333"
+                />
+              </View>
+              <Text style={styles.actionText}>
                 {isFollowingUser ? 'Unfollow User' : 'Follow User'}
               </Text>
             </TouchableOpacity>
           )}
-          
+
           {/* Block/Unblock Option */}
           <TouchableOpacity
-            style={[styles.bottomSheetOption, styles.destructiveOption]}
+            style={[styles.bottomSheetAction, styles.destructiveOption]}
             onPress={() => {
-              bottomSheetModalRef.current?.close();
+              bottomSheetRef.current?.close();
               isBlocked ? handleUnblockUser() : handleBlockUser();
             }}
           >
-            <Ionicons 
-              name={isBlocked ? "shield-checkmark" : "shield"} 
-              size={20} 
-              color="#f44336" 
-            />
-            <Text style={[styles.bottomSheetOptionText, styles.destructiveText]}>
+            <View style={styles.actionIconContainer}>
+              <Ionicons 
+                name={isBlocked ? "shield-checkmark" : "shield"} 
+                size={20} 
+                color="#f44336" 
+              />
+            </View>
+            <Text style={[styles.actionText, styles.destructiveText]}>
               {isBlocked ? 'Unblock User' : 'Block User'}
             </Text>
           </TouchableOpacity>
-        </BottomSheetView>
-      </BottomSheetModal>
+      </BottomSheet>
 
       <ImageViewing
         images={[{ uri: user?.profilePictureURL || '' }]}
@@ -1413,27 +1410,37 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 30,
   },
+  bottomSheetHeader: {
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    marginBottom: 8,
+  },
   bottomSheetTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
     textAlign: 'center',
-    marginBottom: 20,
   },
-  bottomSheetOption: {
+  bottomSheetActions: {
+    flex: 1,
+  },
+  bottomSheetAction: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+    paddingVertical: 8,
     borderRadius: 12,
-    backgroundColor: '#f8f9fa',
-    marginBottom: 12,
-    gap: 12,
+    marginBottom: 8,
   },
-  destructiveOption: {
-    backgroundColor: '#fef2f2',
+  actionIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
-  bottomSheetOptionText: {
+  actionText: {
     fontSize: 16,
     fontWeight: '500',
     color: '#333',

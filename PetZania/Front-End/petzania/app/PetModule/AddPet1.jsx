@@ -3,7 +3,6 @@ import {
     View,
     TouchableOpacity,
     Text,
-    TextInput,
     Dimensions,
     KeyboardAvoidingView,
     ScrollView,
@@ -13,13 +12,12 @@ import {
 import { Image } from 'expo-image';
 import React, { useState, useContext, useRef, useEffect } from 'react';
 import * as ImagePicker from 'expo-image-picker';
-import { AntDesign } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { ActivityIndicator } from 'react-native-paper';
-import { useActionSheet } from '@expo/react-native-action-sheet';
 import ImageViewing from 'react-native-image-viewing';
+import { MaterialIcons } from '@expo/vector-icons';
 import CustomInput from '@/components/CustomInput';
 import ImageUploadInput from '@/components/ImageUploadInput';
+import BottomSheet from '@/components/BottomSheet';
 
 import { uploadFiles } from '@/services/uploadService';
 
@@ -30,13 +28,14 @@ const { width } = Dimensions.get('window');
 
 const AddPet1 = () => {
     const flatListRef = useRef(null);
+    const bottomSheetRef = useRef(null);
     const [loading, setLoading] = useState(false);
-    const { showActionSheetWithOptions } = useActionSheet();
 
     const defaultImage = require('../../assets/images/AddPet/Pet Default Pic.png');
     const { pet, setPet } = useContext(PetContext);
     const [images, setImages] = useState(pet.images || []);
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [selectedImageIndex, setSelectedImageIndex] = useState(null);
     const [errors, setErrors] = useState({
         name: '',
         images: ''
@@ -85,7 +84,7 @@ const AddPet1 = () => {
 
     const pickImage = async () => {
         setLoading(true);
-        clearError('images'); // Clear any previous image errors
+        clearError('images');
         
         try {
             let result = await ImagePicker.launchImageLibraryAsync({
@@ -100,7 +99,6 @@ const AddPet1 = () => {
                 const newImages = [...images, ...uris];
                 setImages(newImages);
                 
-                // Update pet context with images
                 setPet(prev => ({
                     ...prev,
                     images: newImages
@@ -121,20 +119,16 @@ const AddPet1 = () => {
         const updatedImages = images.filter(uri => uri !== uriToDelete);
         setImages(updatedImages);
         
-        // Update pet context
         setPet(prev => ({
             ...prev,
             images: updatedImages
         }));
         
-        // Handle currentIndex adjustment based on which image was deleted
         if (updatedImages.length === 0) {
             setCurrentIndex(0);
         } else if (indexToDelete <= currentIndex) {
-            // If we deleted an image at or before the current index, adjust accordingly
             const newIndex = Math.max(0, currentIndex - 1);
             setCurrentIndex(newIndex);
-            // Force the FlatList to scroll to the correct position
             setTimeout(() => {
                 flatListRef.current?.scrollToIndex({ 
                     index: newIndex, 
@@ -142,7 +136,6 @@ const AddPet1 = () => {
                 });
             }, 100);
         } else if (currentIndex >= updatedImages.length) {
-            // If current index is out of bounds, set to last image
             const newIndex = updatedImages.length - 1;
             setCurrentIndex(newIndex);
             setTimeout(() => {
@@ -155,15 +148,10 @@ const AddPet1 = () => {
     };
 
     const goToNextStep = async () => {
-        // Validate all fields before proceeding
         let hasErrors = false;
 
-        // Validate name
         if (!pet?.name?.trim()) {
             setError('name', "Pet's name is required");
-            hasErrors = true;
-        } else if (pet.name.trim().length < 2) {
-            setError('name', 'Name must be at least 2 characters');
             hasErrors = true;
         }
 
@@ -206,48 +194,38 @@ const AddPet1 = () => {
     };
 
     const handleCarouselImagePress = (index) => {
-        const options = [
-            'View Photo',
-            index === 0 ? null : 'Make Profile Picture',
-            'Add More Photos',
-            'Delete Photo',
-            'Cancel',
-        ].filter(Boolean);
-        const cancelButtonIndex = options.length - 1;
-        const destructiveButtonIndex = options.indexOf('Delete Photo');
-        showActionSheetWithOptions(
-            {
-                options,
-                cancelButtonIndex,
-                destructiveButtonIndex,
-            },
-            (buttonIndex) => {
-                if (buttonIndex === 0) {
+        setSelectedImageIndex(index);
+        bottomSheetRef.current?.present();
+    };
+
+    const handleBottomSheetAction = (action) => {
+        bottomSheetRef.current?.dismiss();
+        setTimeout(() => {
+            const index = selectedImageIndex;
+            switch (action) {
+                case 'viewPhoto':
                     setViewerIndex(index);
                     setShowImageViewer(true);
-                } else if (buttonIndex === 1 && index !== 0) {
-                    // Make profile picture
+                    break;
+                case 'makeProfile':
                     const newImages = [...images];
                     const [selected] = newImages.splice(index, 1);
                     newImages.unshift(selected);
                     setImages(newImages);
-                    
-                    // Update pet context
                     setPet(prev => ({
                         ...prev,
                         images: newImages
                     }));
-                    
                     setCurrentIndex(0);
-                } else if ((buttonIndex === 1 && index === 0) || (buttonIndex === 2 && index !== 0)) {
-                    // Add More Photos
+                    break;
+                case 'addMore':
                     pickImage();
-                } else if ((buttonIndex === 2 && index === 0) || (buttonIndex === 3 && index !== 0)) {
-                    // Delete photo
+                    break;
+                case 'delete':
                     deleteImage(images[index]);
-                }
+                    break;
             }
-        );
+        }, 300);
     };
 
     const renderItem = ({ item, index }) => (
@@ -321,9 +299,9 @@ const AddPet1 = () => {
                     ) : (
                         <ImageUploadInput
                             defaultImage={defaultImage}
-                            onImageChange={(imageUri) => {
-                                if (imageUri) {
-                                    const newImages = [imageUri];
+                            onImageChange={(imageData) => {
+                                if (imageData) {
+                                    const newImages = Array.isArray(imageData) ? imageData : [imageData];
                                     setImages(newImages);
                                     setPet(prev => ({
                                         ...prev,
@@ -372,6 +350,60 @@ const AddPet1 = () => {
                     disabled={!isFormComplete || loading}
                 />
             </View>
+
+            {/* BottomSheet for image actions */}
+            <BottomSheet
+                ref={bottomSheetRef}
+                snapPoints={selectedImageIndex === 0 ? ['40%'] : ['50%']}
+            >
+                <View style={styles.bottomSheetHeader}>
+                    <Text style={styles.bottomSheetTitle}>Photo Actions</Text>
+                </View>
+
+                <View style={styles.bottomSheetActions}>
+                    <TouchableOpacity
+                        style={styles.bottomSheetAction}
+                        onPress={() => handleBottomSheetAction('viewPhoto')}
+                    >
+                        <View style={styles.actionIconContainer}>
+                            <MaterialIcons name="photo" size={24} color="#9188E5" />
+                        </View>
+                        <Text style={styles.actionText}>View Photo</Text>
+                    </TouchableOpacity>
+
+                    {selectedImageIndex !== 0 && (
+                        <TouchableOpacity
+                            style={styles.bottomSheetAction}
+                            onPress={() => handleBottomSheetAction('makeProfile')}
+                        >
+                            <View style={styles.actionIconContainer}>
+                                <MaterialIcons name="star" size={24} color="#9188E5" />
+                            </View>
+                            <Text style={styles.actionText}>Make Profile Picture</Text>
+                        </TouchableOpacity>
+                    )}
+
+                    <TouchableOpacity
+                        style={styles.bottomSheetAction}
+                        onPress={() => handleBottomSheetAction('addMore')}
+                    >
+                        <View style={styles.actionIconContainer}>
+                            <MaterialIcons name="add-photo-alternate" size={24} color="#9188E5" />
+                        </View>
+                        <Text style={styles.actionText}>Add More Photos</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.bottomSheetAction}
+                        onPress={() => handleBottomSheetAction('delete')}
+                    >
+                        <View style={styles.actionIconContainer}>
+                            <MaterialIcons name="delete-outline" size={24} color="#FF3B30" />
+                        </View>
+                        <Text style={[styles.actionText, styles.deleteText]}>Delete Photo</Text>
+                    </TouchableOpacity>
+                </View>
+            </BottomSheet>
 
             {/* Image Viewer Modal */}
             <ImageViewing
@@ -472,60 +504,43 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         paddingHorizontal: 20,
     },
-    uploadContainer: {
-        width: 220,
-        height: 220,
-        borderRadius: 110,
-        borderWidth: 2,
-        borderColor: '#9188E5',
-        borderStyle: 'dashed',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#f8f8ff',
+    bottomSheetHeader: {
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+        marginBottom: 8,
     },
-    uploadImageContainer: {
-        width: 220,
-        height: 220,
-        borderRadius: 110,
-        position: 'relative',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    blurredImage: {
-        position: 'absolute',
-        width: '100%',
-        height: '100%',
-    },
-    uploadOverlay: {
-        position: 'absolute',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        borderRadius: 110,
-        width: '100%',
-        height: '100%',
-    },
-    uploadText: {
-        color: '#9188E5',
-        fontSize: 16,
+    bottomSheetTitle: {
+        fontSize: 18,
         fontWeight: '600',
-        marginTop: 8,
+        color: '#333',
+        textAlign: 'center',
     },
-    uploadSubtext: {
-        color: '#9188E5',
-        fontSize: 14,
-        fontWeight: '400',
-        marginTop: 4,
+    bottomSheetActions: {
+        flex: 1,
     },
-    loadingContainer: {
-        justifyContent: 'center',
+    bottomSheetAction: {
+        flexDirection: 'row',
         alignItems: 'center',
+        paddingVertical: 8,
+        borderRadius: 12,
+        marginBottom: 8,
     },
-    loadingText: {
-        color: '#9188E5',
+    actionIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    actionText: {
         fontSize: 16,
-        fontWeight: '600',
-        marginTop: 10,
+        fontWeight: '500',
+        color: '#333',
+    },
+    deleteText: {
+        color: '#FF3B30',
     },
 });
 

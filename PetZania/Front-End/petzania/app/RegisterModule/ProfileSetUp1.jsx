@@ -1,12 +1,11 @@
-import { StyleSheet, View, TouchableOpacity, Text, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
-import { Image } from 'expo-image';
+import { StyleSheet, View, Text, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
+
 import React, { useState, useContext, useEffect } from 'react';
-import * as ImagePicker from 'expo-image-picker';
-import { AntDesign, MaterialIcons } from '@expo/vector-icons';
+
 import { useRouter } from 'expo-router';
 import Button from '@/components/Button';
+import ImageUploadInput from '@/components/ImageUploadInput';
 import { isValidPhoneNumber } from 'libphonenumber-js';
-import { useActionSheet } from '@expo/react-native-action-sheet';
 import ImageViewing from 'react-native-image-viewing';
 
 import { uploadFile } from '@/services/uploadService';
@@ -33,8 +32,9 @@ const ProfileSetUp1 = () => {
     const [showImageViewer, setShowImageViewer] = useState(false);
     const [isFormComplete, setIsFormComplete] = useState(false);
 
+    const defaultImage = require('@/assets/images/Defaults/default-user.png');
+
     const [isLoading, setIsLoading] = useState(false);
-    const { showActionSheetWithOptions } = useActionSheet();
 
     // Helper function to set individual field errors (like RegisterForm)
     const setError = (field, message) => {
@@ -57,51 +57,12 @@ const ProfileSetUp1 = () => {
         const nameValid = name && name.trim().length >= 2; // Name minimum 2 chars
         const phoneValid = !phoneNumber || phoneNumber.length === 0 || isValidPhoneNumber(phoneNumber);
         const bioValid = bio.length <= 255; // Bio within character limit
-        
+
         // Form is complete when name is valid and phone is valid (if provided)
         const formValid = nameValid && phoneValid && bioValid && !errors.name && !errors.phoneNumber;
-        
+
         setIsFormComplete(formValid);
     }, [name, phoneNumber, bio, errors]);
-
-    const pickImageFromLibrary = async () => {
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'],
-            aspect: [1, 1],
-            quality: 0.7,
-            allowsEditing: true,
-        });
-
-        if (!result.canceled) {
-            setImage(result.assets[0].uri);
-        }
-    };
-
-    const takePhoto = async () => {
-        const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-
-        if (permissionResult.granted === false) {
-            alert("You've refused to allow this app to access your camera!");
-            return;
-        }
-
-        let result = await ImagePicker.launchCameraAsync({
-            mediaTypes: ['images'],
-            aspect: [1, 1],
-            quality: 0.7,
-            allowsEditing: true,
-        });
-
-        if (!result.canceled) {
-            setImage(result.assets[0].uri);
-        }
-    };
-
-    const deleteImage = () => {
-        setImage(null);
-        user.profilePictureURL = null;
-        setUser((prevUser) => ({ ...prevUser, profilePictureURL: null }));
-    };
 
     const goToNextStep = async () => {
         // Validate all fields before proceeding
@@ -161,40 +122,6 @@ const ProfileSetUp1 = () => {
         }
     };
 
-    const handleImagePress = () => {
-        const options = [
-            ...(image ? ['View Profile Picture'] : []),
-            'Take Photo',
-            'Choose from Library',
-            ...(image ? ['Remove Profile Picture'] : []),
-            'Cancel',
-        ];
-        const cancelButtonIndex = options.length - 1;
-        const destructiveButtonIndex = image ? options.indexOf('Remove Profile Picture') : undefined;
-        showActionSheetWithOptions(
-            {
-                options,
-                cancelButtonIndex,
-                destructiveButtonIndex,
-            },
-            (buttonIndex) => {
-                if (image && buttonIndex === 0) {
-                    setShowImageViewer(true);
-                } else if (image && buttonIndex === 1) {
-                    takePhoto();
-                } else if (image && buttonIndex === 2) {
-                    pickImageFromLibrary();
-                } else if (!image && buttonIndex === 0) {
-                    takePhoto();
-                } else if (!image && buttonIndex === 1) {
-                    pickImageFromLibrary();
-                } else if (image && buttonIndex === options.indexOf('Remove Profile Picture')) {
-                    deleteImage();
-                }
-            }
-        );
-    };
-
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -202,28 +129,19 @@ const ProfileSetUp1 = () => {
         >
             <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
             <View style={styles.imageContainer}>
-                <TouchableOpacity onPress={handleImagePress} style={styles.imageWrapper}>
-                    {image ? (
-                        <>
-                            <Image source={{ uri: image }} style={styles.image} />
-                            <TouchableOpacity onPress={deleteImage} style={styles.trashIcon}>
-                                <AntDesign name="delete" size={20} style={styles.icon} />
-                            </TouchableOpacity>
-                        </>
-                    ) : (
-                        <View style={styles.placeholderContainer}>
-                            <View style={styles.placeholderImageArea}>
-                                <MaterialIcons name="add-a-photo" size={40} color="#9188E5" />
-                                <Text style={styles.uploadText}>Tap to upload</Text>
-                                <Text style={styles.uploadSubtext}>Profile Photo</Text>
-                            </View>
-                            <View style={styles.uploadIconContainer}>
-                                <MaterialIcons name="camera-alt" size={24} color="#FFF" />
-                            </View>
-
-                        </View>
-                    )}
-                </TouchableOpacity>
+                <ImageUploadInput
+                    defaultImage={defaultImage}
+                    onImageChange={(imageUri) => {
+                        if (imageUri) {
+                            setImage(imageUri);
+                        } else {
+                            setImage(null);
+                        }
+                    }}
+                    size={180}
+                    isUploading={isLoading}
+                    currentImage={image}
+                />
             </View>
 
             <ImageViewing
@@ -239,7 +157,6 @@ const ProfileSetUp1 = () => {
                 <Text style={styles.label}>Name <Text style={{ color: 'red' }}>*</Text> </Text>
                 <CustomInput
                     style={[errors.name ? styles.inputError : null]}
-                    label="Name"
                     placeholder={"Tyler Gregory"}
                     placeholderTextColor="#999"
                     value={name}
@@ -257,7 +174,6 @@ const ProfileSetUp1 = () => {
                 <Text style={[styles.label, { marginTop: 12 }]}>Phone Number</Text>
                 <CustomInput
                     style={[errors.phoneNumber ? styles.inputError : null]}
-                    label="Phone Number"
                     placeholder={"+201123456789"}
                     placeholderTextColor="#999"
                     keyboardType="phone-pad"
@@ -276,7 +192,6 @@ const ProfileSetUp1 = () => {
                 <Text style={[styles.label, { marginTop: 12 }]}>Bio</Text>
                 <CustomInput
                     style={[styles.bioInput, errors.bio ? styles.inputError : null]}
-                    label="About"
                     placeholder={"Tell us about yourself"}
                     placeholderTextColor="#999"
                     multiline
@@ -297,13 +212,13 @@ const ProfileSetUp1 = () => {
             </ScrollView>
 
             <View style={styles.buttonContainer}>
-                <Button 
-                    title="Next" 
-                    borderRadius={10} 
-                    fontSize={16} 
-                    onPress={goToNextStep} 
+                <Button
+                    title="Next"
+                    borderRadius={10}
+                    fontSize={16}
+                    onPress={goToNextStep}
                     loading={isLoading}
-                    disabled={!isFormComplete || isLoading}
+                    disabled={!isFormComplete}
                 />
             </View>
         </KeyboardAvoidingView>
@@ -324,7 +239,7 @@ const styles = StyleSheet.create({
     imageContainer: {
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 60, // Add margin to accommodate bottom icons
+        paddingVertical: 20,
     },
     imageWrapper: {
         alignItems: 'center',
