@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, KeyboardAvoidingView, ScrollView, Platform, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import React, { useState, useContext, useEffect } from 'react';
 import { Dropdown } from 'react-native-element-dropdown';
 import { useRouter } from 'expo-router';
@@ -133,7 +133,6 @@ export default function AddPet4() {
                     <Text style={styles.label}>Description</Text>
                     <CustomInput
                         style={[styles.descriptionInput, errors.description ? styles.inputError : null]}
-                        label="Description"
                         placeholder="A brief description about your pet"
                         value={description}
                         onChangeText={(text) => {
@@ -152,10 +151,10 @@ export default function AddPet4() {
             </ScrollView>
 
             <View style={styles.buttonContainer}>
-                <Button 
-                    title="Next" 
-                    borderRadius={10} 
-                    fontSize={16} 
+                <Button
+                    title="Next"
+                    borderRadius={10}
+                    fontSize={16}
                     onPress={goToNextStep}
                     disabled={!isFormComplete}
                 />

@@ -477,7 +477,7 @@ export default function ChatIndex() {
         
         const userChat = userChats.get(chat.chatId);
         const isPinned = userChat?.pinned || false;
-        const otherUserName = chat.otherUser?.name || 'Unknown User';
+        const otherUserName = chat.otherUser?.name || chat.otherUser?.username;
 
         Alert.alert(
             isPinned ? 'Unpin Chat' : 'Pin Chat',
@@ -658,7 +658,7 @@ export default function ChatIndex() {
                                 />
                             )}
                             <Text style={styles.userName} numberOfLines={1}>
-                                {otherUser?.name || 'Unknown User'}
+                                {otherUser?.name || otherUser?.username || 'Unknown User'}
                             </Text>
                         </View>
                         <Text style={styles.timestamp}>

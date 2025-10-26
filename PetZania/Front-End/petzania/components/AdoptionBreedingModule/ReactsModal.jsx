@@ -120,8 +120,6 @@ const ReactsModal = ({
       onChange={handleSheetChanges}
       snapPoints={snapPoints}
       backdropComponent={renderBackdrop}
-      enablePanDownToClose={true}
-      enableDismissOnClose={true}
       handleIndicatorStyle={styles.handleIndicator}
       backgroundStyle={styles.bottomSheetBackground}
     >
@@ -129,15 +127,12 @@ const ReactsModal = ({
       data={loading ? [] : profiles}
       keyExtractor={u => u.userId}
       renderItem={renderUserItem}
-      showsVerticalScrollIndicator={false}
+      showsVerticalScrollIndicator={true}
       contentContainerStyle={styles.flatListContent}
       ListHeaderComponent={
         <>
           <View style={styles.header}>
             <Text style={styles.title}>Post Reactions</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={24} color="#666" />
-            </TouchableOpacity>
           </View>
           <View style={styles.content}>
             <Text style={styles.count}>
@@ -175,22 +170,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingTop: 10,
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
   title: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#374151',
-  },
-  closeBtn: {
-    padding: 4,
-    borderRadius: 8,
-    backgroundColor: '#F3F4F6',
-    alignItems: 'center',
-    justifyContent: 'center',
+    fontSize: 26,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
   },
   content: {
     padding: 16,

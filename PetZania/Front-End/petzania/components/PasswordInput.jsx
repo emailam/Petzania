@@ -4,71 +4,130 @@ import { TextInput } from 'react-native-paper';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
 
-export default function PasswordInput({ 
-  control, 
-  name, 
-  errors, 
-  showPassword, 
-  toggleShow, 
+export default function PasswordInput({
+  control,
+  name,
+  errors = {},
+  showPassword,
+  toggleShow,
   icon,
   placeholder,
   label,
   onSubmitEditing,
   returnKeyType = 'next',
-  inputRef
+  inputRef,
+  value,
+  onChangeText,
+  disabled = false,
+  ...props
 }) {
+  // If control and name are provided, use react-hook-form Controller
+  if (control && name) {
+    return (
+      <View style={styles.container}>
+        <Controller
+          control={control}
+          name={name}
+          render={({ field }) => (
+            <TextInput
+              mode="outlined"
+              label={label || placeholder}
+              secureTextEntry={!showPassword}
+              style={styles.input}
+              returnKeyType={returnKeyType}
+              onSubmitEditing={onSubmitEditing}
+              ref={inputRef}
+              theme={{
+                colors: {
+                  primary: '#9188E5',
+                  outline: errors[name] ? '#F44336' : '#9188E5',
+                  background: '#fff',
+                  surface: 'transparent',
+                  onSurface: '#333333',
+                  surfaceVariant: 'transparent',
+                  onBackground: 'transparent',
+                },
+              }}
+              left={icon ? <TextInput.Icon icon={() => icon} /> : undefined}
+              right={
+                <TextInput.Icon
+                  forceTextInputFocus={false}
+                  icon={() => (
+                    <Ionicons
+                      name={showPassword ? "eye-off" : "eye"}
+                      size={24}
+                      color="#9188E5"
+                    />
+                  )}
+                  onPress={toggleShow}
+                />
+              }
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              value={field.value}
+              error={!!errors[name]}
+              contentStyle={styles.inputContent}
+              outlineStyle={styles.inputOutline}
+              disabled={disabled}
+              {...props}
+            />
+          )}
+        />
+        {errors[name] && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{errors[name].message}</Text>
+          </View>
+        )}
+      </View>
+    );
+  }
+  // Otherwise, use regular controlled input
   return (
     <View style={styles.container}>
-      <Controller
-        control={control}
-        name={name}
-        render={({ field }) => (
-          <TextInput
-            mode="outlined"
-            label={label || placeholder}
-            secureTextEntry={!showPassword}
-            style={styles.input}
-            returnKeyType={returnKeyType}
-            onSubmitEditing={onSubmitEditing}
-            ref={inputRef}
-            theme={{
-              colors: {
-                primary: '#9188E5',
-                outline: errors[name] ? '#F44336' : '#9188E5',
-                // onSurfaceVariant: '#666666',
-                background: '#fff',
-                surface: 'transparent',
-                onSurface: '#333333',
-                surfaceVariant: 'transparent',
-                onBackground: 'transparent',
-              },
-            }}
-            left={icon ? <TextInput.Icon icon={() => icon} /> : undefined}
-            right={
-              <TextInput.Icon
-                forceTextInputFocus={false}
-                icon={() => (
-                  <Ionicons
-                    name={showPassword ? "eye-off" : "eye"} 
-                    size={24}
-                    color="#9188E5"
-                  />
-                )}
-                onPress={toggleShow}
+      <TextInput
+        mode="outlined"
+        label={label || placeholder}
+        secureTextEntry={!showPassword}
+        style={styles.input}
+        returnKeyType={returnKeyType}
+        onSubmitEditing={onSubmitEditing}
+        ref={inputRef}
+        theme={{
+          colors: {
+            primary: '#9188E5',
+            outline: errors && errors.message ? '#F44336' : '#9188E5',
+            background: '#fff',
+            surface: 'transparent',
+            onSurface: '#333333',
+            surfaceVariant: 'transparent',
+            onBackground: 'transparent',
+          },
+        }}
+        left={icon ? <TextInput.Icon icon={() => icon} /> : undefined}
+        right={
+          <TextInput.Icon
+            forceTextInputFocus={false}
+            icon={() => (
+              <Ionicons
+                name={showPassword ? "eye-off" : "eye"}
+                size={24}
+                color="#9188E5"
               />
-            }
-            onChangeText={field.onChange}
-            onBlur={field.onBlur}
-            value={field.value}
-            error={!!errors[name]}
-            contentStyle={styles.inputContent}
-            outlineStyle={styles.inputOutline}
+            )}
+            onPress={toggleShow}
           />
-        )}
+        }
+        onChangeText={onChangeText}
+        value={value}
+        error={!!(errors && errors.message)}
+        contentStyle={styles.inputContent}
+        outlineStyle={styles.inputOutline}
+        disabled={disabled}
+        {...props}
       />
-      {errors[name] && (
+      {errors && errors.message && (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{errors[name].message}</Text>
+          <Text style={styles.errorText}>{errors.message}</Text>
         </View>
       )}
     </View>

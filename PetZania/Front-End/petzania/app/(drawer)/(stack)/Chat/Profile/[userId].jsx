@@ -156,7 +156,7 @@ export default function UserProfileScreen() {
                         contentFit="cover"
                     />
                 </TouchableOpacity>
-                <Text style={styles.profileName}>{user.name || 'Unknown User'}</Text>
+                <Text style={styles.profileName}>{user.name || user.username}</Text>
                 <Text style={styles.profileStatus}>
                     {user.online ? 'Online' : 'Offline'}
                 </Text>
