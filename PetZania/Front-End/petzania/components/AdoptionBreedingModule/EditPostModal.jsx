@@ -5,16 +5,17 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  Dimensions,
   Alert,
   ActivityIndicator,
   BackHandler,
 } from 'react-native';
-import { Image } from 'expo-image';
+
 import PetCard from '../PetCard';
+import LoadingModal from '../LoadingModal';
+
 import ImageViewing from 'react-native-image-viewing';
 import { Ionicons } from '@expo/vector-icons';
-import { FlatList } from 'react-native-gesture-handler';
+
 import {
   BottomSheetModal,
   BottomSheetBackdrop,
@@ -83,11 +84,6 @@ const EditPostModal = memo(({ visible, onClose, post, onUpdate, onDelete }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showImageViewer, setShowImageViewer] = useState(false);
   const petDTO = post.petDTO || {};
-
-  const handleImagePress = (imageIndex) => {
-      setCurrentImageIndex(imageIndex);
-      setShowImageViewer(true);
-  };
 
   const validateForm = () => {
     const errors = {};
@@ -204,8 +200,9 @@ const EditPostModal = memo(({ visible, onClose, post, onUpdate, onDelete }) => {
           <View style={styles.headerSpacer} />
         </View>
             <Text style={styles.sectionTitle}>Pet Details</Text>
+            {/* Dismiss the bottomsheet when press */}
             <View style={styles.petContainer}>
-              <PetCard pet={petDTO} marginHorizontal={0} />
+              <PetCard pet={petDTO} marginHorizontal={0} bottomSheetModalRef={bottomSheetModalRef} />
             </View>
 
             {/* Pet Details (read-only except location, description) */}
@@ -359,6 +356,7 @@ const EditPostModal = memo(({ visible, onClose, post, onUpdate, onDelete }) => {
               swipeToCloseEnabled
               doubleTapToZoomEnabled
           />
+          <LoadingModal title="Deleting Post..." visible={isDeleting} />
         </BottomSheetScrollView>
       </BottomSheetModal>
   );

@@ -29,6 +29,7 @@ import { PET_BREEDS } from '@/constants/PETBREEDS';
 import { updatePet, deletePet, getPetById } from '@/services/petService';
 import Toast from 'react-native-toast-message';
 import Button from '@/components/Button';
+import LoadingModal from '@/components/LoadingModal';
 
 export default function PetDetails() {
     const { petId, petData } = useLocalSearchParams();
@@ -81,7 +82,7 @@ export default function PetDetails() {
 
     // Tab navigation state
     const [activeTab, setActiveTab] = useState('info');
-    
+
     // Photo management state
     const [images, setImages] = useState(pet?.myPicturesURLs || []);
     const [selectedImageIndex, setSelectedImageIndex] = useState(null);
@@ -97,6 +98,7 @@ export default function PetDetails() {
     const [vaccineFiles, setVaccineFiles] = useState(pet?.myVaccinesURLs || []);
 
     const [isLoading, setIsLoading] = useState(false);
+    const [isDeletingPet, setIsDeletingPet] = useState(false);
     const [isFormValid, setIsFormValid] = useState(true);
     const [errors, setErrors] = useState({
         name: '',
@@ -294,7 +296,6 @@ export default function PetDetails() {
             setUploadingImages(true);
 
             const localImages = images.filter(isLocalImage);
-            const serverImages = images.filter(isServerImage);
 
             let uploadedUrls = [];
 
@@ -441,7 +442,7 @@ export default function PetDetails() {
     };
 
     const deletePetByPetId = () => {
-        setIsLoading(true);
+        setIsDeletingPet(true);
         deletePet(petId)
             .then(() => {
                 setPets(prevPets => prevPets.filter(pet => pet.petId !== petId));
@@ -454,7 +455,7 @@ export default function PetDetails() {
             .catch((error) => {
                 showErrorMessage('Failed to delete pet.', 'Please try again later.');
             })
-            .finally(() => setIsLoading(false));
+            .finally(() => setIsDeletingPet(false));
     };
 
     const handleDeletePet = () => {
@@ -996,6 +997,7 @@ export default function PetDetails() {
                     </TouchableOpacity>
                 </View>
             </BottomSheet>
+            <LoadingModal visible={isDeletingPet} title='Deleting Pet...' />
         </KeyboardAvoidingView>
     );
 };
