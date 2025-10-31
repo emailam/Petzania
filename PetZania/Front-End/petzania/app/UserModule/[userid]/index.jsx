@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert} from 'react-native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import  { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+
 import BottomSheet from '@/components/BottomSheet';
 import ImageViewing from 'react-native-image-viewing';
 import LottieView from 'lottie-react-native';
@@ -42,6 +42,7 @@ export default function UserProfile() {
     const { user: currentUser } = useContext(UserContext);
 
     const bottomSheetRef = useRef(null);
+    const respondBottomSheetRef = useRef(null);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [friendshipStatus, setFriendshipStatus] = useState('none');
@@ -313,33 +314,9 @@ export default function UserProfile() {
         }
       };
 
-    const handleRespondToRequest = () => {
-        const options = ['Accept', 'Decline', 'Cancel'];
-        const cancelButtonIndex = 2;
-        const destructiveButtonIndex = 1;
-
-        showActionSheetWithOptions(
-            {
-                options,
-                cancelButtonIndex,
-                destructiveButtonIndex,
-                title: `Respond to ${user?.name || 'User'}'s friend request`,
-                message: 'What would you like to do?',
-            },
-            async (buttonIndex) => {
-                switch (buttonIndex) {
-                    case 0:
-                        // Accept
-                        await handleAcceptRequest();
-                        break;
-                    case 1:
-                        // Decline
-                        await handleDeclineRequest();
-                        break;
-                }
-            }
-        );
-    };
+    const handleRespondToRequest = useCallback(() => {
+        respondBottomSheetRef.current?.present();
+    }, []);
 
     const handleAcceptRequest = async () => {
         if (actionLoading) return;
@@ -926,50 +903,90 @@ export default function UserProfile() {
         ref={bottomSheetRef}
         snapPoints={['30%']}
       >
-          <View style={styles.bottomSheetHeader}>
-            <Text style={styles.bottomSheetTitle}>More Options</Text>
-          </View>
-          {/* Follow/Unfollow Option - Only show if not blocked */}
-          {!isBlocked && (
-            <TouchableOpacity
-              style={styles.bottomSheetAction}
-              onPress={() => {
-                bottomSheetRef.current?.close();
-                handleFollowUser();
-              }}
-            >
-              <View style={styles.actionIconContainer}>
-                <Ionicons
-                  name={isFollowingUser ? "person-remove" : "person-add"} 
-                  size={20}
-                  color="#333"
-                />
-              </View>
-              <Text style={styles.actionText}>
-                {isFollowingUser ? 'Unfollow User' : 'Follow User'}
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {/* Block/Unblock Option */}
+        <View style={styles.bottomSheetHeader}>
+          <Text style={styles.bottomSheetTitle}>More Options</Text>
+        </View>
+        {/* Follow/Unfollow Option - Only show if not blocked */}
+        {!isBlocked && (
           <TouchableOpacity
-            style={[styles.bottomSheetAction, styles.destructiveOption]}
+            style={styles.bottomSheetAction}
             onPress={() => {
               bottomSheetRef.current?.close();
-              isBlocked ? handleUnblockUser() : handleBlockUser();
+              handleFollowUser();
             }}
           >
             <View style={styles.actionIconContainer}>
-              <Ionicons 
-                name={isBlocked ? "shield-checkmark" : "shield"} 
-                size={20} 
-                color="#f44336" 
+              <Ionicons
+                name={isFollowingUser ? "person-remove" : "person-add"} 
+                size={20}
+                color="#333"
               />
             </View>
-            <Text style={[styles.actionText, styles.destructiveText]}>
-              {isBlocked ? 'Unblock User' : 'Block User'}
+            <Text style={styles.actionText}>
+              {isFollowingUser ? 'Unfollow User' : 'Follow User'}
             </Text>
           </TouchableOpacity>
+        )}
+
+        {/* Block/Unblock Option */}
+        <TouchableOpacity
+          style={[styles.bottomSheetAction, styles.destructiveOption]}
+          onPress={() => {
+            bottomSheetRef.current?.close();
+            isBlocked ? handleUnblockUser() : handleBlockUser();
+          }}
+        >
+          <View style={styles.actionIconContainer}>
+            <Ionicons 
+              name={isBlocked ? "shield-checkmark" : "shield"} 
+              size={20} 
+              color="#f44336" 
+            />
+          </View>
+          <Text style={[styles.actionText, styles.destructiveText]}>
+            {isBlocked ? 'Unblock User' : 'Block User'}
+          </Text>
+        </TouchableOpacity>
+      </BottomSheet>
+
+      {/* Friend Request Response Bottom Sheet */}
+      <BottomSheet
+        ref={respondBottomSheetRef}
+        snapPoints={['35%']}
+      >
+        <View style={styles.bottomSheetHeader}>
+          <Text style={styles.bottomSheetTitle}>Friend Request</Text>
+        </View>
+
+        <TouchableOpacity
+          style={styles.bottomSheetAction}
+          onPress={() => {
+            respondBottomSheetRef.current?.close();
+            handleAcceptRequest();
+          }}
+        >
+          <View style={[styles.actionIconContainer, { backgroundColor: '#e8f5e9' }]}>
+            <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
+          </View>
+          <Text style={[styles.actionText, { color: '#4CAF50' }]}>
+            Accept Friend Request
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.bottomSheetAction, styles.destructiveOption]}
+          onPress={() => {
+            respondBottomSheetRef.current?.close();
+            handleDeclineRequest();
+          }}
+        >
+          <View style={[styles.actionIconContainer, { backgroundColor: '#ffebee' }]}>
+            <Ionicons name="close-circle" size={24} color="#f44336" />
+          </View>
+          <Text style={[styles.actionText, styles.destructiveText]}>
+            Decline Friend Request
+          </Text>
+        </TouchableOpacity>
       </BottomSheet>
 
       <ImageViewing

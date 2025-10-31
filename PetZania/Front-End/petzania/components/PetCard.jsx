@@ -4,13 +4,11 @@ import { Image } from 'expo-image';
 import Foundation from '@expo/vector-icons/Foundation';
 import { useRouter } from "expo-router";
 
-export default function PetCard({ pet, marginHorizontal = 8 }) {
+export default function PetCard({ pet, marginHorizontal = 8, bottomSheetModalRef }) {
     const router = useRouter();
 
     const showPetInfo = (pet) => {
         try {
-            console.log('PetCard: Navigating to pet details for pet:', pet.petId);
-            
             // Validate required fields
             if (!pet || !pet.petId) {
                 console.error('PetCard: Invalid pet data - missing petId');
@@ -34,9 +32,10 @@ export default function PetCard({ pet, marginHorizontal = 8 }) {
             
             const serializedData = JSON.stringify(cleanPetData);
             
-            router.push({ 
-                pathname: `/PetModule/${pet.petId}`, 
-                params: { petData: serializedData } 
+            if(bottomSheetModalRef) bottomSheetModalRef.current?.dismiss();
+            router.push({
+                pathname: `/PetModule/${pet.petId}`,
+                params: { petData: serializedData }
             });
         } catch (error) {
             console.error('PetCard: Error serializing pet data:', error);

@@ -521,7 +521,7 @@ export default function index() {
                             )}
 
                             {/* Three dots button */}
-                            <View style={styles.moreOptionsContainer}>
+                            {!notification.actionable && <View style={styles.moreOptionsContainer}>
                                 <TouchableOpacity
                                     onPress={() => handleNotificationLongPress(notification)}
                                     style={styles.moreOptionsButton}
@@ -530,6 +530,7 @@ export default function index() {
                                     <Entypo name="dots-three-horizontal" size={20} color="#9188E5" />
                                 </TouchableOpacity>
                             </View>
+                            }
 
                             {/* Read indicator */}
                             {!notification.isRead && (
