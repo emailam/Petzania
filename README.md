@@ -30,6 +30,7 @@ PetZania follows a **microservices architecture** with the following components:
 - **Yup** - Schema validation
 - **Axios** - HTTP client for API communication
 - **Expo Router** - File-based routing system
+- **React Query (TanStack Query)** – Server-state caching and synchronization
 
 ### Backend Technologies
 - **Spring Boot** - Microservices framework
@@ -67,6 +68,8 @@ PetZania follows a **microservices architecture** with the following components:
 - ✅ **Pet Adoption & Breeding** - Trusted platform for pet adoption and breeding services
 - ✅ **Push Notifications** - Real-time notifications for user activities
 - ✅ **Content Moderation** - AI-powered toxicity detection for user-generated content
+- ✅ Smart caching & auto-refetch with React Query (TanStack)
+
 
 ### Advanced Features
 - ✅ **Microservices Architecture** - Scalable and maintainable backend design
