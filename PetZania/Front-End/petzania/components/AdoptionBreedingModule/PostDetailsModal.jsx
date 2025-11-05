@@ -1,16 +1,21 @@
-import React, { useState, useEffect, useCallback, memo, useContext } from 'react';
+import React, { useState, useEffect, useCallback, memo, useContext, useRef, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Modal,
   TouchableOpacity,
-  Image,
-  ScrollView,
   Dimensions,
   ActivityIndicator,
-  Alert
+  ScrollView,
+  BackHandler,
+  Image as RNImage
 } from 'react-native';
+import { Image } from 'expo-image';
+import {
+  BottomSheetModal,
+  BottomSheetScrollView,
+  BottomSheetBackdrop,
+} from '@gorhom/bottom-sheet';
 import { createChat } from '@/services/chatService';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -27,6 +32,9 @@ const PostDetailsModal = memo(({
   onClose,
   post
 }) => {
+  const bottomSheetModalRef = useRef(null);
+  const snapPoints = useMemo(() => ['90%'], []);
+
   const [ownerDetails, setOwnerDetails] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -38,6 +46,58 @@ const PostDetailsModal = memo(({
   const { user } = useContext(UserContext);
 
   const isOwner = user?.userId === post?.ownerId;
+
+  // Handle modal visibility
+  useEffect(() => {
+    if (visible) {
+      bottomSheetModalRef.current?.present();
+    } else {
+      bottomSheetModalRef.current?.dismiss();
+    }
+  }, [visible]);
+
+  // Handle Android back button
+  useEffect(() => {
+    const backAction = () => {
+      if (visible) {
+        onClose?.();
+        return true;
+      }
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+    return () => backHandler.remove();
+  }, [visible, onClose]);
+
+  // Handle modal dismiss
+  const handleSheetChanges = useCallback((index) => {
+    if (index === -1) {
+      onClose?.();
+    }
+  }, [onClose]);
+
+  // Backdrop component
+  const renderBackdrop = useCallback(
+    (props) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.5}
+        pressBehavior="close"
+      />
+    ),
+    []
+  );
+
+  const goToPetProfile = () => {
+    bottomSheetModalRef.current?.dismiss();
+    router.push({
+      pathname: `/PetModule/${post.petDTO.petId}`,
+      params: { petData: JSON.stringify(post.petDTO) },
+    });
+  };
 
   useEffect(() => {
     if (visible && post?.ownerId) {
@@ -54,7 +114,6 @@ const PostDetailsModal = memo(({
 
   const goToOwnerProfile = () => {
     if (ownerDetails?.userId) {
-      // Close the modal first
       onClose();
       router.push({
           pathname: `/UserModule/${ownerDetails.userId}`,
@@ -159,74 +218,80 @@ const PostDetailsModal = memo(({
   };
 
   return (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={visible}
-      onRequestClose={onClose}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={onClose}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Ionicons name="close" size={24} color="#666" />
-          </TouchableOpacity>
-
-          <ScrollView showsVerticalScrollIndicator={false}>
+    <>
+      <BottomSheetModal
+        ref={bottomSheetModalRef}
+        snapPoints={snapPoints}
+        onChange={handleSheetChanges}
+        backdropComponent={renderBackdrop}
+        enablePanDownToClose={true}
+        enableDismissOnClose={true}
+        handleComponent={null}
+        backgroundStyle={styles.bottomSheetBackground}
+      >
+        <BottomSheetScrollView
+          style={styles.scrollContent}
+          contentContainerStyle={styles.scrollContentContainer}
+          showsVerticalScrollIndicator={false}
+        >
             {/* Images Section */}
             <View style={styles.imageSection}>
-                  {hasImages ? (
-                    <>
-                      <ScrollView
-                        horizontal
-                        pagingEnabled
-                        showsHorizontalScrollIndicator={false}
-                        onMomentumScrollEnd={handleImageScroll}
-                        style={styles.imageScrollView}
+              {hasImages ? (
+                <>
+                  <ScrollView
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    onMomentumScrollEnd={handleImageScroll}
+                    style={styles.imageScrollView}
+                  >
+                    {images.map((imageUrl, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        activeOpacity={0.9}
+                        onPress={() => handleImagePress(index)}
                       >
-                        {images.map((imageUrl, index) => (
-                          <TouchableOpacity
-                            key={index}
-                            activeOpacity={0.9}
-                            onPress={() => handleImagePress(index)}
-                          >
-                            <Image
-                              source={{ uri: imageUrl }}
-                              style={styles.petImage}
-                              resizeMode="cover"
-                            />
-                          </TouchableOpacity>
-                        ))}
-                      </ScrollView>
-                      {renderImagePagination()}
-                    </>
-                  ) : (
-                    <TouchableOpacity
-                      activeOpacity={0.9}
-                      onPress={() => handleImagePress(0)}
-                    >
-                      <Image
-                        source={require('@/assets/images/Defaults/default-pet.png')}
-                        style={styles.petImage}
-                        resizeMode="cover"
-                      />
-                    </TouchableOpacity>
-                  )}
+                        <Image
+                          source={{ uri: imageUrl }}
+                          style={styles.petImage}
+                          contentFit="cover"
+                        />
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  {renderImagePagination()}
+                </>
+              ) : (
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => handleImagePress(0)}
+                >
+                  <Image
+                    source={require('@/assets/images/Defaults/default-pet.png')}
+                    style={styles.petImage}
+                    contentFit="cover"
+                  />
+                </TouchableOpacity>
+              )}
             </View>
 
             <View style={styles.detailsSection}>
               {/* Pet Name and Gender */}
               <View style={styles.petNameRow}>
                 <View style={styles.petNameContainer}>
-                  <Text style={styles.petName}>{petData?.name || 'Unknown Pet'}</Text>
-                  <Ionicons 
+                  <TouchableOpacity onPress={goToPetProfile} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Image
+                      source={{ uri: images[0] }}
+                      style={styles.ownerAvatar}
+                      contentFit="cover"
+                    />
+                    <Text style={styles.petName}>{petData?.name || 'Unknown Pet'}</Text>
+                  </TouchableOpacity>
+                  <Ionicons
                     name={petData?.gender?.toLowerCase() === 'female' ? 'female' : 'male'} 
-                    size={20} 
+                    size={20}
                     color={petData?.gender?.toLowerCase() === 'male' ? '#2196F3' : '#E91E63'} 
-                    style={styles.genderIcon} 
+                    style={styles.genderIcon}
                   />
                 </View>
               </View>
@@ -251,11 +316,6 @@ const PostDetailsModal = memo(({
                   {petData?.age && (
                     <View style={styles.pill}>
                       <Text style={styles.pillText}>{petData.age}</Text>
-                    </View>
-                  )}
-                  {petData?.vaccinated && (
-                    <View style={styles.pill}>
-                      <Text style={styles.pillText}>Vaccinated</Text>
                     </View>
                   )}
                 </View>
@@ -326,48 +386,46 @@ const PostDetailsModal = memo(({
                 </TouchableOpacity>
               )}
             </View>
-          </ScrollView>
-        </View>
-      </View>
+          </BottomSheetScrollView>
+        </BottomSheetModal>
 
-      {/* Image Viewer Modal */}
-      <ImageViewing
-        images={hasImages ? imageViewerImages : [{ uri: Image.resolveAssetSource(require('@/assets/images/Defaults/default-pet.png')).uri }]}
-        imageIndex={imageViewerIndex}
-        visible={imageViewerVisible}
-        onRequestClose={() => setImageViewerVisible(false)}
-        animationType="fade"
-        backgroundColor="rgba(0, 0, 0, 0.9)"
-        presentationStyle="overFullScreen"
-      />
-    </Modal>
+        {/* Image Viewer Modal */}
+        <ImageViewing
+          images={hasImages ? imageViewerImages : [{ uri: RNImage.resolveAssetSource(require('@/assets/images/Defaults/default-pet.png')).uri }]}
+          imageIndex={imageViewerIndex}
+          visible={imageViewerVisible}
+          onRequestClose={() => setImageViewerVisible(false)}
+          animationType="fade"
+          backgroundColor="rgba(0, 0, 0, 0.9)"
+          presentationStyle="overFullScreen"
+        />
+      </>
   );
 });
 
 const styles = StyleSheet.create({
   sectionLabel: {
   fontSize: 14,
-  color: '#91', // gray-700
+  color: '#666', // gray-700
   fontWeight: '500',
   marginBottom: 8,
 },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContainer: {
+  bottomSheetBackground: {
     backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: height * 0.9,
-    minHeight: height * 0.5,
+  },
+  scrollContent: {
+    flex: 1,
+  },
+  scrollContentContainer: {
+    paddingBottom: 20,
+  },
+  header: {
+    alignItems: 'flex-end',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 8,
   },
   closeButton: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    zIndex: 10,
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 20,
     padding: 8,
@@ -403,6 +461,7 @@ const styles = StyleSheet.create({
     height: height * 0.4,
     backgroundColor: '#f5f5f5',
   },
+  
   paginationContainer: {
     position: 'absolute',
     bottom: 16,

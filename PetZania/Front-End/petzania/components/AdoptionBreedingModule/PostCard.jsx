@@ -2,12 +2,12 @@ import React, { memo, useState, useCallback, useContext } from 'react';
 import {
   View,
   Text,
-  Image,
   StyleSheet,
   TouchableOpacity,
   useWindowDimensions,
   Platform,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { getTimeAgo } from '../../services/postService';
 import ToggleLike from './ToggleLike';
@@ -36,8 +36,8 @@ function PostCard({
   const isMediumScreen = width >= 380 && width < 768;
   const isLargeScreen = width >= 768;
   
-  // Dynamic image sizing
-  const imageSize = isSmallScreen ? 100 : isMediumScreen ? 120 : 140;
+  // Dynamic image sizing - adjusted for 2-column layout
+  const imageSize = isSmallScreen ? 120 : isMediumScreen ? 160 : 160;
   
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -78,13 +78,25 @@ function PostCard({
         accessibilityRole="button"
         accessibilityLabel={`Open ${showAdvancedFeatures ? 'edit' : 'details'} for ${petDTO.name}`}
         onPress={handleCardPress}
+        style={[styles.container, isLargeScreen && styles.containerLarge]}
       >
-        <View style={[styles.container, isLargeScreen && styles.containerLarge]}>
+        <View>
+          {/* Image Container with Like Button Overlay */}
           <View style={styles.imageContainer}>
             <Image
               source={petDTO.myPicturesURLs[0] ? { uri: petDTO.myPicturesURLs[0] } : require('@/assets/images/Defaults/default-pet.png')}
-              style={[styles.image, { width: imageSize, height: imageSize }]}
+              style={[styles.image , { width: imageSize, height: imageSize }]}
+              contentFit="fill"
             />
+            {/* Like Button positioned on top-right of image */}
+            <View style={styles.likeOverlay}>
+              <ToggleLike
+                postId={post.postId}
+                onLikeChange={onPostLikeToggle}
+                initialLiked={post?.reactedUsersIds?.includes(user.userId)}
+                onLongPress={handleReactsModalPress}
+              />
+            </View>
           </View>
 
           <View style={styles.contentContainer}>
@@ -120,12 +132,6 @@ function PostCard({
 
             {/* Tags Section */}
             <View style={styles.tagsContainer}>
-              <View style={styles.tagPrimary}>
-                <Text style={styles.tagTextPrimary}>{petDTO.breed}</Text>
-              </View>
-              <View style={styles.tagSecondary}>
-                <Text style={styles.tagTextSecondary}>{petDTO.age}</Text>
-              </View>
               {showAdvancedFeatures && (
                 <View style={styles.tagAccent}>
                   <Text style={styles.tagTextAccent}>
@@ -133,26 +139,6 @@ function PostCard({
                   </Text>
                 </View>
               )}
-            </View>
-
-            {/* Actions Section */}
-            <View style={styles.actionsSection}>
-              <View style={styles.likeContainer}>
-                <ToggleLike
-                  postId={post.postId}
-                  onLikeChange={onPostLikeToggle}
-                  initialLiked={post?.reactedUsersIds?.includes(user.userId)}
-                />
-                <TouchableOpacity
-                  style={styles.reactCountButton}
-                  onPress={handleReactsModalPress}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.reactCountText}>
-                    {post.reactedUsersIds.length}
-                  </Text>
-                </TouchableOpacity>
-              </View>
             </View>
           </View>
         </View>
@@ -189,12 +175,12 @@ function PostCard({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    marginHorizontal: 16,
+    borderRadius: 12,
     marginVertical: 8,
-    padding: 12,
+    padding: 8,
+    flex: 1,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -203,21 +189,27 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
       },
       android: {
-        elevation: 4,
+        elevation: 2,
       },
     }),
   },
   containerLarge: {
-    maxWidth: 600,
     alignSelf: 'center',
-    width: '100%',
   },
   imageContainer: {
-    marginRight: 12,
+    position: 'relative',
+    marginBottom: 12,
+    alignSelf: 'center',
   },
   image: {
     borderRadius: 12,
     backgroundColor: '#F3F4F6',
+  },
+  likeOverlay: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    borderRadius: 20,
   },
   contentContainer: {
     flex: 1,
@@ -304,16 +296,7 @@ const styles = StyleSheet.create({
     color: '#2563EB',
     fontWeight: '500',
   },
-  actionsSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  likeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
+
   reactCountButton: {
     backgroundColor: '#F9FAFB',
     borderRadius: 16,

@@ -1,27 +1,56 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, RefreshControl } from 'react-native';
-import { Image } from 'expo-image';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, RefreshControl } from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
+import EmptyState from '@/components/EmptyState';
+import UserList from '@/components/UserList';
 import { getBlockedUsers, unblockUser } from '@/services/friendsService';
 
-const defaultAvatar = require('@/assets/images/Defaults/default-user.png');
+import LoadingIndicator from '@/components/LoadingIndicator';
 
 export default function Blocked() {
     const [blockedUsers, setBlockedUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [unblockingUsers, setUnblockingUsers] = useState(new Set());
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+
+    const PAGE_SIZE = 10;
 
     useEffect(() => {
-        loadBlockedUsers();
+        loadBlockedUsers(0, true);
     }, []);
 
-    const loadBlockedUsers = async () => {
+    const loadBlockedUsers = async (pageNum = 0, isInitial = false) => {
         try {
-            setLoading(true);
-            const response = await getBlockedUsers(0, 50); // page, size
-            setBlockedUsers(response?.content || []);
+            if (isInitial) {
+                setLoading(true);
+            } else {
+                setLoadingMore(true);
+            }
+
+            const response = await getBlockedUsers(pageNum, PAGE_SIZE);
+
+            // Transform blocked users data for UserList compatibility
+            const transformedBlockedUsers = (response?.content || []).map(item => ({
+                ...item.blocked,
+                blockId: item.blockId,
+                blockedAt: item.createdAt
+            }));
+
+            if (isInitial) {
+                setBlockedUsers(transformedBlockedUsers);
+            } else {
+                // Append new users to existing list
+                setBlockedUsers(prev => [...prev, ...transformedBlockedUsers]);
+            }
+
+            // Check if there are more pages
+            setHasMore(transformedBlockedUsers.length === PAGE_SIZE);
+            setPage(pageNum);
         } catch (error) {
             console.error('Error loading blocked users:', error);
             Toast.show({
@@ -33,14 +62,24 @@ export default function Blocked() {
             });
         } finally {
             setLoading(false);
+            setLoadingMore(false);
         }
     };
 
     const handleRefresh = async () => {
         setRefreshing(true);
-        await loadBlockedUsers();
+        setPage(0);
+        setHasMore(true);
+        await loadBlockedUsers(0, true);
         setRefreshing(false);
     };
+
+    const handleLoadMore = useCallback(() => {
+        if (!loadingMore && hasMore && !loading) {
+            const nextPage = page + 1;
+            loadBlockedUsers(nextPage, false);
+        }
+    }, [loadingMore, hasMore, loading, page]);
 
     const handleUnblock = (user) => {
         Alert.alert(
@@ -66,12 +105,8 @@ export default function Blocked() {
 
             await unblockUser(user.userId);
 
-            // Remove user from blocked list - fix the filtering logic
-            console.log('Unblocking user:', user, "Blocked Users Before:", blockedUsers);
-            setBlockedUsers(prev => prev.filter(item => {
-                const blockedUser = item.blocked || item;
-                return blockedUser.userId !== user.userId;
-            }));
+            // Optimistically remove user from blocked list
+            setBlockedUsers(prev => prev.filter(item => item.userId !== user.userId));
 
             Toast.show({
                 type: 'success',
@@ -82,6 +117,10 @@ export default function Blocked() {
             });
         } catch (error) {
             console.error('Error unblocking user:', error);
+
+            // Reload the list on error to ensure data consistency
+            await loadBlockedUsers(0, true);
+
             Toast.show({
                 type: 'error',
                 text1: 'Failed to unblock user',
@@ -98,99 +137,65 @@ export default function Blocked() {
         }
     };
 
-    const renderUser = ({ item }) => {
-        console.log('Rendering blocked user:', item);
-        const user = item.blocked;
+    const handleUserPress = (user) => {
+        handleUnblock(user);
+    };
+
+    const renderUnblockButton = (user) => {
         const isUnblocking = unblockingUsers.has(user.userId);
-        const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
-        const displayName = user.username || fullName || 'Unknown User';
 
         return (
-            <TouchableOpacity 
-                style={styles.userContainer}
+            <TouchableOpacity
+                style={[styles.unblockButton, isUnblocking && styles.unblockButtonDisabled]}
                 onPress={() => handleUnblock(user)}
-                activeOpacity={0.7}
+                disabled={isUnblocking}
             >
-                <View style={styles.userInfo}>
-                    <Image
-                        source={defaultAvatar}
-                        style={styles.avatar}
-                        contentFit="cover"
-                    />
-                    <View style={styles.userDetails}>
-                        <Text style={styles.displayName} numberOfLines={1}>
-                            {displayName}
-                        </Text>
-                        {user.username && fullName && (
-                            <Text style={styles.fullName} numberOfLines={1}>
-                                {fullName}
-                            </Text>
-                        )}
-                        <Text style={styles.blockedDate}>
-                            Blocked
-                        </Text>
-                    </View>
-                </View>
-
-                <TouchableOpacity
-                    style={[styles.unblockButton, isUnblocking && styles.unblockButtonDisabled]}
-                    onPress={() => handleUnblock(user)}
-                    disabled={isUnblocking}
-                >
-                    {isUnblocking ? (
-                        <ActivityIndicator size="small" color="#fff" />
-                    ) : (
-                        <>
-                            <Ionicons name="person-add-outline" size={16} color="#fff" />
-                            <Text style={styles.unblockButtonText}>Unblock</Text>
-                        </>
-                    )}
-                </TouchableOpacity>
+                {isUnblocking ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                    <>
+                        <Ionicons name="person-add-outline" size={16} color="#fff" />
+                        <Text style={styles.unblockButtonText}>Unblock</Text>
+                    </>
+                )}
             </TouchableOpacity>
         );
     };
 
-    const formatDate = (dateString) => {
-        if (!dateString) return 'Recently';
-
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffTime = Math.abs(now - date);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        if (diffDays === 1) return 'Yesterday';
-        if (diffDays < 7) return `${diffDays} days ago`;
-        if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
-        if (diffDays < 365) return `${Math.ceil(diffDays / 30)} months ago`;
-        return `${Math.ceil(diffDays / 365)} years ago`;
-    };
-
     const renderEmptyState = () => (
-        <View style={styles.emptyContainer}>
-            <Ionicons name="people-outline" size={80} color="#ccc" />
-            <Text style={styles.emptyTitle}>No Blocked Users</Text>
-            <Text style={styles.emptySubtitle}>
-                You haven't blocked anyone yet. When you block someone, they'll appear here.
-            </Text>
-        </View>
+        <EmptyState
+            iconName="people-outline"
+            title="No Blocked Users"
+            subtitle="You haven't blocked anyone yet. When you block someone, they'll appear here."
+        />
     );
+
+    const renderFooter = () => {
+        if (!loadingMore) return null;
+
+        return (
+            <View style={styles.footerLoader}>
+                <LoadingIndicator />
+            </View>
+        );
+    };
 
     if (loading) {
         return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#9188E5" />
-                <Text style={styles.loadingText}>Loading blocked users...</Text>
+            <View style={[styles.container, styles.centerContent]}>
+                <LoadingIndicator text="Loading blocked users..." />
             </View>
         );
     }
 
     return (
         <View style={styles.container}>
-            <FlatList
-                data={blockedUsers}
-                renderItem={renderUser}
-                keyExtractor={(item) => item.blockId || item.blocked?.userId}
-                showsVerticalScrollIndicator={false}
+            <UserList
+                users={blockedUsers}
+                onUserPress={handleUserPress}
+                keyExtractor={(item) => item.blockId || item.userId}
+                showChevron={false}
+                renderActionButton={renderUnblockButton}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
@@ -200,10 +205,11 @@ export default function Blocked() {
                     />
                 }
                 ListEmptyComponent={renderEmptyState}
-                contentContainerStyle={[
-                    styles.listContainer,
-                    blockedUsers.length === 0 && styles.emptyListContainer
-                ]}
+                ListFooterComponent={renderFooter}
+                contentContainerStyle={{ padding: 16 }}
+                showsVerticalScrollIndicator={false}
+                onEndReached={handleLoadMore}
+                onEndReachedThreshold={0.5}
             />
         </View>
     );
@@ -214,64 +220,13 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff',
     },
-    loadingContainer: {
-        flex: 1,
+    centerContent: {
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#fff',
     },
-    loadingText: {
-        marginTop: 10,
-        fontSize: 16,
-        color: '#666',
-    },
-    listContainer: {
-        padding: 16,
-    },
-    emptyListContainer: {
-        flex: 1,
-        justifyContent: 'center',
-    },
-    userContainer: {
-        flexDirection: 'row',
+    footerLoader: {
+        paddingVertical: 20,
         alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: 12,
-        paddingHorizontal: 4,
-        marginBottom: 8,
-    },
-    userInfo: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flex: 1,
-        marginRight: 12,
-    },
-    avatar: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        marginRight: 12,
-        borderWidth: 1,
-        borderColor: '#9188E5',
-        backgroundColor: '#f0f0f0',
-    },
-    userDetails: {
-        flex: 1,
-    },
-    displayName: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#333',
-        marginBottom: 2,
-    },
-    fullName: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 2,
-    },
-    blockedDate: {
-        fontSize: 12,
-        color: '#999',
     },
     unblockButton: {
         flexDirection: 'row',
@@ -291,25 +246,5 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '600',
         marginLeft: 4,
-    },
-    emptyContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 60,
-        paddingHorizontal: 40,
-    },
-    emptyTitle: {
-        fontSize: 24,
-        fontWeight: '600',
-        color: '#333',
-        marginTop: 20,
-        marginBottom: 10,
-        textAlign: 'center',
-    },
-    emptySubtitle: {
-        fontSize: 16,
-        color: '#666',
-        textAlign: 'center',
-        lineHeight: 22,
     },
 });

@@ -51,7 +51,7 @@ export default function AdoptionBreedingForm() {
   const userPets = user?.myPets;
   const selectedPet = userPets?.find((pet) => pet.petId === selectedPetId);
   const isFormValid = postType && location && descriptionValue && selectedPetId;
-  
+
   const onSubmit = (data) => {
   createPost(data, {
     onSuccess: (res) => {
@@ -75,7 +75,6 @@ export default function AdoptionBreedingForm() {
   const handleAddNewPet = () => {
     setFromPage('AdoptionBreedingPost');
     router.push("/PetModule/AddPet1");
-    console.log('Add new pet button pressed');
   };
 
   const getPlaceholderText = () => {
@@ -91,7 +90,7 @@ export default function AdoptionBreedingForm() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}

@@ -35,6 +35,7 @@ export default function DateOfBirthInput({ label = "Date of Birth", value, onCha
                 <DateTimePicker
                     value={selectedDate}
                     mode="date"
+                    minimumDate={new Date(1970, 0, 1)}
                     display={Platform.OS === 'ios' ? 'default' : 'spinner'}
                     maximumDate={new Date()}
                     onChange={(event, date) => {
@@ -67,7 +68,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#9188E5',
         borderRadius: 10,
-        paddingHorizontal: 15,
+        paddingHorizontal: 16,
         justifyContent: 'center',
         backgroundColor: '#fff',
     },

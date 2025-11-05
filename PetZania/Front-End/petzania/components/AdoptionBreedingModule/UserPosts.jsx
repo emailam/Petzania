@@ -1,10 +1,8 @@
-import React, { useCallback, useContext } from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
-  SafeAreaView,
   RefreshControl,
   ActivityIndicator,
   TouchableOpacity,
@@ -15,6 +13,8 @@ import PostCard from './PostCard';
 import { useUserPostsInfinite, useDeletePost, useUpdatePost, useToggleLike } from '../../services/postService';
 import { UserContext } from '@/context/UserContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import LottieView from 'lottie-react-native';
+import EmptyState from '../EmptyState';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -41,6 +41,19 @@ const UserPosts = ({ userId }) => {
 
   // Flatten pages and ensure only valid posts are mapped
   const posts = data?.pages.flatMap((page) => (Array.isArray(page.posts) ? page.posts : [])).filter(Boolean) || [];
+  
+  // Create 2-column layout using useMemo for performance
+  const postsInColumns = useMemo(() => {
+    const columns = [];
+    for (let i = 0; i < posts.length; i += 2) {
+      columns.push({
+        left: posts[i] || null,
+        right: posts[i + 1] || null,
+        key: `row-${i}`
+      });
+    }
+    return columns;
+  }, [posts]);
   
   const handlePostUpdate = useCallback(async (postId, updatedData) => {
     try {
@@ -72,8 +85,16 @@ const UserPosts = ({ userId }) => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#9188E5" />
+        <LottieView
+          source={require("@/assets/lottie/loading.json")}
+          autoPlay
+          loop
+          style={styles.lottie}
+        />
         <Text style={styles.loadingText}>Loading posts...</Text>
+        <Text style={styles.loadingSubText}>
+          Getting posts from the user
+        </Text>
       </View>
     );
   }
@@ -86,8 +107,8 @@ const UserPosts = ({ userId }) => {
         </View>
         <Text style={styles.errorText}>Something went wrong</Text>
         <Text style={styles.errorSubtext}>Unable to load posts</Text>
-        <TouchableOpacity 
-          style={styles.retryButton} 
+        <TouchableOpacity
+          style={styles.retryButton}
           onPress={refetch}
           activeOpacity={0.8}
         >
@@ -98,116 +119,103 @@ const UserPosts = ({ userId }) => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>
-          {isOwnProfile ? 'My Posts' : 'Posts'}
-        </Text>
-        <Text style={styles.headerSubtitle}>{posts.length} posts</Text>
-      </View>
-
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl 
-            refreshing={isRefetching} 
-            onRefresh={refetch}
-            tintColor="#9188E5"
-            colors={['#9188E5']}
-          />
-        }
-      >
-        {posts.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>📋</Text>
-            <Text style={styles.emptyText}>No posts yet</Text>
-            <Text style={styles.emptySubtext}>
-              {isOwnProfile 
-                ? 'Start sharing your pets to find them loving homes!'
-                : 'This user hasn\'t shared any posts yet.'
-              }
-            </Text>
-          </View>
-        ) : (
-          <>
-            {posts.map((post) => (
-              <View key={post.postId} style={styles.cardContainer}>
-                <PostCard
-                  showAdvancedFeatures={isOwnProfile}
-                  post={post}
-                  onPostUpdate={isOwnProfile ? handlePostUpdate : undefined}
-                  onPostDelete={isOwnProfile ? handlePostDelete : undefined}
-                  onPostLikeToggle={handlePostLike}
-                  onPostDetails={() => {}} 
-                />
-              </View>
-            ))}
-
-            {hasNextPage && (
-              <TouchableOpacity
-                onPress={fetchNextPage}
-                disabled={isFetchingNextPage}
-                activeOpacity={0.8}
-                style={styles.loadMoreWrapper}
-              >
-                <View style={styles.loadMoreButton}>
-                  {isFetchingNextPage ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <Text style={styles.loadMoreText}>Load More</Text>
+    <View style={styles.container}>
+      {posts.length === 0 ? (
+        <EmptyState
+          iconName="document-text-outline"
+          title="No posts yet"
+          subtitle={isOwnProfile 
+            ? 'Start sharing your pets to find them loving homes!'
+            : "This user hasn't shared any posts yet."
+          }
+          style={styles.emptyStateContainer}
+        />
+      ) : (
+        <>
+          {/* 2-Column Posts Grid */}
+          <View>
+            {postsInColumns.map((row) => (
+              <View key={row.key} style={styles.postRow}>
+                <View style={styles.postColumn}>
+                  {row.left && (
+                    <PostCard
+                      post={row.left}
+                      showAdvancedFeatures={isOwnProfile}
+                      onPostUpdate={isOwnProfile ? handlePostUpdate : undefined}
+                      onPostDelete={isOwnProfile ? handlePostDelete : undefined}
+                      onPostLikeToggle={handlePostLike}
+                      onPostDetails={() => {}}
+                    />
                   )}
                 </View>
-              </TouchableOpacity>
-            )}
-          </>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+                <View style={styles.postColumn}>
+                  {row.right && (
+                    <PostCard
+                      post={row.right}
+                      showAdvancedFeatures={isOwnProfile}
+                      onPostUpdate={isOwnProfile ? handlePostUpdate : undefined}
+                      onPostDelete={isOwnProfile ? handlePostDelete : undefined}
+                      onPostLikeToggle={handlePostLike}
+                      onPostDetails={() => {}}
+                    />
+                  )}
+                </View>
+              </View>
+            ))}
+          </View>
+
+          {hasNextPage && (
+            <TouchableOpacity
+              onPress={fetchNextPage}
+              disabled={isFetchingNextPage}
+              activeOpacity={0.8}
+              style={styles.loadMoreWrapper}
+            >
+              <View style={styles.loadMoreButton}>
+                {isFetchingNextPage ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.loadMoreText}>Load More</Text>
+                )}
+              </View>
+            </TouchableOpacity>
+          )}
+        </>
+      )}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF',
   },
-  header: {
-    paddingVertical: screenHeight < 700 ? 16 : 20,
-    paddingHorizontal: screenWidth < 380 ? 16 : 20,
-    paddingTop: Platform.OS === 'android' ? 20 : 16,
+  postRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
   },
-  headerTitle: {
-    fontSize: screenWidth < 380 ? 22 : 26,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  headerSubtitle: {
-    fontSize: screenWidth < 380 ? 14 : 16,
-    marginTop: 4,
-    fontWeight: '500',
-  },
-  scrollView: {
+  postColumn: {
     flex: 1,
-  },
-  scrollContent: {
-    padding: screenWidth < 380 ? 3 : 2, // Reduced padding for more card width
-    paddingBottom: 32,
-  },
-  cardContainer: {
-    marginBottom: screenWidth < 380 ? 8 : 12,
+    marginHorizontal: 4,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F8F7FD',
+    backgroundColor: '#F9FAFB',
   },
   loadingText: {
     marginTop: 16,
-    fontSize: 16,
-    color: '#6B46C1',
-    fontWeight: '500',
+    fontSize: 18,
+    color: '#9188E5',
+    fontWeight: '600',
+  },
+  loadingSubText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
   },
   errorContainer: {
     flex: 1,
@@ -238,7 +246,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     ...Platform.select({
       ios: {
-        shadowColor: '#7C3AED',
+        shadowColor: '#9188E5',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 4,
@@ -253,29 +261,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: screenHeight * 0.15,
+  emptyStateContainer: {
+    paddingVertical: 40,
     paddingHorizontal: 20,
-  },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: 16,
-  },
-  emptyText: {
-    fontSize: screenWidth < 380 ? 18 : 20,
-    fontWeight: '600',
-    color: '#4C1D95',
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: screenWidth < 380 ? 14 : 16,
-    color: '#6B46C1',
-    textAlign: 'center',
-    maxWidth: screenWidth * 0.8,
-    lineHeight: 22,
   },
   loadMoreWrapper: {
     marginTop: 16,
@@ -296,6 +284,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: screenWidth < 380 ? 15 : 17,
     letterSpacing: 0.5,
+  },
+  lottie: {
+    width: 80,
+    height: 80,
   },
 });
 

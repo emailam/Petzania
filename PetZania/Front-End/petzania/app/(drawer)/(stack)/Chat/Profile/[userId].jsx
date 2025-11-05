@@ -156,7 +156,7 @@ export default function UserProfileScreen() {
                         contentFit="cover"
                     />
                 </TouchableOpacity>
-                <Text style={styles.profileName}>{user.name || 'Unknown User'}</Text>
+                <Text style={styles.profileName}>{user.name || user.username}</Text>
                 <Text style={styles.profileStatus}>
                     {user.online ? 'Online' : 'Offline'}
                 </Text>
@@ -263,6 +263,7 @@ const styles = StyleSheet.create({
     },
     profileSection: {
         backgroundColor: '#fff',
+        justifyContent: 'center',
         alignItems: 'center',
         paddingVertical: 30,
         marginBottom: 20,
@@ -280,6 +281,8 @@ const styles = StyleSheet.create({
     },
     profileName: {
         fontSize: 22,
+        flexWrap: 'wrap',
+        textAlign: 'center',
         fontWeight: '600',
         color: '#000',
         marginBottom: 5,
@@ -293,7 +296,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#666',
         textAlign: 'center',
-        marginHorizontal: 20,
+        marginHorizontal: 16,
         lineHeight: 22,
     },
     optionsList: {

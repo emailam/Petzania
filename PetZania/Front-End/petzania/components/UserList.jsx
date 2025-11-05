@@ -13,13 +13,13 @@ export default function UserList({
   contentContainerStyle,
   showChevron = true,
   itemStyle = {},
+  renderActionButton,
   ...flatListProps
 }){
 
     const router = useRouter();
 
     const handleUserPress = (user) => {
-      console.log("User pressed:", user);
         if (onUserPress) {
             onUserPress(user);
         } else {
@@ -61,9 +61,11 @@ export default function UserList({
                 )}
             </View>
 
-            {showChevron && (
+            {renderActionButton ? (
+                renderActionButton(item)
+            ) : showChevron ? (
                 <Ionicons name="chevron-forward" size={20} color="#ccc" />
-            )}
+            ) : null}
         </TouchableOpacity>
     );
 

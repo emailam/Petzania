@@ -15,7 +15,7 @@ export default function PetModuleLayout() {
                     headerTitle: () => (
                         <View style={{width: screenWidth }}>
                             <CustomHeader title="Add Pet Profile" subtitle="Name" alignment={"center"}/>
-                            <Progress.Bar borderRadius={10} progress={(1/5)} width={screenWidth * 0.9} style={{margin: 10}} color='#FFC542' borderWidth={0.5} unfilledColor = {'#FFFFFF'}/>
+                            <Progress.Bar borderRadius={10} progress={(1/5)} width={screenWidth * 0.9} style={{margin: 10}} color='#9188E5' borderWidth={0.5} unfilledColor = {'#FFFFFF'}/>
                         </View>
                     ),
                     headerRight: () => (
@@ -35,7 +35,7 @@ export default function PetModuleLayout() {
                     headerTitle: () => (
                         <View style={{width: screenWidth }}>
                             <CustomHeader title="Add Pet Profile" subtitle="Type" alignment={"center"}/>
-                            <Progress.Bar borderRadius={10} progress={(2/5)} width={screenWidth * 0.9} style={{margin: 10}} color='#FFC542' borderWidth={0.5} unfilledColor = {'#FFFFFF'}/>
+                            <Progress.Bar borderRadius={10} progress={(2/5)} width={screenWidth * 0.9} style={{margin: 10}} color='#9188E5' borderWidth={0.5} unfilledColor = {'#FFFFFF'}/>
                         </View>
                     ),
                     headerRight: () => (
@@ -55,7 +55,7 @@ export default function PetModuleLayout() {
                     headerTitle: () => (
                         <View style={{width: screenWidth }}>
                             <CustomHeader title="Add Pet Profile" subtitle="Breed" alignment={"center"}/>
-                            <Progress.Bar borderRadius={10} progress={(3/5)} width={screenWidth * 0.9} style={{margin: 10}} color='#FFC542' borderWidth={0.5} unfilledColor = {'#FFFFFF'}/>
+                            <Progress.Bar borderRadius={10} progress={(3/5)} width={screenWidth * 0.9} style={{margin: 10}} color='#9188E5' borderWidth={0.5} unfilledColor = {'#FFFFFF'}/>
                         </View>
                     ),
                     headerRight: () => (
@@ -75,7 +75,7 @@ export default function PetModuleLayout() {
                     headerTitle: () => (
                         <View style={{width: screenWidth }}>
                             <CustomHeader title="Add Pet Profile" subtitle="General Information" alignment={"center"}/>
-                            <Progress.Bar borderRadius={10} progress={(4/5)} width={screenWidth * 0.9} style={{margin: 10}} color='#FFC542' borderWidth={0.5} unfilledColor = {'#FFFFFF'}/>
+                            <Progress.Bar borderRadius={10} progress={(4/5)} width={screenWidth * 0.9} style={{margin: 10}} color='#9188E5' borderWidth={0.5} unfilledColor = {'#FFFFFF'}/>
                         </View>
                     ),
                     headerRight: () => (
@@ -95,7 +95,7 @@ export default function PetModuleLayout() {
                     headerTitle: () => (
                         <View style={{width: screenWidth }}>
                             <CustomHeader title="Add Pet Profile" subtitle="Health Conditions" alignment={"center"}/>
-                            <Progress.Bar borderRadius={10} progress={(5/5)} width={screenWidth * 0.9} style={{margin: 10}} color='#FFC542' borderWidth={0.5} unfilledColor = {'#FFFFFF'}/>
+                            <Progress.Bar borderRadius={10} progress={(5/5)} width={screenWidth * 0.9} style={{margin: 10}} color='#9188E5' borderWidth={0.5} unfilledColor = {'#FFFFFF'}/>
                         </View>
                     ),
                     headerRight: () => (

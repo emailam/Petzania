@@ -1,48 +1,63 @@
-import React, { useState, useContext } from 'react';
-import { View, Text, StyleSheet, TextInput, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useState, useContext, useEffect } from 'react';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
 import { UserContext } from '@/context/UserContext';
 import { changePassword } from '@/services/userService';
 import Button from '@/components/Button';
+import PasswordInput from '@/components/PasswordInput';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function ChangePasswordScreen() {
   const router = useRouter();
   const { user } = useContext(UserContext);
-  
+
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isFormComplete, setIsFormComplete] = useState(false);
+
+  useEffect(() => {
+    const passwordValid =
+      newPassword.length >= 8 &&
+      /[A-Z]/.test(newPassword) &&
+      /[a-z]/.test(newPassword) &&
+      /\d/.test(newPassword) &&
+      /[!@#$%^&*(),.?":{}|<>]/.test(newPassword) &&
+      newPassword === confirmPassword &&
+      confirmPassword.trim() !== '';
+
+    setIsFormComplete(passwordValid);
+  }, [newPassword, confirmPassword]);
 
   const handleChangePassword = async () => {
     setError('');
-    
+
     // Validation
     if (!newPassword.trim()) {
       setError('New password is required');
       return;
     }
-    
+
     if (newPassword.length < 8) {
       setError('Password must be at least 8 characters long');
       return;
     }
-    
+
     if (newPassword !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-    
+
     setLoading(true);
-    
-    try {      
+
+    try {
       // Call the changePassword service
       await changePassword(user?.email, newPassword);
-      
+
       Toast.show({
         type: 'success',
         text1: 'Password Changed',
@@ -50,22 +65,22 @@ export default function ChangePasswordScreen() {
         position: 'top',
         visibilityTime: 3000,
       });
-      
+
       // Navigate back to settings
       router.back();
-      
+
     } catch (error) {
       console.error('Change password error:', error);
-      
+
       let errorMessage = 'Failed to change password. Please try again.';
       if (error.response?.status === 400) {
         errorMessage = 'Invalid password format';
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       setError(errorMessage);
-      
+
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -88,64 +103,35 @@ export default function ChangePasswordScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>
-            New Password <Text style={{ fontSize: 18, color: 'red' }}>*</Text>
-          </Text>
-          <View style={styles.passwordContainer}>
-            <TextInput
-              style={[styles.input, error ? styles.inputError : null]}
-              placeholder="Enter your new password"
-              placeholderTextColor="#999"
-              value={newPassword}
-              onChangeText={(text) => {
-                setNewPassword(text);
-                setError('');
-              }}
-              secureTextEntry={!showNewPassword}
-              returnKeyType="next"
-            />
-            <TouchableOpacity
-              style={styles.eyeIcon}
-              onPress={() => setShowNewPassword(!showNewPassword)}
-            >
-              <Ionicons
-                name={showNewPassword ? 'eye-off' : 'eye'}
-                size={24}
-                color="#9188E5"
-              />
-            </TouchableOpacity>
-          </View>
+          <PasswordInput
+            placeholder="Enter your new password"
+            label="New Password"
+            value={newPassword}
+            onChangeText={(text) => {
+              setNewPassword(text);
+              setError('');
+            }}
+            showPassword={showNewPassword}
+            toggleShow={() => setShowNewPassword((prev) => !prev)}
+            errors={error && error.includes('New password') ? { message: error } : undefined}
+            returnKeyType="next"
+          />
         </View>
 
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>
-            Confirm Password
-            <Text style={{ fontSize: 18, color: 'red' }}>*</Text>
-          </Text>
-          <View style={styles.passwordContainer}>
-            <TextInput
-              style={[styles.input, error ? styles.inputError : null]}
-              placeholder="Confirm your new password"
-              placeholderTextColor="#999"
-              value={confirmPassword}
-              onChangeText={(text) => {
-                setConfirmPassword(text);
-                setError('');
-              }}
-              secureTextEntry={!showConfirmPassword}
-              returnKeyType="done"
-            />
-            <TouchableOpacity
-              style={styles.eyeIcon}
-              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
-              <Ionicons
-                name={showConfirmPassword ? 'eye-off' : 'eye'}
-                size={24}
-                color="#9188E5"
-              />
-            </TouchableOpacity>
-          </View>
+          <PasswordInput
+            placeholder="Confirm your new password"
+            label="Confirm Password"
+            value={confirmPassword}
+            onChangeText={(text) => {
+              setConfirmPassword(text);
+              setError('');
+            }}
+            showPassword={showConfirmPassword}
+            toggleShow={() => setShowConfirmPassword((prev) => !prev)}
+            errors={error && (error.includes('match') || error.includes('8 characters')) ? { message: error } : undefined}
+            returnKeyType="done"
+          />
         </View>
 
         {/* Password Requirements */}
@@ -234,12 +220,13 @@ export default function ChangePasswordScreen() {
 
       <View style={styles.buttonContainer}>
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        <Button 
-          title="Change Password" 
-          borderRadius={10} 
-          fontSize={16} 
-          onPress={handleChangePassword} 
-          loading={loading} 
+        <Button
+          title="Change Password"
+          borderRadius={10}
+          fontSize={16}
+          onPress={handleChangePassword}
+          loading={loading}
+          disabled={!isFormComplete}
         />
       </View>
     </KeyboardAvoidingView>
@@ -277,7 +264,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#9188E5',
     borderRadius: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: 16,
     paddingRight: 50,
     fontSize: 16,
     backgroundColor: '#fff',

@@ -4,6 +4,8 @@ import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 import LottieView from 'lottie-react-native'
 
+import EmptyState from '@/components/EmptyState'
+
 import { searchByUsername } from '@/services/searchService'
 import UserList from '@/components/UserList'
 
@@ -94,23 +96,23 @@ export default function SearchScreen() {
                 </View>
             );
         }
-        
+
         if (query.trim()) {
             return (
-                <View style={styles.emptyContainer}>
-                    <Ionicons name="search" size={60} color="#ddd" />
-                    <Text style={styles.noResults}>No users found</Text>
-                    <Text style={styles.noResultsSubtext}>Try searching with a different username</Text>
-                </View>
+                <EmptyState
+                    iconName="search"
+                    title="No users found"
+                    subtitle="Try a different username"
+                />
             );
         }
-        
+
         return (
-            <View style={styles.emptyContainer}>
-                <Ionicons name="people" size={60} color="#ddd" />
-                <Text style={styles.noResults}>Search for users</Text>
-                <Text style={styles.noResultsSubtext}>Start typing to find other pet owners</Text>
-            </View>
+            <EmptyState
+                iconName="people"
+                title="Search for users"
+                subtitle="Type a username above to find users"
+            />
         );
     };
 
@@ -204,7 +206,7 @@ const styles = StyleSheet.create({
     },
     input: {
         flex: 1,
-        fontSize: 16,
+        fontSize: 12,
         color: '#333',
         paddingVertical: 4,
     },

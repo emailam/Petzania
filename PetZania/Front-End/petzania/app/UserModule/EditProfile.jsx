@@ -1,13 +1,12 @@
-import { StyleSheet, View, TouchableOpacity, Text, TextInput, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
-import { Image } from 'expo-image';
-import React, { useState, useContext } from 'react';
-import * as ImagePicker from 'expo-image-picker';
-import { AntDesign, MaterialIcons, Feather } from '@expo/vector-icons';
+import { StyleSheet, View, TouchableOpacity, Text, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
+import React, { useState, useContext, useEffect } from 'react';
+import {  MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Button from '@/components/Button';
+import CustomInput from '@/components/CustomInput';
+import ImageUploadInput from '@/components/ImageUploadInput';
 import { isValidPhoneNumber } from 'libphonenumber-js';
-import { useActionSheet } from '@expo/react-native-action-sheet';
-import ImageViewing from 'react-native-image-viewing';
+import { TextInput } from 'react-native-paper';
 
 import { uploadFile } from '@/services/uploadService';
 import { updateUserData } from '@/services/userService';
@@ -31,62 +30,74 @@ const EditProfile = () => {
     const [name, setName] = useState(user?.name || '');
     const [bio, setBio] = useState(user?.bio || '');
     const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || '');
-    const [error, setError] = useState('');
-    const [phoneError, setPhoneError] = useState('');
-    const [showImageViewer, setShowImageViewer] = useState(false);
+    const [errors, setErrors] = useState({
+        name: '',
+        phoneNumber: ''
+    });
     const [isLoading, setIsLoading] = useState(false);
+    const [isFormValid, setIsFormValid] = useState(false);
 
-    const { showActionSheetWithOptions } = useActionSheet();
+    // Helper functions for error handling
+    const setError = (field, message) => {
+        setErrors(prev => ({
+            ...prev,
+            [field]: message
+        }));
+    };
 
-    const pickImage = async () => {
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'],
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 0.7,
-        });
+    const clearError = (field) => {
+        setErrors(prev => ({
+            ...prev,
+            [field]: ''
+        }));
+    };
 
-        if (!result.canceled) {
-            setImage(result.assets[0].uri);
+    // Validation effect
+    useEffect(() => {
+
+        // Validate name
+        if (!name.trim()) {
+            setError('name', 'Name is required');
+        } else {
+            clearError('name');
         }
-    };
 
-    const deleteImage = () => {
-        setImage(null);
-        user.profilePictureURL = null;
-        setUser((prevUser) => ({ ...prevUser, profilePictureURL: null }));
-    };
+        // Validate phone number if provided
+        if (phoneNumber && phoneNumber.length > 0 && !isValidPhoneNumber(phoneNumber)) {
+            setError('phoneNumber', 'Please enter a valid phone number including country code (e.g. +20)');
+        } else {
+            clearError('phoneNumber');
+        }
+    }, [name, phoneNumber]);
+
+    useEffect(() => {
+        const nameValid = name;
+        const phoneValid = !phoneNumber || phoneNumber.length === 0 || isValidPhoneNumber(phoneNumber);
+        const hasErrors = Object.values(errors).some(error => error !== '');
+
+        setIsFormValid(nameValid && phoneValid && !hasErrors);
+    }, [name, phoneNumber, errors]);
 
     const saveProfile = async () => {
-        const isPhoneEmpty = phoneNumber.length === 0;
-        const isValid = isPhoneEmpty || isValidPhoneNumber(phoneNumber);
-
-        if (!name.trim()) {
-            setError('Full name is required!');
+        // Double-check validation before submitting
+        if (!isFormValid) {
             Toast.show({
                 type: 'error',
                 text1: 'Validation Error',
-                text2: 'Full name is required!',
+                text2: 'Please fix the errors before saving',
                 position: 'top',
                 visibilityTime: 3000,
             });
             return;
         }
 
-        if (!isValid) {
-            setPhoneError('Please enter a valid phone number including country code (e.g. +1)');
-            Toast.show({
-                type: 'error',
-                text1: 'Validation Error',
-                text2: 'Please enter a valid phone number including country code (e.g. +1)',
-                position: 'top',
-                visibilityTime: 4000,
-            });
-            return;
-        }
-
         let uploadedImageUrl = user?.profilePictureURL;
-        if(image && image !== user?.profilePictureURL) {
+        
+        // Handle image removal
+        if (image === null) {
+            uploadedImageUrl = "";
+        } else if (image && image !== user?.profilePictureURL) {
+            // Handle new image upload
             try {
                 const file = {
                     uri: image,
@@ -128,9 +139,6 @@ const EditProfile = () => {
 
             setUser(completeUpdatedUser);
 
-            setError('');
-            setPhoneError('');
-
             Toast.show({
                 type: 'success',
                 text1: 'Profile Updated!',
@@ -154,30 +162,6 @@ const EditProfile = () => {
         }
     };
 
-    const handleImagePress = () => {
-        const options = [
-            ...(image ? ['View Profile Picture'] : []),
-            'Change Profile Picture',
-            ...(image ? ['Remove Profile Picture'] : []),
-            'Cancel',
-        ];
-        const cancelButtonIndex = options.length - 1;
-        const destructiveButtonIndex = image ? options.indexOf('Remove Profile Picture') : undefined;
-
-        showActionSheetWithOptions(
-            {
-                options,
-                cancelButtonIndex,
-                destructiveButtonIndex,
-            },
-            (buttonIndex) => {
-                if (image && buttonIndex === 0) setShowImageViewer(true);
-                else if ((image && buttonIndex === 1) || (!image && buttonIndex === 0)) pickImage();
-                else if (image && buttonIndex === options.indexOf('Remove Profile Picture')) deleteImage();
-            }
-        );
-    };
-
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -186,81 +170,85 @@ const EditProfile = () => {
             <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
                 {/* Profile Image Section */}
                 <View style={styles.imageContainer}>
-                    <TouchableOpacity onPress={handleImagePress} style={styles.imageWrapper}>
-                        <Image source={image ? { uri: image } : defaultImage} style={styles.image} />
-                        {image && (
-                            <TouchableOpacity onPress={deleteImage} style={styles.trashIcon}>
-                                <AntDesign name="delete" size={20} style={styles.icon} />
-                            </TouchableOpacity>
-                        )}
-                    </TouchableOpacity>
+                    <ImageUploadInput
+                        defaultImage={defaultImage}
+                        onImageChange={(imageUri) => {
+                            if (imageUri) {
+                                setImage(imageUri);
+                            } else {
+                                setImage(null);
+                            }
+                        }}
+                        size={180}
+                        isUploading={isLoading}
+                        currentImage={image}
+                    />
                 </View>
-
-                <ImageViewing
-                    images={[{ uri: image || '' }]}
-                    imageIndex={0}
-                    visible={showImageViewer}
-                    onRequestClose={() => setShowImageViewer(false)}
-                    backgroundColor="black"
-                    swipeToCloseEnabled
-                    doubleTapToZoomEnabled
-                />
                 <View style={styles.inputContainer}>
                     <Text style={styles.label}>Username</Text>
-                    <TextInput
-                        style={[styles.input, styles.disabledInput]}
-                        placeholder="@username"
+                    <CustomInput
+                        disabled={true}
                         placeholderTextColor="#999"
+                        style={[styles.disabledInput]}
                         value={`@${username}`}
-                        editable={false}
+                        mode="outlined"
                     />
 
                     <Text style={[styles.label, { marginTop: 12 }]}>Email</Text>
-                    <TextInput
-                        style={[styles.input, styles.disabledInput]}
-                        placeholder="Email"
+                    <CustomInput
+                        disabled={true}
+                        style={[styles.disabledInput]}
                         placeholderTextColor="#999"
                         value={email}
-                        editable={false}
+                        mode="outlined"
                     />
 
                     <Text style={[styles.label, { marginTop: 12 }]}>
-                        Full Name <Text style={{ color: 'red' }}>*</Text>
+                        Name <Text style={{ color: 'red' }}>*</Text>
                     </Text>
-                    <TextInput
-                        style={[styles.input, error ? styles.inputError : null]}
+                    <CustomInput
+                        style={[errors.name ? styles.inputError : null]}
                         placeholder="Tyler Gregory Okonma"
                         placeholderTextColor="#999"
                         value={name}
                         onChangeText={(text) => {
                             setName(text);
-                            setError('');
                         }}
+                        maxLength={50}
+                        mode="outlined"
+                        error={!!errors.name}
+                        errorMessage={errors.name}
                     />
-                    {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
                     <Text style={[styles.label, { marginTop: 12 }]}>Phone Number</Text>
-                    <TextInput
-                        style={[styles.input, phoneError ? styles.inputError : null]}
+                    <CustomInput
+                        style={[errors.phoneNumber ? styles.inputError : null]}
                         placeholder="+20 101 234 5678"
                         keyboardType="phone-pad"
                         placeholderTextColor="#999"
                         value={phoneNumber}
                         onChangeText={(text) => {
                             setPhoneNumber(text);
-                            setPhoneError('');
                         }}
+                        maxLength={20}
+                        mode="outlined"
+                        error={!!errors.phoneNumber}
+                        errorMessage={errors.phoneNumber}
                     />
-                    {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
 
                     <Text style={[styles.label, { marginTop: 12 }]}>Bio</Text>
-                    <TextInput
-                        style={[styles.input, styles.textArea]}
-                        placeholder="About"
+                    <CustomInput
+                        style={[styles.bioInput]}
+                        placeholder="Tell us about yourself"
                         placeholderTextColor="#999"
                         multiline
+                        numberOfLines={4}
                         value={bio}
                         onChangeText={setBio}
+                        maxLength={255}
+                        returnKeyType="done"
+                        mode="outlined"
+                        right={<TextInput.Affix text={`${bio.length}/255`} />}
                     />
                 </View>
                 <View style={styles.petsSection}>
@@ -287,7 +275,14 @@ const EditProfile = () => {
             </ScrollView>
 
             <View style={styles.buttonContainer}>
-                <Button title="Save Changes" borderRadius={10} fontSize={16} onPress={saveProfile} loading={isLoading} />
+                <Button 
+                    title="Save Changes" 
+                    borderRadius={10} 
+                    fontSize={16} 
+                    onPress={saveProfile} 
+                    loading={isLoading}
+                    disabled={!isFormValid || isLoading}
+                />
             </View>
         </KeyboardAvoidingView>
     );
@@ -335,7 +330,6 @@ const styles = StyleSheet.create({
     inputContainer: {
         paddingHorizontal: '5%',
         width: '100%',
-        alignItems: 'center',
         marginTop: 20,
         marginBottom: 20,
     },
@@ -345,15 +339,6 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         color: '#333',
         alignSelf: 'flex-start',
-    },    input: {
-        width: '100%',
-        height: 50,
-        borderWidth: 1,
-        borderColor: '#9188E5',
-        borderRadius: 10,
-        paddingHorizontal: 15,
-        fontSize: 16,
-        backgroundColor: '#fff',
     },
     disabledInput: {
         backgroundColor: '#f5f5f5',
@@ -363,9 +348,9 @@ const styles = StyleSheet.create({
     inputError: {
         borderColor: 'red',
     },
-    textArea: {
-        height: 100,
-        textAlignVertical: 'top',
+    bioInput: {
+        minHeight: 120, // Set minimum height for multiline
+        textAlignVertical: 'top', // Align text to top for multiline
     },
     errorText: {
         color: 'red',

@@ -6,14 +6,17 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { UserContext } from '@/context/UserContext';
 import UserList from '@/components/UserList';
-import { getFriendsByUserId, getNumberOfFriendsByUserId } from '@/services/friendsService';
+import EmptyState from '@/components/EmptyState';
+import { getFriendsByUserId, getNumberOfFriendsByUserId, removeFriend } from '@/services/friendsService';
 import { getUserById, getUserProfilePicture } from '@/services/userService';
 import Toast from 'react-native-toast-message';
+import LottieView from 'lottie-react-native';
 
 export default function Friends() {
   const { userid } = useLocalSearchParams();
@@ -28,6 +31,7 @@ export default function Friends() {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [unfriendingUsers, setUnfriendingUsers] = useState(new Set());
 
   const isOwnProfile = currentUser?.userId === userid;
 
@@ -142,25 +146,108 @@ export default function Friends() {
       params: { username: user.username || 'User Profile' }
     });
   };
+
+  const handleUnfriend = (friend) => {
+    Alert.alert(
+      "Remove Friend",
+      `Are you sure you want to remove ${friend.username || friend.firstName + ' ' + friend.lastName} from your friends?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: () => confirmUnfriend(friend)
+        }
+      ]
+    );
+  };
+
+  const confirmUnfriend = async (friend) => {
+    try {
+      setUnfriendingUsers(prev => new Set(prev).add(friend.userId));
+
+      await removeFriend(friend.userId);
+
+      // Remove friend from list
+      setFriends(prev => prev.filter(item => item.userId !== friend.userId));
+
+      Toast.show({
+        type: 'success',
+        text1: 'Friend Removed',
+        text2: `${friend.username || friend.firstName} has been removed from your friends`,
+        position: 'top',
+        visibilityTime: 2000,
+      });
+    } catch (error) {
+      console.error('Error removing friend:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to remove friend',
+        text2: 'Please try again later',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+    } finally {
+      setUnfriendingUsers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(friend.userId);
+        return newSet;
+      });
+    }
+  };
+
+  const renderUnfriendButton = (friend) => {
+    if (!isOwnProfile) return null; // Only show unfriend button on own profile
+    
+    const isUnfriending = unfriendingUsers.has(friend.userId);
+    
+    return (
+      <TouchableOpacity
+        style={[styles.unfriendButton, isUnfriending && styles.unfriendButtonDisabled]}
+        onPress={() => handleUnfriend(friend)}
+        disabled={isUnfriending}
+      >
+        {isUnfriending ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <>
+            <Ionicons name="person-remove-outline" size={16} color="#fff" />
+            <Text style={styles.unfriendButtonText}>Remove</Text>
+          </>
+        )}
+      </TouchableOpacity>
+    );
+  };
+
   const renderEmptyState = () => (
-    <View style={styles.emptyContainer}>
-      <Ionicons name="people-outline" size={60} color="#ccc" />
-      <Text style={styles.emptyTitle}>No Friends Yet</Text>
-      <Text style={styles.emptySubtitle}>
-        {isOwnProfile 
+    <EmptyState
+      iconName="people-outline"
+      title="No Friends Yet"
+      subtitle={
+        isOwnProfile 
           ? "When you make friends, they'll appear here"
           : `${profileUser?.name || 'This user'} doesn't have any friends yet`
-        }
-      </Text>
-    </View>
+      }
+    />
   );
 
   if (loading) {
     return (
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#9188E5" />
+          <LottieView
+            source={require("@/assets/lottie/loading.json")}
+            autoPlay
+            loop
+            style={styles.lottie}
+          />
           <Text style={styles.loadingText}>Loading friends...</Text>
+          <Text style={styles.loadingSubText}>
+            Getting friend information
+          </Text>
         </View>
       </View>
     );
@@ -171,6 +258,8 @@ export default function Friends() {
         users={friends}
         onUserPress={handleUserPress}
         keyExtractor={(item) => item.friendshipId || item.userId}
+        showChevron={!isOwnProfile}
+        renderActionButton={isOwnProfile ? renderUnfriendButton : null}
         onEndReached={loadMoreFriends}
         onEndReachedThreshold={0.1}
         contentContainerStyle={{ padding: 12 }}
@@ -201,35 +290,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  lottie: {
+    width: 80,
+    height: 80,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#9188E5',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#999',
     marginTop: 16,
-    textAlign: 'center',
+    fontSize: 18,
+    color: '#9188E5',
+    fontWeight: '600',
   },
-  emptySubtitle: {
-    fontSize: 14,
-    color: '#999',
+  loadingSubText: {
     marginTop: 8,
+    fontSize: 14,
+    color: '#666',
     textAlign: 'center',
-    lineHeight: 20,
   },
   footerLoading: {
     flexDirection: 'row',
@@ -241,5 +321,24 @@ const styles = StyleSheet.create({
   footerLoadingText: {
     fontSize: 14,
     color: '#666',
+  },
+  unfriendButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ff4444',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    minWidth: 80,
+    justifyContent: 'center',
+  },
+  unfriendButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  unfriendButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 4,
   },
 });

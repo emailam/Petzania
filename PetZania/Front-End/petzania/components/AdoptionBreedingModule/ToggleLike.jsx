@@ -1,10 +1,11 @@
 import React, { useState, useCallback, memo } from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 const ToggleLike = memo(({
   postId,
   onLikeChange,
-  initialLiked
+  initialLiked,
+  ...props
 }) => {
 
   const [liked, setLiked] = useState(initialLiked);
@@ -12,25 +13,26 @@ const ToggleLike = memo(({
   const handleToggle = useCallback(() => {
 
     const nextLiked = !liked;
-    setLiked(nextLiked);    
+    setLiked(nextLiked);
     onLikeChange?.(postId);
-    
+
   }, [liked, postId]);
 
 
   return (
     <>
       <View style={styles.container}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.likeButton}
           onPress={handleToggle}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           activeOpacity={0.7}
+          {...props}
         >
-          <Ionicons 
-            name={liked ? 'heart' : 'heart-outline'} 
-            size={20} 
-            color={liked ? '#FF3040' : '#666'} 
+          <Ionicons
+            name={liked ? 'heart' : 'heart-outline'}
+            size={22}
+            color={liked ? '#FF3040' : '#666'}
           />
         </TouchableOpacity>
       </View>
@@ -41,12 +43,11 @@ const ToggleLike = memo(({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    gap: 4,
   },
   likeButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: '#f8f8f8',
     justifyContent: 'center',
     alignItems: 'center',

@@ -13,6 +13,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import PostCard from './PostCard';
 import FilterModal from '@/components/AdoptionBreedingModule/FilterModal';
+import SortModal from '@/components/AdoptionBreedingModule/SortModal';
+import EmptyState from '@/components/EmptyState';
+import LoadingIndicator from '@/components/LoadingIndicator';
+
 import {
   useFetchPosts,
   useToggleLike,
@@ -38,6 +42,7 @@ export default function PostScreen({ postType }) {
   });
 
   const [isFilterModalVisible, setFilterModalVisible] = useState(false);
+  const [isSortModalVisible, setSortModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const toggleLikeMutation = useToggleLike();
@@ -59,7 +64,13 @@ export default function PostScreen({ postType }) {
   } = useFetchPosts({ petPostType: postType, ...filters });
 
   const posts = data?.pages.flatMap(page => (Array.isArray(page.posts) ? page.posts : [])) || [];
-  
+
+  // Ensure even number of items for 2-column layout
+  const postsWithPlaceholder = posts.length % 2 === 1 
+    ? [...posts, { isPlaceholder: true, postId: 'placeholder' }]
+    : posts;
+    
+
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // Handlers
   const handlePostLike = useCallback(
@@ -83,10 +94,21 @@ export default function PostScreen({ postType }) {
 
   const handleFilterPress = useCallback(() => setFilterModalVisible(true), []);
   const handleCloseFilters = useCallback(() => setFilterModalVisible(false), []);
+
+  const handleSortPress = useCallback(() => setSortModalVisible(true), []);
+  const handleCloseSort = useCallback(() => setSortModalVisible(false), []);
+
   const handleApplyFilters = useCallback(newFilters => {
     setFilters(newFilters);
     setFilterModalVisible(false);
     toast.show({ type: 'success', text1: 'Filters applied' });
+  }, []);
+
+  const handleApplySort = useCallback(newFilters => {
+    console.log('Applying sort:', newFilters);
+    setFilters(newFilters);
+    setSortModalVisible(false);
+    toast.show({ type: 'success', text1: 'Sort applied' });
   }, []);
 
   const handleRefresh = useCallback(async () => {
@@ -95,104 +117,109 @@ export default function PostScreen({ postType }) {
     setRefreshing(false);
   }, [refetch]);
 
-  const renderPost = useCallback(({ item }) => (
-    <View style={[styles.cardWrapper, isLargeScreen && styles.cardWrapperLarge]}>
-      <PostCard
-        showAdvancedFeatures={false}
-        post={item}
-        onPostUpdate={() => {}}
-        onPostDelete={() => {}}
-        onPostLikeToggle={handlePostLike}
-        getUsers={handleGetUserById}
-      />
-    </View>
-  ), [handlePostLike, handleGetUserById, isLargeScreen]);
+  const renderPost = useCallback(({ item }) => {
+    // Render empty space for placeholder items
+    if (item.isPlaceholder) {
+      return <View style={styles.cardWrapper} />;
+    }
 
-  // CHANGED BUTTON: solid purple, white text/icon
-  const renderFooter = useCallback(() => {
-    if (!hasNextPage) return null;
-    
     return (
-      <TouchableOpacity
-        onPress={fetchNextPage}
-        style={styles.loadMoreButton}
-        disabled={isFetchingNextPage}
-        activeOpacity={0.8}
-      >
-        {isFetchingNextPage ? (
-          <ActivityIndicator size="small" color="#FFFFFF" />
-        ) : (
-          <>
-            <Text style={styles.loadMoreText}>Load More</Text>
-            <Ionicons name="chevron-down" size={20} color="#FFFFFF" />
-          </>
-        )}
-      </TouchableOpacity>
-    );
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
-
-  const renderEmpty = useCallback(() => (
-    <View style={styles.emptyContainer}>
-      <View style={styles.emptyIconContainer}>
-        <Ionicons 
-          name={postType === 'ADOPTION' ? 'heart-outline' : 'git-branch-outline'} 
-          size={64} 
-          color="#E5E7EB" 
+      <View style={styles.cardWrapper}>
+        <PostCard
+          showAdvancedFeatures={false}
+          post={item}
+          onPostUpdate={() => {}}
+          onPostDelete={() => {}}
+          onPostLikeToggle={handlePostLike}
+          getUsers={handleGetUserById}
         />
       </View>
-      <Text style={styles.emptyText}>No {title} Found</Text>
-      <Text style={styles.emptySubtext}>
-        {postType === 'ADOPTION' 
-          ? 'Check back later for pets looking for their forever homes'
-          : 'No breeding posts available at the moment'}
-      </Text>
-      <TouchableOpacity 
-        style={styles.refreshButton} 
-        onPress={handleRefresh}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="refresh" size={20} color="#7C3AED" />
-        <Text style={styles.refreshButtonText}>Refresh</Text>
-      </TouchableOpacity>
-    </View>
-  ), [postType, title, handleRefresh]);
+    );
+  }, [handlePostLike, handleGetUserById]);
+
+  // CHANGED BUTTON: solid purple, white text/icon
+
+  // Infinite scroll: fetch next page when end reached
+  const handleEndReached = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const renderEmpty = useCallback(() => {
+    const emptyConfig = {
+      ADOPTION: {
+        iconName: 'heart-outline',
+        title: 'No Adoption Posts',
+        subtitle: 'No pets looking for adoption at the moment.\nCheck back later for furry friends seeking their forever homes!'
+      },
+      BREEDING: {
+        iconName: 'git-branch-outline', 
+        title: 'No Breeding Posts',
+        subtitle: 'No breeding posts available right now.\nCheck back later for breeding opportunities!'
+      }
+    };
+
+    const config = emptyConfig[postType] || {
+      iconName: 'albums-outline',
+      title: 'No Posts Available',
+      subtitle: 'No posts found at the moment.\nTry refreshing or check back later!'
+    };
+
+    return (
+      <EmptyState
+        iconName={config.iconName}
+        title={config.title}
+        subtitle={config.subtitle}
+        style={styles.emptyStateContainer}
+      />
+    );
+  }, [postType]);
+
+  // Check if filters are active (excluding sort settings)
+  const hasActiveFilters = useCallback(() => {
+    return (filters.species !== 'ALL') ||
+           (filters.breed !== 'ALL') ||
+           (filters.minAge !== 0) ||
+           (filters.maxAge !== 1000);
+  }, [filters]);
+
+  // Check if sort is non-default
+  const hasActiveSort = useCallback(() => {
+    return (filters.sortBy !== 'SCORE') || (filters.sortDesc !== true);
+  }, [filters]);
 
   const renderHeader = useCallback(() => (
     <View style={[styles.header, isLargeScreen && styles.headerLarge]}>
       <View style={styles.headerContent}>
-        <Text style={[styles.headerTitle, isSmallScreen && styles.headerTitleSmall]}>
-          {title}
-        </Text>
         <TouchableOpacity
-          style={styles.filterButton}
+          style={[styles.filterButton, { marginRight: 12 }]}
           onPress={handleFilterPress}
           activeOpacity={0.8}
         >
-          <Ionicons name="filter" size={20} color="#9188E5" />
+          <Ionicons name="funnel-outline" size={20} color="#9188E5" />
           <Text style={styles.filterButtonText}>Filter</Text>
-          {Object.keys(filters).some(key => 
-            (key === 'species' && filters[key] !== 'ALL') ||
-            (key === 'breed' && filters[key] !== 'ALL') ||
-            (key === 'minAge' && filters[key] !== 0) ||
-            (key === 'maxAge' && filters[key] !== 1000)
-          ) && <View style={styles.filterBadge} />}
+          {hasActiveFilters() && <View style={styles.filterBadge} />}
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={handleSortPress}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="swap-vertical-outline" size={20} color="#9188E5" />
+          <Text style={styles.filterButtonText}>Sort</Text>
+          {hasActiveSort() && <View style={styles.filterBadge} />}
         </TouchableOpacity>
       </View>
-      {posts.length > 0 && (
-        <Text style={styles.postCount}>
-          {posts.length} {posts.length === 1 ? 'pet' : 'pets'} available
-        </Text>
-      )}
     </View>
-  ), [title, isLargeScreen, isSmallScreen, handleFilterPress, filters, posts.length]);
+  ), [isLargeScreen, handleFilterPress, handleSortPress, hasActiveFilters, hasActiveSort]);
 
   // CONDITIONAL RETURNS MUST COME AFTER ALL HOOKS
   // Loading state
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#7C3AED" />
-        <Text style={styles.loadingText}>Loading {title}...</Text>
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <LoadingIndicator text="Loading notifications..." />
       </View>
     );
   }
@@ -206,8 +233,8 @@ export default function PostScreen({ postType }) {
         </View>
         <Text style={styles.errorText}>Something went wrong</Text>
         <Text style={styles.errorSubtext}>Unable to load posts</Text>
-        <TouchableOpacity 
-          style={styles.retryButton} 
+        <TouchableOpacity
+          style={styles.retryButton}
           onPress={refetch}
           activeOpacity={0.8}
         >
@@ -220,48 +247,59 @@ export default function PostScreen({ postType }) {
   return (
     <View style={styles.container}>
       <FlatList
-        data={[{ type: 'landing' }, { type: 'header' }, ...posts]}
-        renderItem={({ item, index }) => {
-          if (item.type === 'landing') {
-            return <LandingImages />;
-          }
-          if (item.type === 'header') {
-            return renderHeader();
-          }
-          return renderPost({ item });
-        }}
-        keyExtractor={(item, index) => {
-          if (item.type === 'landing') return 'landing';
-          if (item.type === 'header') return 'header';
-          return item.postId;
-        }}
-        stickyHeaderIndices={[1]}
+        data={postsWithPlaceholder}
+        numColumns={2}
+        
+        renderItem={renderPost}
+        ListHeaderComponent={
+          <>
+            <LandingImages />
+            {renderHeader()}
+          </>
+        }
+        keyExtractor={(item) => item.postId}
         contentContainerStyle={[
+          styles.listContent,
           posts.length === 0 && styles.listContentEmpty
         ]}
-        ListEmptyComponent={posts.length === 0 ? renderEmpty : null}
-        ListFooterComponent={renderFooter}
+        ListFooterComponent={isFetchingNextPage ? (
+          <View style={{ padding: 16, alignItems: 'center' }}>
+            <ActivityIndicator size="small" color="#9188E5" />
+          </View>
+        ) : null}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.1}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={['#7C3AED']}
-            tintColor="#7C3AED"
+            colors={['#9188E5']}
+            tintColor="#9188E5"
           />
         }
         showsVerticalScrollIndicator={false}
-        initialNumToRender={5}
-        maxToRenderPerBatch={5}
+        initialNumToRender={6}
+        maxToRenderPerBatch={6}
         windowSize={10}
         removeClippedSubviews={true}
+        columnWrapperStyle={styles.row}
       />
+      {posts.length === 0 && renderEmpty()}
 
       {/* Filter Modal */}
       <FilterModal
         visible={isFilterModalVisible}
-        initialFilters={{ ...filters, petPostType: postType }}
+        initialFilters={filters}
         onApply={handleApplyFilters}
         onClose={handleCloseFilters}
+      />
+
+      {/* Sort Modal */}
+      <SortModal
+        visible={isSortModalVisible}
+        initialFilters={filters}
+        onApply={handleApplySort}
+        onClose={handleCloseSort}
       />
     </View>
   );
@@ -330,7 +368,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
     ...Platform.select({
@@ -344,13 +382,13 @@ const styles = StyleSheet.create({
         elevation: 2,
       },
     }),
+    position: 'sticky',
   },
   headerLarge: {
     paddingHorizontal: 24,
   },
   headerContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
   },
   headerTitle: {
@@ -393,48 +431,19 @@ const styles = StyleSheet.create({
   listContentEmpty: {
     flex: 1,
   },
+  row: {
+    justifyContent: 'space-evenly',
+    paddingHorizontal: 8,
+  },
   cardWrapper: {
-    marginBottom: 16,
-  },
-  cardWrapperLarge: {
-    alignItems: 'center',
-  },
-  emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-       alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingBottom: 100,
-  },
-  emptyIconContainer: {
-    marginBottom: 24,
-  },
-  emptyText: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#1F2937',
+    marginHorizontal: 6,
     marginBottom: 8,
   },
-  emptySubtext: {
-    fontSize: 16,
-    color: '#6B7280',
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 22,
-  },
-  refreshButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EDE9FE',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    gap: 8,
-  },
-  refreshButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#7C3AED',
+  emptyStateContainer: {
+    flex: 1,
+    paddingHorizontal: 32,
+    paddingBottom: 100,
   },
   // CHANGED: solid purple, white text/icon for load more (no gradient)
   loadMoreButton: {
@@ -446,13 +455,15 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     paddingVertical: 12,
     borderRadius: 12,
-    // borderWidth: 1,
-    // borderColor: '#E5E7EB', // Remove border for strong solid
     gap: 8,
   },
   loadMoreText: {
     fontSize: 14,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  lottie: {
+    width: 100,
+    height: 100,
   },
 });

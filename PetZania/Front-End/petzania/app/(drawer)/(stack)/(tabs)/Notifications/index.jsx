@@ -1,35 +1,45 @@
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native'
 import { Image } from 'expo-image';
-import React, { useState, useEffect, useCallback } from 'react'
-import { Ionicons } from '@expo/vector-icons'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
+
+import { Ionicons } from '@expo/vector-icons';
+import Entypo from '@expo/vector-icons/Entypo';
+
 import { useRouter } from 'expo-router'
 import { getAllNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification } from '@/services/notificationService'
 import { acceptFriendRequest, cancelFriendRequest } from '@/services/friendsService'
 import { useNotifications } from '@/context/NotificationContext'
 import { getUserById } from '@/services/userService';
+import EmptyState from '@/components/EmptyState';
+import BottomSheet from '@/components/BottomSheet';
+import { useInfiniteQuery } from '@tanstack/react-query';
+
+import LoadingIndicator from '@/components/LoadingIndicator';
 
 export default function index() {
     const defaultImage = require('@/assets/images/Defaults/default-user.png');
     const router = useRouter();
-    const { decrementUnreadCount, resetUnreadCount, recentNotifications } = useNotifications();
+    const { decrementUnreadCount, resetUnreadCount } = useNotifications();
 
-    const [notifications, setNotifications] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [refreshing, setRefreshing] = useState(false);
-    const [error, setError] = useState(null);
-    const [page, setPage] = useState(0);
-    const [hasMore, setHasMore] = useState(true);
+    const [selectedNotification, setSelectedNotification] = useState(null);
 
-    const fetchNotifications = async (pageNum = 0, isRefresh = false) => {
-        try {
-            if (isRefresh) {
-                setRefreshing(true);
-            } else {
-                setLoading(true);
-            }
-            setError(null);
+    // Bottom sheet ref
+    const bottomSheetRef = useRef(null);
 
-            const response = await getAllNotifications(pageNum, 10);
+    // useInfiniteQuery for notifications
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading,
+        isError,
+        error: fetchError,
+        refetch,
+    } = useInfiniteQuery({
+        queryKey: ['notifications'],
+        queryFn: async ({ pageParam = 0 }) => {
+            const response = await getAllNotifications(pageParam, 10);
 
             if (response && response?.content) {
                 // Collect user IDs we need to fetch
@@ -37,14 +47,12 @@ export default function index() {
 
                 response.content.forEach(notification => {
                     if (notification.type === 'FRIEND_REQUEST_ACCEPTED') {
-                        // For friend request accepted, we want the accepter's info (receiverId)
-                        if (notification.attributes?.receiverId) {
-                            userIdsToFetch.add(notification.attributes.receiverId);
+                        if (notification.recipientId) {
+                            userIdsToFetch.add(notification.recipientId);
                         }
                     } else {
-                        // For other notifications, use senderId
-                        if (notification.attributes?.senderId) {
-                            userIdsToFetch.add(notification.attributes.senderId);
+                        if (notification.initiatorId) {
+                            userIdsToFetch.add(notification.initiatorId);
                         }
                     }
                 });
@@ -61,12 +69,10 @@ export default function index() {
                     let senderUser;
 
                     if (notification.type === 'FRIEND_REQUEST_ACCEPTED') {
-                        // Show the person who accepted the request (receiverId)
-                        relevantUserId = notification.attributes?.receiverId;
+                        relevantUserId = notification.recipientId;
                         senderUser = relevantUserId ? userMap[relevantUserId] : null;
                     } else {
-                        // For other notifications, show the sender
-                        relevantUserId = notification.attributes?.senderId;
+                        relevantUserId = notification.initiatorId;
                         senderUser = relevantUserId ? userMap[relevantUserId] : null;
                     }
 
@@ -79,34 +85,32 @@ export default function index() {
                         time: formatTime(notification.createdAt),
                         isRead: notification.status === 'READ',
                         actionable: notification.type === 'FRIEND_REQUEST_RECEIVED' && notification.status === 'UNREAD',
-                        requestId: notification.attributes?.friendRequestId,
+                        requestId: notification.entityId,
                         senderData: senderUser,
-                        attributes: notification.attributes || {}
                     };
                 });
 
-                if (isRefresh || pageNum === 0) {
-                    setNotifications(formattedNotifications);
-                } else {
-                    setNotifications(prev => [...prev, ...formattedNotifications]);
-                }
-
-                setHasMore(response.content.length === 10);
-                setPage(pageNum);
-            } else {
-                if (isRefresh || pageNum === 0) {
-                    setNotifications([]);
-                }
-                setHasMore(false);
+                return {
+                    content: formattedNotifications,
+                    currentPage: pageParam,
+                    hasMore: response.content.length === 10,
+                };
             }
-        } catch (error) {
-            console.error('Error fetching notifications:', error);
-            setError('Failed to load notifications');
-        } finally {
-            setLoading(false);
-            setRefreshing(false);
-        }
-    };
+
+            return {
+                content: [],
+                currentPage: pageParam,
+                hasMore: false,
+            };
+        },
+        getNextPageParam: (lastPage) => {
+            return lastPage.hasMore ? lastPage.currentPage + 1 : undefined;
+        },
+        staleTime: 30000, // 30 seconds
+    });
+
+    // Flatten all notifications from pages
+    const notifications = data?.pages?.flatMap(page => page.content) || [];
 
     const getNotificationTitle = (type) => {
         switch (type) {
@@ -145,76 +149,25 @@ export default function index() {
         }
     };
 
+    // Handle refresh
+    const onRefresh = useCallback(async () => {
+        await refetch();
+    }, [refetch]);
 
-    useEffect(() => {
-        fetchNotifications(0, false);
-    }, []);
-
-    // Listen for real-time notifications and prepend to the list
-    useEffect(() => {
-        if (!recentNotifications || recentNotifications.length === 0) return;
-        // Only handle the most recent notification
-        const newNotification = recentNotifications[0];
-        if (!newNotification) return;
-        // Prevent duplicates
-        if (notifications.some(n => n.id === newNotification.notificationId)) return;
-        (async () => {
-            let senderUser = null;
-            let relevantUserId;
-
-            if (newNotification.type === 'FRIEND_REQUEST_ACCEPTED') {
-                // For friend request accepted, get the accepter's info (receiverId)
-                relevantUserId = newNotification.attributes?.receiverId;
-            } else {
-                // For other notifications, get the sender's info
-                relevantUserId = newNotification.attributes?.senderId;
-            }
-
-            if (relevantUserId) {
-                try {
-                    senderUser = await getUserById(relevantUserId);
-                } catch (e) {
-                    senderUser = null;
-                }
-            }
-            const formatted = {
-                id: newNotification.notificationId,
-                type: newNotification.type,
-                title: getNotificationTitle(newNotification.type),
-                message: newNotification.message,
-                avatar: senderUser?.profilePictureURL || null,
-                time: formatTime(newNotification.createdAt),
-                isRead: newNotification.status === 'READ',
-                actionable: newNotification.type === 'FRIEND_REQUEST_RECEIVED' && newNotification.status === 'UNREAD',
-                requestId: newNotification.attributes?.friendRequestId,
-                senderData: senderUser,
-                attributes: newNotification.attributes || {}
-            };
-            setNotifications(prev => [formatted, ...prev]);
-        })();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [recentNotifications]);
-
-    const onRefresh = useCallback(() => {
-        fetchNotifications(0, true);
-    }, []);
-
-    const loadMore = () => {
-        if (!loading && hasMore) {
-            fetchNotifications(page + 1, false);
+    // Handle load more
+    const loadMore = useCallback(() => {
+        if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
         }
-    };
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
     const markAsRead = async (notification) => {
         if (notification.isRead) return;
 
         try {
             await markNotificationAsRead(notification.id);
-            setNotifications(prev => 
-                prev.map(n => 
-                    n.id === notification.id ? { ...n, isRead: true } : n
-                )
-            );
+            // Optimistically update the cache
+            refetch();
             decrementUnreadCount(1);
         } catch (error) {
             console.error('Error marking notification as read:', error);
@@ -232,7 +185,7 @@ export default function index() {
                     onPress: async () => {
                         try {
                             await markAllNotificationsAsRead();
-                            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+                            refetch();
                             resetUnreadCount();
                         } catch (error) {
                             console.error('Error marking all notifications as read:', error);
@@ -244,7 +197,29 @@ export default function index() {
         );
     };
 
-    const deleteNotificationItem = async (notificationId) => {
+    const handleNotificationLongPress = async (notification) => {
+        setSelectedNotification(notification);
+        bottomSheetRef.current?.present();
+    };
+
+    const handleMarkAsRead = async () => {
+        if (!selectedNotification) return;
+
+        try {
+            await markNotificationAsRead(selectedNotification.id);
+            refetch();
+            decrementUnreadCount(1);
+            bottomSheetRef.current?.dismiss();
+            setSelectedNotification(null);
+        } catch (error) {
+            console.error('Error marking notification as read:', error);
+            Alert.alert('Error', 'Failed to mark notification as read');
+        }
+    };
+
+    const handleDeleteNotification = async () => {
+        if (!selectedNotification) return;
+
         Alert.alert(
             'Delete Notification',
             'Are you sure you want to delete this notification?',
@@ -255,14 +230,13 @@ export default function index() {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            await deleteNotification(notificationId);
-                            const deletedNotification = notifications.find(n => n.id === notificationId);
-                            setNotifications(prev => prev.filter(n => n.id !== notificationId));
-                            
-                            // Decrement unread count if deleted notification was unread
-                            if (deletedNotification && !deletedNotification.isRead) {
+                            await deleteNotification(selectedNotification.id);
+                            refetch();
+                            if (!selectedNotification.isRead) {
                                 decrementUnreadCount(1);
                             }
+                            bottomSheetRef.current?.dismiss();
+                            setSelectedNotification(null);
                         } catch (error) {
                             console.error('Error deleting notification:', error);
                             Alert.alert('Error', 'Failed to delete notification');
@@ -283,18 +257,9 @@ export default function index() {
                     text: 'Accept',
                     onPress: async () => {
                         try {
-                            await acceptFriendRequest(notification.attributes?.requestId);
-                            
-                            // Mark notification as read and remove actionable state
+                            await acceptFriendRequest(notification.requestId);
                             await markNotificationAsRead(notification.id);
-                            setNotifications(prev =>
-                                prev.map(n => 
-                                    n.id === notification.id 
-                                        ? { ...n, isRead: true, actionable: false, title: 'Friend Accepted', message: `You and ${notification.senderData?.username || 'this user'} are now friends!` }
-                                        : n
-                                )
-                            );
-
+                            refetch();
                             Alert.alert('Success', 'Friend request accepted!');
                         } catch (error) {
                             console.error('Error accepting friend request:', error);
@@ -317,15 +282,9 @@ export default function index() {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            await cancelFriendRequest(notification.attributes?.requestId);
-
+                            await cancelFriendRequest(notification.requestId);
                             await markNotificationAsRead(notification.id);
-
-                            // Remove the notification entirely for rejected requests
-                            setNotifications(prev => 
-                                prev.filter(n => n.id !== notification.id)
-                            );
-
+                            refetch();
                             Alert.alert('Rejected', 'Friend request rejected');
                         } catch (error) {
                             console.error('Error rejecting friend request:', error);
@@ -361,7 +320,7 @@ export default function index() {
                 });
                 break;
             case 'PET_POST_LIKED':
-                console.log('Post ID:', notification.attributes?.postId);
+                console.log('Post ID:', notification.postId);
                 
             default:
                 // Generic fallback
@@ -387,6 +346,15 @@ export default function index() {
 
     const localUnreadCount = notifications.filter(n => !n.isRead).length;
 
+    // Show loading state
+    if (isLoading) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <LoadingIndicator text="Loading notifications..." />
+            </View>
+        );
+    }
+
     return (
         <View style={styles.container}>
             <ScrollView
@@ -394,7 +362,7 @@ export default function index() {
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl
-                        refreshing={refreshing}
+                        refreshing={false}
                         onRefresh={onRefresh}
                         colors={['#9188E5']}
                         tintColor="#9188E5"
@@ -403,45 +371,38 @@ export default function index() {
                 onScroll={({ nativeEvent }) => {
                     const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
                     const paddingToBottom = 20;
-                    if (layoutMeasurement.height + contentOffset.y >= 
+                    if (layoutMeasurement.height + contentOffset.y >=
                         contentSize.height - paddingToBottom) {
                         loadMore();
                     }
                 }}
                 scrollEventThrottle={400}
             >
-                {/* Content padding for floating header */}
-                {/* Floating Header */}
-                <View style={styles.floatingHeader}>
-                    <View style={styles.headerContent}>
-                        <Text style={styles.headerTitle}>Notifications</Text>
-                        {localUnreadCount > 0 && (
-                            <TouchableOpacity onPress={markAllAsRead} style={styles.markAllButton}>
-                                <Ionicons name="checkmark-done" size={16} color="#fff" />
-                                <Text style={styles.markAllButtonText}>Mark all read</Text>
-                            </TouchableOpacity>
-                        )}
-                    </View>
-                </View>
                 <View style={styles.headerSpacer} />
 
                 {/* Unread count indicator */}
                 {localUnreadCount > 0 && (
                     <View style={styles.unreadIndicator}>
                         <View style={styles.unreadIndicatorContent}>
-                            <Ionicons name="notifications" size={16} color="#9188E5" />
-                            <Text style={styles.unreadIndicatorText}>
-                                {localUnreadCount} unread notification{localUnreadCount > 1 ? 's' : ''}
-                            </Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Ionicons name="notifications" size={16} color="#9188E5" />
+                                <Text style={styles.unreadIndicatorText}>
+                                    {localUnreadCount} unread notification{localUnreadCount > 1 ? 's' : ''}
+                                </Text>
+                            </View>
+                            <TouchableOpacity onPress={markAllAsRead} style={styles.markAllButton}>
+                                <Ionicons name="checkmark-done" size={16} color="#fff" />
+                                <Text style={styles.markAllButtonText}>Mark all read</Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
                 )}
 
                 {/* Error message */}
-                {error && (
+                {isError && (
                     <View style={styles.errorContainer}>
-                        <Text style={styles.errorText}>{error}</Text>
-                        <TouchableOpacity onPress={() => fetchNotifications(0, true)} style={styles.retryButton}>
+                        <Text style={styles.errorText}>{fetchError?.message || 'Failed to load notifications'}</Text>
+                        <TouchableOpacity onPress={() => refetch()} style={styles.retryButton}>
                             <Text style={styles.retryButtonText}>Retry</Text>
                         </TouchableOpacity>
                     </View>
@@ -455,9 +416,9 @@ export default function index() {
                             !notification.isRead && styles.unreadNotification
                         ]}
                         onPress={() => handleNotificationPress(notification)}
-                        onLongPress={() => deleteNotificationItem(notification.id)}
+                        onLongPress={() => handleNotificationLongPress(notification)}
                     >
-                        <View style={styles.notificationContent}>
+                        <View style={styles.notificationContent} >
                             {/* Avatar */}
                             <View style={styles.avatarContainer}>
                                 <Image
@@ -494,6 +455,18 @@ export default function index() {
                                 </View>
                             )}
 
+                            {/* Three dots button */}
+                            {!notification.actionable && <View style={styles.moreOptionsContainer}>
+                                <TouchableOpacity
+                                    onPress={() => handleNotificationLongPress(notification)}
+                                    style={styles.moreOptionsButton}
+                                    activeOpacity={0.7}
+                                >
+                                    <Entypo name="dots-three-horizontal" size={20} color="#9188E5" />
+                                </TouchableOpacity>
+                            </View>
+                            }
+
                             {/* Read indicator */}
                             {!notification.isRead && (
                                 <View style={styles.unreadDot} />
@@ -503,21 +476,63 @@ export default function index() {
                 ))}
 
                 {/* Loading more indicator */}
-                {loading && notifications.length > 0 && (
+                {isFetchingNextPage && notifications.length > 0 && (
                     <View style={styles.loadingMore}>
-                        <Text style={styles.loadingMoreText}>Loading more...</Text>
+                        <LoadingIndicator text="Loading more..." />
                     </View>
                 )}
 
                 {/* Empty state */}
-                {notifications.length === 0 && !loading && (
+                {notifications.length === 0 && !isLoading && (
                     <View style={styles.emptyState}>
-                        <Ionicons name="notifications-off" size={64} color="#ccc" />
-                        <Text style={styles.emptyTitle}>No notifications</Text>
-                        <Text style={styles.emptyMessage}>You're all caught up!</Text>
+                        <EmptyState
+                            iconName="notifications-off"
+                            title="No notifications"
+                            subtitle="You're all caught up!"
+                            iconColor='#ccc'
+                        />
                     </View>
                 )}
             </ScrollView>
+
+            {/* Bottom Sheet Modal for notification actions */}
+            <BottomSheet
+                ref={bottomSheetRef}
+                index={0}
+                snapPoints={['30%']}
+            >
+                <View style={styles.bottomSheetHeader}>
+                    <Text style={styles.bottomSheetTitle}>Notification Actions</Text>
+                </View>
+
+                <View style={styles.bottomSheetActions}>
+                    {selectedNotification && !selectedNotification.isRead && (
+                        <TouchableOpacity
+                            style={styles.bottomSheetAction}
+                            onPress={handleMarkAsRead}
+                        >
+                            <View style={styles.actionIconContainer}>
+                                <Ionicons name="checkmark-circle" size={24} color="#9188E5" />
+                            </View>
+                            <View style={styles.actionTextContainer}>
+                                <Text style={styles.actionText}>Mark as Read</Text>
+                            </View>
+                        </TouchableOpacity>
+                    )}
+
+                    <TouchableOpacity
+                        style={styles.bottomSheetAction}
+                        onPress={handleDeleteNotification}
+                    >
+                        <View style={styles.actionIconContainer}>
+                            <Ionicons name="trash-outline" size={24} color="#FF3B30" />
+                        </View>
+                        <View style={styles.actionTextContainer}>
+                            <Text style={[styles.actionText, styles.removeText]}>Remove Notification</Text>
+                        </View>
+                    </TouchableOpacity>
+                </View>
+            </BottomSheet>
         </View>
     )
 }
@@ -525,7 +540,7 @@ export default function index() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: '#F9FAFB',
     },
     header: {
         backgroundColor: '#fff',
@@ -539,16 +554,11 @@ const styles = StyleSheet.create({
     },
     floatingHeader: {
         flex: 1,
-        justifyContent: 'flex-end',
+        justifyContent: 'center',
+        alignItems: 'flex-end',
         backgroundColor: '#fff',
         borderBottomWidth: 1,
         borderBottomColor: '#f0f0f0',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 5,
-        zIndex: 10,
     },
     headerContent: {
         flexDirection: 'row',
@@ -589,7 +599,7 @@ const styles = StyleSheet.create({
     unreadIndicatorContent: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 12,
     },
@@ -628,6 +638,10 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     notificationItem: {
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         backgroundColor: '#fff',
         borderBottomWidth: 1,
         borderBottomColor: '#f0f0f0',
@@ -636,6 +650,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#f8f9ff',
     },
     notificationContent: {
+        flex: 1,
         flexDirection: 'row',
         padding: 16,
         alignItems: 'flex-start',
@@ -670,7 +685,7 @@ const styles = StyleSheet.create({
     },
     textContent: {
         flex: 1,
-        marginRight: 10,
+        marginRight: 50, // Increased to make room for absolutely positioned three dots button
     },
     notificationTitle: {
         fontSize: 16,
@@ -711,7 +726,7 @@ const styles = StyleSheet.create({
     unreadDot: {
         position: 'absolute',
         top: 16,
-        right: 16,
+        right: 10,
         width: 8,
         height: 8,
         borderRadius: 4,
@@ -727,20 +742,58 @@ const styles = StyleSheet.create({
     },
     emptyState: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingTop: 100,
+        paddingVertical: 20,
     },
-    emptyTitle: {
+    // Bottom Sheet Styles
+    bottomSheetContent: {
+        flex: 1,
+        paddingHorizontal: 20,
+    },
+    bottomSheetHeader: {
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+        marginBottom: 8,
+    },
+    bottomSheetTitle: {
         fontSize: 18,
         fontWeight: '600',
         color: '#333',
-        marginTop: 16,
+        textAlign: 'center',
+    },
+    bottomSheetActions: {
+        flex: 1,
+    },
+    bottomSheetAction: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 8,
+        borderRadius: 12,
         marginBottom: 8,
     },
-    emptyMessage: {
-        fontSize: 14,
-        color: '#666',
-        textAlign: 'center',
+    actionIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    actionTextContainer: {
+        flex: 1,
+    },
+    actionText: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#333',
+    },
+    removeText: {
+        color: '#FF3B30',
+    },
+    moreOptionsButton: {
+        padding: 8,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 })

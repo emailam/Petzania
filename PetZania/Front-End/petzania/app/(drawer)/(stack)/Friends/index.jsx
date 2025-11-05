@@ -1,14 +1,16 @@
-import { StyleSheet, Text, View, ActivityIndicator } from 'react-native'
+import { StyleSheet, Text, View, ActivityIndicator, RefreshControl } from 'react-native'
 import LottieView from 'lottie-react-native'
-import React, { useContext, useCallback } from 'react'
+import React, { useContext, useCallback, useState} from 'react'
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getFriendsByUserId } from '@/services/friendsService';
 import { getUserProfilePicture } from '@/services/userService';
 import { UserContext } from '@/context/UserContext';
 import UserList from '@/components/UserList';
+import EmptyState from '@/components/EmptyState';
 
 export default function FriendsScreen() {
   const { user } = useContext(UserContext);
+  const [refreshing, setRefreshing] = useState(false);
 
   const {
     data,
@@ -18,6 +20,7 @@ export default function FriendsScreen() {
     isFetchingNextPage,
     isLoading,
     isError,
+    refetch
   } = useInfiniteQuery({
     queryKey: ['friends', user?.userId],
     queryFn: async ({ pageParam = 0 }) => {
@@ -73,9 +76,12 @@ export default function FriendsScreen() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const EmptyComponent = () => (
-    <View style={styles.centered}>
-      <Text style={styles.emptyText}>You have no friends yet.</Text>
-    </View>
+    <EmptyState
+      iconName="people-outline"
+      title="No Friends Yet"
+      subtitle="Start connecting with other pet lovers in your area. Your friends will appear here once you make connections!"
+      style={styles.emptyState}
+    />
   );
 
   const FooterComponent = () => {
@@ -88,6 +94,13 @@ export default function FriendsScreen() {
       </View>
     );
   };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
+
 
   if (isLoading) {
     return (
@@ -122,6 +135,14 @@ export default function FriendsScreen() {
         onEndReachedThreshold={0.1}
         contentContainerStyle={{ padding: 12 }}
         itemStyle={styles.friendItem}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#9188E5']}
+            tintColor="#9188E5"
+          />
+        }
       />
     </View>
   );
@@ -138,6 +159,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
   },
+  emptyState: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
@@ -145,11 +170,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: '#f44336',
-    fontSize: 16,
-    marginTop: 8,
-  },
-  emptyText: {
-    color: '#888',
     fontSize: 16,
     marginTop: 8,
   },

@@ -1,15 +1,19 @@
-import { StyleSheet, Text, View, TouchableOpacity, Alert, ScrollView, TextInput, Modal } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, Alert, ScrollView, TextInput, Modal} from 'react-native'
 import React, { useState, useContext} from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 import Toast from 'react-native-toast-message'
 import { deleteUser, logout } from '@/services/userService'
 import { UserContext } from '@/context/UserContext'
+import { clearAllTokens } from '@/storage/tokenStorage';
+
+import LoadingModal from '@/components/LoadingModal'
 
 export default function Settings() { const router = useRouter();
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [usernameInput, setUsernameInput] = useState('');
     const [inputError, setInputError] = useState('');
+    const [isWaiting, setIsWaiting] = useState(false);
     const { user } = useContext(UserContext);
 
     const handleLogout = () => {
@@ -25,29 +29,41 @@ export default function Settings() { const router = useRouter();
                     text: "Logout",
                     style: "destructive",
                     onPress: async () => {
-                            try {
-                              await logout(user?.email);
+                        setIsWaiting(true);
 
-                              Toast.show({
+                        try {
+                            // Try to logout from server
+                            await logout(user?.email);
+
+                            Toast.show({
                                 type: 'success',
                                 text1: 'Logged out successfully',
                                 position: 'top',
                                 visibilityTime: 2000,
-                              });
+                            });
 
-                              if(router.canDismiss()) {
-                                router.dismissAll();
-                              }
-                              router.replace('/RegisterModule/LoginScreen');
-
-                            } catch (error) {
-                              console.error('Logout error:', error);
+                        } catch (error) {
+                            console.error('Logout error:', error);
+                        } finally {
+                            // Always clear local storage and navigate to login, regardless of server response
+                            try {
+                                await clearAllTokens();
+                            } catch (storageError) {
+                                console.error('Error clearing storage:', storageError);
                             }
+
+                            setIsWaiting(false);
+
+                            if(router.canDismiss()) {
+                                router.dismissAll();
+                            }
+                            router.replace('/RegisterModule/LoginScreen');
                         }
                     }
+                }
             ]
-        )
-    }
+        );
+    };
 
     const handleDeleteAccount = () => {
         Alert.alert(
@@ -86,6 +102,7 @@ export default function Settings() { const router = useRouter();
         // Proceed with account deletion
         try {
             setShowDeleteModal(false);
+            setIsWaiting(true);
             await deleteUser(user?.email);
 
             Toast.show({
@@ -268,6 +285,7 @@ export default function Settings() { const router = useRouter();
                     </View>
                 </View>
             </Modal>
+        <LoadingModal isVisible={isWaiting} />
         </ScrollView>
     )
 }
@@ -275,7 +293,7 @@ export default function Settings() { const router = useRouter();
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: '#F9FAFB',
     },
     section: {
         marginTop: 20,

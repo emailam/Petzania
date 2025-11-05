@@ -39,13 +39,6 @@ export default function UserLayout() {
             <Stack.Screen name="Followers" />
             <Stack.Screen name="Following" />
             <Stack.Screen name="Friends" />
-            <Stack.Screen
-                name="Blocked"
-                options={{
-                    headerShown: true,
-                    headerTitle: 'Blocked Users',
-                }}
-            />
         </Stack>
     );
 }

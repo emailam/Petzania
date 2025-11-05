@@ -1,7 +1,8 @@
 import React from 'react'
-import BreedingScreen from './BreedingScreen'
+import PostScreen from '@/components/AdoptionBreedingModule/PostScreen';
+
 export default function index() {
     return (
-        <BreedingScreen />
+        <PostScreen postType="BREEDING"/>
     )
 }

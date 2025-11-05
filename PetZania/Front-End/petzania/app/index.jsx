@@ -1,16 +1,23 @@
 import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { Redirect } from 'expo-router';
 import { useFonts } from 'expo-font';
-import { ActivityIndicator, View, Text, Image } from 'react-native';
-import { getToken, clearAllTokens } from '@/storage/tokenStorage';
+import { View, Text } from 'react-native';
+import { Image } from 'expo-image';
+import { Asset } from 'expo-asset';
+
 import { getUserById } from '@/services/userService';
+
 import { getUserId } from '@/storage/userStorage';
+import { getToken, clearAllTokens } from '@/storage/tokenStorage';
+import { getOnboardingStatus } from '@/storage/onboardingStorage';
+
+import LottieView from 'lottie-react-native';
 
 import { UserContext } from '@/context/UserContext';
 import { PetContext } from '@/context/PetContext';
+
 import { AntDesign, FontAwesome5, Ionicons, Feather, FontAwesome } from '@expo/vector-icons';
 
-import { Asset } from 'expo-asset';
 import { PETS } from '@/constants/PETS';
 
 import 'react-native-gesture-handler';
@@ -40,15 +47,20 @@ export default function App() {
                 const accessToken = await getToken('accessToken');
                 const refreshToken = await getToken('refreshToken');
                 const userId = await getUserId('userId');
+                const hasSeenOnboarding = await getOnboardingStatus();
+
+                if(!hasSeenOnboarding) {
+                    setRedirectPath('/RegisterModule/Onboarding');
+                    return;
+                }
 
                 if (!accessToken || !refreshToken || !userId) {
-                    setRedirectPath('/RegisterModule/Onboarding');
+                    setRedirectPath('/RegisterModule/LoginScreen');
                     return;
                 }
 
                 const userData = await getUserById(userId);
                 setUser(userData);
-
                 setPets(userData.myPets);
 
                 if (userData?.name === null) {
@@ -82,7 +94,7 @@ export default function App() {
             // Add 3-second delay before setting app as ready
             const timer = setTimeout(() => {
                 setAppIsReady(true);
-            }, 30);
+            }, 3000);
 
             return () => clearTimeout(timer);
         }
@@ -101,14 +113,14 @@ export default function App() {
 
     if (!appIsReady) {
         return (
-            <View style={{ 
-                flex: 1, 
-                justifyContent: 'center', 
+            <View style={{
+                flex: 1,
+                justifyContent: 'center',
                 alignItems: 'center',
                 backgroundColor: '#9a90f5' // Match your app's primary color
             }}>
                 {/* App Logo */}
-                <Image 
+                <Image
                     source={require('@/assets/images/splash.png')}
                     style={{
                         width: 300,
@@ -116,11 +128,31 @@ export default function App() {
                         resizeMode: 'contain'
                     }}
                 />
-                
-                {/* Loading Indicator */}
-                <View style={{ marginTop: 60 }}>
-                    <ActivityIndicator size="large" color="white" />
+
+                {/* Loading Animation */}
+                <View style={{ marginTop: 40 }}>
+                    <LottieView
+                        source={require('@/assets/lottie/loading.json')}
+                        style={{
+                            width: 100,
+                            height: 100,
+                        }}
+                        autoPlay
+                        loop
+                        speed={1.0}
+                    />
                 </View>
+
+                {/* Loading Text */}
+                <Text style={{
+                    color: 'white',
+                    fontSize: 16,
+                    fontWeight: '600',
+                    marginTop: 20,
+                    textAlign: 'center'
+                }}>
+                    Loading PetZania...
+                </Text>
             </View>
         );
     }

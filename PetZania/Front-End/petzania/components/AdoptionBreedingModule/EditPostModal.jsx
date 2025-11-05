@@ -1,21 +1,76 @@
-import React, { useState , memo } from 'react';
+import React, { useState, memo, useMemo, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Modal,
   TouchableOpacity,
-  ScrollView,
   TextInput,
-  Image,
-  Dimensions,
   Alert,
   ActivityIndicator,
+  BackHandler,
 } from 'react-native';
+
+import PetCard from '../PetCard';
+import LoadingModal from '../LoadingModal';
+
+import ImageViewing from 'react-native-image-viewing';
 import { Ionicons } from '@expo/vector-icons';
-import { FlatList } from 'react-native-gesture-handler';
-const { height } = Dimensions.get('window');
-const EditPostModal = memo(({visible ,onClose, post, onUpdate, onDelete}) => {
+
+import {
+  BottomSheetModal,
+  BottomSheetBackdrop,
+  BottomSheetScrollView,
+} from '@gorhom/bottom-sheet';
+
+const EditPostModal = memo(({ visible, onClose, post, onUpdate, onDelete }) => {
+  const bottomSheetModalRef = useRef(null);
+
+  // Memoized snap points
+  const snapPoints = useMemo(() => ['90%'], []);
+
+  // Handle modal visibility changes
+  useEffect(() => {
+    if (visible) {
+      bottomSheetModalRef.current?.present();
+    } else {
+      bottomSheetModalRef.current?.dismiss();
+    }
+  }, [visible]);
+
+  // Handle Android back button
+  useEffect(() => {
+    const backAction = () => {
+      if (visible) {
+        handleCancel();
+        return true;
+      }
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+    return () => backHandler.remove();
+  }, [visible]);
+
+  // Handle modal dismiss
+  const handleSheetChanges = useCallback((index) => {
+    if (index === -1) {
+      onClose?.();
+    }
+  }, [onClose]);
+
+  // Backdrop component
+  const renderBackdrop = useCallback(
+    (props) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.5}
+        pressBehavior="close"
+      />
+    ),
+    []
+  );
 
   if (!post) return null;
 
@@ -26,6 +81,8 @@ const EditPostModal = memo(({visible ,onClose, post, onUpdate, onDelete}) => {
   const [formErrors, setFormErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showImageViewer, setShowImageViewer] = useState(false);
   const petDTO = post.petDTO || {};
 
   const validateForm = () => {
@@ -63,7 +120,7 @@ const EditPostModal = memo(({visible ,onClose, post, onUpdate, onDelete}) => {
   const formValid = Object.keys(validateForm()).length === 0;
 
   const handleSave = async () => {
-  if (isSaving || isDeleting) return;    
+  if (isSaving || isDeleting) return;
       // Client-side validation
       const errors = validateForm();
       if (Object.keys(errors).length > 0) {
@@ -83,7 +140,7 @@ const EditPostModal = memo(({visible ,onClose, post, onUpdate, onDelete}) => {
         updatePetDTO: petDTO,
       }; 
       await onUpdate?.(post.postId, updatedData);
-      onClose?.();
+      bottomSheetModalRef.current?.dismiss();
     } catch (error) {
       console.error('Save failed:', error);
     } finally {
@@ -104,7 +161,7 @@ const EditPostModal = memo(({visible ,onClose, post, onUpdate, onDelete}) => {
           setIsDeleting(true);
           try {
             await onDelete?.(post.postId);
-            onClose?.();
+            bottomSheetModalRef.current?.dismiss();
           } catch (error) {
             console.error('Delete failed:', error);
           } finally {
@@ -117,120 +174,39 @@ const EditPostModal = memo(({visible ,onClose, post, onUpdate, onDelete}) => {
 };
 
   const handleCancel = () => {
-    if (hasChanges()) {
-      Alert.alert(
-        'Discard Changes',
-        'You have unsaved changes. Are you sure you want to discard them?',
-        [
-          { text: 'Keep Editing', style: 'cancel' },
-          {
-            text: 'Discard',
-            style: 'destructive',
-            onPress: () => {
-              setFormErrors({});
-              onClose?.();
-            },
-          },
-        ]
-      );
-    } else {
-      onClose?.();
-    }
+    bottomSheetModalRef.current?.dismiss();
   };
 
-  
-
   return (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      onRequestClose={onClose}
-      visible={visible}
+    <BottomSheetModal
+      ref={bottomSheetModalRef}
+      snapPoints={snapPoints}
+      onChange={handleSheetChanges}
+      backdropComponent={renderBackdrop}
+      enablePanDownToClose={true}
+      enableDismissOnClose={true}
+      handleIndicatorStyle={styles.handleIndicator}
+      backgroundStyle={styles.bottomSheetBackground}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity
-              onPress={handleCancel}  // Changed from onClose to handleCancel
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons name="close" size={24} color="#666" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Edit Post</Text>
-            <View style={styles.headerSpacer} />
-          </View>
-
-          <ScrollView
-            style={styles.content}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            {/* Pet Image (read-only) */}
-            <Text style={styles.sectionTitle}>Pet Images</Text>
-            <View style={styles.imagesContainer}>
-              {petDTO?.myPicturesURLs && petDTO.myPicturesURLs.length > 0 ? (
-                <FlatList
-                  horizontal
-                  data={petDTO.myPicturesURLs}
-                  keyExtractor={(item, index) => index.toString()}
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.imagesScrollContainer}
-                  renderItem={({ item, index }) => (
-                    <View style={styles.imageWrapper}>
-                      <Image 
-                        source={{ uri: item }} 
-                        style={styles.image} 
-                        resizeMode="cover"
-                      />
-                    </View>
-                  )}
-                />
-              ) : (
-                <View style={styles.imageContainer}>
-                  <Image 
-                    source={require('@/assets/images/Defaults/default-pet.png')} 
-                    style={styles.image} 
-                    resizeMode="cover"
-                  />
-                </View>
-              )}
+      <BottomSheetScrollView
+        style={styles.scrollContent}
+        contentContainerStyle={styles.scrollContentContainer}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Edit Post</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+            <Text style={styles.sectionTitle}>Pet Details</Text>
+            {/* Dismiss the bottomsheet when press */}
+            <View style={styles.petContainer}>
+              <PetCard pet={petDTO} marginHorizontal={0} bottomSheetModalRef={bottomSheetModalRef} />
             </View>
 
             {/* Pet Details (read-only except location, description) */}
-            <Text style={styles.sectionTitle}>Pet Details</Text>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Pet Name</Text>
-              <TextInput
-                style={[styles.textInput, { backgroundColor: '#e7e7e7' }]}
-                value={petDTO?.name || ''}
-                editable={false}
-              />
-            </View>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Gender</Text>
-              <TextInput
-                style={[styles.textInput, { backgroundColor: '#e7e7e7' }]}
-                value={petDTO?.gender || ''}
-                editable={false}
-              />
-            </View>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Breed</Text>
-              <TextInput
-                style={[styles.textInput, { backgroundColor: '#e7e7e7' }]}
-                value={petDTO?.breed || ''}
-                editable={false}
-              />
-            </View>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Age</Text>
-              <TextInput
-                style={[styles.textInput, { backgroundColor: '#e7e7e7' }]}
-                value={petDTO?.age || ''}
-                editable={false}
-              />
-            </View>
+            <Text style={styles.sectionTitle}>Post Details</Text>
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Location</Text>
               <TextInput
@@ -334,26 +310,25 @@ const EditPostModal = memo(({visible ,onClose, post, onUpdate, onDelete}) => {
               <Text style={styles.errorText}>{formErrors.status}</Text>
             )}
             <View style={styles.bottomPadding} />
-          </ScrollView>
 
-          {/* Action Buttons */}
+          {/* Action Buttons - Fixed at bottom */}
           <View style={styles.actionButtons}>
-          {/* Save Button */}
-          <TouchableOpacity
-            onPress={handleSave}
-            disabled={isSaving || isDeleting || !hasChanges() || !formValid}
-            activeOpacity={0.8}
-            style={[
-              styles.saveButton,
-              (isSaving || isDeleting || !hasChanges() || !formValid) && styles.saveButtonDisabled,
-            ]}
-          >
-            {isSaving ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.saveButtonText}>Save Changes</Text>
-            )}
-          </TouchableOpacity>
+            {/* Save Button */}
+            <TouchableOpacity
+              onPress={handleSave}
+              disabled={isSaving || isDeleting || !hasChanges() || !formValid}
+              activeOpacity={0.8}
+              style={[
+                styles.saveButton,
+                (isSaving || isDeleting || !hasChanges() || !formValid) && styles.saveButtonDisabled,
+              ]}
+            >
+              {isSaving ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.saveButtonText}>Save Changes</Text>
+              )}
+            </TouchableOpacity>
 
             {/* Delete Button */}
             <TouchableOpacity
@@ -372,64 +347,72 @@ const EditPostModal = memo(({visible ,onClose, post, onUpdate, onDelete}) => {
               )}
             </TouchableOpacity>
           </View>
-        </View>
-      </View>
-    </Modal>
+          <ImageViewing
+              images={petDTO?.myPicturesURLs.map(uri => ({ uri }))}
+              imageIndex={currentImageIndex}
+              visible={showImageViewer}
+              onRequestClose={() => setShowImageViewer(false)}
+              backgroundColor="black"
+              swipeToCloseEnabled
+              doubleTapToZoomEnabled
+          />
+          <LoadingModal title="Deleting Post..." visible={isDeleting} />
+        </BottomSheetScrollView>
+      </BottomSheetModal>
   );
 });
 
 const styles = StyleSheet.create({
-  saveButtonWrapper: {
-  flex: 2,
-  borderRadius: 8,
-  overflow: 'hidden',
-},
-saveButtonDisabled: {
-  // Change from backgroundColor to opacity only
-  opacity: 0.6,
-},
-  modalOverlay: {
+  container: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContainer: {
     backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: height * 0.9,
-    minHeight: height * 0.7,
+  },
+  bottomSheetBackground: {
+    backgroundColor: 'white',
+  },
+  handleIndicator: {
+    backgroundColor: '#9188E5',
+    width: 40,
+  },
+  saveButtonWrapper: {
+    flex: 2,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  saveButtonDisabled: {
+    opacity: 0.6,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
-    // HEADER BACKGROUND REMOVED - These lines were removed:
-    // borderBottomWidth: 1,
-    // borderBottomColor: '#e0e0e0',
-    // The header now has no border/background separation
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: '600',
     color: '#333',
   },
   headerSpacer: {
     width: 24,
   },
-  content: {
+  scrollContent: {
     flex: 1,
-    // MODAL CONTENT WIDTH ADJUSTMENT
-    // Original: padding: 16,
-    padding: 8, // Reduced padding for wider content area
+  },
+  scrollContentContainer: {
+    paddingHorizontal: 12,
+    paddingBottom: 20,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '600',
-    color: '#333',
+    color: '#000',
     marginBottom: 12,
     marginTop: 16,
+  },
+  petContainer:{
+    marginBottom: 20,
   },
   imagesContainer: {
     marginBottom: 20,
@@ -454,9 +437,11 @@ saveButtonDisabled: {
     shadowRadius: 2,
   },
   image: {
-    width: 100,  // Adjust width as needed
-    height: 100, // Adjust height as needed
+    width: 100,
+    height: 100,
     borderRadius: 8,
+    borderColor: '#9188E5',
+    borderWidth: 1,
   },
   // Keep your existing imageContainer style for the default image case
   imageContainer: {
@@ -512,15 +497,16 @@ saveButtonDisabled: {
     color: '#fff',
   },
   bottomPadding: {
-    height: 20,
+    height: 16,
   },
   actionButtons: {
     flexDirection: 'row',
-    padding: 16,
+    paddingVertical: 16,
     gap: 12,
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
     backgroundColor: '#fff',
+    marginTop: 8,
   },
   saveButton: {
     flex: 2,

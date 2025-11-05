@@ -1,10 +1,10 @@
 import React, { useContext, useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Modal } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
 import { Image } from 'expo-image';
-import LottieView from 'lottie-react-native';
+import LoadingModal from './LoadingModal';
 
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
-import { FontAwesome, Ionicons, MaterialIcons, Feather, FontAwesome5 } from '@expo/vector-icons';
+import { FontAwesome, Ionicons, MaterialIcons, Feather } from '@expo/vector-icons';
 import { useRouter, usePathname } from 'expo-router';
 
 import { UserContext } from '@/context/UserContext';
@@ -29,47 +29,54 @@ export default function CustomDrawer(props) {
     router.push('/PetModule/AddPet1');
   };
 
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    
-    try {
-      // Try to logout from server
-      await logout(user?.email);
-      
-      Toast.show({
-        type: 'success',
-        text1: 'Logged out successfully',
-        position: 'top',
-        visibilityTime: 2000,
-      });
+  const handleLogout = () => {
+    Alert.alert(
+        "Logout",
+        "Are you sure you want to logout?",
+        [
+            {
+                text: "Cancel",
+                style: "cancel"
+            },
+            {
+                text: "Logout",
+                style: "destructive",
+                onPress: async () => {
+                    setIsLoggingOut(true);
 
-    } catch (error) {
-      console.error('Logout error:', error);
-      
-      // Even if server logout fails, show info message
-      Toast.show({
-        type: 'info',
-        text1: 'Logged out locally',
-        text2: 'Unable to reach server, but you have been logged out',
-        position: 'top',
-        visibilityTime: 3000,
-      });
-    } finally {
-      // Always clear local storage and navigate to login, regardless of server response
-      try {
-        await clearAllTokens();
-      } catch (storageError) {
-        console.error('Error clearing storage:', storageError);
-      }
+                    try {
+                        // Try to logout from server
+                        await logout(user?.email);
 
-      setIsLoggingOut(false);
+                        Toast.show({
+                            type: 'success',
+                            text1: 'Logged out successfully',
+                            position: 'top',
+                            visibilityTime: 2000,
+                        });
 
-      if(router.canDismiss()) {
-        router.dismissAll();
-      }
-      router.replace('/RegisterModule/LoginScreen');
-    }
-  }
+                    } catch (error) {
+                        console.error('Logout error:', error);
+                    } finally {
+                        // Always clear local storage and navigate to login, regardless of server response
+                        try {
+                            await clearAllTokens();
+                        } catch (storageError) {
+                            console.error('Error clearing storage:', storageError);
+                        }
+
+                        setIsLoggingOut(false);
+
+                        if(router.canDismiss()) {
+                            router.dismissAll();
+                        }
+                        router.replace('/RegisterModule/LoginScreen');
+                    }
+                }
+            }
+        ]
+    );
+  };
 
   const closeAndNavigate = (path) => {
     props.navigation.closeDrawer();
@@ -105,7 +112,9 @@ export default function CustomDrawer(props) {
               />
             </View>
             <View style={styles.userInfoText}>
-              <Text style={styles.name}>{user?.name || 'Guest'}</Text>
+              <Text style={styles.name} numberOfLines={2} ellipsizeMode="tail">
+                {user?.name || user?.username || 'Unknown User'}
+              </Text>
               <Text style={styles.username}>@{user?.username || 'CreamOfSomeYoungGuy69'}</Text>
             </View>
             <View style={styles.profileArrow}>
@@ -208,35 +217,17 @@ export default function CustomDrawer(props) {
         <View>
           <DrawerItem label="Settings" icon={() => <Ionicons name="settings-outline" size={28} />} onPress = { () => { props.navigation.closeDrawer(); router.push('/Settings'); } } />
           <DrawerItem label="Help & Support" icon={() => <Ionicons name="help-circle-outline" size={28} />} onPress = { () => { props.navigation.closeDrawer(); router.push('/Help') } } />
-          <DrawerItem 
-            label="Log out" 
+          <DrawerItem
+            label="Log out"
             icon={() => <MaterialIcons name="logout" size={28} />} 
-            onPress={handleLogout} 
+            onPress={handleLogout}
           />
         </View>
-
-        {/* Logout Loading Modal */}
-        <Modal
-          visible={isLoggingOut}
-          transparent={true}
-          animationType="fade"
-          statusBarTranslucent={true}
-        >
-          <View style={styles.logoutModalOverlay}>
-            <View style={styles.logoutModalContent}>
-              <LottieView
-                source={require("@/assets/lottie/loading.json")}
-                autoPlay
-                loop
-                style={styles.logoutLottie}
-              />
-              <Text style={styles.logoutModalTitle}>Logging out...</Text>
-              <Text style={styles.logoutModalSubtitle}>
-                Please wait while we securely log you out
-              </Text>
-            </View>
-          </View>
-        </Modal>
+        <LoadingModal
+          title="Logging Out"
+          subtitle="Please wait while we securely log you out"
+          isVisible={isLoggingOut}
+        />
       </View>
     </DrawerContentScrollView>
   );
@@ -312,7 +303,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: '#F9FAFB',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
@@ -336,7 +327,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#F9FAFB',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -434,51 +425,5 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E0E0E0',
     borderBottomWidth: StyleSheet.hairlineWidth,
     marginVertical: 12,
-  },
-
-  // Logout Modal Styles
-  logoutModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  logoutModalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 30,
-    alignItems: 'center',
-    minWidth: 280,
-    maxWidth: 320,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-
-  logoutLottie: {
-    width: 80,
-    height: 80,
-    marginBottom: 20,
-  },
-
-  logoutModalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-
-  logoutModalSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 20,
   },
 })

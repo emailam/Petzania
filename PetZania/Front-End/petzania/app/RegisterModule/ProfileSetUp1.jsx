@@ -1,21 +1,21 @@
-import { StyleSheet, View, TouchableOpacity, Text, TextInput, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
-import { Image } from 'expo-image';
-import React, { useState, useContext } from 'react';
-import * as ImagePicker from 'expo-image-picker';
-import { AntDesign } from '@expo/vector-icons';
+import { StyleSheet, View, Text, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
+
+import React, { useState, useContext, useEffect } from 'react';
+
 import { useRouter } from 'expo-router';
 import Button from '@/components/Button';
+import ImageUploadInput from '@/components/ImageUploadInput';
 import { isValidPhoneNumber } from 'libphonenumber-js';
-import { useActionSheet } from '@expo/react-native-action-sheet';
 import ImageViewing from 'react-native-image-viewing';
 
 import { uploadFile } from '@/services/uploadService';
 import { updateUserData } from '@/services/userService';
 
 import { UserContext } from '@/context/UserContext';
+import CustomInput from '@/components/CustomInput';
+import { TextInput } from 'react-native-paper';
 
 const ProfileSetUp1 = () => {
-    const defaultImage = require('@/assets/images/Defaults/default-user.png');
     const router = useRouter();
 
     const { user, setUser } = useContext(UserContext);
@@ -24,43 +24,63 @@ const ProfileSetUp1 = () => {
     const [name, setName] = useState(user?.name || '');
     const [bio, setBio] = useState(user?.bio || '');
     const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || '');
-    const [error, setError] = useState('');
-    const [phoneError, setPhoneError] = useState('');
+    const [errors, setErrors] = useState({
+        name: '',
+        phoneNumber: '',
+        bio: ''
+    });
     const [showImageViewer, setShowImageViewer] = useState(false);
+    const [isFormComplete, setIsFormComplete] = useState(false);
+
+    const defaultImage = require('@/assets/images/Defaults/default-user.png');
 
     const [isLoading, setIsLoading] = useState(false);
-    const { showActionSheetWithOptions } = useActionSheet();
 
-    const pickImage = async () => {
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'],
-            aspect: [1, 1],
-            quality: 0.7,
-            allowsEditing: true,
-        });
-
-        if (!result.canceled) {
-            setImage(result.assets[0].uri);
-        }
+    // Helper function to set individual field errors (like RegisterForm)
+    const setError = (field, message) => {
+        setErrors(prev => ({
+            ...prev,
+            [field]: message
+        }));
     };
 
-    const deleteImage = () => {
-        setImage(null);
-        user.profilePictureURL = null;
-        setUser((prevUser) => ({ ...prevUser, profilePictureURL: null }));
+    // Clear individual field errors
+    const clearError = (field) => {
+        setErrors(prev => ({
+            ...prev,
+            [field]: ''
+        }));
     };
+
+    // Check if form is complete and valid (like RegisterForm)
+    useEffect(() => {
+        const nameValid = name && name.trim().length >= 2; // Name minimum 2 chars
+        const phoneValid = !phoneNumber || phoneNumber.length === 0 || isValidPhoneNumber(phoneNumber);
+        const bioValid = bio.length <= 255; // Bio within character limit
+
+        // Form is complete when name is valid and phone is valid (if provided)
+        const formValid = nameValid && phoneValid && bioValid && !errors.name && !errors.phoneNumber;
+
+        setIsFormComplete(formValid);
+    }, [name, phoneNumber, bio, errors]);
 
     const goToNextStep = async () => {
-        const isPhoneEmpty = phoneNumber.length === 0;
-        const isValid = isPhoneEmpty || isValidPhoneNumber(phoneNumber);
+        // Validate all fields before proceeding
+        let hasErrors = false;
 
+        // Validate name
         if (!name.trim()) {
-            setError('Full name is required!');
-            return;
+            setError('name', 'Full name is required');
+            hasErrors = true;
         }
 
-        if (!isValid) {
-            setPhoneError('Please enter a valid phone number including country code (e.g. +1)');
+        // Validate phone number if provided
+        if (phoneNumber && phoneNumber.length > 0 && !isValidPhoneNumber(phoneNumber)) {
+            setError('phoneNumber', 'Please enter a valid phone number including country code (e.g. +20)');
+            hasErrors = true;
+        }
+
+        if (hasErrors) {
             return;
         }
 
@@ -94,36 +114,12 @@ const ProfileSetUp1 = () => {
             const updatedUser = await updateUserData(user.userId, userData);
             setUser((prevUser) => ({ ...prevUser, ...updatedUser }));
             setError('');
-            setPhoneError('');
             router.push('/RegisterModule/ProfileSetUp2');
         } catch (err) {
             console.error('Error updating user profile:', err.message);
         } finally {
             setIsLoading(false);
         }
-    };
-
-    const handleImagePress = () => {
-        const options = [
-            ...(image ? ['View Profile Picture'] : []),
-            'Change Profile Picture',
-            ...(image ? ['Remove Profile Picture'] : []),
-            'Cancel',
-        ];
-        const cancelButtonIndex = options.length - 1;
-        const destructiveButtonIndex = image ? options.indexOf('Remove Profile Picture') : undefined;
-        showActionSheetWithOptions(
-            {
-                options,
-                cancelButtonIndex,
-                destructiveButtonIndex,
-            },
-            (buttonIndex) => {
-                if (image && buttonIndex === 0) setShowImageViewer(true);
-                else if ((image && buttonIndex === 1) || (!image && buttonIndex === 0)) pickImage();
-                else if (image && buttonIndex === options.indexOf('Remove Profile Picture')) deleteImage();
-            }
-        );
     };
 
     return (
@@ -133,14 +129,19 @@ const ProfileSetUp1 = () => {
         >
             <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
             <View style={styles.imageContainer}>
-                <TouchableOpacity onPress={handleImagePress} style={styles.imageWrapper}>
-                <Image source={image ? { uri: image } : defaultImage} style={styles.image} />
-                {image && (
-                    <TouchableOpacity onPress={deleteImage} style={styles.trashIcon}>
-                    <AntDesign name="delete" size={20} style={styles.icon} />
-                    </TouchableOpacity>
-                )}
-                </TouchableOpacity>
+                <ImageUploadInput
+                    defaultImage={defaultImage}
+                    onImageChange={(imageUri) => {
+                        if (imageUri) {
+                            setImage(imageUri);
+                        } else {
+                            setImage(null);
+                        }
+                    }}
+                    size={180}
+                    isUploading={isLoading}
+                    currentImage={image}
+                />
             </View>
 
             <ImageViewing
@@ -153,49 +154,72 @@ const ProfileSetUp1 = () => {
                 doubleTapToZoomEnabled
             />
             <View style={styles.inputContainer}>
-                <Text style={styles.label}>
-                    Full Name <Text style={{ color: 'red' }}>*</Text>
-                </Text>
-                <TextInput
-                    style={[styles.input, error ? styles.inputError : null]}
-                    placeholder="Tyler Gregory Okonma"
+                <Text style={styles.label}>Name <Text style={{ color: 'red' }}>*</Text> </Text>
+                <CustomInput
+                    style={[errors.name ? styles.inputError : null]}
+                    placeholder={"Tyler Gregory"}
                     placeholderTextColor="#999"
                     value={name}
+                    maxLength={50}
                     onChangeText={(text) => {
                         setName(text);
-                        setError('');
+                        clearError('name');
                     }}
+                    returnKeyType="next"
+                    mode="outlined"
+                    error={!!errors.name}
                 />
-                {error ? <Text style={styles.errorText}>{error}</Text> : null}
+                {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
 
                 <Text style={[styles.label, { marginTop: 12 }]}>Phone Number</Text>
-                <TextInput
-                    style={[styles.input, phoneError ? styles.inputError : null]}
-                    placeholder="+20 101 234 5678"
+                <CustomInput
+                    style={[errors.phoneNumber ? styles.inputError : null]}
+                    placeholder={"+201123456789"}
                     placeholderTextColor="#999"
                     keyboardType="phone-pad"
                     value={phoneNumber}
+                    maxLength={20}
                     onChangeText={(text) => {
                         setPhoneNumber(text);
-                        setPhoneError('');
+                        clearError('phoneNumber');
                     }}
+                    returnKeyType="next"
+                    mode="outlined"
+                    error={!!errors.phoneNumber}
                 />
-                {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
+                {errors.phoneNumber ? <Text style={styles.errorText}>{errors.phoneNumber}</Text> : null}
 
                 <Text style={[styles.label, { marginTop: 12 }]}>Bio</Text>
-                <TextInput
-                    style={[styles.input, styles.textArea]}
-                    placeholder="About"
+                <CustomInput
+                    style={[styles.bioInput, errors.bio ? styles.inputError : null]}
+                    placeholder={"Tell us about yourself"}
                     placeholderTextColor="#999"
                     multiline
+                    numberOfLines={4}
                     value={bio}
-                    onChangeText={setBio}
+                    maxLength={255}
+                    onChangeText={(text) => {
+                        setBio(text);
+                        clearError('bio');
+                    }}
+                    returnKeyType="done"
+                    mode="outlined"
+                    error={!!errors.bio}
+                    right={<TextInput.Affix text={`${bio.length}/255`} />}
                 />
+                {errors.bio ? <Text style={styles.errorText}>{errors.bio}</Text> : null}
             </View>
             </ScrollView>
 
             <View style={styles.buttonContainer}>
-                <Button title="Next" borderRadius={10} fontSize={16} onPress={goToNextStep} loading={isLoading}/>
+                <Button
+                    title="Next"
+                    borderRadius={10}
+                    fontSize={16}
+                    onPress={goToNextStep}
+                    loading={isLoading}
+                    disabled={!isFormComplete}
+                />
             </View>
         </KeyboardAvoidingView>
     );
@@ -215,6 +239,7 @@ const styles = StyleSheet.create({
     imageContainer: {
         justifyContent: 'center',
         alignItems: 'center',
+        paddingVertical: 20,
     },
     imageWrapper: {
         alignItems: 'center',
@@ -222,11 +247,54 @@ const styles = StyleSheet.create({
         position: 'relative',
     },
     image: {
-        width: 220,
-        height: 220,
-        borderRadius: 110,
+        width: 180,
+        height: 180,
+        borderRadius: 90,
         borderWidth: 2,
         borderColor: '#9188E5',
+    },
+    placeholderContainer: {
+        width: 180,
+        height: 180,
+        borderRadius: 90,
+        borderWidth: 2,
+        borderColor: '#9188E5',
+        borderStyle: 'dashed',
+        backgroundColor: '#F8F7FF',
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'relative',
+    },
+    placeholderImageArea: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    uploadText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#9188E5',
+        marginTop: 8,
+    },
+    uploadSubtext: {
+        fontSize: 12,
+        color: '#666',
+        marginTop: 4,
+    },
+    uploadIconContainer: {
+        position: 'absolute',
+        bottom: 10,
+        right: 10,
+        backgroundColor: '#9188E5',
+        borderRadius: 20,
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
     },
     trashIcon: {
         position: 'absolute',
@@ -243,32 +311,14 @@ const styles = StyleSheet.create({
     inputContainer: {
         paddingHorizontal: '5%',
         width: '100%',
-        alignItems: 'center',
         marginTop: 20,
     },
     label: {
         fontSize: 18,
         fontWeight: 'bold',
-        marginBottom: 10,
+        marginBottom: 6,
         color: '#333',
         alignSelf: 'flex-start',
-    },
-    input: {
-        width: '100%',
-        height: 50,
-        borderWidth: 1,
-        borderColor: '#9188E5',
-        borderRadius: 10,
-        paddingHorizontal: 15,
-        fontSize: 16,
-        backgroundColor: '#fff',
-    },
-    inputError: {
-        borderColor: 'red',
-    },
-    textArea: {
-        height: 100,
-        textAlignVertical: 'top',
     },
     errorText: {
         color: 'red',
@@ -282,18 +332,9 @@ const styles = StyleSheet.create({
         borderTopColor: '#e0e0e0',
         backgroundColor: '#f5f5f5',
     },
-    phoneContainer: {
-        width: '100%',
-        height: 50,
-        borderWidth: 1,
-        borderColor: '#9188E5',
-        borderRadius: 10,
-        overflow: 'hidden',
-    },
-    phoneTextContainer: {
-        paddingVertical: 0,
-        borderRadius: 10,
-        backgroundColor: '#fff',
+    bioInput: {
+        minHeight: 120, // Set minimum height for multiline
+        textAlignVertical: 'top', // Align text to top for multiline
     },
 });
 

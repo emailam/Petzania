@@ -1,9 +1,9 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text } from "react-native";
 
 import LottieView from "lottie-react-native";
 
-export default function Button({ title, onPress, disabled, loading, fontSize }) {
+export default function Button({ title, onPress, disabled, loading, fontSize = 16, ...props }) {
   const isDisabled = disabled || loading;
 
   const textStyle = React.useMemo(
@@ -14,7 +14,7 @@ export default function Button({ title, onPress, disabled, loading, fontSize }) 
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.button, isDisabled && styles.disabledButton]}
+      style={[styles.button, isDisabled && styles.disabledButton, props.style]}
       disabled={isDisabled}
     >
       {loading ? (

@@ -4,11 +4,45 @@ import { Image } from 'expo-image';
 import Foundation from '@expo/vector-icons/Foundation';
 import { useRouter } from "expo-router";
 
-export default function PetCard({ pet }) {
+export default function PetCard({ pet, marginHorizontal = 8, bottomSheetModalRef }) {
     const router = useRouter();
 
     const showPetInfo = (pet) => {
-        router.push({ pathname: `/PetModule/${pet.petId}` });
+        try {
+            // Validate required fields
+            if (!pet || !pet.petId) {
+                console.error('PetCard: Invalid pet data - missing petId');
+                return;
+            }
+            
+            // Create a clean copy of pet data without potential circular references
+            const cleanPetData = {
+                petId: pet.petId,
+                name: pet.name || '',
+                species: pet.species || '',
+                breed: pet.breed || '',
+                gender: pet.gender || '',
+                dateOfBirth: pet.dateOfBirth || null,
+                description: pet.description || '',
+                myPicturesURLs: Array.isArray(pet.myPicturesURLs) ? pet.myPicturesURLs : [],
+                userId: pet.userId || '',
+            };
+            
+
+            
+            const serializedData = JSON.stringify(cleanPetData);
+            
+            if(bottomSheetModalRef) bottomSheetModalRef.current?.dismiss();
+            router.push({
+                pathname: `/PetModule/${pet.petId}`,
+                params: { petData: serializedData }
+            });
+        } catch (error) {
+            console.error('PetCard: Error serializing pet data:', error);
+            console.error('PetCard: Pet object that caused error:', pet);
+            // Fallback: navigate without petData parameter
+            router.push(`/PetModule/${pet.petId}`);
+        }
     };
 
     const formatSpecies = (species) => {
@@ -22,7 +56,7 @@ export default function PetCard({ pet }) {
     };
 
     return (
-        <TouchableOpacity style={styles.container} onPress={() => {showPetInfo(pet)}} >
+        <TouchableOpacity style={[styles.container, { marginHorizontal: marginHorizontal }]} onPress={() => {showPetInfo(pet)}} >
             <View style={styles.leftContainer}>
                 <Image style={styles.imageContainer} source={pet?.myPicturesURLs?.length ? { uri: pet.myPicturesURLs[0] } : require('@/assets/images/AddPet/Pet Default Pic.png')}  />
                 <View>
@@ -46,11 +80,13 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
+        borderColor: "#9188E5",
+        borderWidth: 0.25,
         borderRadius: 10,
         backgroundColor: "#fff",
-        elevation: 5,
-        margin: 10,
-        padding: 10,
+        elevation: 2,
+        marginVertical: 8,
+        padding: 8,
     },
     leftContainer: {
         flexDirection: "row",

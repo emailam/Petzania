@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
+import EmptyState from "@/components/EmptyState";
 import {
     View,
     Text,
@@ -229,7 +230,7 @@ export default function ChatIndex() {
     // Update unread indicator helper
     const updateUnreadIndicator = async (chatId, hasUnread) => {
         console.log(`🔄 updateUnreadIndicator called for chat ${chatId} with hasUnread: ${hasUnread}`);
-        
+
         try {
             const userChat = userChats.get(chatId);
             if (!userChat) {
@@ -242,7 +243,7 @@ export default function ChatIndex() {
                 source: 'real-time message',
                 currentUserChatUnread: userChat.unread || 0
             });
-            
+
             // Update ChatContext immediately for real-time UI updates
             console.log(`📊 Setting ChatContext indicator for chat ${chatId} to: ${hasUnread}`);
             setChatUnreadIndicator(chatId, hasUnread);
@@ -476,7 +477,7 @@ export default function ChatIndex() {
         
         const userChat = userChats.get(chat.chatId);
         const isPinned = userChat?.pinned || false;
-        const otherUserName = chat.otherUser?.name || 'Unknown User';
+        const otherUserName = chat.otherUser?.name || chat.otherUser?.username;
 
         Alert.alert(
             isPinned ? 'Unpin Chat' : 'Pin Chat',
@@ -657,7 +658,7 @@ export default function ChatIndex() {
                                 />
                             )}
                             <Text style={styles.userName} numberOfLines={1}>
-                                {otherUser?.name || 'Unknown User'}
+                                {otherUser?.name || otherUser?.username || 'Unknown User'}
                             </Text>
                         </View>
                         <Text style={styles.timestamp}>
@@ -723,11 +724,11 @@ export default function ChatIndex() {
 
     const renderEmptyState = () => (
         <View style={styles.emptyContainer}>
-            <Ionicons name="chatbubbles-outline" size={60} color="#ccc" />
-            <Text style={styles.emptyTitle}>No Conversations Yet</Text>
-            <Text style={styles.emptySubtitle}>
-                Start a conversation by visiting someone's profile and tapping Message
-            </Text>
+            <EmptyState
+                iconName="chatbubbles-outline"
+                title="No Conversations Yet"
+                subtitle="Start a conversation by visiting someone's profile and tapping Message"
+            />
         </View>
     );
 
@@ -897,25 +898,7 @@ const styles = StyleSheet.create({
         marginLeft: 78,
     },
     emptyContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 40,
-        paddingTop: 100,
-    },
-    emptyTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#999',
-        marginTop: 16,
-        textAlign: 'center',
-    },
-    emptySubtitle: {
-        fontSize: 14,
-        color: '#999',
-        marginTop: 8,
-        textAlign: 'center',
-        lineHeight: 20,
+        paddingVertical: 12
     },
     footerLoading: {
         flexDirection: 'row',

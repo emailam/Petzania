@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert} from 'react-native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { useActionSheet } from '@expo/react-native-action-sheet';
+
+import BottomSheet from '@/components/BottomSheet';
 import ImageViewing from 'react-native-image-viewing';
 import LottieView from 'lottie-react-native';
 import UserPosts from '@/components/AdoptionBreedingModule/UserPosts';
+import PetCard from '@/components/PetCard';
 
 import { UserContext } from '@/context/UserContext';
 
@@ -38,7 +40,9 @@ export default function UserProfile() {
     const { userid } = useLocalSearchParams();
     const router = useRouter();
     const { user: currentUser } = useContext(UserContext);
-    const { showActionSheetWithOptions } = useActionSheet();
+
+    const bottomSheetRef = useRef(null);
+    const respondBottomSheetRef = useRef(null);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [friendshipStatus, setFriendshipStatus] = useState('none');
@@ -204,7 +208,8 @@ export default function UserProfile() {
             if (friendshipStatus === 'none') {
                 // Send friend request
                 const response = await sendFriendRequest(userid);
-                setFriendshipStatus('pending');
+                handleFollowUser(); // Auto-follow when sending request
+                setFriendshipStatus('pending');``
                 setFriendRequestId(response.id);
 
                 Toast.show({
@@ -212,7 +217,8 @@ export default function UserProfile() {
                     text1: 'Friend Request Sent',
                     text2: `Friend request sent to ${user?.name || 'user'}`,
                     position: 'top',
-                    visibilityTime: 3000,                });
+                    visibilityTime: 3000,
+                  });
             } else if (friendshipStatus === 'friends') {
                 // Remove friend
                 Alert.alert(
@@ -308,33 +314,9 @@ export default function UserProfile() {
         }
       };
 
-    const handleRespondToRequest = () => {
-        const options = ['Accept', 'Decline', 'Cancel'];
-        const cancelButtonIndex = 2;
-        const destructiveButtonIndex = 1;
-
-        showActionSheetWithOptions(
-            {
-                options,
-                cancelButtonIndex,
-                destructiveButtonIndex,
-                title: `Respond to ${user?.name || 'User'}'s friend request`,
-                message: 'What would you like to do?',
-            },
-            async (buttonIndex) => {
-                switch (buttonIndex) {
-                    case 0:
-                        // Accept
-                        await handleAcceptRequest();
-                        break;
-                    case 1:
-                        // Decline
-                        await handleDeclineRequest();
-                        break;
-                }
-            }
-        );
-    };
+    const handleRespondToRequest = useCallback(() => {
+        respondBottomSheetRef.current?.present();
+    }, []);
 
     const handleAcceptRequest = async () => {
         if (actionLoading) return;
@@ -445,51 +427,9 @@ export default function UserProfile() {
         }
     };
 
-    const handleMoreOptions = () => {
-        // Build options array based on block status
-        const options = [];
-
-        // Only show follow/unfollow if user is not blocked
-        if (!isBlocked) {
-            options.push(isFollowingUser ? 'Unfollow User' : 'Follow User');
-        }
-
-        // Show Block/Unblock based on current status
-        options.push(isBlocked ? 'Unblock User' : 'Block User');
-        options.push('Cancel');
-
-        const cancelButtonIndex = options.length - 1;
-        const destructiveButtonIndex = options.length - 2;
-
-        showActionSheetWithOptions(
-            {
-              options,
-              cancelButtonIndex,
-              destructiveButtonIndex,
-              title: 'More Options',
-            },
-            (buttonIndex) => {
-                if (isBlocked) {
-                    // When user is blocked, only block/unblock option is available
-                    switch (buttonIndex) {
-                        case 0:
-                            handleUnblockUser();
-                            break;
-                    }
-                } else {
-                    // When user is not blocked, both follow and block options are available
-                    switch (buttonIndex) {
-                        case 0:
-                            handleFollowUser();
-                            break;
-                        case 1:
-                            handleBlockUser();
-                            break;
-                    }
-                }
-            }
-        );
-    };
+    const handleMoreOptions = useCallback(() => {
+        bottomSheetRef.current?.present();
+    }, []);
 
     const handleFollowUser = async () => {
         try {
@@ -634,7 +574,7 @@ export default function UserProfile() {
             case 'pending':
                 return {
                     icon: 'hourglass',
-                    text: 'Pending',
+                    text: 'Requested',
                     style: styles.pendingButton,
                     textStyle: styles.pendingButtonText,
                 };
@@ -721,7 +661,7 @@ export default function UserProfile() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.headerContainer}>
-        <View style={{ flexDirection: 'row', alignItems: 'center'}}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
           <TouchableOpacity
             style={styles.profileImageContainer}
             onPress={handleImagePress}
@@ -744,7 +684,9 @@ export default function UserProfile() {
           </TouchableOpacity>
 
           <View style={styles.userInfoContainer}>
-            <Text style={styles.name}>{user?.name || 'Unknown User'}</Text>
+            <Text style={styles.name} numberOfLines={2} ellipsizeMode="tail">
+              {user?.name || user?.username || 'Unknown User'}
+            </Text>
           </View>
         </View>
 
@@ -929,56 +871,123 @@ export default function UserProfile() {
 
       {/* Tab Content */}
       {activeTab === 'posts' && (
-        <View style={styles.tabContent}>
+        <View style = {styles.tabSection}>
           <UserPosts userId={userid} />
         </View>
       )}
 
       {activeTab === 'pets' && (
-        <View style={styles.tabContent}>
-          {/* Pets Section */}
-          <View style={styles.petsSection}>
-            {user?.myPets && user?.myPets.length > 0 ? (
-              <View style={styles.petsGrid}>
-                {user?.myPets.map((pet) => (
-                  <TouchableOpacity
-                    key={pet.petId}
-                    style={styles.petGridCard}
-                    onPress={() => { router.push(`/PetModule/${pet.petId}`)}}
-                  >
-                    {pet.myPicturesURLs && pet.myPicturesURLs.length > 0 ? (
-                      <Image
-                        source={{ uri: pet.myPicturesURLs[0] }}
-                        style={styles.petGridImage}
-                      />
-                    ) : (
-                      <View style={styles.defaultPetGridImage}>
-                        <MaterialIcons name="pets" size={30} color="#9188E5" />
-                      </View>
-                    )}
-                    <View style={styles.petGridInfo}>
-                      <Text style={styles.petGridName} numberOfLines={1}>
-                        {pet.name}
-                      </Text>
-                      <Text style={styles.petGridType} numberOfLines={1}>
-                        {pet.type || 'Pet'}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            ) : (
-              <View style={styles.noContentContainer}>
-                <MaterialIcons name="pets" size={40} color="#ccc" />
-                <Text style={styles.noContentText}>No pets yet</Text>
-                <Text style={styles.noContentSubText}>
-                  {isOwnProfile ? "Add your first pet!" : `${user?.name || 'User'} hasn't added any pets yet`}
-                </Text>
-              </View>
-            )}
+        <View style={styles.tabSection}>
+          {user?.myPets && user?.myPets.length > 0 ? (
+            user.myPets.map((pet) => (
+              <PetCard
+                key={pet.petId}
+                pet={pet}
+                marginHorizontal={0}
+              />
+            ))
+          ) : (
+            <View style={styles.noContentContainer}>
+              <MaterialIcons name="pets" size={64} color="#999" />
+              <Text style={styles.noContentText}>No pets yet</Text>
+              <Text style={styles.noContentSubText}>
+                {isOwnProfile ? "Add your first pet!" : `${user?.name || 'User'} hasn't added any pets yet`}
+              </Text>
             </View>
-        </View>
+          )}
+          </View>
       )}
+
+      {/* More Options Bottom Sheet */}
+      <BottomSheet
+        ref={bottomSheetRef}
+        snapPoints={['30%']}
+      >
+        <View style={styles.bottomSheetHeader}>
+          <Text style={styles.bottomSheetTitle}>More Options</Text>
+        </View>
+        {/* Follow/Unfollow Option - Only show if not blocked */}
+        {!isBlocked && (
+          <TouchableOpacity
+            style={styles.bottomSheetAction}
+            onPress={() => {
+              bottomSheetRef.current?.close();
+              handleFollowUser();
+            }}
+          >
+            <View style={styles.actionIconContainer}>
+              <Ionicons
+                name={isFollowingUser ? "person-remove" : "person-add"} 
+                size={20}
+                color="#333"
+              />
+            </View>
+            <Text style={styles.actionText}>
+              {isFollowingUser ? 'Unfollow User' : 'Follow User'}
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Block/Unblock Option */}
+        <TouchableOpacity
+          style={[styles.bottomSheetAction, styles.destructiveOption]}
+          onPress={() => {
+            bottomSheetRef.current?.close();
+            isBlocked ? handleUnblockUser() : handleBlockUser();
+          }}
+        >
+          <View style={styles.actionIconContainer}>
+            <Ionicons 
+              name={isBlocked ? "shield-checkmark" : "shield"} 
+              size={20} 
+              color="#f44336" 
+            />
+          </View>
+          <Text style={[styles.actionText, styles.destructiveText]}>
+            {isBlocked ? 'Unblock User' : 'Block User'}
+          </Text>
+        </TouchableOpacity>
+      </BottomSheet>
+
+      {/* Friend Request Response Bottom Sheet */}
+      <BottomSheet
+        ref={respondBottomSheetRef}
+        snapPoints={['35%']}
+      >
+        <View style={styles.bottomSheetHeader}>
+          <Text style={styles.bottomSheetTitle}>Friend Request</Text>
+        </View>
+
+        <TouchableOpacity
+          style={styles.bottomSheetAction}
+          onPress={() => {
+            respondBottomSheetRef.current?.close();
+            handleAcceptRequest();
+          }}
+        >
+          <View style={[styles.actionIconContainer, { backgroundColor: '#e8f5e9' }]}>
+            <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
+          </View>
+          <Text style={[styles.actionText, { color: '#4CAF50' }]}>
+            Accept Friend Request
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.bottomSheetAction, styles.destructiveOption]}
+          onPress={() => {
+            respondBottomSheetRef.current?.close();
+            handleDeclineRequest();
+          }}
+        >
+          <View style={[styles.actionIconContainer, { backgroundColor: '#ffebee' }]}>
+            <Ionicons name="close-circle" size={24} color="#f44336" />
+          </View>
+          <Text style={[styles.actionText, styles.destructiveText]}>
+            Decline Friend Request
+          </Text>
+        </TouchableOpacity>
+      </BottomSheet>
 
       <ImageViewing
         images={[{ uri: user?.profilePictureURL || '' }]}
@@ -996,8 +1005,9 @@ export default function UserProfile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-  },  lottie: {
+    backgroundColor: '#F9FAFB',
+  },
+  lottie: {
     width: 80,
     height: 80,
   },
@@ -1051,7 +1061,7 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     padding: 20,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#fff',
   },
   profileImageContainer: {
     marginBottom: 16,
@@ -1060,7 +1070,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#9188E5',
   },
   defaultProfileImage: {
@@ -1068,7 +1078,7 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     backgroundColor: '#f0f0f0',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#9188E5',
     justifyContent: 'center',
     alignItems: 'center',
@@ -1080,12 +1090,15 @@ const styles = StyleSheet.create({
   },
   userInfoContainer: {
     marginLeft: 16,
+    flex: 1,
+    paddingRight: 16,
   },
   name: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 4,
+    flexWrap: 'wrap',
   },
   actionButtonsContainer: {
     flexDirection: 'row',
@@ -1100,6 +1113,7 @@ const styles = StyleSheet.create({
     gap: 6,
     flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   // Friend Button States
   addFriendButton: {
@@ -1270,6 +1284,7 @@ const styles = StyleSheet.create({
   },
   bioContainer: {
     padding: 20,
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
@@ -1312,33 +1327,15 @@ const styles = StyleSheet.create({
   activeTabText: {
     color: '#9188E5',
   },
-  tabContent: {
-    flex: 1,
-  },
   // Updated Pets Section Styles
-  petsSection: {
-    padding: 16,
-  },
-  petsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  petGridCard: {
-    width: '48%',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
-    padding: 12,
-    marginBottom: 16,
-    alignItems: 'center',
+  tabSection: {
+    marginHorizontal: 8,
   },
   petGridImage: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#9188E5',
     marginBottom: 8,
   },
@@ -1347,7 +1344,7 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     backgroundColor: '#f0f0f0',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#9188E5',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1390,14 +1387,13 @@ const styles = StyleSheet.create({
   },
   petCard: {
     alignItems: 'center',
-    marginRight: 16,
     width: 80,
   },
   petImage: {
     width: 70,
     height: 70,
     borderRadius: 35,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#9188E5',
     marginBottom: 8,
   },
@@ -1406,7 +1402,7 @@ const styles = StyleSheet.create({
     height: 70,
     borderRadius: 35,
     backgroundColor: '#f0f0f0',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#9188E5',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1425,5 +1421,48 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 16,
     color: '#999',
+  },
+  // Bottom Sheet Styles
+  bottomSheetContent: {
+    padding: 20,
+    paddingBottom: 30,
+  },
+  bottomSheetHeader: {
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    marginBottom: 8,
+  },
+  bottomSheetTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+  },
+  bottomSheetActions: {
+    flex: 1,
+  },
+  bottomSheetAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  actionIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  actionText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+  },
+  destructiveText: {
+    color: '#f44336',
   },
 });

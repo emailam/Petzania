@@ -59,8 +59,7 @@
         "android.permission.ACCESS_WIFI_STATE"
       ],
       "package": "com.alivetube.petzania",
-      "versionCode": 1,
-      "usesCleartextTraffic": true
+      "versionCode": 1
     },
     "web": {
       "bundler": "metro",
@@ -87,7 +86,8 @@
       "expo-secure-store",
       "expo-font",
       "expo-web-browser",
-      "./plugins/with-network-security-config.js"
+      "./plugins/with-network-security-config.js",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true

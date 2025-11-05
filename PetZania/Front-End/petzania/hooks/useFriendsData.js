@@ -1,5 +1,4 @@
-import { useEffect, useContext } from 'react';
-import { UserContext } from '../context/UserContext';
+import { useEffect } from 'react';
 import * as friendsService from '../services/friendsService';
 
 // Custom hook to load initial friends data
@@ -21,12 +20,10 @@ export const useFriendsData = (userId) => {
                 friendsCountData,
                 followersCountData,
                 followingCountData,
-                blockedCountData
             ] = await Promise.all([
                 friendsService.getNumberOfFriendsByUserId(userId).catch(() => 0),
                 friendsService.getNumberOfFollowersByUserId(userId).catch(() => 0),
                 friendsService.getNumberOfFollowingByUserId(userId).catch(() => 0),
-                friendsService.getNumberOfBlockedUsers().catch(() => 0)
             ]);
 
             // Return the counts instead of setting them in global state
@@ -34,7 +31,6 @@ export const useFriendsData = (userId) => {
                 friendsCount: friendsCountData || 0,
                 followersCount: followersCountData || 0,
                 followingCount: followingCountData || 0,
-                blockedCount: blockedCountData || 0
             };
 
         } catch (error) {
@@ -44,7 +40,6 @@ export const useFriendsData = (userId) => {
                 friendsCount: 0,
                 followersCount: 0,
                 followingCount: 0,
-                blockedCount: 0
             };
         }
     };
