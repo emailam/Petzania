@@ -15,7 +15,8 @@ import PostCard from './PostCard';
 import FilterModal from '@/components/AdoptionBreedingModule/FilterModal';
 import SortModal from '@/components/AdoptionBreedingModule/SortModal';
 import EmptyState from '@/components/EmptyState';
-import LottieView from 'lottie-react-native';
+import LoadingIndicator from '@/components/LoadingIndicator';
+
 import {
   useFetchPosts,
   useToggleLike,
@@ -137,26 +138,13 @@ export default function PostScreen({ postType }) {
   }, [handlePostLike, handleGetUserById]);
 
   // CHANGED BUTTON: solid purple, white text/icon
-  const renderFooter = useCallback(() => {
-    if (!hasNextPage) return null;
-    return (
-      <TouchableOpacity
-        onPress={fetchNextPage}
-        style={styles.loadMoreButton}
-        disabled={isFetchingNextPage}
-        activeOpacity={0.8}
-      >
-        {isFetchingNextPage ? (
-          <ActivityIndicator size="small" color="#FFFFFF" />
-        ) : (
-          <>
-            <Text style={styles.loadMoreText}>Load More</Text>
-            <Ionicons name="chevron-down" size={20} color="#FFFFFF" />
-          </>
-        )}
-      </TouchableOpacity>
-    );
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  // Infinite scroll: fetch next page when end reached
+  const handleEndReached = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const renderEmpty = useCallback(() => {
     const emptyConfig = {
@@ -230,14 +218,8 @@ export default function PostScreen({ postType }) {
   // Loading state
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <LottieView
-          source={require("@/assets/lottie/loading.json")}
-          autoPlay
-          loop
-          style={styles.lottie}
-        />
-        <Text style={styles.loadingText}>Loading {title}...</Text>
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <LoadingIndicator text="Loading notifications..." />
       </View>
     );
   }
@@ -267,6 +249,7 @@ export default function PostScreen({ postType }) {
       <FlatList
         data={postsWithPlaceholder}
         numColumns={2}
+        
         renderItem={renderPost}
         ListHeaderComponent={
           <>
@@ -279,7 +262,13 @@ export default function PostScreen({ postType }) {
           styles.listContent,
           posts.length === 0 && styles.listContentEmpty
         ]}
-        ListFooterComponent={renderFooter}
+        ListFooterComponent={isFetchingNextPage ? (
+          <View style={{ padding: 16, alignItems: 'center' }}>
+            <ActivityIndicator size="small" color="#9188E5" />
+          </View>
+        ) : null}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.1}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

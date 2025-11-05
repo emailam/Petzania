@@ -254,7 +254,7 @@ const PostDetailsModal = memo(({
                         <Image
                           source={{ uri: imageUrl }}
                           style={styles.petImage}
-                          resizeMode="cover"
+                          contentFit="cover"
                         />
                       </TouchableOpacity>
                     ))}
@@ -269,7 +269,7 @@ const PostDetailsModal = memo(({
                   <Image
                     source={require('@/assets/images/Defaults/default-pet.png')}
                     style={styles.petImage}
-                    resizeMode="cover"
+                    contentFit="cover"
                   />
                 </TouchableOpacity>
               )}
@@ -283,7 +283,7 @@ const PostDetailsModal = memo(({
                     <Image
                       source={{ uri: images[0] }}
                       style={styles.ownerAvatar}
-                      resizeMode="cover"
+                      contentFit="cover"
                     />
                     <Text style={styles.petName}>{petData?.name || 'Unknown Pet'}</Text>
                   </TouchableOpacity>

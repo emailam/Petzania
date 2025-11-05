@@ -115,12 +115,16 @@ const FilterModal = memo(({ visible, onClose, onApply, initialFilters = {} }) =>
 
   // Clear all filters
   const handleClearAll = useCallback(() => {
-    setFilters({
+    const newFilters = {
       species: 'ALL',
       breed: 'ALL',
       minAge: 0,
       maxAge: 1000,
-    });
+    };
+    setFilters(newFilters);
+
+    onApply(newFilters);
+    bottomSheetModalRef.current?.dismiss();
   }, []);
 
   // Cancel and close

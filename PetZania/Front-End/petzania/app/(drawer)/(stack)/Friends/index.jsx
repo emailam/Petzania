@@ -1,6 +1,6 @@
-import { StyleSheet, Text, View, ActivityIndicator } from 'react-native'
+import { StyleSheet, Text, View, ActivityIndicator, RefreshControl } from 'react-native'
 import LottieView from 'lottie-react-native'
-import React, { useContext, useCallback } from 'react'
+import React, { useContext, useCallback, useState} from 'react'
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getFriendsByUserId } from '@/services/friendsService';
 import { getUserProfilePicture } from '@/services/userService';
@@ -10,6 +10,7 @@ import EmptyState from '@/components/EmptyState';
 
 export default function FriendsScreen() {
   const { user } = useContext(UserContext);
+  const [refreshing, setRefreshing] = useState(false);
 
   const {
     data,
@@ -19,6 +20,7 @@ export default function FriendsScreen() {
     isFetchingNextPage,
     isLoading,
     isError,
+    refetch
   } = useInfiniteQuery({
     queryKey: ['friends', user?.userId],
     queryFn: async ({ pageParam = 0 }) => {
@@ -93,6 +95,13 @@ export default function FriendsScreen() {
     );
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
+
+
   if (isLoading) {
     return (
       <View style={styles.centered}>
@@ -126,6 +135,14 @@ export default function FriendsScreen() {
         onEndReachedThreshold={0.1}
         contentContainerStyle={{ padding: 12 }}
         itemStyle={styles.friendItem}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#9188E5']}
+            tintColor="#9188E5"
+          />
+        }
       />
     </View>
   );

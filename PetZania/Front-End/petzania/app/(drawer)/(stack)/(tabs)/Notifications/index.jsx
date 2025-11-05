@@ -12,33 +12,34 @@ import { useNotifications } from '@/context/NotificationContext'
 import { getUserById } from '@/services/userService';
 import EmptyState from '@/components/EmptyState';
 import BottomSheet from '@/components/BottomSheet';
+import { useInfiniteQuery } from '@tanstack/react-query';
+
+import LoadingIndicator from '@/components/LoadingIndicator';
 
 export default function index() {
     const defaultImage = require('@/assets/images/Defaults/default-user.png');
     const router = useRouter();
-    const { decrementUnreadCount, resetUnreadCount, recentNotifications } = useNotifications();
+    const { decrementUnreadCount, resetUnreadCount } = useNotifications();
 
-    const [notifications, setNotifications] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [refreshing, setRefreshing] = useState(false);
-    const [error, setError] = useState(null);
-    const [page, setPage] = useState(0);
-    const [hasMore, setHasMore] = useState(true);
     const [selectedNotification, setSelectedNotification] = useState(null);
 
     // Bottom sheet ref
     const bottomSheetRef = useRef(null);
 
-    const fetchNotifications = async (pageNum = 0, isRefresh = false) => {
-        try {
-            if (isRefresh) {
-                setRefreshing(true);
-            } else {
-                setLoading(true);
-            }
-            setError(null);
-
-            const response = await getAllNotifications(pageNum, 10);
+    // useInfiniteQuery for notifications
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading,
+        isError,
+        error: fetchError,
+        refetch,
+    } = useInfiniteQuery({
+        queryKey: ['notifications'],
+        queryFn: async ({ pageParam = 0 }) => {
+            const response = await getAllNotifications(pageParam, 10);
 
             if (response && response?.content) {
                 // Collect user IDs we need to fetch
@@ -46,12 +47,10 @@ export default function index() {
 
                 response.content.forEach(notification => {
                     if (notification.type === 'FRIEND_REQUEST_ACCEPTED') {
-                        // For friend request accepted, we want the accepter's info (recipientId)
                         if (notification.recipientId) {
                             userIdsToFetch.add(notification.recipientId);
                         }
                     } else {
-                        // For other notifications, use initiatorId
                         if (notification.initiatorId) {
                             userIdsToFetch.add(notification.initiatorId);
                         }
@@ -70,11 +69,9 @@ export default function index() {
                     let senderUser;
 
                     if (notification.type === 'FRIEND_REQUEST_ACCEPTED') {
-                        // Show the person who accepted the request (recipientId)
                         relevantUserId = notification.recipientId;
                         senderUser = relevantUserId ? userMap[relevantUserId] : null;
                     } else {
-                        // For other notifications, show the sender
                         relevantUserId = notification.initiatorId;
                         senderUser = relevantUserId ? userMap[relevantUserId] : null;
                     }
@@ -93,28 +90,27 @@ export default function index() {
                     };
                 });
 
-                if (isRefresh || pageNum === 0) {
-                    setNotifications(formattedNotifications);
-                } else {
-                    setNotifications(prev => [...prev, ...formattedNotifications]);
-                }
-
-                setHasMore(response.content.length === 10);
-                setPage(pageNum);
-            } else {
-                if (isRefresh || pageNum === 0) {
-                    setNotifications([]);
-                }
-                setHasMore(false);
+                return {
+                    content: formattedNotifications,
+                    currentPage: pageParam,
+                    hasMore: response.content.length === 10,
+                };
             }
-        } catch (error) {
-            console.error('Error fetching notifications:', error);
-            setError('Failed to load notifications');
-        } finally {
-            setLoading(false);
-            setRefreshing(false);
-        }
-    };
+
+            return {
+                content: [],
+                currentPage: pageParam,
+                hasMore: false,
+            };
+        },
+        getNextPageParam: (lastPage) => {
+            return lastPage.hasMore ? lastPage.currentPage + 1 : undefined;
+        },
+        staleTime: 30000, // 30 seconds
+    });
+
+    // Flatten all notifications from pages
+    const notifications = data?.pages?.flatMap(page => page.content) || [];
 
     const getNotificationTitle = (type) => {
         switch (type) {
@@ -153,74 +149,25 @@ export default function index() {
         }
     };
 
+    // Handle refresh
+    const onRefresh = useCallback(async () => {
+        await refetch();
+    }, [refetch]);
 
-    useEffect(() => {
-        fetchNotifications(0, false);
-    }, []);
-
-    // Listen for real-time notifications and prepend to the list
-    useEffect(() => {
-        if (!recentNotifications || recentNotifications.length === 0) return;
-        // Only handle the most recent notification
-        const newNotification = recentNotifications[0];
-        if (!newNotification) return;
-        // Prevent duplicates
-        if (notifications.some(n => n.id === newNotification.notificationId)) return;
-        (async () => {
-            let senderUser = null;
-            let relevantUserId;
-
-            if (newNotification.type === 'FRIEND_REQUEST_ACCEPTED') {
-                // For friend request accepted, get the accepter's info (recipientId)
-                relevantUserId = newNotification.recipientId;
-            } else {
-                // For other notifications, get the sender's info
-                relevantUserId = newNotification.initiatorId;
-            }
-
-            if (relevantUserId) {
-                try {
-                    senderUser = await getUserById(relevantUserId);
-                } catch (e) {
-                    senderUser = null;
-                }
-            }
-            const formatted = {
-                id: newNotification.notificationId,
-                type: newNotification.type,
-                title: getNotificationTitle(newNotification.type),
-                message: newNotification.message,
-                avatar: senderUser?.profilePictureURL || null,
-                time: formatTime(newNotification.createdAt),
-                isRead: newNotification.status === 'READ',
-                actionable: newNotification.type === 'FRIEND_REQUEST_RECEIVED' && newNotification.status === 'UNREAD',
-                requestId: newNotification.entityId,
-                senderData: senderUser,
-            };
-            setNotifications(prev => [formatted, ...prev]);
-        })();
-    }, [recentNotifications]);
-
-    const onRefresh = useCallback(() => {
-        fetchNotifications(0, true);
-    }, []);
-
-    const loadMore = () => {
-        if (!loading && hasMore) {
-            fetchNotifications(page + 1, false);
+    // Handle load more
+    const loadMore = useCallback(() => {
+        if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
         }
-    };
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
     const markAsRead = async (notification) => {
         if (notification.isRead) return;
 
         try {
             await markNotificationAsRead(notification.id);
-            setNotifications(prev =>
-                prev.map(n =>
-                    n.id === notification.id ? { ...n, isRead: true } : n
-                )
-            );
+            // Optimistically update the cache
+            refetch();
             decrementUnreadCount(1);
         } catch (error) {
             console.error('Error marking notification as read:', error);
@@ -238,7 +185,7 @@ export default function index() {
                     onPress: async () => {
                         try {
                             await markAllNotificationsAsRead();
-                            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+                            refetch();
                             resetUnreadCount();
                         } catch (error) {
                             console.error('Error marking all notifications as read:', error);
@@ -260,11 +207,7 @@ export default function index() {
 
         try {
             await markNotificationAsRead(selectedNotification.id);
-            setNotifications(prev =>
-                prev.map(n =>
-                    n.id === selectedNotification.id ? { ...n, isRead: true } : n
-                )
-            );
+            refetch();
             decrementUnreadCount(1);
             bottomSheetRef.current?.dismiss();
             setSelectedNotification(null);
@@ -288,9 +231,7 @@ export default function index() {
                     onPress: async () => {
                         try {
                             await deleteNotification(selectedNotification.id);
-                            setNotifications(prev =>
-                                prev.filter(n => n.id !== selectedNotification.id)
-                            );
+                            refetch();
                             if (!selectedNotification.isRead) {
                                 decrementUnreadCount(1);
                             }
@@ -317,17 +258,8 @@ export default function index() {
                     onPress: async () => {
                         try {
                             await acceptFriendRequest(notification.requestId);
-
-                            // Mark notification as read and remove actionable state
                             await markNotificationAsRead(notification.id);
-                            setNotifications(prev =>
-                                prev.map(n => 
-                                    n.id === notification.id 
-                                        ? { ...n, isRead: true, actionable: false, title: 'Friend Accepted', message: `You and ${notification.senderData?.username || 'this user'} are now friends!` }
-                                        : n
-                                )
-                            );
-
+                            refetch();
                             Alert.alert('Success', 'Friend request accepted!');
                         } catch (error) {
                             console.error('Error accepting friend request:', error);
@@ -351,14 +283,8 @@ export default function index() {
                     onPress: async () => {
                         try {
                             await cancelFriendRequest(notification.requestId);
-
                             await markNotificationAsRead(notification.id);
-
-                            // Remove the notification entirely for rejected requests
-                            setNotifications(prev => 
-                                prev.filter(n => n.id !== notification.id)
-                            );
-
+                            refetch();
                             Alert.alert('Rejected', 'Friend request rejected');
                         } catch (error) {
                             console.error('Error rejecting friend request:', error);
@@ -420,6 +346,15 @@ export default function index() {
 
     const localUnreadCount = notifications.filter(n => !n.isRead).length;
 
+    // Show loading state
+    if (isLoading) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <LoadingIndicator text="Loading notifications..." />
+            </View>
+        );
+    }
+
     return (
         <View style={styles.container}>
             <ScrollView
@@ -427,7 +362,7 @@ export default function index() {
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl
-                        refreshing={refreshing}
+                        refreshing={false}
                         onRefresh={onRefresh}
                         colors={['#9188E5']}
                         tintColor="#9188E5"
@@ -464,10 +399,10 @@ export default function index() {
                 )}
 
                 {/* Error message */}
-                {error && (
+                {isError && (
                     <View style={styles.errorContainer}>
-                        <Text style={styles.errorText}>{error}</Text>
-                        <TouchableOpacity onPress={() => fetchNotifications(0, true)} style={styles.retryButton}>
+                        <Text style={styles.errorText}>{fetchError?.message || 'Failed to load notifications'}</Text>
+                        <TouchableOpacity onPress={() => refetch()} style={styles.retryButton}>
                             <Text style={styles.retryButtonText}>Retry</Text>
                         </TouchableOpacity>
                     </View>
@@ -541,14 +476,14 @@ export default function index() {
                 ))}
 
                 {/* Loading more indicator */}
-                {loading && notifications.length > 0 && (
+                {isFetchingNextPage && notifications.length > 0 && (
                     <View style={styles.loadingMore}>
-                        <Text style={styles.loadingMoreText}>Loading more...</Text>
+                        <LoadingIndicator text="Loading more..." />
                     </View>
                 )}
 
                 {/* Empty state */}
-                {notifications.length === 0 && !loading && (
+                {notifications.length === 0 && !isLoading && (
                     <View style={styles.emptyState}>
                         <EmptyState
                             iconName="notifications-off"

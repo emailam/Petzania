@@ -1,38 +1,56 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, RefreshControl } from 'react-native';
-import { Image } from 'expo-image';
+
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import EmptyState from '@/components/EmptyState';
 import UserList from '@/components/UserList';
 import { getBlockedUsers, unblockUser } from '@/services/friendsService';
-import LottieView from 'lottie-react-native';
 
-const defaultAvatar = require('@/assets/images/Defaults/default-user.png');
+import LoadingIndicator from '@/components/LoadingIndicator';
 
 export default function Blocked() {
     const [blockedUsers, setBlockedUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [unblockingUsers, setUnblockingUsers] = useState(new Set());
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+
+    const PAGE_SIZE = 10;
 
     useEffect(() => {
-        loadBlockedUsers();
+        loadBlockedUsers(0, true);
     }, []);
 
-    const loadBlockedUsers = async () => {
+    const loadBlockedUsers = async (pageNum = 0, isInitial = false) => {
         try {
-            setLoading(true);
-            const response = await getBlockedUsers(0, 50); // page, size
-            
+            if (isInitial) {
+                setLoading(true);
+            } else {
+                setLoadingMore(true);
+            }
+
+            const response = await getBlockedUsers(pageNum, PAGE_SIZE);
+
             // Transform blocked users data for UserList compatibility
             const transformedBlockedUsers = (response?.content || []).map(item => ({
                 ...item.blocked,
                 blockId: item.blockId,
                 blockedAt: item.createdAt
             }));
-            
-            setBlockedUsers(transformedBlockedUsers);
+
+            if (isInitial) {
+                setBlockedUsers(transformedBlockedUsers);
+            } else {
+                // Append new users to existing list
+                setBlockedUsers(prev => [...prev, ...transformedBlockedUsers]);
+            }
+
+            // Check if there are more pages
+            setHasMore(transformedBlockedUsers.length === PAGE_SIZE);
+            setPage(pageNum);
         } catch (error) {
             console.error('Error loading blocked users:', error);
             Toast.show({
@@ -44,14 +62,24 @@ export default function Blocked() {
             });
         } finally {
             setLoading(false);
+            setLoadingMore(false);
         }
     };
 
     const handleRefresh = async () => {
         setRefreshing(true);
-        await loadBlockedUsers();
+        setPage(0);
+        setHasMore(true);
+        await loadBlockedUsers(0, true);
         setRefreshing(false);
     };
+
+    const handleLoadMore = useCallback(() => {
+        if (!loadingMore && hasMore && !loading) {
+            const nextPage = page + 1;
+            loadBlockedUsers(nextPage, false);
+        }
+    }, [loadingMore, hasMore, loading, page]);
 
     const handleUnblock = (user) => {
         Alert.alert(
@@ -77,11 +105,8 @@ export default function Blocked() {
 
             await unblockUser(user.userId);
 
-            // Remove user from blocked list - fix the filtering logic
-            console.log('Unblocking user:', user, "Blocked Users Before:", blockedUsers);
-            setBlockedUsers(prev => prev.filter(item => {
-                return item.userId !== user.userId;
-            }));
+            // Optimistically remove user from blocked list
+            setBlockedUsers(prev => prev.filter(item => item.userId !== user.userId));
 
             Toast.show({
                 type: 'success',
@@ -92,6 +117,10 @@ export default function Blocked() {
             });
         } catch (error) {
             console.error('Error unblocking user:', error);
+
+            // Reload the list on error to ensure data consistency
+            await loadBlockedUsers(0, true);
+
             Toast.show({
                 type: 'error',
                 text1: 'Failed to unblock user',
@@ -109,13 +138,12 @@ export default function Blocked() {
     };
 
     const handleUserPress = (user) => {
-        // Don't navigate to profile for blocked users, just show unblock option
         handleUnblock(user);
     };
 
     const renderUnblockButton = (user) => {
         const isUnblocking = unblockingUsers.has(user.userId);
-        
+
         return (
             <TouchableOpacity
                 style={[styles.unblockButton, isUnblocking && styles.unblockButtonDisabled]}
@@ -142,21 +170,20 @@ export default function Blocked() {
         />
     );
 
+    const renderFooter = () => {
+        if (!loadingMore) return null;
+
+        return (
+            <View style={styles.footerLoader}>
+                <LoadingIndicator />
+            </View>
+        );
+    };
+
     if (loading) {
         return (
-            <View style={styles.container}>
-                <View style={styles.loadingContainer}>
-                    <LottieView
-                        source={require("@/assets/lottie/loading.json")}
-                        autoPlay
-                        loop
-                        style={styles.lottie}
-                    />
-                    <Text style={styles.loadingText}>Loading blocked users...</Text>
-                    <Text style={styles.loadingSubText}>
-                        Getting blocked user information
-                    </Text>
-                </View>
+            <View style={[styles.container, styles.centerContent]}>
+                <LoadingIndicator text="Loading blocked users..." />
             </View>
         );
     }
@@ -178,8 +205,11 @@ export default function Blocked() {
                     />
                 }
                 ListEmptyComponent={renderEmptyState}
+                ListFooterComponent={renderFooter}
                 contentContainerStyle={{ padding: 16 }}
                 showsVerticalScrollIndicator={false}
+                onEndReached={handleLoadMore}
+                onEndReachedThreshold={0.5}
             />
         </View>
     );
@@ -190,26 +220,13 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff',
     },
-    lottie: {
-        width: 80,
-        height: 80,
-    },
-    loadingContainer: {
-        flex: 1,
+    centerContent: {
         justifyContent: 'center',
         alignItems: 'center',
     },
-    loadingText: {
-        marginTop: 16,
-        fontSize: 18,
-        color: '#9188E5',
-        fontWeight: '600',
-    },
-    loadingSubText: {
-        marginTop: 8,
-        fontSize: 14,
-        color: '#666',
-        textAlign: 'center',
+    footerLoader: {
+        paddingVertical: 20,
+        alignItems: 'center',
     },
     unblockButton: {
         flexDirection: 'row',
