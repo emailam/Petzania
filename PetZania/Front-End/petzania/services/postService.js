@@ -21,13 +21,13 @@ async function fetchPosts(filters, page = 0, pageSize = 10) {
 }
 
 export const useFetchPosts = (filters) => {
-  const newfilters = { ...filters, petPostStatus: "PENDING" };
+  const newFilters = { ...filters, petPostStatus: "PENDING" };
 
   return useInfiniteQuery({
-    queryKey: ['posts', newfilters],
+    queryKey: ['posts', newFilters],
     queryFn: ({ pageParam = 0 }) => {
       // Pass pageParam as the page parameter, and include filters
-      return fetchPosts(newfilters, pageParam);
+      return fetchPosts(newFilters, pageParam);
     },
     getNextPageParam: (lastPage, allPages) => {
       // Since pages are 0-indexed, the next page number should be the current length
