@@ -3,11 +3,13 @@ import { Image } from 'expo-image';
 import Onboarding from "react-native-onboarding-swiper";
 import { useRouter } from "expo-router";
 import { AntDesign } from "@expo/vector-icons";
+import { saveOnboardingStatus } from '@/storage/onboardingStorage';
 
 export default function OnboardingScreen() {
   const router = useRouter();
 
   const handleDone = async () => {
+    await saveOnboardingStatus(true);
     router.push("/RegisterModule/RegisterScreen");
   };
 

@@ -1,5 +1,4 @@
 import React from 'react';
-import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { PetProvider } from '@/context/PetContext';
 import { UserProvider } from '@/context/UserContext';
 import { FlowProvider } from '@/context/FlowContext';
@@ -24,9 +23,7 @@ export default function AppProviders({ children }) {
                             <NotificationProvider>
                                 <FriendsProvider>
                                     <PetProvider>
-                                        <ActionSheetProvider>
-                                            {children}
-                                        </ActionSheetProvider>
+                                        {children}
                                     </PetProvider>
                                 </FriendsProvider>
                             </NotificationProvider>
