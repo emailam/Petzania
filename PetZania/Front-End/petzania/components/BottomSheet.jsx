@@ -27,7 +27,7 @@ const BottomSheet = forwardRef(({ children, snapPoints = ['50%'], ...props }, re
             }}
             {...props}
         >
-            <BottomSheetView style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 20 }}>
+            <BottomSheetView style={{ flex: 1, paddingHorizontal: 20 }}>
                 {children}
             </BottomSheetView>
         </BottomSheetModal>
