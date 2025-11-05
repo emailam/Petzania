@@ -1,0 +1,81 @@
+spring:
+  application:
+    name: AdoptionAndBreedingModule
+
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  super:
+    admin:
+      username: superadmin
+      password: superadmin
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  security:
+    user:
+      name: admin
+      password: 1234
+
+  jwt:
+    secret-key:
+      4ioX3ogCr4GAZ9gB99txf1LyhqVOmTJ8RsL9hyJzZXQ=
+
+  access:
+    token:
+      expiration:
+        300000
+
+  refresh:
+    token:
+      expiration:
+        86400000
+
+feed:
+  weights:
+    recency:              700
+    totalReacts:          300
+    petCategoryAffinity:  400
+    postCategoryAffinity: 300
+    friendBoost:          5000
+    followeeBoost:        3000
+    distance:             750
+    speciesAffinity:      500
+    breedAffinity:        350
+    postTypeAffinity:     300
+    authorAffinity:       200
+  freshness-window-hours: 96
+
+post:
+  expiration-days: 30
+
+server:
+  error:
+    include-message: always
+    include-binding-errors: always
+
+logging:
+  level:
+    org.springframework.amqp.rabbit.core.RabbitAdmin: DEBUG
+    org.springframework.cache: DEBUG
+    org.springframework.data.redis.cache: DEBUG
+    org.springframework.beans: DEBUG

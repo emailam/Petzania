@@ -1,0 +1,77 @@
+spring:
+    application:
+        name: AdoptionAndBreedingModule
+
+    rabbitmq:
+        host: ${RABBITMQ_HOST}
+        port: ${RABBITMQ_PORT}
+        username: ${RABBITMQ_USERNAME}
+        password: ${RABBITMQ_PASSWORD}
+
+    data:
+        redis:
+            host: ${REDIS_HOST}
+            port: ${REDIS_PORT}
+        cache:
+            type: redis
+
+    super:
+        admin:
+            username: ${SUPER_ADMIN_USERNAME}
+
+    datasource:
+        username: ${DB_USERNAME}
+        password: ${DB_PASSWORD}
+        url: ${ADOPTION_DB_URL}
+
+    flyway:
+        enabled: true
+        locations: classpath:db/migration
+        baseline-on-migrate: true
+
+    jpa:
+        hibernate:
+            ddl-auto: none
+        #        show-sql: true
+        properties:
+            hibernate:
+                dialect: org.hibernate.dialect.PostgreSQLDialect
+                format_sql: true
+
+    security:
+        user:
+            name: ${SECURITY_USER_NAME}
+            password: ${SECURITY_USER_PASSWORD}
+    jwt:
+        secret-key: ${SPRING_JWT_SECRET_KEY}
+
+feed:
+    weights:
+        recency:              700
+        totalReacts:          300
+        petCategoryAffinity:  400
+        postCategoryAffinity: 300
+        friendBoost:          5000
+        followeeBoost:        3000
+        distance:             750
+        speciesAffinity:      500
+        breedAffinity:        350
+        postTypeAffinity:     300
+        authorAffinity:       200
+    freshness-window-hours: 96
+
+post:
+  expiration-days: 30
+
+server:
+    port: ${ADOPTION_SERVER_PORT}
+    error:
+        include-message: always
+        include-binding-errors: always
+
+logging:
+    level:
+        org.springframework.cache: DEBUG
+        org.springframework.data.redis.cache: DEBUG
+        org.springframework.security: DEBUG
+        org.springframework.web.servlet.DispatcherServlet: DEBUG

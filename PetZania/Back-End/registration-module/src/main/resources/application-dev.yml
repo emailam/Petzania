@@ -1,0 +1,76 @@
+spring:
+  application:
+    name: RegistrationModule
+
+  super:
+    admin:
+      username: superadmin
+      password: superadmin
+
+  rabbitmq:
+    host: localhost
+    port: 5673
+    username: guest
+    password: guest
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  datasource:
+    username: development
+    password: development
+    url: jdbc:postgresql://localhost:5433/registration_dev
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  security:
+    user:
+      name: admin
+      password: 1234
+
+  jwt:
+    secret-key: 5uaW4pgDs9KTX3rB99jvF7WyusLOnPA7DyM3gyRkZXQ9=
+
+  access:
+    token:
+      expiration: 9000000
+
+  refresh:
+    token:
+      expiration: 86400000
+
+  sendgrid:
+    key: SG.dummykey.dummysegment
+
+  email:
+    sender: dev-email@example.com
+
+server:
+  error:
+    include-message: always
+    include-binding-errors: always
+  port: 8080
+
+logging:
+  level:
+    org.springframework.cache: DEBUG
+    org.springframework.data.redis.cache: DEBUG
+    org.springframework.data.redis: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web.servlet.DispatcherServlet: DEBUG
+    io.lettuce.core: DEBUG
+    com.example.registrationmodule.service.impl.UserService: DEBUG
+    com.sendgrid: DEBUG

@@ -1,0 +1,1123 @@
+package com.example.adoption_and_breeding_module.controller;
+
+
+import com.example.adoption_and_breeding_module.TestDataUtil;
+import com.example.adoption_and_breeding_module.model.dto.*;
+import com.example.adoption_and_breeding_module.model.entity.*;
+import com.example.adoption_and_breeding_module.model.enumeration.*;
+import com.example.adoption_and_breeding_module.model.principal.UserPrincipal;
+import com.example.adoption_and_breeding_module.repository.BlockRepository;
+import com.example.adoption_and_breeding_module.repository.PetPostRepository;
+import com.example.adoption_and_breeding_module.repository.UserRepository;
+import com.example.adoption_and_breeding_module.repository.projection.BreedScore;
+import com.example.adoption_and_breeding_module.repository.projection.OwnerScore;
+import com.example.adoption_and_breeding_module.repository.projection.PostTypeScore;
+import com.example.adoption_and_breeding_module.repository.projection.SpeciesScore;
+import com.example.adoption_and_breeding_module.service.impl.FeedScorer;
+import com.example.adoption_and_breeding_module.util.SecurityUtils;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+
+import static org.hamcrest.Matchers.*;
+
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.MediaType;
+import com.example.adoption_and_breeding_module.repository.PetRepository;
+import com.example.adoption_and_breeding_module.repository.FriendshipRepository;
+import com.example.adoption_and_breeding_module.repository.FollowRepository;
+import com.example.adoption_and_breeding_module.repository.PetPostInterestRepository;
+import com.example.adoption_and_breeding_module.model.enumeration.InterestType;
+import jakarta.persistence.EntityManager;
+
+import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+
+@SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+@AutoConfigureMockMvc(addFilters = false)
+@Transactional
+public class PetPostControllerIntegrationTests {
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private PetPostRepository petPostRepository;
+
+    @Autowired
+    private PetRepository petRepository;
+
+    @Autowired
+    private BlockRepository blockRepository;
+    @Autowired
+    private FeedScorer feedScorer;
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+
+    @Autowired
+    private EntityManager entityManager;
+
+    @Autowired
+    private FriendshipRepository friendshipRepository;
+    @Autowired
+    private FollowRepository followRepository;
+    @Autowired
+    private PetPostInterestRepository petPostInterestRepository;
+
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+    private User userA;
+    private User userB;
+    private User userC;
+    private PetPost adoptionPost;
+    private PetPost breedingPost;
+    private Pet testPet;
+    private final int RATE_LIMIT_VALUE = 10;
+
+    @BeforeEach
+    void setup() {
+        // Clean up first
+        petPostRepository.deleteAll();
+        blockRepository.deleteAll();
+        userRepository.deleteAll();
+
+        // Create test users
+        userA = userRepository.save(TestDataUtil.createTestUser("userA"));
+        userB = userRepository.save(TestDataUtil.createTestUser("userB"));
+        userC = userRepository.save(TestDataUtil.createTestUser("userC"));
+
+        // Set up security context for userA by default
+        UserPrincipal userPrincipal = new UserPrincipal(userA);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        userPrincipal,
+                        null,
+                        userPrincipal.getAuthorities()
+                )
+        );
+
+        // Create test pet
+        testPet = TestDataUtil.createTestPet("Buddy", PetSpecies.DOG, Gender.MALE, 24); // 2 years old
+        petRepository.save(testPet);
+        // Create test posts
+        adoptionPost = petPostRepository.save(PetPost.builder()
+                .owner(userA)
+                .pet(testPet)
+                .postType(PetPostType.ADOPTION)
+                .postStatus(PetPostStatus.PENDING)
+                .description("Looking for a loving home")
+                .latitude(40.7128)
+                .longitude(-74.0060)
+                .reacts(0)
+                .reactedUsers(new HashSet<>())
+                .build());
+
+        Pet testPet2 = TestDataUtil.createTestPet("Luna", PetSpecies.CAT, Gender.FEMALE, 36);
+        petRepository.save(testPet2);
+
+        breedingPost = petPostRepository.save(PetPost.builder()
+                .owner(userB)
+                .pet(testPet2)
+                .postType(PetPostType.BREEDING)
+                .postStatus(PetPostStatus.PENDING)
+                .description("Purebred Persian cat for breeding")
+                .latitude(34.0522)
+                .longitude(-118.2437)
+                .reacts(1)
+                .reactedUsers(new HashSet<>(Set.of(userA)))
+                .build());
+    }
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+        Set<String> rateLimitKeys = redisTemplate.keys("rate_limit:*");
+        if (!rateLimitKeys.isEmpty()) {
+            redisTemplate.delete(rateLimitKeys);
+        }
+    }
+
+    @Test
+    void createPetPost_Success() throws Exception {
+        PetDTO petDTO = TestDataUtil.createPetDTO("Max", PetSpecies.DOG, Gender.MALE);
+
+        setupSecurityContext(userA);
+        System.out.println(SecurityUtils.getCurrentUser().getUser());
+        CreatePetPostDTO createDTO = new CreatePetPostDTO();
+        createDTO.setPetDTO(petDTO);
+        createDTO.setDescription("Friendly dog needs home");
+        createDTO.setPostType(PetPostType.ADOPTION);
+        createDTO.setLatitude(-14.2350);
+        createDTO.setLongitude(-51.9253);
+
+        mockMvc.perform(post("/api/pet-posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.ownerId").value(userA.getUserId().toString()))
+                .andExpect(jsonPath("$.petDTO.name").value("Max"))
+                .andExpect(jsonPath("$.petDTO.age").exists())
+                .andExpect(jsonPath("$.description").value("Friendly dog needs home"))
+                .andExpect(jsonPath("$.postType").value("ADOPTION"))
+                .andExpect(jsonPath("$.postStatus").value("PENDING"))
+                .andExpect(jsonPath("$.reacts").value(0))
+                .andExpect(jsonPath("$.createdAt").exists())
+                .andExpect(jsonPath("$.latitude").exists())
+                .andExpect(jsonPath("$.longitude").exists());
+
+        // Verify post was saved
+        assertEquals(3, petPostRepository.count());
+    }
+
+    @Test
+    void testRateLimit_createPetPost() throws Exception {
+        PetDTO petDTO = TestDataUtil.createPetDTO("Max", PetSpecies.DOG, Gender.MALE);
+        setupSecurityContext(userA);
+        System.out.println(SecurityUtils.getCurrentUser().getUser());
+        CreatePetPostDTO createDTO = new CreatePetPostDTO();
+        createDTO.setPetDTO(petDTO);
+        createDTO.setDescription("Friendly dog needs home");
+        createDTO.setPostType(PetPostType.ADOPTION);
+        createDTO.setLatitude(5.0);
+        createDTO.setLongitude(5.0);
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(post("/api/pet-posts")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(createDTO)))
+                    .andExpect(status().isCreated());
+        }
+        mockMvc.perform(post("/api/pet-posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createDTO)))
+                .andExpect(status().isTooManyRequests());
+    }
+
+
+    @Test
+    void createPetPost_ValidationErrors() throws Exception {
+        // Test missing required fields
+        CreatePetPostDTO createDTO = new CreatePetPostDTO();
+
+        mockMvc.perform(post("/api/pet-posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createDTO)))
+                .andExpect(status().isNotAcceptable())
+                .andExpect(jsonPath("$.status").value(406))
+                .andExpect(jsonPath("$.error").value("Not Acceptable"))
+                .andExpect(jsonPath("$.message").isArray())
+                .andExpect(jsonPath("$.message[*].field").value(hasItems("petDTO", "postType")))
+                .andExpect(jsonPath("$.message[*].message").value(hasItems("Pet DTO is required.", "Post type is required.")));
+    }
+
+    @Test
+    void createPetPost_InvalidEnumValue() throws Exception {
+        String invalidJson = """
+                {
+                    "petDTO": {
+                        "name": "Test",
+                        "gender": "INVALID_GENDER",
+                        "dateOfBirth": "2022-01-01",
+                        "breed": "Test Breed",
+                        "species": "DOG"
+                    },
+                    "postType": "INVALID_TYPE"
+                }
+                """;
+
+        mockMvc.perform(post("/api/pet-posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidJson))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createPetPost_NoAuthentication() throws Exception {
+        SecurityContextHolder.clearContext();
+
+        PetDTO petDTO = TestDataUtil.createPetDTO("Max", PetSpecies.DOG, Gender.MALE);
+        CreatePetPostDTO createDTO = new CreatePetPostDTO();
+        createDTO.setPetDTO(petDTO);
+        createDTO.setPostType(PetPostType.ADOPTION);
+        createDTO.setLatitude(35.8617);
+        createDTO.setLongitude(104.1954);
+
+        mockMvc.perform(post("/api/pet-posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)           // ← add this
+                        .content(objectMapper.writeValueAsString(createDTO)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getPetPostById_Success() throws Exception {
+        mockMvc.perform(get("/api/pet-posts/{petPostId}", adoptionPost.getPostId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.postId").value(adoptionPost.getPostId().toString()))
+                .andExpect(jsonPath("$.petDTO.name").value("Buddy"))
+                .andExpect(jsonPath("$.petDTO.petId").value(testPet.getPetId().toString()))
+                .andExpect(jsonPath("$.petDTO.age").value("2 years"))
+                .andExpect(jsonPath("$.postType").value("ADOPTION"));
+    }
+
+    @Test
+    void testRateLimit_getPetPostById() throws Exception {
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(get("/api/pet-posts/{petPostId}", adoptionPost.getPostId()))
+                    .andExpect(status().isOk());
+        }
+        mockMvc.perform(get("/api/pet-posts/{petPostId}", adoptionPost.getPostId()))
+                .andExpect(status().isTooManyRequests());
+    }
+
+    @Test
+    void getPetPostById_NotFound() throws Exception {
+        UUID nonExistentId = UUID.randomUUID();
+
+        mockMvc.perform(get("/api/pet-posts/{petPostId}", nonExistentId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message").value("Pet post not found with id: " + nonExistentId));
+    }
+
+    @Test
+    void getAllPetPostsByUserId_Success() throws Exception {
+        mockMvc.perform(get("/api/pet-posts/user/{userId}", userA.getUserId())
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].ownerId").value(userA.getUserId().toString()))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.number").value(0));
+    }
+
+    @Test
+    void testRateLimit_getAllPetPostsByUserId() throws Exception {
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(get("/api/pet-posts/user/{userId}", userA.getUserId())
+                            .param("page", "0")
+                            .param("size", "10"))
+                    .andExpect(status().isOk());
+        }
+        mockMvc.perform(get("/api/pet-posts/user/{userId}", userA.getUserId())
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isTooManyRequests());
+    }
+
+    @Test
+    void getAllPetPostsByUserId_BlockedUser_Forbidden() throws Exception {
+        // Create a block relationship
+        blockRepository.save(Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userA)
+                .blocked(userB)
+                .createdAt(new Timestamp(System.currentTimeMillis()))
+                .build());
+
+        mockMvc.perform(get("/api/pet-posts/user/{userId}", userB.getUserId())
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.message").value("Operation blocked due to existing block relationship"));
+    }
+
+    @Test
+    void getFilteredPosts_CompleteFilterTest() throws Exception {
+        // Create posts with different characteristics for filtering
+        petPostRepository.saveAll(List.of(
+                PetPost.builder()
+                        .owner(userC)
+                        .pet(TestDataUtil.createTestPet("Young Dog", PetSpecies.DOG, Gender.MALE, 6)) // 6 months
+                        .postType(PetPostType.ADOPTION)
+                        .postStatus(PetPostStatus.PENDING)
+                        .latitude(35.8617)
+                        .longitude(104.1954)
+                        .reacts(5)
+                        .build(),
+                PetPost.builder()
+                        .owner(userC)
+                        .pet(TestDataUtil.createTestPet("Old Cat", PetSpecies.CAT, Gender.FEMALE, 120)) // 10 years
+                        .postType(PetPostType.BREEDING)
+                        .postStatus(PetPostStatus.PENDING)
+                        .latitude(35.8617)
+                        .longitude(104.1954)
+                        .reacts(10)
+                        .build(),
+                PetPost.builder()
+                        .owner(userC)
+                        .pet(TestDataUtil.createTestPet("Luna", PetSpecies.RABBIT, Gender.FEMALE, 18)) // 1.5 years
+                        .postType(PetPostType.BREEDING)
+                        .postStatus(PetPostStatus.COMPLETED)
+                        .latitude(35.8617)
+                        .longitude(104.1954)
+                        .reacts(7)
+                        .build()
+        ));
+
+        // Test with all filter parameters
+        PetPostFilterDTO filter = new PetPostFilterDTO();
+        filter.setPetPostStatus(PetPostStatus.PENDING);
+        filter.setPetPostType(PetPostType.ADOPTION);
+        filter.setSpecies(PetSpecies.DOG);
+        filter.setGender(Gender.MALE);
+        filter.setBreed("Test"); // Partial match
+        filter.setMinAge(5);
+        filter.setMaxAge(30);
+        filter.setSortBy(PetPostSortBy.REACTS);
+        filter.setSortDesc(true);
+
+        mockMvc.perform(post("/api/pet-posts/filtered")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(filter))
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content", hasSize(2))) // Buddy (24 months) and Young Dog (6 months)
+                .andExpect(jsonPath("$.content[0].reacts").value(5)) // Sorted by likes desc
+                .andExpect(jsonPath("$.content[1].reacts").value(0));
+    }
+
+    @Test
+    void getFilteredPosts_WithBlockedUsers() throws Exception {
+        // Block userB
+        blockRepository.save(Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userA)
+                .blocked(userB)
+                .createdAt(new Timestamp(System.currentTimeMillis()))
+                .build());
+
+        PetPostFilterDTO filter = new PetPostFilterDTO();
+        filter.setSortBy(PetPostSortBy.CREATED_DATE);
+        filter.setSortDesc(true);
+
+        mockMvc.perform(post("/api/pet-posts/filtered")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(filter))
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1))) // Only userA's post visible
+                .andExpect(jsonPath("$.content[0].ownerId").value(userA.getUserId().toString()));
+    }
+
+    @Test
+    void updatePetPost_PartialUpdate() throws Exception {
+        // Test updating only post description
+        UpdatePetPostDTO updateDTO = new UpdatePetPostDTO();
+        updateDTO.setDescription("Only updating description");
+
+        mockMvc.perform(patch("/api/pet-posts/{petPostId}", adoptionPost.getPostId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.description").value("Only updating description"))
+                .andExpect(jsonPath("$.petDTO.name").value("Buddy")) // Unchanged
+                .andExpect(jsonPath("$.postStatus").value("PENDING")); // Unchanged
+    }
+
+    @Test
+    void updatePetPost_CompleteUpdate() throws Exception {
+        UpdatePetDTO updatePetDTO = new UpdatePetDTO();
+        updatePetDTO.setName("Buddy Updated");
+        updatePetDTO.setDescription("Updated pet description");
+        updatePetDTO.setBreed("Golden Retriever");
+        updatePetDTO.setMyVaccinesURLs(List.of(
+                "https://example.com/new-vaccine1.jpg",
+                "https://example.com/new-vaccine2.jpg"
+        ));
+
+        updatePetDTO.setMyPicturesURLs(List.of(
+                "https://example.com/new-pic1.jpg",
+                "https://example.com/new-pic2.jpg"
+        ));
+
+        UpdatePetPostDTO updateDTO = new UpdatePetPostDTO();
+        updateDTO.setUpdatePetDTO(updatePetDTO);
+        updateDTO.setDescription("Updated post description");
+        updateDTO.setLatitude(35.8617);
+        updateDTO.setLongitude(104.1954);
+        updateDTO.setPostStatus(PetPostStatus.COMPLETED);
+
+        mockMvc.perform(patch("/api/pet-posts/{petPostId}", adoptionPost.getPostId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.petDTO.name").value("Buddy Updated"))
+                .andExpect(jsonPath("$.petDTO.description").value("Updated pet description"))
+                .andExpect(jsonPath("$.petDTO.breed").value("Golden Retriever"))
+                .andExpect(jsonPath("$.petDTO.myVaccinesURLs", hasSize(2)))
+                .andExpect(jsonPath("$.description").value("Updated post description"))
+                .andExpect(jsonPath("$.postStatus").value("COMPLETED"))
+                .andExpect(jsonPath("$.updatedAt").exists());
+    }
+
+    @Test
+    void updatePetPost_NotOwner_Forbidden() throws Exception {
+        setupSecurityContext(userB);
+
+        UpdatePetPostDTO updateDTO = new UpdatePetPostDTO();
+        updateDTO.setDescription("Trying to update someone else's post");
+
+        mockMvc.perform(patch("/api/pet-posts/{petPostId}", adoptionPost.getPostId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.message").value("You can only update your own posts"));
+    }
+
+    @Test
+    void deletePetPost_Success() throws Exception {
+        UUID postId = adoptionPost.getPostId();
+
+        mockMvc.perform(delete("/api/pet-posts/{petPostId}", postId))
+                .andExpect(status().isNoContent());
+
+        // Verify post was deleted
+        assertFalse(petPostRepository.existsById(postId));
+        assertEquals(1, petPostRepository.count()); // Only breedingPost remains
+    }
+
+    @Test
+    void deletePetPost_NotOwner_Forbidden() throws Exception {
+        setupSecurityContext(userB);
+
+        mockMvc.perform(delete("/api/pet-posts/{petPostId}", adoptionPost.getPostId()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.message").value("You can only delete your own posts"));
+
+        // Verify post was NOT deleted
+        assertTrue(petPostRepository.existsById(adoptionPost.getPostId()));
+    }
+
+    @Test
+    void deletePetPost_NotFound() throws Exception {
+        UUID nonExistentId = UUID.randomUUID();
+
+        mockMvc.perform(delete("/api/pet-posts/{petPostId}", nonExistentId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message").value("Pet post not found: " + nonExistentId));
+    }
+
+    @Test
+    void toggleReact_AddReaction_Success() throws Exception {
+        setupSecurityContext(userB);
+
+        mockMvc.perform(put("/api/pet-posts/{petPostId}/react", adoptionPost.getPostId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reacts").value(1))
+                .andExpect(jsonPath("$.reactedUsersIds", hasSize(1)))
+                .andExpect(jsonPath("$.reactedUsersIds", hasItem(userB.getUserId().toString())));
+
+        // Verify in database
+        PetPost updated = petPostRepository.findById(adoptionPost.getPostId()).orElseThrow();
+        assertEquals(1, updated.getReacts());
+        assertTrue(updated.getReactedUsers().stream()
+                .anyMatch(user -> user.getUserId().equals(userB.getUserId())));
+    }
+
+    @Test
+    void testRateLimit_toggleReact() throws Exception {
+        setupSecurityContext(userB);
+
+        for (int i = 0; i < RATE_LIMIT_VALUE; i++) {
+            mockMvc.perform(put("/api/pet-posts/{petPostId}/react", adoptionPost.getPostId()))
+                    .andExpect(status().isOk());
+        }
+        mockMvc.perform(put("/api/pet-posts/{petPostId}/react", adoptionPost.getPostId()))
+                .andExpect(status().isTooManyRequests());
+    }
+
+    @Test
+    void toggleReact_RemoveReaction_Success() throws Exception {
+        // UserA already reacted to breedingPost in setup
+        setupSecurityContext(userA);
+        mockMvc.perform(put("/api/pet-posts/{petPostId}/react", breedingPost.getPostId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reacts").value(0))
+                .andExpect(jsonPath("$.reactedUsersIds", empty()));
+
+        // Verify in database
+        PetPost updated = petPostRepository.findById(breedingPost.getPostId()).orElseThrow();
+        assertEquals(0, updated.getReacts());
+        assertTrue(updated.getReactedUsers().isEmpty());
+    }
+
+    @Test
+    void toggleReact_MultipleUsersReacting() throws Exception {
+        // First user reacts
+        setupSecurityContext(userB);
+        mockMvc.perform(put("/api/pet-posts/{petPostId}/react", adoptionPost.getPostId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reacts").value(1));
+
+        // Second user reacts
+        setupSecurityContext(userC);
+        mockMvc.perform(put("/api/pet-posts/{petPostId}/react", adoptionPost.getPostId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reacts").value(2))
+                .andExpect(jsonPath("$.reactedUsersIds", hasSize(2)))
+                .andExpect(jsonPath("$.reactedUsersIds", hasItems(
+                        userB.getUserId().toString(),
+                        userC.getUserId().toString()
+                )));
+    }
+
+    @Test
+    void toggleReact_BlockedByPostOwner_Forbidden() throws Exception {
+        // Owner blocks user
+        blockRepository.save(Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userA) // Post owner
+                .blocked(userB)
+                .createdAt(new Timestamp(System.currentTimeMillis()))
+                .build());
+
+        setupSecurityContext(userB);
+
+        mockMvc.perform(put("/api/pet-posts/{petPostId}/react", adoptionPost.getPostId()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.message").value("Operation blocked due to existing block relationship"));
+    }
+
+    @Test
+    void toggleReact_UserBlockedPostOwner_Forbidden() throws Exception {
+        // User blocks post owner
+        blockRepository.save(Block.builder()
+                .blockId(UUID.randomUUID())
+                .blocker(userB)
+                .blocked(userA) // Post owner
+                .createdAt(new Timestamp(System.currentTimeMillis()))
+                .build());
+
+        setupSecurityContext(userB);
+
+        mockMvc.perform(put("/api/pet-posts/{petPostId}/react", adoptionPost.getPostId()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.message").value("Operation blocked due to existing block relationship"));
+    }
+
+    @Test
+    void toggleReact_UserNotFound() throws Exception {
+        // Delete the current user to simulate user not found
+        userRepository.delete(userA);
+
+        mockMvc.perform(put("/api/pet-posts/{petPostId}/react", breedingPost.getPostId()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message").value("User not found with ID: " + userA.getUserId()));
+    }
+
+    @Test
+    void testPaginationAndSorting() throws Exception {
+        // Create multiple posts with different react counts
+        List<PetPost> posts = new ArrayList<>();
+        for (int i = 0; i < 25; i++) {
+            posts.add(petPostRepository.save(PetPost.builder()
+                    .owner(userA)
+                    .pet(TestDataUtil.createTestPet("Pet" + i, PetSpecies.DOG, Gender.MALE, 24))
+                    .postType(PetPostType.ADOPTION)
+                    .postStatus(PetPostStatus.PENDING)
+                    .description("Test post " + i)
+                    .latitude(10.0)
+                    .longitude(20.0)
+                    .reacts(i % 5) // Different react counts for sorting
+                    .reactedUsers(new HashSet<>())
+                    .score(0).build()));
+        }
+
+        // Test first page
+        mockMvc.perform(get("/api/pet-posts/user/{userId}", userA.getUserId())
+                        .param("page", "0")
+                        .param("size", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(5)))
+                .andExpect(jsonPath("$.totalElements").value(26)) // 25 new + 1 from setup
+                .andExpect(jsonPath("$.totalPages").value(6))
+                .andExpect(jsonPath("$.first").value(true))
+                .andExpect(jsonPath("$.last").value(false));
+
+        // Test last page
+        mockMvc.perform(get("/api/pet-posts/user/{userId}", userA.getUserId())
+                        .param("page", "5")
+                        .param("size", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.first").value(false))
+                .andExpect(jsonPath("$.last").value(true));
+
+        // Test sorting by likes descending
+        PetPostFilterDTO filterLikes = new PetPostFilterDTO();
+        filterLikes.setSortBy(PetPostSortBy.REACTS);
+        filterLikes.setSortDesc(true);
+
+        mockMvc.perform(post("/api/pet-posts/filtered")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(filterLikes))
+                        .param("page", "0")
+                        .param("size", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].reacts").value(4))
+                .andExpect(jsonPath("$.content[1].reacts").value(4))
+                .andExpect(jsonPath("$.content[2].reacts").value(4));
+
+        // Test sorting by date ascending
+        PetPostFilterDTO filterDate = new PetPostFilterDTO();
+        filterDate.setSortBy(PetPostSortBy.CREATED_DATE);
+        filterDate.setSortDesc(false);
+
+        mockMvc.perform(post("/api/pet-posts/filtered")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(filterDate))
+                        .param("page", "0")
+                        .param("size", "3"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].createdAt").value(adoptionPost.getCreatedAt().toString())); // Oldest post
+    }
+
+    @Test
+    void testInvalidUUIDFormat() throws Exception {
+        mockMvc.perform(get("/api/pet-posts/{petPostId}", "invalid-uuid"))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(get("/api/pet-posts/user/{userId}", "invalid-uuid"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testSpecialCharactersInData() throws Exception {
+        PetDTO petDTO = TestDataUtil.createPetDTO("Max & Buddy's Friend", PetSpecies.DOG, Gender.MALE);
+        petDTO.setBreed("Côte d'Azur Shepherd");
+        petDTO.setDescription("Special chars: <>&\"'{}[]");
+
+        CreatePetPostDTO createDTO = new CreatePetPostDTO();
+        createDTO.setPetDTO(petDTO);
+        createDTO.setDescription("Test with émojis 🐕 and special chars: <script>alert('test')</script>");
+        createDTO.setPostType(PetPostType.ADOPTION);
+        createDTO.setLatitude(35.8617);
+        createDTO.setLongitude(104.1954);
+
+        mockMvc.perform(post("/api/pet-posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.petDTO.name").value("Max & Buddy's Friend"))
+                .andExpect(jsonPath("$.petDTO.breed").value("Côte d'Azur Shepherd"));
+    }
+
+
+    private void setupSecurityContext(User user) {
+        UserPrincipal userPrincipal = new UserPrincipal(user);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        userPrincipal,
+                        null,
+                        userPrincipal.getAuthorities()
+                )
+        );
+    }
+
+    @Test
+    void createPetPost_ToxicPetName_ShouldFailValidation() throws Exception {
+        PetDTO petDTO = PetDTO.builder()
+                .name("stupid dog") // toxic
+                .description("friendly and playful")
+                .gender(Gender.MALE)
+                .dateOfBirth(LocalDate.of(2020, 5, 15))
+                .age("4 years")
+                .breed("Labrador")
+                .species(PetSpecies.DOG)
+                .build();
+
+        CreatePetPostDTO dto = CreatePetPostDTO.builder()
+                .petDTO(petDTO)
+                .latitude(35.8617)
+                .longitude(104.1954)
+                .description("Nice post")
+                .postType(PetPostType.ADOPTION)
+                .build();
+
+        mockMvc.perform(post("/api/pet-posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isNotAcceptable())
+                .andExpect(jsonPath("$.message[0].field").value("petDTO.name"))
+                .andExpect(jsonPath("$.message[0].message").value("Toxic content is not allowed."));
+    }
+
+    @Test
+    void createPetPost_ToxicDescription_ShouldFailValidation() throws Exception {
+        PetDTO petDTO = PetDTO.builder()
+                .name("Max")
+                .description("You are horrible") // toxic
+                .gender(Gender.MALE)
+                .dateOfBirth(LocalDate.of(2020, 5, 15))
+                .age("4 years")
+                .breed("Labrador")
+                .species(PetSpecies.DOG)
+                .build();
+
+        CreatePetPostDTO dto = CreatePetPostDTO.builder()
+                .petDTO(petDTO)
+                .latitude(35.8617)
+                .longitude(104.1954)
+                .description("Great pet")
+                .postType(PetPostType.ADOPTION)
+                .build();
+
+        mockMvc.perform(post("/api/pet-posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isNotAcceptable())
+                .andExpect(jsonPath("$.message[0].field").value("petDTO.description"))
+                .andExpect(jsonPath("$.message[0].message").value("Toxic content is not allowed."));
+    }
+
+    @Test
+    void updatePetPost_ToxicPostDescription_ShouldFail() throws Exception {
+        UpdatePetPostDTO updateDTO = new UpdatePetPostDTO();
+        updateDTO.setDescription("You're disgusting"); // toxic content
+
+        mockMvc.perform(patch("/api/pet-posts/{petPostId}", adoptionPost.getPostId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isNotAcceptable())
+                .andExpect(jsonPath("$.message[0].field").value("description"))
+                .andExpect(jsonPath("$.message[0].message").value("Toxic content is not allowed."));
+    }
+
+    @Test
+    void updatePetPost_ToxicPetName_ShouldFail() throws Exception {
+        UpdatePetDTO petDTO = UpdatePetDTO.builder()
+                .name("You're ugly") // toxic
+                .build();
+
+        UpdatePetPostDTO updateDTO = UpdatePetPostDTO.builder()
+                .updatePetDTO(petDTO)
+                .build();
+
+        mockMvc.perform(patch("/api/pet-posts/{petPostId}", adoptionPost.getPostId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isNotAcceptable())
+                .andExpect(jsonPath("$.message[0].field").value("updatePetDTO.name"))
+                .andExpect(jsonPath("$.message[0].message").value("Toxic content is not allowed."));
+    }
+
+    @Test
+    void updatePetPost_NotToxicEdgeCasePostDescription_ShouldPass() throws Exception {
+        UpdatePetDTO petDTO = UpdatePetDTO.builder()
+                .breed("Trash dog")        // toxic
+                .description("Stupid pet") // toxic
+                .build();
+
+        UpdatePetPostDTO updateDTO = UpdatePetPostDTO.builder()
+                .updatePetDTO(petDTO)
+                .build();
+
+        mockMvc.perform(patch("/api/pet-posts/{petPostId}", adoptionPost.getPostId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isNotAcceptable())
+                .andExpect(jsonPath("$.message", hasSize(2)))
+                .andExpect(jsonPath("$.message[?(@.field=='updatePetDTO.breed')].message").value(hasItem("Toxic content is not allowed.")))
+                .andExpect(jsonPath("$.message[?(@.field=='updatePetDTO.description')].message").value(hasItem("Toxic content is not allowed.")));
+    }
+
+    @Test
+    void createPetPost_NotToxicEdgeCaseDescription_ShouldPass() throws Exception {
+        PetDTO petDTO = PetDTO.builder()
+                .name("Max")
+                .description("Great dog") // toxic
+                .gender(Gender.MALE)
+                .dateOfBirth(LocalDate.of(2020, 5, 15))
+                .age("4 years")
+                .breed("Labrador")
+                .species(PetSpecies.DOG)
+                .build();
+
+        CreatePetPostDTO dto = CreatePetPostDTO.builder()
+                .petDTO(petDTO)
+                .latitude(35.8617)
+                .longitude(104.1954)
+                .description("My dog had a horrible accident and needs adoption.")
+                .postType(PetPostType.ADOPTION)
+                .build();
+
+        mockMvc.perform(post("/api/pet-posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void markInterestedAndRemoveInterest_Success() throws Exception {
+        // Mark as interested
+        mockMvc.perform(put("/api/pet-posts/{petPostId}/interested", adoptionPost.getPostId()))
+                .andExpect(status().isOk());
+
+        // Mark as not interested (should overwrite interest)
+        mockMvc.perform(put("/api/pet-posts/{petPostId}/not-interested", adoptionPost.getPostId()))
+                .andExpect(status().isOk());
+
+        // Remove interest
+        mockMvc.perform(delete("/api/pet-posts/{petPostId}/interest", adoptionPost.getPostId()))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void markInterested_NotFoundCases() throws Exception {
+        UUID nonExistentId = UUID.randomUUID();
+        // Mark interest on non-existent post
+        mockMvc.perform(put("/api/pet-posts/{petPostId}/interested", nonExistentId))
+                .andExpect(status().isNotFound());
+        // Remove interest on non-existent post
+        mockMvc.perform(delete("/api/pet-posts/{petPostId}/interest", nonExistentId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void removeInterest_NotFoundInterest() throws Exception {
+        // Try to remove interest when none exists
+        mockMvc.perform(delete("/api/pet-posts/{petPostId}/interest", adoptionPost.getPostId()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testFilteredPostsSortedByScore() throws Exception {
+        // 1. Create additional users
+        User userD = userRepository.save(TestDataUtil.createTestUser("userD"));
+        User userE = userRepository.save(TestDataUtil.createTestUser("userE"));
+
+        // 2. Set up friendships and followings for userA
+        // userA friends: userB, userC
+        friendshipRepository.save(Friendship.builder()
+                .id(UUID.randomUUID()).user1(userA).user2(userB).createdAt(new Timestamp(System.currentTimeMillis())).build());
+        friendshipRepository.save(com.example.adoption_and_breeding_module.model.entity.Friendship.builder()
+                .id(UUID.randomUUID()).user1(userA).user2(userC).createdAt(new Timestamp(System.currentTimeMillis())).build());
+        // userA follows: userD
+        followRepository.save(Follow.builder()
+                .id(UUID.randomUUID()).follower(userA).followed(userD).createdAt(new Timestamp(System.currentTimeMillis())).build());
+
+        // 3. Build new test posts with variety in location, type, owner, and reacts
+        List<PetPost> newPosts = new ArrayList<>();
+        // Close to userA, by friend userB
+        newPosts.add(PetPost.builder()
+                .owner(userB)
+                .pet(TestDataUtil.createTestPet("DogFriend", PetSpecies.DOG, Gender.MALE, 10))
+                .postType(PetPostType.ADOPTION)
+                .postStatus(PetPostStatus.PENDING)
+                .description("By friend, close location, 3 reacts")
+                .latitude(userA.getLatitude() + 0.01)
+                .longitude(userA.getLongitude() + 0.01)
+                .reacts(3)
+                .reactedUsers(new HashSet<>(Arrays.asList(userA, userC, userD)))
+                .createdAt(Instant.now().minus(Duration.ofHours(2)))
+                .build());
+        // By followee userD, far from userA
+        newPosts.add(PetPost.builder()
+                .owner(userD)
+                .pet(TestDataUtil.createTestPet("CatFollowee", PetSpecies.CAT, Gender.FEMALE, 20))
+                .postType(PetPostType.BREEDING)
+                .postStatus(PetPostStatus.PENDING)
+                .description("By followee, far location, 2 reacts")
+                .latitude(0.0)
+                .longitude(0.0)
+                .reacts(2)
+                .reactedUsers(new HashSet<>(Arrays.asList(userB, userE)))
+                .createdAt(Instant.now().minus(Duration.ofHours(10)))
+                .build());
+        // By neither friend nor followee, but high affinity (species userA liked most)
+        newPosts.add(PetPost.builder()
+                .owner(userE)
+                .pet(TestDataUtil.createTestPet("DogAffinity", PetSpecies.DOG, Gender.FEMALE, 8))
+                .postType(PetPostType.ADOPTION)
+                .postStatus(PetPostStatus.PENDING)
+                .description("High affinity species, 1 react")
+                .latitude(userA.getLatitude() + 1.0)
+                .longitude(userA.getLongitude() + 1.0)
+                .reacts(1)
+                .reactedUsers(new HashSet<>(Collections.singletonList(userA)))
+                .createdAt(Instant.now().minus(Duration.ofHours(20)))
+                .build());
+        // By neither friend nor followee, old post, many reacts
+        newPosts.add(PetPost.builder()
+                .owner(userC)
+                .pet(TestDataUtil.createTestPet("RabbitPopular", PetSpecies.RABBIT, Gender.MALE, 30))
+                .postType(PetPostType.BREEDING)
+                .postStatus(PetPostStatus.PENDING)
+                .description("Old, popular, not friend/followee")
+                .latitude(userA.getLatitude() + 5.0)
+                .longitude(userA.getLongitude() + 5.0)
+                .reacts(10)
+                .reactedUsers(new HashSet<>(Arrays.asList(userA, userB, userC, userD, userE)))
+                .createdAt(Instant.now().minus(Duration.ofDays(5)))
+                .build());
+        // By friend userC, close, recent, 0 reacts
+        newPosts.add(PetPost.builder()
+                .owner(userC)
+                .pet(TestDataUtil.createTestPet("DogFriendRecent", PetSpecies.DOG, Gender.FEMALE, 6))
+                .postType(PetPostType.ADOPTION)
+                .postStatus(PetPostStatus.PENDING)
+                .description("By friend, close, recent, 0 reacts")
+                .latitude(userA.getLatitude() + 0.02)
+                .longitude(userA.getLongitude() + 0.02)
+                .reacts(0)
+                .reactedUsers(new HashSet<>())
+                .createdAt(Instant.now().minus(Duration.ofMinutes(30)))
+                .build());
+        // Persist new posts
+        List<PetPost> savedNew = newPosts.stream()
+                .map(petPostRepository::save)
+                .toList();
+        // Add the two posts from @BeforeEach
+        List<PetPost> allPosts = new ArrayList<>(savedNew);
+        allPosts.add(adoptionPost);
+        allPosts.add(breedingPost);
+
+        // Add interest: userA marks DogAffinity as INTERESTED
+        PetPost dogAffinityPost = allPosts.stream()
+                .filter(p -> "DogAffinity".equals(p.getPet().getName()))
+                .findFirst().orElseThrow();
+        petPostInterestRepository.save(
+                PetPostInterest.builder()
+                        .id(new PetPostInterestId(userA.getUserId(), dogAffinityPost.getPostId()))
+                        .user(userA)
+                        .post(dogAffinityPost)
+                        .interestType(InterestType.INTERESTED)
+                        .build()
+        );
+
+        // Prepare interest maps for scoring
+        Map<PetSpecies, Long> interestSpecies = petPostInterestRepository.scoreBySpecies(userA.getUserId()).stream()
+                .collect(Collectors.toMap(SpeciesScore::getSpecies, SpeciesScore::getScore));
+        Map<String, Long> interestBreed = petPostInterestRepository.scoreByBreed(userA.getUserId()).stream()
+                .collect(Collectors.toMap(BreedScore::getBreed, BreedScore::getScore));
+        Map<PetPostType, Long> interestPostType = petPostInterestRepository.scoreByPostType(userA.getUserId()).stream()
+                .collect(Collectors.toMap(PostTypeScore::getPostType, PostTypeScore::getScore));
+        Map<UUID, Long> interestOwner = petPostInterestRepository.scoreByOwner(userA.getUserId()).stream()
+                .collect(Collectors.toMap(OwnerScore::getOwnerId, OwnerScore::getScore));
+
+        // Score & sort in-memory using userA's context, with interest
+        feedScorer.scoreAndSort(
+                allPosts,
+                userA.getLatitude(),
+                userA.getLongitude(),
+                petPostRepository.countByReactedUsersUserId(userA.getUserId()),
+                petPostRepository.countReactsBySpecies(userA.getUserId()).stream().collect(Collectors.toMap(e -> e.getSpecies(), e -> e.getCnt())),
+                petPostRepository.countReactsByPostType(userA.getUserId()).stream().collect(Collectors.toMap(e -> e.getPostType(), e -> e.getCnt())),
+                friendshipRepository.findUser2_UserIdByUser1_UserId(userA.getUserId()),
+                followRepository.findFollowed_UserIdByFollower_UserId(userA.getUserId()),
+                interestSpecies,
+                interestBreed,
+                interestPostType,
+                interestOwner
+        );
+        Map<UUID, Long> expectedScores = allPosts.stream()
+                .collect(Collectors.toMap(PetPost::getPostId, PetPost::getScore));
+        PetPostFilterDTO filter = new PetPostFilterDTO();
+        filter.setSortBy(PetPostSortBy.SCORE);
+        filter.setSortDesc(true);
+        MvcResult result = mockMvc.perform(post("/api/pet-posts/filtered")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(filter))
+                        .param("page", "0")
+                        .param("size", String.valueOf(allPosts.size())))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode content = objectMapper.readTree(result.getResponse().getContentAsString())
+                .get("content");
+        List<Long> returnedScores = new ArrayList<>();
+        for (JsonNode node : content) {
+            UUID id = UUID.fromString(node.get("postId").asText());
+            returnedScores.add(expectedScores.get(id));
+        }
+        for (int i = 0; i < returnedScores.size() - 1; i++) {
+            Long curr = returnedScores.get(i);
+            Long next = returnedScores.get(i + 1);
+            assertTrue(
+                    curr >= next,
+                    String.format("Score %d should be >= %d", curr, next)
+            );
+        }
+    }
+
+    @Test
+    void userDeletionShouldCascadeToPetPosts() {
+        User user = userRepository.save(TestDataUtil.createTestUser("cascadeUser"));
+        Pet pet1 = petRepository.save(TestDataUtil.createTestPet("CascadePet1", PetSpecies.DOG, Gender.MALE, 12));
+        Pet pet2 = petRepository.save(TestDataUtil.createTestPet("CascadePet2", PetSpecies.CAT, Gender.FEMALE, 24));
+        PetPost post1 = petPostRepository.save(PetPost.builder()
+                .owner(user)
+                .pet(pet1)
+                .postType(PetPostType.ADOPTION)
+                .postStatus(PetPostStatus.PENDING)
+                .description("Cascade test post 1")
+                .latitude(35.8617)
+                .longitude(104.1954)
+                .reacts(0)
+                .reactedUsers(new HashSet<>())
+                .build());
+        PetPost post2 = petPostRepository.save(PetPost.builder()
+                .owner(user)
+                .pet(pet2)
+                .postType(PetPostType.BREEDING)
+                .postStatus(PetPostStatus.PENDING)
+                .description("Cascade test post 2")
+                .latitude(35.8617)
+                .longitude(104.1954)
+                .reacts(0)
+                .reactedUsers(new HashSet<>())
+                .build());
+
+        entityManager.flush();
+        entityManager.clear();
+
+        assertTrue(petPostRepository.existsById(post1.getPostId()));
+        assertTrue(petPostRepository.existsById(post2.getPostId()));
+
+        userRepository.deleteById(user.getUserId());
+        entityManager.flush();
+
+        assertFalse(petPostRepository.existsById(post1.getPostId()));
+        assertFalse(petPostRepository.existsById(post2.getPostId()));
+    }
+
+}

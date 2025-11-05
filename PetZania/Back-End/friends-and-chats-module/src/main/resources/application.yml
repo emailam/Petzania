@@ -1,0 +1,62 @@
+spring:
+  application:
+    name: FriendsAndChatsModule
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+    cache:
+      type: redis
+
+  super:
+    admin:
+      username: ${SUPER_ADMIN_USERNAME}
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  datasource:
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    url: ${FRIENDS_DB_URL}
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+    # show-sql: true
+
+  security:
+    user:
+      name: ${SECURITY_USER_NAME}
+      password: ${SECURITY_USER_PASSWORD}
+
+  jwt:
+    secret-key:
+      ${SPRING_JWT_SECRET_KEY}
+
+server:
+  error:
+    include-message: always
+    include-binding-errors: always
+  port: ${FRIENDS_SERVER_PORT}
+
+logging:
+  level:
+    org.springframework.cache: DEBUG
+    org.springframework.data.redis.cache: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web.servlet.DispatcherServlet: DEBUG

@@ -1,0 +1,1 @@
+ALTER TABLE blocks ADD COLUMN x CHAR(20) default 'xxx';

@@ -1,0 +1,121 @@
+version: '3'
+
+services:
+  postgres:
+    env_file:
+      - .env
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - ./init-db-dev.sql:/docker-entrypoint-initdb.d/init-db-dev.sql
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - registration-module
+      - friends-module
+      - adoption-and-breeding-module
+      - notification-module
+    networks:
+      - app-network
+
+  rabbitmq:
+    env_file:
+      - .env
+    image: rabbitmq:3.13.7-management-alpine
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    networks:
+      - app-network
+
+  redis:
+    env_file:
+      - .env
+    image: redis:8-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+  registration-module:
+    env_file:
+      - .env
+    build:
+      context: ./registration-module
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - rabbitmq
+      - redis
+    networks:
+      - app-network
+
+  friends-module:
+    env_file:
+      - .env
+    build:
+      context: ./friends-and-chats-module
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+      - rabbitmq
+      - redis
+    networks:
+      - app-network
+
+  adoption-and-breeding-module:
+    env_file:
+      - .env
+    build:
+      context: ./adoption-and-breeding-module
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres
+      - rabbitmq
+      - redis
+    restart: on-failure
+    networks:
+      - app-network
+
+  notification-module:
+    env_file:
+      - .env
+    build:
+      context: ./notification-module
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres
+      - rabbitmq
+      - redis
+    restart: on-failure
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

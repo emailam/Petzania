@@ -1,0 +1,94 @@
+package com.example.adoption_and_breeding_module.model.entity;
+
+import com.example.adoption_and_breeding_module.model.enumeration.Gender;
+import com.example.adoption_and_breeding_module.model.enumeration.PetSpecies;
+import com.example.adoption_and_breeding_module.validator.NotToxicText;
+import com.example.adoption_and_breeding_module.validator.ValidEnum;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.time.Period;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Data
+@Entity
+@Table(
+        name = "pets",
+        indexes = {
+                @Index(name = "idx_pet_species", columnList = "species"),
+                @Index(name = "idx_pet_breed", columnList = "breed"),
+                @Index(name = "idx_pet_gender", columnList = "gender")
+        }
+)
+public class Pet {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "pet_id", nullable = false, updatable = false)
+    private UUID petId;
+
+    @Column(name = "name", nullable = false)
+    private String name;
+
+    @Column(name = "description")
+    private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender", nullable = false)
+    private Gender gender;
+
+    @Column(name = "date_of_birth", nullable = false)
+    private LocalDate dateOfBirth;
+
+    @Column(name = "breed", nullable = false, length = 32)
+    private String breed;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "species", nullable = false, length = 20)
+    private PetSpecies species;
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+            name = "pets_vaccines_urls",
+            joinColumns = @JoinColumn(name = "pet_id")
+    )
+    @Column(name = "vaccine_url", length = 500)
+    private List<String> myVaccinesURLs = new ArrayList<>();
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+            name = "pets_pictures_urls",
+            joinColumns = @JoinColumn(name = "pet_id")
+    )
+    @Column(name = "picture_url", length = 500)
+    private List<String> myPicturesURLs = new ArrayList<>();
+
+    // === Age calculation method ===
+    public int getAgeInMonths() {
+        if (dateOfBirth == null) return -1; // Or throw a custom exception
+        Period period = Period.between(dateOfBirth, LocalDate.now());
+        return period.getYears() * 12 + period.getMonths();
+    }
+
+    public String getFormattedAge() {
+        if (dateOfBirth == null) return "Unknown";
+        Period period = Period.between(dateOfBirth, LocalDate.now());
+        int years = period.getYears();
+        int months = period.getMonths();
+
+        if (years > 0) {
+            return years + " years" + (months > 0 ? " " + months + " months" : "");
+        } else {
+            return months + " months";
+        }
+    }
+}
